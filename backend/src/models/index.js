@@ -18,9 +18,24 @@ const sequelize = new Sequelize(
   },
 );
 
+const Organization = require('./Organization')(sequelize);
+const LabelRequest = require('./LabelRequest')(sequelize);
+
+/* Relie demandes de label et organisations. */
+LabelRequest.belongsTo(Organization, {
+  foreignKey: 'organization_id',
+  as: 'organization',
+});
+Organization.hasMany(LabelRequest, {
+  foreignKey: 'organization_id',
+  as: 'labelRequests',
+});
+
 const db = {
   sequelize,
   Sequelize,
+  Organization,
+  LabelRequest,
 };
 
 module.exports = db;
