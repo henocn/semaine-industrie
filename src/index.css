@@ -6,7 +6,8 @@
   --color-ink: #1b2622;      /* texte courant */
   --color-sage: #e9eee8;     /* fond de section clair */
   --color-leaf: #5aa832;     /* vert de la charte, usage ponctuel */
-  --color-sun: #f2c200;      /* réservé au vendredi 20 */
+  --color-sun: #f2c200;      /* dates */
+  --color-flag: #c8102e;     /* rouge du drapeau, réservé au vendredi 20 */
 }
 
 html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
