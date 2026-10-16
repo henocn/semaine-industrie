@@ -1,18 +1,14 @@
-# Images à déposer ici (format .jpg, sauf armoiries.png)
+# Images à déposer ici
 
-Tant qu'une image manque, le site affiche un dégradé de la charte avec son nom.
+4 photos en .jpg + les armoiries en .png. Sans fichier, un aplat vert pâle s'affiche à la place.
+Privilégier de vraies photos (pas d'images générées), nettes, lumière naturelle, ~2000 px de large.
 
-| Fichier            | Section                      | Sujet (cf. PDF)                              | Format conseillé |
-|--------------------|------------------------------|----------------------------------------------|------------------|
-| structuration.jpg  | Hero, 2e marche              | Structure métallique d'usine                 | portrait 3:5     |
-| transformation.jpg | Hero, 3e marche              | Ouvrière, chaîne d'embouteillage d'huile     | portrait 3:5     |
-| progres.jpg        | Hero, 4e marche              | Étudiants en blouse et lunettes              | portrait 3:5     |
-| eleves.jpg         | Enjeu et ambition            | Élèves casqués de dos dans une usine         | 16:7             |
-| mecanicien.jpg     | Pilier Usines ouvertes       | Technicien sur machine-outil                 | 4:3              |
-| entrepot.jpg       | Pilier Journée phare         | Entrepôt, chariot élévateur, port            | 4:3              |
-| usine.jpg          | Pilier Récit et médias       | Hall d'usine, deux agents en gilet           | 4:3              |
-| portrait.jpg       | Table ronde au féminin       | Femme en blouse blanche tenant un bocal      | 4:5              |
-| agro.jpg           | Ce que le Togo fabrique      | Manioc, farine, jus, cajou, cacao            | 4:3              |
-| materiaux.jpg      | Ce que le Togo fabrique      | Ciment, clinker, carreaux, fers              | 16:10            |
-| chimie.jpg         | Ce que le Togo fabrique      | Bidons, pots de peinture, panneau solaire    | 16:10            |
-| armoiries.png      | Pied de page                 | Armoiries de la République togolaise         | PNG transparent  |
+| Fichier            | Où                         | Sujet                                              | Format       |
+|--------------------|----------------------------|----------------------------------------------------|--------------|
+| eleves.jpg         | Grande photo d'ouverture   | Élèves casqués de dos entrant dans une usine       | paysage 21:9 |
+| usine.jpg          | Vendredi 20 (fond vert)    | Hall d'usine, chaîne de production                 | portrait 4:5 |
+| portrait.jpg       | Table ronde au féminin     | Femme en blouse dans un atelier, regard caméra     | portrait 4:5 |
+| structuration.jpg  | Les sites ouverts          | Structure métallique d'un site industriel          | portrait 4:5 |
+| armoiries.png      | Pied de page               | Armoiries de la République togolaise (fond transparent, version claire) | PNG |
+
+Les fichiers de la version précédente (transformation, progres, mecanicien, entrepot, agro, materiaux, chimie) ne sont plus utilisés.

@@ -1,43 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --color-pine: #021f18;
-  --color-forest: #03483a;
-  --color-moss: #0b6b4f;
-  --color-leaf: #12a150;
-  --color-lime: #8bd63a;
-  --color-sun: #f5c400;
-  --color-mist: #f1f4f2;
-  --color-ink: #10231d;
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --color-forest: #0f3d2e;   /* vert institutionnel, texte des titres et fonds forts */
+  --color-ink: #1b2622;      /* texte courant */
+  --color-sage: #e9eee8;     /* fond de section clair */
+  --color-leaf: #5aa832;     /* vert de la charte, usage ponctuel */
+  --color-sun: #f2c200;      /* réservé au vendredi 20 */
 }
 
-html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
-body { @apply bg-white font-sans text-ink antialiased; }
-::selection { background: var(--color-lime); color: var(--color-pine); }
+html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
+body { background: #fff; color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 
-/* Forme « feuille » de la charte : deux angles très arrondis, deux angles serrés */
-.leaf { border-radius: 2.75rem 0.6rem 2.75rem 0.6rem; }
-.leaf-sm { border-radius: 1.25rem 0.35rem 1.25rem 0.35rem; }
-.leaf-r { border-radius: 0.6rem 2.75rem 0.6rem 2.75rem; }
+/* Titres : la même famille, en largeur étendue */
+.display { font-stretch: 118%; font-weight: 750; letter-spacing: -0.025em; line-height: 0.98; color: var(--color-forest); }
 
-.grad-text { background: linear-gradient(90deg, var(--color-lime), #c6f06b); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.rule { height: 4px; width: 9rem; border-radius: 9px; background: linear-gradient(90deg, var(--color-forest), var(--color-leaf), var(--color-lime)); }
-.eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.28em]; }
+/* La forme feuille de la charte, réservée aux photographies */
+.leaf { border-radius: 0 7rem 0 0; }
+.leaf-alt { border-radius: 6rem 0 0 0; }
+@media (max-width: 640px) { .leaf { border-radius: 0 3.5rem 0 0; } .leaf-alt { border-radius: 3rem 0 0 0; } }
 
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(139,214,58,.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139,214,58,.07) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse at 70% 40%, #000 20%, transparent 75%);
-}
-.noise::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .06; mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+:focus-visible { outline: 2px solid var(--color-leaf); outline-offset: 3px; }
 
-@keyframes marquee { to { transform: translateX(-50%); } }
-.marquee { animation: marquee 38s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } html { scroll-behavior: auto; } }
+/* Accordéon du programme */
+.fold { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s cubic-bezier(.2,.8,.2,1); }
+.fold[data-open="true"] { grid-template-rows: 1fr; }
+.fold > div { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .fold { transition: none; } }
