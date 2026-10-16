@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getStoredUser } from '../api/auth'
 import { getDashboardStats, type DashboardStats } from '../api/dashboard'
-import { OrgaNav } from '../components/layout/OrgaNav'
-import { WRAP } from '../components/layout/Mark'
+import { OrgaShell } from '../components/layout/OrgaShell'
 
-/* Tableau de bord orga avec indicateurs temps réel. */
+/* Tableau de bord orga — layout backoffice type DataStack. */
 export default function OrgaDashboardPage() {
   const navigate = useNavigate()
   const user = getStoredUser()
@@ -21,8 +20,8 @@ export default function OrgaDashboardPage() {
     async function load() {
       try {
         setStats(await getDashboardStats())
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur')
+      } catch {
+        setError('Impossible de charger le tableau')
         navigate('/login')
       }
     }
@@ -30,84 +29,138 @@ export default function OrgaDashboardPage() {
   }, [navigate, user])
 
   const ind = stats?.indicators
+  const total = Math.max(ind?.requests_total ?? 0, 1)
+  const approved = ind?.labels_approved ?? 0
+  const pending = ind?.labels_pending ?? 0
+  const rejected = ind?.labels_rejected ?? 0
+  const approvedPct = Math.round((approved / total) * 100)
+  const pendingPct = Math.round((pending / total) * 100)
+  const rejectedPct = Math.max(0, 100 - approvedPct - pendingPct)
 
   return (
-    <>
-      <OrgaNav email={user?.email} />
-      <main className="py-12 sm:py-16">
-        <div className={WRAP}>
-          <h1 className="display text-4xl">Tableau de bord</h1>
-          <p className="mt-3 text-ink/65">
-            Chiffres alimentés par les labels validés. Visites et RDV arriveront avec les modules suivants.
-          </p>
-          {error && <p className="mt-6 text-red-700">{error}</p>}
+    <OrgaShell
+      title="Dashboard"
+      actions={
+        <Link
+          to="/orga/labels"
+          className="rounded-xl bg-forest px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-ink"
+        >
+          Demandes +
+        </Link>
+      }
+    >
+      {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
-          {ind && (
-            <>
-              <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  ['Labels validés', ind.labels_approved],
-                  ['En attente', ind.labels_pending ?? 0],
-                  ['Sur la carte', ind.sites_on_map],
-                  ['Demandes totales', ind.requests_total ?? 0],
-                ].map(([label, value]) => (
-                  <div key={String(label)} className="border-t border-forest/20 pt-4">
-                    <p className="display text-4xl text-forest">{value}</p>
-                    <p className="mt-2 text-[15px] text-ink/60">{label}</p>
-                  </div>
-                ))}
+      {ind && (
+        <div className="space-y-6">
+          <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-[15px] font-semibold text-forest">Pipeline labels</h2>
+                <p className="mt-1 text-[13px] text-ink/45">Répartition des demandes reçues</p>
               </div>
+              <p className="text-[13px] text-ink/55">
+                <span className="font-semibold text-forest">{approved}</span> validés sur {ind.requests_total} demandes
+              </p>
+            </div>
+            <div className="mt-5 flex h-3 overflow-hidden rounded-full bg-[#eef0f2]">
+              <div className="bg-leaf" style={{ width: `${approvedPct}%` }} />
+              <div className="bg-sun" style={{ width: `${pendingPct}%` }} />
+              <div className="bg-ink/20" style={{ width: `${rejectedPct}%` }} />
+            </div>
+            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-ink/60">
+              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-leaf" />Validés {approved}</li>
+              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-sun" />En attente {pending}</li>
+              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-ink/20" />Refusés {rejected}</li>
+            </ul>
+          </section>
 
-              <div className="mt-14 grid gap-12 lg:grid-cols-2">
-                <div>
-                  <h2 className="text-lg font-semibold text-forest">Par région</h2>
-                  <ul className="mt-4 border-t border-forest/15">
-                    {stats.by_region.length === 0 && <li className="py-4 text-ink/50">Aucun</li>}
-                    {stats.by_region.map((r) => (
-                      <li key={r.name} className="flex justify-between border-b border-forest/10 py-3 text-[15px]">
-                        <span>{r.name}</span>
-                        <span className="font-semibold text-forest">{r.count}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-forest">Par secteur</h2>
-                  <ul className="mt-4 border-t border-forest/15">
-                    {stats.by_sector.length === 0 && <li className="py-4 text-ink/50">Aucun</li>}
-                    {stats.by_sector.map((r) => (
-                      <li key={r.name} className="flex justify-between border-b border-forest/10 py-3 text-[15px]">
-                        <span>{r.name}</span>
-                        <span className="font-semibold text-forest">{r.count}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: 'Labels validés', value: approved, to: '/orga/qr', tint: 'bg-[#eef7e8]', accent: 'text-leaf' },
+              { label: 'En attente', value: pending, to: '/orga/labels', tint: 'bg-[#fff8e6]', accent: 'text-[#b8860b]' },
+              { label: 'Sur la carte', value: ind.sites_on_map, to: '/carte', tint: 'bg-[#e8f1ee]', accent: 'text-forest' },
+              { label: 'Demandes', value: ind.requests_total ?? 0, to: '/orga/labels', tint: 'bg-[#f3f4f6]', accent: 'text-ink/70' },
+            ].map((card) => (
+              <Link
+                key={card.label}
+                to={card.to}
+                className={`rounded-2xl ${card.tint} p-5 shadow-sm transition-transform hover:-translate-y-0.5`}
+              >
+                <p className={`text-[28px] font-semibold tracking-tight ${card.accent}`}>{card.value}</p>
+                <p className="mt-2 text-[13px] font-medium text-ink/60">{card.label}</p>
+              </Link>
+            ))}
+          </section>
 
-              <div className="mt-14">
-                <div className="flex items-end justify-between gap-4">
-                  <h2 className="text-lg font-semibold text-forest">Derniers labels</h2>
-                  <Link to="/orga/labels" className="text-[15px] text-forest underline underline-offset-4">Gérer les demandes</Link>
-                </div>
-                <ul className="mt-4 border-t border-forest/15">
+          <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-[15px] font-semibold text-forest">Derniers labels</h2>
+              <Link to="/orga/labels" className="text-[13px] font-medium text-forest hover:underline">Tout voir</Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left text-[13px]">
+                <thead>
+                  <tr className="border-b border-black/5 text-ink/40">
+                    <th className="pb-3 font-medium">Nom</th>
+                    <th className="pb-3 font-medium">Type</th>
+                    <th className="pb-3 font-medium">Lieu</th>
+                    <th className="pb-3 font-medium">Code</th>
+                    <th className="pb-3 font-medium">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recent_labels.length === 0 && (
+                    <tr><td colSpan={5} className="py-8 text-ink/40">Aucun label validé</td></tr>
+                  )}
                   {stats.recent_labels.map((o) => (
-                    <li key={o.slug} className="flex flex-wrap items-baseline justify-between gap-2 border-b border-forest/10 py-4">
-                      <div>
-                        <p className="font-semibold text-forest">{o.name}</p>
-                        <p className="text-[15px] text-ink/55">{[o.city, o.region].filter(Boolean).join(' · ')}</p>
-                      </div>
-                      <Link to={`/o/${o.slug}`} className="text-[15px] text-forest underline underline-offset-4">
-                        {o.label_code || o.slug}
-                      </Link>
-                    </li>
+                    <tr key={o.slug} className="border-b border-black/[0.04] last:border-0">
+                      <td className="py-3.5 font-medium text-forest">{o.name}</td>
+                      <td className="py-3.5">
+                        <span className="rounded-full bg-[#eef7e8] px-2.5 py-1 text-[12px] font-medium text-leaf">
+                          {o.type === 'ecole' ? 'École' : 'Entreprise'}
+                        </span>
+                      </td>
+                      <td className="py-3.5 text-ink/55">{[o.city, o.region].filter(Boolean).join(' · ') || '—'}</td>
+                      <td className="py-3.5 text-ink/55">{o.label_code || '—'}</td>
+                      <td className="py-3.5">
+                        <Link to={`/o/${o.slug}`} className="font-medium text-forest hover:underline">Fiche</Link>
+                      </td>
+                    </tr>
                   ))}
-                </ul>
-              </div>
-            </>
-          )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <h2 className="text-[15px] font-semibold text-forest">Par région</h2>
+              <ul className="mt-4 space-y-2">
+                {stats.by_region.length === 0 && <li className="text-[13px] text-ink/40">Aucune donnée</li>}
+                {stats.by_region.map((r) => (
+                  <li key={r.name} className="flex items-center justify-between rounded-xl bg-[#f7f8f9] px-3 py-2.5 text-[13px]">
+                    <span className="text-ink/70">{r.name}</span>
+                    <span className="font-semibold text-forest">{r.count}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <h2 className="text-[15px] font-semibold text-forest">Par secteur</h2>
+              <ul className="mt-4 space-y-2">
+                {stats.by_sector.length === 0 && <li className="text-[13px] text-ink/40">Aucune donnée</li>}
+                {stats.by_sector.map((r) => (
+                  <li key={r.name} className="flex items-center justify-between rounded-xl bg-[#f7f8f9] px-3 py-2.5 text-[13px]">
+                    <span className="text-ink/70">{r.name}</span>
+                    <span className="font-semibold text-forest">{r.count}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
         </div>
-      </main>
-    </>
+      )}
+    </OrgaShell>
   )
 }

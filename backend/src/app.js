@@ -11,6 +11,7 @@ const healthRoutes = require('./modules/health/health.routes');
 const labelRoutes = require('./modules/labels/label.routes');
 const authRoutes = require('./modules/auth/auth.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
+const bookingRoutes = require('./modules/bookings/booking.routes');
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use(`${env.API_PREFIX}/health`, healthRoutes);
 app.use(`${env.API_PREFIX}/auth`, authRoutes);
 app.use(`${env.API_PREFIX}/labels`, labelRoutes);
 app.use(`${env.API_PREFIX}/dashboard`, dashboardRoutes);
+app.use(`${env.API_PREFIX}/bookings`, bookingRoutes);
 
 app.use(errorHandler);
 

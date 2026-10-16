@@ -22,6 +22,7 @@ const Organization = require('./Organization')(sequelize);
 const LabelRequest = require('./LabelRequest')(sequelize);
 const User = require('./User')(sequelize);
 const RefreshToken = require('./RefreshToken')(sequelize);
+const VisitBooking = require('./VisitBooking')(sequelize);
 
 LabelRequest.belongsTo(Organization, {
   foreignKey: 'organization_id',
@@ -35,6 +36,19 @@ Organization.hasMany(LabelRequest, {
 RefreshToken.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(RefreshToken, { foreignKey: 'user_id', as: 'refreshTokens' });
 
+VisitBooking.belongsTo(Organization, {
+  foreignKey: 'organization_id',
+  as: 'organization',
+});
+Organization.hasMany(VisitBooking, {
+  foreignKey: 'organization_id',
+  as: 'visitBookings',
+});
+VisitBooking.belongsTo(User, {
+  foreignKey: 'teacher_user_id',
+  as: 'teacher',
+});
+
 const db = {
   sequelize,
   Sequelize,
@@ -42,6 +56,7 @@ const db = {
   LabelRequest,
   User,
   RefreshToken,
+  VisitBooking,
 };
 
 module.exports = db;

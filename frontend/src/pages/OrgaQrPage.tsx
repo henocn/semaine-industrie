@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getStoredUser } from '../api/auth'
 import { listQrBatch, type QrBatchItem } from '../api/labels'
-import { OrgaNav } from '../components/layout/OrgaNav'
-import { WRAP } from '../components/layout/Mark'
+import { OrgaShell } from '../components/layout/OrgaShell'
 
-/* Écran orga : QR en lot pour impression des labels. */
+/* Écran orga : QR en lot — shell backoffice. */
 export default function OrgaQrPage() {
   const navigate = useNavigate()
   const user = getStoredUser()
   const [items, setItems] = useState<QrBatchItem[]>([])
+  const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -29,47 +29,59 @@ export default function OrgaQrPage() {
     load()
   }, [navigate, user])
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return items
+    return items.filter((item) =>
+      [item.name, item.label_code, item.city, item.region]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
+    )
+  }, [items, query])
+
   return (
-    <>
-      <OrgaNav email={user?.email} />
-      <main className="py-12 sm:py-16">
-        <div className={WRAP}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between print:hidden">
-            <div>
-              <h1 className="display text-4xl">QR des labels</h1>
-              <p className="mt-3 max-w-xl text-ink/65">
-                Un QR par structure validée, prêt pour l’impression des autocollants. Utilisez Imprimer pour le lot.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="bg-forest px-6 py-3 text-[15px] font-semibold text-white hover:bg-ink"
-            >
-              Imprimer le lot
-            </button>
-          </div>
+    <OrgaShell
+      title="QR / impression"
+      searchPlaceholder="Filtrer un label…"
+      onSearch={setQuery}
+      actions={
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="rounded-xl bg-forest px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-ink print:hidden"
+        >
+          Imprimer +
+        </button>
+      }
+    >
+      {error && <p className="mb-4 text-[14px] text-red-700 print:hidden">{error}</p>}
 
-          {error && <p className="mt-6 text-red-700 print:hidden">{error}</p>}
-          {items.length === 0 && !error && (
-            <p className="mt-10 text-ink/55">Aucun label validé pour l’instant.</p>
-          )}
-
-          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-3">
-            {items.map((item) => (
-              <article key={item.id} className="break-inside-avoid border border-forest/15 p-5">
-                <img src={item.qr_data_url} alt={`QR ${item.name}`} className="mx-auto h-40 w-40" />
-                <p className="mt-4 text-center text-lg font-semibold text-forest">{item.name}</p>
-                <p className="mt-1 text-center text-[15px] text-ink/55">
-                  {item.label_code}
-                  {item.city ? ` · ${item.city}` : ''}
-                </p>
-                <p className="mt-2 break-all text-center text-xs text-ink/40">{item.fiche_url}</p>
-              </article>
-            ))}
+      <section className="rounded-2xl bg-white p-5 shadow-sm print:shadow-none sm:p-6">
+        <div className="mb-5 flex items-end justify-between gap-3 print:hidden">
+          <div>
+            <h2 className="text-[15px] font-semibold text-forest">Lot prêt à imprimer</h2>
+            <p className="mt-1 text-[13px] text-ink/45">{filtered.length} QR généré{filtered.length > 1 ? 's' : ''}</p>
           </div>
         </div>
-      </main>
-    </>
+
+        {filtered.length === 0 && !error && (
+          <p className="py-10 text-[14px] text-ink/40">Aucun label validé pour l’instant.</p>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 print:grid-cols-3">
+          {filtered.map((item) => (
+            <article key={item.id} className="break-inside-avoid rounded-2xl bg-[#f7f8f9] p-5 print:border print:border-black/10 print:bg-white">
+              <img src={item.qr_data_url} alt={`QR ${item.name}`} className="mx-auto h-36 w-36 rounded-xl bg-white p-2" />
+              <p className="mt-4 text-center text-[15px] font-semibold text-forest">{item.name}</p>
+              <p className="mt-1 text-center text-[12px] text-ink/50">
+                {item.label_code}
+                {item.city ? ` · ${item.city}` : ''}
+              </p>
+              <p className="mt-2 break-all text-center text-[10px] text-ink/35">{item.fiche_url}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </OrgaShell>
   )
 }

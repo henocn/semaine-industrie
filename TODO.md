@@ -73,7 +73,7 @@
 
 ## PHASE 3 — P1
 
-- [ ] **3.1** Réservations visites (enseignants)
+- [x] **3.1** Réservations visites (enseignants) — API + `/visites` + `/orga/visites`
 - [ ] **3.2** Rencontres d’affaires (profils + matching simple + fiches contact)
 - [ ] **3.3** Branchements n8n / WhatsApp (ou plan B réponses rapides)
 
@@ -98,4 +98,4 @@
 
 ## En cours
 
-→ **P1** réservations visites (enseignants)
+→ **P1** rencontres d’affaires · n8n/WhatsApp

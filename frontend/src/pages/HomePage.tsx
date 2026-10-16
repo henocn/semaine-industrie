@@ -40,6 +40,7 @@ function Header() {
           <a href="#vendredi" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Vendredi 20</a>
           <Link to="/carte" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Carte</Link>
           <Link to="/label" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Label</Link>
+          <Link to="/visites" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Visites</Link>
           <Link to="/bilan" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Bilan</Link>
           <a href="#contact" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Contact</a>
         </nav>
