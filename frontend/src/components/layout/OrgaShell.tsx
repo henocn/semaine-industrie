@@ -39,6 +39,9 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
         <NavLink to="/orga/labels" className={linkClass}>Demandes label</NavLink>
         <NavLink to="/orga/visites" className={linkClass}>Visites</NavLink>
+        <NavLink to="/orga/affaires" className={linkClass}>Affaires</NavLink>
+        <NavLink to="/orga/passeports" className={linkClass}>Passeports</NavLink>
+        <NavLink to="/orga/live" className={linkClass}>Live & mesures</NavLink>
         <NavLink to="/orga/qr" className={linkClass}>QR / impression</NavLink>
       </nav>
 

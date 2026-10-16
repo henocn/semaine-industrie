@@ -225,7 +225,7 @@ export default function OrgaBusinessPage() {
                 Participant A
                 <select required name="participant_a_id" className="mt-1 w-full rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px] text-forest">
                   <option value="">Choisir…</option>
-                  {approved.map((p) => (
+                  {approvedPool.map((p) => (
                     <option key={p.id} value={p.id}>{p.organization_name} ({p.kind})</option>
                   ))}
                 </select>
@@ -234,7 +234,7 @@ export default function OrgaBusinessPage() {
                 Participant B
                 <select required name="participant_b_id" className="mt-1 w-full rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px] text-forest">
                   <option value="">Choisir…</option>
-                  {approved.map((p) => (
+                  {approvedPool.map((p) => (
                     <option key={p.id} value={p.id}>{p.organization_name} ({p.kind})</option>
                   ))}
                 </select>

@@ -74,28 +74,29 @@
 ## PHASE 3 — P1
 
 - [x] **3.1** Réservations visites (enseignants) — API + `/visites` + `/orga/visites`
-- [ ] **3.2** Rencontres d’affaires (profils + matching simple + fiches contact)
-- [ ] **3.3** Branchements n8n / WhatsApp (ou plan B réponses rapides)
+- [x] **3.2** Rencontres d’affaires — `/affaires` + `/orga/affaires`
+- [x] **3.3** Hook n8n (`N8N_WEBHOOK_URL`) — stub si vide
 
 ---
 
 ## PHASE 4 — P2
 
-- [ ] **4.1** Passeport industrie (numéros, scan référent, page mon parcours)
-- [ ] **4.2** Questions live + vote samedi
-- [ ] **4.3** Questionnaire avant / après
+- [x] **4.1** Passeport — `/passeport/:code` + `/orga/passeports`
+- [x] **4.2** Questions + vote — `/questions` `/vote` + `/orga/live`
+- [x] **4.3** Questionnaire — `/questionnaire` + stats orga
 
 ---
 
 ## PHASE 5 — Déploiement VPS
 
-- [ ] **5.1** Nginx : site + reverse proxy API (+ sous-domaine admin si besoin)
-- [ ] **5.2** systemd service API
-- [ ] **5.3** Migrations prod + backup Postgres
-- [ ] **5.4** Healthcheck + variables `.env` serveur
+- [x] **5.1** Nginx : `deploy/nginx/semaine-industrie.conf` (site + `/api` + admin.)
+- [x] **5.2** systemd : `deploy/systemd/semaine-industrie-api.service` + `deploy/deploy.sh`
+- [x] **5.3** Migrations dans deploy.sh + `deploy/postgres-backup.sh`
+- [x] **5.4** `deploy/env.production.example` + healthcheck dans deploy.sh
+- [ ] **5.5** Appliquer sur le VPS (SSH : copier configs, Certbot, premier `deploy.sh`)
 
 ---
 
 ## En cours
 
-→ **P1** rencontres d’affaires · n8n/WhatsApp
+→ **P5.5** appliquer sur le VPS (accès SSH requis)

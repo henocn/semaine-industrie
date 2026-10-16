@@ -1,15 +1,23 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import BilanPage from './pages/BilanPage'
 import BookingPage from './pages/BookingPage'
+import BusinessRegisterPage from './pages/BusinessRegisterPage'
 import HomePage from './pages/HomePage'
 import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
 import OrganizationPage from './pages/OrganizationPage'
+import OrgaBusinessPage from './pages/OrgaBusinessPage'
 import OrgaDashboardPage from './pages/OrgaDashboardPage'
 import OrgaLabelsPage from './pages/OrgaLabelsPage'
+import OrgaLivePage from './pages/OrgaLivePage'
+import OrgaPassportsPage from './pages/OrgaPassportsPage'
 import OrgaQrPage from './pages/OrgaQrPage'
 import OrgaVisitsPage from './pages/OrgaVisitsPage'
+import PassportPage from './pages/PassportPage'
+import QuestionsPage from './pages/QuestionsPage'
+import SurveyPage from './pages/SurveyPage'
+import VotePage from './pages/VotePage'
 
 /* Routeur principal : site public + label + orga. */
 export default function App() {
@@ -19,13 +27,21 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/label" element={<LabelRequestPage />} />
         <Route path="/visites" element={<BookingPage />} />
+        <Route path="/affaires" element={<BusinessRegisterPage />} />
         <Route path="/carte" element={<MapPage />} />
         <Route path="/bilan" element={<BilanPage />} />
+        <Route path="/passeport/:code" element={<PassportPage />} />
+        <Route path="/questions" element={<QuestionsPage />} />
+        <Route path="/vote" element={<VotePage />} />
+        <Route path="/questionnaire" element={<SurveyPage />} />
         <Route path="/o/:slug" element={<OrganizationPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/orga" element={<OrgaDashboardPage />} />
         <Route path="/orga/labels" element={<OrgaLabelsPage />} />
         <Route path="/orga/visites" element={<OrgaVisitsPage />} />
+        <Route path="/orga/affaires" element={<OrgaBusinessPage />} />
+        <Route path="/orga/passeports" element={<OrgaPassportsPage />} />
+        <Route path="/orga/live" element={<OrgaLivePage />} />
         <Route path="/orga/qr" element={<OrgaQrPage />} />
       </Routes>
     </BrowserRouter>

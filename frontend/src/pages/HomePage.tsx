@@ -41,6 +41,8 @@ function Header() {
           <Link to="/carte" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Carte</Link>
           <Link to="/label" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Label</Link>
           <Link to="/visites" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Visites</Link>
+          <Link to="/affaires" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Affaires</Link>
+          <Link to="/questions" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Forum</Link>
           <Link to="/bilan" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Bilan</Link>
           <a href="#contact" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Contact</a>
         </nav>
@@ -282,8 +284,10 @@ function Footer() {
           <p className="font-semibold text-forest">La semaine</p>
           <ul className="mt-4 space-y-2.5 text-ink/70">
             <li><a href="#programme" className="hover:text-forest">Programme</a></li>
-            <li><a href="#vendredi" className="hover:text-forest">Journée phare du 20 novembre</a></li>
-            <li><a href="#lieux" className="hover:text-forest">Sites ouverts</a></li>
+            <li><Link to="/carte" className="hover:text-forest">Carte des usines</Link></li>
+            <li><Link to="/questions" className="hover:text-forest">Questions live</Link></li>
+            <li><Link to="/vote" className="hover:text-forest">Vote samedi</Link></li>
+            <li><Link to="/questionnaire" className="hover:text-forest">Questionnaire</Link></li>
             <li><a href="#contact" className="hover:text-forest">Contact</a></li>
           </ul>
         </div>

@@ -6,6 +6,7 @@ const {
   LabelRequest,
   VisitBooking,
   BusinessMeeting,
+  PassportVisit,
   sequelize,
 } = require('../../models');
 
@@ -20,6 +21,7 @@ async function getStats() {
     visitsBooked,
     youngVisitors,
     businessMeetings,
+    passportScans,
     byRegionRows,
     bySectorRows,
     byTypeRows,
@@ -40,6 +42,7 @@ async function getStats() {
     VisitBooking.count({ where: { status: { [Op.in]: ['pending', 'confirmed'] } } }),
     VisitBooking.sum('headcount', { where: { status: { [Op.in]: ['pending', 'confirmed'] } } }),
     BusinessMeeting.count({ where: { status: { [Op.in]: ['scheduled', 'done'] } } }),
+    PassportVisit.count(),
     Organization.findAll({
       attributes: [
         'region',
@@ -85,7 +88,7 @@ async function getStats() {
       visits_booked: visitsBooked,
       young_visitors: Number(youngVisitors || 0),
       business_meetings: businessMeetings,
-      passport_scans: 0,
+      passport_scans: passportScans,
     },
     by_region: byRegionRows.map((r) => ({ name: r.region, count: Number(r.count) })),
     by_sector: bySectorRows.map((r) => ({ name: r.sector, count: Number(r.count) })),

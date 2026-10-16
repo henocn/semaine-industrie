@@ -13,6 +13,9 @@ const authRoutes = require('./modules/auth/auth.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 const bookingRoutes = require('./modules/bookings/booking.routes');
 const businessRoutes = require('./modules/business/business.routes');
+const passportRoutes = require('./modules/passports/passport.routes');
+const engagementRoutes = require('./modules/engagement/engagement.routes');
+const surveyRoutes = require('./modules/surveys/survey.routes');
 
 const app = express();
 
@@ -32,6 +35,9 @@ app.use(`${env.API_PREFIX}/labels`, labelRoutes);
 app.use(`${env.API_PREFIX}/dashboard`, dashboardRoutes);
 app.use(`${env.API_PREFIX}/bookings`, bookingRoutes);
 app.use(`${env.API_PREFIX}/business`, businessRoutes);
+app.use(`${env.API_PREFIX}/passports`, passportRoutes);
+app.use(`${env.API_PREFIX}/engagement`, engagementRoutes);
+app.use(`${env.API_PREFIX}/surveys`, surveyRoutes);
 
 app.use(errorHandler);
 

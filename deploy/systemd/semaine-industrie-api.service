@@ -1,0 +1,23 @@
+# systemd — API Semaine de l'industrie
+# Copier vers /etc/systemd/system/semaine-industrie-api.service
+# puis : systemctl daemon-reload && systemctl enable --now semaine-industrie-api
+
+[Unit]
+Description=Semaine de l'industrie 2026 — API Express
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/semaine-industrie/backend
+EnvironmentFile=/var/www/semaine-industrie/backend/.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+# Limites raisonnables pour un VPS partagé
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

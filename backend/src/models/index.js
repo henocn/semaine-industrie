@@ -25,6 +25,12 @@ const RefreshToken = require('./RefreshToken')(sequelize);
 const VisitBooking = require('./VisitBooking')(sequelize);
 const BusinessParticipant = require('./BusinessParticipant')(sequelize);
 const BusinessMeeting = require('./BusinessMeeting')(sequelize);
+const Passport = require('./Passport')(sequelize);
+const PassportVisit = require('./PassportVisit')(sequelize);
+const LiveQuestion = require('./LiveQuestion')(sequelize);
+const VoteOption = require('./VoteOption')(sequelize);
+const VoteBallot = require('./VoteBallot')(sequelize);
+const SurveyResponse = require('./SurveyResponse')(sequelize);
 
 LabelRequest.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 Organization.hasMany(LabelRequest, { foreignKey: 'organization_id', as: 'labelRequests' });
@@ -38,8 +44,18 @@ VisitBooking.belongsTo(User, { foreignKey: 'teacher_user_id', as: 'teacher' });
 
 BusinessMeeting.belongsTo(BusinessParticipant, { foreignKey: 'participant_a_id', as: 'participantA' });
 BusinessMeeting.belongsTo(BusinessParticipant, { foreignKey: 'participant_b_id', as: 'participantB' });
-BusinessParticipant.hasMany(BusinessMeeting, { foreignKey: 'participant_a_id', as: 'meetingsAsA' });
-BusinessParticipant.hasMany(BusinessMeeting, { foreignKey: 'participant_b_id', as: 'meetingsAsB' });
+
+PassportVisit.belongsTo(Passport, { foreignKey: 'passport_id', as: 'passport' });
+Passport.hasMany(PassportVisit, { foreignKey: 'passport_id', as: 'visits' });
+PassportVisit.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
+Organization.hasMany(PassportVisit, { foreignKey: 'organization_id', as: 'passportVisits' });
+
+SurveyResponse.belongsTo(Passport, { foreignKey: 'passport_id', as: 'passport' });
+Passport.hasMany(SurveyResponse, { foreignKey: 'passport_id', as: 'surveys' });
+
+VoteBallot.belongsTo(VoteOption, { foreignKey: 'option_id', as: 'option' });
+VoteOption.hasMany(VoteBallot, { foreignKey: 'option_id', as: 'ballots' });
+VoteOption.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 
 module.exports = {
   sequelize,
@@ -51,4 +67,10 @@ module.exports = {
   VisitBooking,
   BusinessParticipant,
   BusinessMeeting,
+  Passport,
+  PassportVisit,
+  LiveQuestion,
+  VoteOption,
+  VoteBallot,
+  SurveyResponse,
 };
