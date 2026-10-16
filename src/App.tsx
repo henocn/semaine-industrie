@@ -15,13 +15,13 @@ function Mark({ className = '' }: { className?: string }) {
 }
 
 /* Photo : déposez le fichier dans public/images. Sans fichier, un aplat discret. */
-function Photo({ name, alt, className = '' }: { name: string; alt: string; className?: string }) {
+function Photo({ name, alt, className = '', position = 'center', eager = false }: { name: string; alt: string; className?: string; position?: string; eager?: boolean }) {
   const [missing, setMissing] = useState(false)
   return (
     <div className={`relative overflow-hidden bg-sage ${className}`}>
       {missing
         ? <span className="absolute bottom-3 left-4 text-xs text-forest/40">images/{name}.jpg</span>
-        : <img src={`/images/${name}.jpg`} alt={alt} loading="lazy" onError={() => setMissing(true)} className="absolute inset-0 h-full w-full object-cover" />}
+        : <img src={`/images/${name}.jpg`} alt={alt} loading={eager ? 'eager' : 'lazy'} onError={() => setMissing(true)} style={{ objectPosition: position }} className="absolute inset-0 h-full w-full object-cover" />}
     </div>
   )
 }
@@ -47,20 +47,25 @@ function Header() {
 
 function Hero() {
   return (
-    <section id="top" className="pt-16 sm:pt-24">
-      <div className={WRAP}>
-        <h1 className="display max-w-4xl text-[clamp(2.75rem,8vw,6.25rem)]">L’industrie togolaise en mouvement</h1>
-        <div className="mt-10 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
-          <p className="max-w-xl text-lg leading-relaxed text-ink/75 sm:text-xl">
+    <section id="top" className="relative isolate flex min-h-[520px] items-end overflow-hidden rounded-br-[4rem] bg-forest text-white sm:h-[72svh] sm:max-h-[760px] sm:rounded-br-[8rem]">
+      <img
+        src="/images/hall.jpg"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+      />
+      {/* Voile noir léger pour la lisibilité du texte */}
+      <div className="absolute inset-0 -z-10 bg-black/50" />
+      <div className={`${WRAP} pb-14 pt-24 sm:pb-20`}>
+        <h1 className="display max-w-4xl text-[clamp(2.75rem,7.5vw,6rem)] !text-white">L’industrie togolaise en mouvement</h1>
+        <div className="mt-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
+          <p className="max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl">
             Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public, à Lomé et dans les régions.
           </p>
-          <p className="text-lg font-semibold text-forest [font-stretch:112%] sm:text-right">
-            Du 16 au 22 novembre 2026<br /><span className="font-normal text-ink/60">Lomé et les régions</span>
+          <p className="text-lg font-semibold [font-stretch:112%] sm:text-right">
+            <span className="text-sun">Du 16 au 22 novembre 2026</span><br /><span className="font-normal text-white/70">Lomé et les régions</span>
           </p>
         </div>
-      </div>
-      <div className="mx-auto mt-14 max-w-[1400px] sm:px-8">
-        <Photo name="eleves" alt="Élèves en visite dans une usine" className="leaf aspect-[4/3] sm:aspect-[21/9]" />
       </div>
     </section>
   )
@@ -70,7 +75,10 @@ function About() {
   return (
     <section className="py-24 sm:py-32">
       <div className={`${WRAP} grid gap-12 md:grid-cols-[1fr_1.15fr]`}>
-        <h2 className="display text-4xl sm:text-5xl">Voir ce que le Togo fabrique, où, et par qui.</h2>
+        <div>
+          <h2 className="display text-4xl sm:text-5xl">Voir ce que le Togo fabrique, où, et par qui.</h2>
+          <Photo name="eleves" alt="Lycéennes et lycéens dans la cour d’un établissement togolais" className="leaf-alt mt-12 aspect-[4/3]" />
+        </div>
         <div className="space-y-6 text-lg leading-relaxed text-ink/80">
           <p>
             La Semaine de l’industrie fait découvrir les usines et leurs métiers aux jeunes et au grand public. Elle réunit aussi investisseurs, industriels et PME locales, et raconte l’industrie togolaise par des images et des portraits.
@@ -147,25 +155,27 @@ function Programme() {
 function Friday() {
   return (
     <section id="vendredi" className="bg-forest py-24 text-white sm:py-32">
-      <div className={`${WRAP} grid gap-14 md:grid-cols-2 md:items-center`}>
+      <div className={`${WRAP} grid gap-14 md:grid-cols-2 md:items-start`}>
         <div>
           <p className="text-lg font-semibold text-sun">Vendredi 20 novembre</p>
           <h2 className="display mt-4 text-4xl !text-white sm:text-5xl">La journée phare</h2>
           <p className="mt-8 text-lg leading-relaxed text-white/80">
             Décideurs, industriels, PME et investisseurs se retrouvent au CETEF Togo 2000 pour la Journée de l’industrialisation de l’Afrique.
           </p>
-          <dl className="mt-10 space-y-6 text-white/85">
-            <div>
-              <dt className="font-semibold text-white">Le matin, deux tables rondes</dt>
-              <dd className="mt-1 text-white/70">La transformation locale comme levier de souveraineté économique, puis l’industrie et l’emploi des jeunes.</dd>
-            </div>
-            <div>
-              <dt className="font-semibold text-white">L’après-midi, des rencontres d’affaires</dt>
-              <dd className="mt-1 text-white/70">Des rendez-vous de 20 minutes, préparés à l’avance, entre investisseurs, acheteurs, industriels et PME.</dd>
-            </div>
-          </dl>
+          <p className="mt-6 text-lg leading-relaxed text-white/80">
+            Le matin, deux tables rondes. L’après-midi, des rencontres d’affaires de 20 minutes, préparées à l’avance.
+          </p>
         </div>
-        <Photo name="usine" alt="Hall d’une usine togolaise" className="leaf-alt aspect-[4/5]" />
+        <table className="w-full self-start text-[15px]">
+          <tbody>
+            {DAYS.find((d) => d.phare)!.slots.map(([h, t]) => (
+              <tr key={h} className="border-t border-white/15">
+                <td className="w-20 py-3.5 align-top font-semibold text-sun">{h}</td>
+                <td className="py-3.5 text-white/85">{t}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </section>
   )
@@ -178,7 +188,7 @@ function Women() {
         <div>
           <h2 className="display text-4xl sm:text-5xl">Les métiers de l’industrie au féminin</h2>
           <p className="mt-6 text-lg leading-relaxed text-ink/70">Table ronde du jeudi 19 novembre, à 15 heures. Cinq industrielles sont pressenties.</p>
-          <Photo name="portrait" alt="Industrielle dans son atelier" className="leaf mt-10 hidden aspect-[4/5] max-w-sm md:block" />
+          <Photo name="atelier" alt="Ouvrières dans un atelier textile de la zone franche" className="leaf mt-10 aspect-[4/3]" />
         </div>
         <ul className="self-start border-t border-forest/15">
           {SPEAKERS.map(([name, org]) => (
@@ -198,17 +208,15 @@ function Places() {
     <section id="lieux" className="bg-sage py-24 sm:py-32">
       <div className={WRAP}>
         <h2 className="display max-w-3xl text-4xl sm:text-5xl">Les sites ouverts, du port aux régions</h2>
-        <div className="mt-14 grid gap-12 md:grid-cols-[1fr_1.15fr]">
-          <Photo name="structuration" alt="Structure métallique d’un site industriel" className="leaf-alt aspect-[4/5]" />
-          <dl className="grid gap-x-10 gap-y-8 self-start sm:grid-cols-2">
-            {PLACES.map(([t, d]) => (
-              <div key={t}>
-                <dt className="text-lg font-semibold text-forest">{t}</dt>
-                <dd className="mt-2 leading-relaxed text-ink/70">{d}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+        <Photo name="port" alt="Porte-conteneurs à quai au Lomé Container Terminal" position="center 45%" className="leaf-alt mt-14 aspect-[4/3] sm:aspect-[2/1]" />
+        <dl className="mt-14 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          {PLACES.map(([t, d]) => (
+            <div key={t} className="border-t border-forest/20 pt-5">
+              <dt className="text-lg font-semibold text-forest">{t}</dt>
+              <dd className="mt-2 max-w-[34ch] leading-relaxed text-ink/70">{d}</dd>
+            </div>
+          ))}
+        </dl>
         <div className="mt-24 grid gap-10 md:grid-cols-[1fr_1.15fr]">
           <h3 className="text-2xl font-semibold text-forest [font-stretch:112%]">Avec</h3>
           <p className="text-lg leading-relaxed text-ink/75">{PARTNERS.join(', ')}.</p>
@@ -249,15 +257,14 @@ function Contact() {
 
 function Footer() {
   return (
-    <footer className="bg-forest text-white/70">
-      <div className={`${WRAP} grid gap-10 py-16 md:grid-cols-[1fr_auto] md:items-end`}>
-        <div className="flex items-start gap-5">
-          <img src="/images/armoiries.png" alt="République togolaise" className="h-16 w-auto" onError={(e) => (e.currentTarget.style.display = 'none')} />
-          <p className="max-w-md leading-relaxed">
-            Ministère délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique
-          </p>
-        </div>
-        <div className="flex items-center gap-3 text-white">
+    <footer className="border-t border-forest/15 bg-white">
+      <div className={`${WRAP} grid gap-10 py-14 md:grid-cols-[1fr_auto] md:items-end`}>
+        <img
+          src="/images/armoiries.png"
+          alt="République togolaise, Ministère délégué chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique"
+          className="h-28 w-auto"
+        />
+        <div className="flex items-center gap-3 text-forest">
           <Mark className="h-7 w-auto text-leaf" />
           <span className="font-semibold [font-stretch:112%]">#SemaineIndustrie2026</span>
         </div>

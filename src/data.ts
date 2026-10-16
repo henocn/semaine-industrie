@@ -21,7 +21,7 @@ export const DAYS: Day[] = [
     goal: 'Les lycéens et les étudiants découvrent les métiers de l’industrie.',
     where: 'Usines le matin, CETEF Togo 2000 l’après-midi',
     slots: [
-      ['8h30', 'Visites d’usines, premier créneau (groupes de 20 à 30 élèves)'],
+      ['8h30', 'Visites d’usines, premier créneau (groupes de 20 à 30 élèves)'],
       ['10h30', 'Visites d’usines, second créneau'],
       ['14h00', 'Forum des métiers : un stand par métier, tenu par des professionnels'],
       ['16h00', 'Conseils d’orientation et témoignages de jeunes professionnels'],
@@ -89,9 +89,9 @@ export const SPEAKERS = [
 ]
 
 export const PLACES = [
-  ['Zone portuaire de Lomé', 'Plastique, pharmacie, agro-alimentaire, métal, bois, habillement et cosmétique, sur plus de 900 hectares.'],
-  ['Zone franche', '141 entreprises agréées depuis 1994 et environ 19 000 emplois directs.'],
-  ['Plateforme d’Adétikopé', 'Textile, soja, engrais, bois, brasserie et assemblage électrique ; plus de 3 000 emplois.'],
+  ['Zone portuaire de Lomé', 'Plastique, pharmacie, agro-alimentaire, métal, bois, habillement et cosmétique, sur plus de 900 hectares.'],
+  ['Zone franche', '141 entreprises agréées depuis 1994 et environ 19 000 emplois directs.'],
+  ['Plateforme d’Adétikopé', 'Textile, soja, engrais, bois, brasserie et assemblage électrique ; plus de 3 000 emplois.'],
   ['Matières premières', 'Phosphates, calcaire et clinker.'],
   ['Agro-industrie', 'Près de la moitié de la valeur ajoutée de l’industrie manufacturière.'],
   ['Régions', 'Agbélouvé et Kara, avec leurs projets de parcs industriels.'],
