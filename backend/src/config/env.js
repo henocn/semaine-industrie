@@ -22,6 +22,7 @@ const env = cleanEnv(process.env, {
 
   ALLOWED_ORIGINS: str({ default: 'http://localhost:5173' }),
   PUBLIC_APP_URL: str({ default: 'http://localhost:5173' }),
+  N8N_WEBHOOK_URL: str({ default: '' }),
 });
 
 module.exports = env;

@@ -1,7 +1,13 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { Organization, LabelRequest, VisitBooking, sequelize } = require('../../models');
+const {
+  Organization,
+  LabelRequest,
+  VisitBooking,
+  BusinessMeeting,
+  sequelize,
+} = require('../../models');
 
 /* Calcule les indicateurs agrégés de la semaine. */
 async function getStats() {
@@ -13,6 +19,7 @@ async function getStats() {
     orgsWithCoords,
     visitsBooked,
     youngVisitors,
+    businessMeetings,
     byRegionRows,
     bySectorRows,
     byTypeRows,
@@ -32,6 +39,7 @@ async function getStats() {
     }),
     VisitBooking.count({ where: { status: { [Op.in]: ['pending', 'confirmed'] } } }),
     VisitBooking.sum('headcount', { where: { status: { [Op.in]: ['pending', 'confirmed'] } } }),
+    BusinessMeeting.count({ where: { status: { [Op.in]: ['scheduled', 'done'] } } }),
     Organization.findAll({
       attributes: [
         'region',
@@ -76,7 +84,7 @@ async function getStats() {
       sites_on_map: orgsWithCoords,
       visits_booked: visitsBooked,
       young_visitors: Number(youngVisitors || 0),
-      business_meetings: 0,
+      business_meetings: businessMeetings,
       passport_scans: 0,
     },
     by_region: byRegionRows.map((r) => ({ name: r.region, count: Number(r.count) })),

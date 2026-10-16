@@ -5,6 +5,7 @@ const QRCode = require('qrcode');
 const { LabelRequest, Organization, sequelize } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
+const { notifyN8n } = require('../../utils/n8n');
 
 /* Transforme un nom en slug URL. */
 function slugify(text) {
@@ -119,8 +120,15 @@ async function reviewRequest(id, { status, review_note }) {
     request.organization_id = organization.id;
     await request.save({ transaction });
 
-    // Stub webhook n8n : à brancher plus tard (kit mail / WhatsApp)
-    // await notifyLabelApproved(organization);
+    await notifyN8n('label.approved', {
+      organization_id: organization.id,
+      name: organization.name,
+      slug: organization.slug,
+      label_code: organization.label_code,
+      contact_email: organization.contact_email,
+      contact_name: organization.contact_name,
+      fiche_url: `${env.PUBLIC_APP_URL.replace(/\/$/, '')}/o/${organization.slug}`,
+    });
 
     return { request, organization };
   });

@@ -3,6 +3,7 @@
 const { Op } = require('sequelize');
 const { VisitBooking, Organization } = require('../../models');
 const ApiError = require('../../utils/ApiError');
+const { notifyN8n } = require('../../utils/n8n');
 
 /* Crée une réservation si la capacité le permet. */
 async function createBooking(payload, teacherUserId = null) {
@@ -41,11 +42,25 @@ async function createBooking(payload, teacherUserId = null) {
     }
   }
 
-  return VisitBooking.create({
+  const booking = await VisitBooking.create({
     ...payload,
     teacher_user_id: teacherUserId,
     status: 'confirmed',
   });
+
+  await notifyN8n('booking.confirmed', {
+    id: booking.id,
+    school_name: booking.school_name,
+    teacher_email: booking.teacher_email,
+    teacher_name: booking.teacher_name,
+    headcount: booking.headcount,
+    visit_day: booking.visit_day,
+    visit_start: booking.visit_start,
+    visit_end: booking.visit_end,
+    site: org.name,
+  });
+
+  return booking;
 }
 
 /* Liste les réservations (orga). */

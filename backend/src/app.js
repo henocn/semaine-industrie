@@ -12,6 +12,7 @@ const labelRoutes = require('./modules/labels/label.routes');
 const authRoutes = require('./modules/auth/auth.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 const bookingRoutes = require('./modules/bookings/booking.routes');
+const businessRoutes = require('./modules/business/business.routes');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use(`${env.API_PREFIX}/auth`, authRoutes);
 app.use(`${env.API_PREFIX}/labels`, labelRoutes);
 app.use(`${env.API_PREFIX}/dashboard`, dashboardRoutes);
 app.use(`${env.API_PREFIX}/bookings`, bookingRoutes);
+app.use(`${env.API_PREFIX}/business`, businessRoutes);
 
 app.use(errorHandler);
 
