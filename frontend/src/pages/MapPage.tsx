@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listMapPoints, type MapPoint } from '../api/labels'
+import { SitesMap } from '../components/map/SitesMap'
 import { Mark, WRAP } from '../components/layout/Mark'
 
 /* Page carte des usines / écoles labellisées. */
@@ -36,30 +37,6 @@ export default function MapPage() {
     () => [...new Set(points.map((p) => p.sector).filter(Boolean))] as string[],
     [points],
   )
-
-  /* Bornes pour un positionnement relatif simple (sans lib carte). */
-  const bounds = useMemo(() => {
-    if (points.length === 0) return null
-    const lats = points.map((p) => Number(p.lat))
-    const lngs = points.map((p) => Number(p.lng))
-    return {
-      minLat: Math.min(...lats),
-      maxLat: Math.max(...lats),
-      minLng: Math.min(...lngs),
-      maxLng: Math.max(...lngs),
-    }
-  }, [points])
-
-  /* Convertit lat/lng en pourcentage dans le cadre. */
-  function toPos(lat: number, lng: number) {
-    if (!bounds) return { left: '50%', top: '50%' }
-    const pad = 0.02
-    const latSpan = Math.max(bounds.maxLat - bounds.minLat, pad)
-    const lngSpan = Math.max(bounds.maxLng - bounds.minLng, pad)
-    const x = ((lng - bounds.minLng) / lngSpan) * 80 + 10
-    const y = (1 - (lat - bounds.minLat) / latSpan) * 80 + 10
-    return { left: `${x}%`, top: `${y}%` }
-  }
 
   return (
     <>
@@ -112,29 +89,11 @@ export default function MapPage() {
           {error && <p className="mt-6 text-red-700">{error}</p>}
 
           <div className="mt-10 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
-            <div className="relative aspect-[4/3] overflow-hidden bg-sage/60 sm:aspect-[16/10]">
-              <div className="absolute inset-0 opacity-40" style={{
-                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(27,67,50,0.25) 1px, transparent 0)',
-                backgroundSize: '24px 24px',
-              }} />
-              {points.map((p) => {
-                const pos = toPos(Number(p.lat), Number(p.lng))
-                const active = selected === p.id
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    title={p.name}
-                    onClick={() => setSelected(p.id)}
-                    className={`absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white transition-transform ${active ? 'scale-150 bg-sun' : 'bg-forest hover:scale-125'}`}
-                    style={{ left: pos.left, top: pos.top }}
-                  />
-                )
-              })}
-              {points.length === 0 && !error && (
-                <p className="absolute inset-0 grid place-items-center text-ink/50">Aucun site labellisé pour l’instant</p>
-              )}
-            </div>
+            <SitesMap
+              points={points}
+              selectedId={selected}
+              onSelect={setSelected}
+            />
 
             <ul className="border-t border-forest/15">
               {points.map((p) => (

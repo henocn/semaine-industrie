@@ -97,6 +97,14 @@
 
 ---
 
+## PHASE 6 — Polish (hors VPS)
+
+- [x] **6.1** Carte Leaflet + seed sites démo (lat/lng)
+- [x] **6.2** Coordonnées optionnelles sur demande de label
+- [ ] **6.3** WhatsApp / Meta réel via n8n (quand webhook prod)
+
+---
+
 ## En cours
 
-→ **P5.5** appliquer sur le VPS (accès SSH requis)
+→ **P5.5** appliquer sur le VPS (accès SSH requis) · polish 6.3 ensuite

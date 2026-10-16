@@ -39,6 +39,8 @@ export default function LabelRequestPage() {
         products,
         max_visitors: fd.get('max_visitors') ? Number(fd.get('max_visitors')) : null,
         safety_rules: String(fd.get('safety_rules') || '') || undefined,
+        lat: fd.get('lat') ? Number(fd.get('lat')) : null,
+        lng: fd.get('lng') ? Number(fd.get('lng')) : null,
       })
       setSent(true)
     } catch (err) {
@@ -104,6 +106,14 @@ export default function LabelRequestPage() {
               <label className="block text-[15px] font-medium text-forest sm:col-span-2">
                 Adresse
                 <input name="address" className={field} />
+              </label>
+              <label className="block text-[15px] font-medium text-forest">
+                Latitude (optionnel)
+                <input name="lat" type="number" step="any" min={-90} max={90} className={field} />
+              </label>
+              <label className="block text-[15px] font-medium text-forest">
+                Longitude (optionnel)
+                <input name="lng" type="number" step="any" min={-180} max={180} className={field} />
               </label>
               <label className="block text-[15px] font-medium text-forest">
                 Référent
