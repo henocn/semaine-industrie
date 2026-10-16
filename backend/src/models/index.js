@@ -20,8 +20,9 @@ const sequelize = new Sequelize(
 
 const Organization = require('./Organization')(sequelize);
 const LabelRequest = require('./LabelRequest')(sequelize);
+const User = require('./User')(sequelize);
+const RefreshToken = require('./RefreshToken')(sequelize);
 
-/* Relie demandes de label et organisations. */
 LabelRequest.belongsTo(Organization, {
   foreignKey: 'organization_id',
   as: 'organization',
@@ -31,11 +32,16 @@ Organization.hasMany(LabelRequest, {
   as: 'labelRequests',
 });
 
+RefreshToken.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(RefreshToken, { foreignKey: 'user_id', as: 'refreshTokens' });
+
 const db = {
   sequelize,
   Sequelize,
   Organization,
   LabelRequest,
+  User,
+  RefreshToken,
 };
 
 module.exports = db;

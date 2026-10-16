@@ -27,10 +27,10 @@
 
 ### 1.2 — Auth (comptes nécessaires)
 
-- [ ] **1.2.1** Modèles `User` + `RefreshToken` + migrations
-- [ ] **1.2.2** Module `auth` : login, refresh, logout, `/me`
-- [ ] **1.2.3** Middleware JWT + rôles (`orga`, `enseignant`, `referent_entreprise`, `b2b`)
-- [ ] **1.2.4** Seed super_admin / compte orga de démo
+- [x] **1.2.1** Modèles `User` + `RefreshToken` + migrations
+- [x] **1.2.2** Module `auth` : login, refresh, logout, `/me`
+- [x] **1.2.3** Middleware JWT + rôles (`orga`, `enseignant`, `referent_entreprise`, `b2b`)
+- [x] **1.2.4** Seed compte orga de démo
 
 ---
 
@@ -54,7 +54,7 @@
 
 - [x] **2.3.1** Champs lat/lng + secteur + région sur Organization
 - [x] **2.3.2** `GET /organizations/map` (labels validés, filtres)
-- [ ] **2.3.3** Page frontend carte
+- [x] **2.3.3** Page frontend carte (`/carte`)
 
 ### 2.4 — Dashboard / bilan
 
@@ -66,7 +66,7 @@
 
 - [x] **2.5.1** React Router + pages publiques
 - [x] **2.5.2** Formulaire demande de label (`/label`)
-- [ ] **2.5.3** Écran validation orga
+- [x] **2.5.3** Écran validation orga (`/orga/labels` + `/login`)
 - [x] **2.5.4** Client API (`frontend/src/api`)
 
 ---
@@ -98,4 +98,4 @@
 
 ## En cours
 
-→ **2.5.3** écran validation orga · **2.3.3** carte · **1.2** auth
+→ **2.4** dashboard/bilan · **2.2.2** QR en lot · P1 réservations

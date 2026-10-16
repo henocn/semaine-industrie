@@ -9,6 +9,7 @@ const env = require('./config/env');
 const errorHandler = require('./middlewares/errorHandler.middleware');
 const healthRoutes = require('./modules/health/health.routes');
 const labelRoutes = require('./modules/labels/label.routes');
+const authRoutes = require('./modules/auth/auth.routes');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(
 app.use(express.json());
 
 app.use(`${env.API_PREFIX}/health`, healthRoutes);
+app.use(`${env.API_PREFIX}/auth`, authRoutes);
 app.use(`${env.API_PREFIX}/labels`, labelRoutes);
 
 app.use(errorHandler);

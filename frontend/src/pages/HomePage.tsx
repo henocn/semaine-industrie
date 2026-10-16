@@ -38,7 +38,7 @@ function Header() {
         <nav className="hidden gap-1 text-[15px] text-ink/70 md:flex">
           <a href="#programme" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Programme</a>
           <a href="#vendredi" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Vendredi 20</a>
-          <a href="#lieux" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Lieux</a>
+          <Link to="/carte" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Carte</Link>
           <Link to="/label" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Label</Link>
           <a href="#contact" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Contact</a>
         </nav>
