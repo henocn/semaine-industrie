@@ -1,7 +1,9 @@
 'use strict';
 
 const { Op } = require('sequelize');
+const QRCode = require('qrcode');
 const { LabelRequest, Organization, sequelize } = require('../../models');
+const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 
 /* Transforme un nom en slug URL. */
@@ -158,6 +160,40 @@ async function listMapPoints({ region, sector } = {}) {
   });
 }
 
+/* Génère les QR (data URL PNG) pour toutes les fiches labellisées. */
+async function listQrBatch() {
+  const orgs = await Organization.findAll({
+    where: { label_status: 'approved', is_active: true, slug: { [Op.ne]: null } },
+    attributes: ['id', 'name', 'slug', 'label_code', 'type', 'city', 'region'],
+    order: [['name', 'ASC']],
+  });
+
+  const base = env.PUBLIC_APP_URL.replace(/\/$/, '');
+  const items = [];
+
+  for (const org of orgs) {
+    const fiche_url = `${base}/o/${org.slug}`;
+    const qr_data_url = await QRCode.toDataURL(fiche_url, {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 320,
+    });
+    items.push({
+      id: org.id,
+      name: org.name,
+      slug: org.slug,
+      label_code: org.label_code,
+      type: org.type,
+      city: org.city,
+      region: org.region,
+      fiche_url,
+      qr_data_url,
+    });
+  }
+
+  return { count: items.length, items };
+}
+
 module.exports = {
   createRequest,
   listRequests,
@@ -165,4 +201,5 @@ module.exports = {
   reviewRequest,
   getPublicBySlug,
   listMapPoints,
+  listQrBatch,
 };

@@ -20,7 +20,7 @@ export default function LoginPage() {
     const fd = new FormData(e.currentTarget)
     try {
       const session = await login(String(fd.get('email')), String(fd.get('password')))
-      if (session.user.role === 'orga') navigate('/orga/labels')
+      if (session.user.role === 'orga') navigate('/orga')
       else navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connexion impossible')

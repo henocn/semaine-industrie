@@ -15,6 +15,7 @@ router.get('/organizations/map', controller.listMap);
 router.get('/organizations/:slug', controller.getPublicFiche);
 
 // Orga authentifié
+router.get('/qr-batch', authenticate, authorize('orga'), controller.listQrBatch);
 router.get('/requests', authenticate, authorize('orga'), controller.listRequests);
 router.get('/requests/:id', authenticate, authorize('orga'), controller.getRequest);
 router.patch(

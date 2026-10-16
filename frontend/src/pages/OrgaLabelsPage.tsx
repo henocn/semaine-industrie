@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { getStoredUser, logout } from '../api/auth'
+import { useNavigate } from 'react-router-dom'
+import { getStoredUser } from '../api/auth'
 import { listLabelRequests, reviewLabelRequest, type LabelRequest } from '../api/labels'
-import { Mark, WRAP } from '../components/layout/Mark'
+import { OrgaNav } from '../components/layout/OrgaNav'
+import { WRAP } from '../components/layout/Mark'
 
 /* Écran orga : liste et validation des demandes de label. */
 export default function OrgaLabelsPage() {
@@ -49,28 +50,9 @@ export default function OrgaLabelsPage() {
     }
   }
 
-  /* Déconnecte l'utilisateur. */
-  async function onLogout() {
-    await logout()
-    navigate('/login')
-  }
-
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-        <div className={`${WRAP} flex h-16 items-center justify-between gap-4`}>
-          <Link to="/" className="flex items-center gap-2.5 text-forest">
-            <Mark className="h-6 w-auto text-leaf" />
-            <span className="text-[15px] font-semibold">Espace organisation</span>
-          </Link>
-          <div className="flex items-center gap-4 text-[15px]">
-            <span className="hidden text-ink/60 sm:inline">{user?.email}</span>
-            <button type="button" onClick={onLogout} className="text-forest hover:underline">
-              Déconnexion
-            </button>
-          </div>
-        </div>
-      </header>
+      <OrgaNav email={user?.email} />
 
       <main className="py-12 sm:py-16">
         <div className={WRAP}>

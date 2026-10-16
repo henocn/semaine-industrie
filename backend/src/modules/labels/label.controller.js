@@ -66,6 +66,16 @@ async function listMap(req, res, next) {
   }
 }
 
+/* Lot de QR pour impression. */
+async function listQrBatch(req, res, next) {
+  try {
+    const data = await labelService.listQrBatch();
+    return ApiResponse.success(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   createRequest,
   listRequests,
@@ -73,4 +83,5 @@ module.exports = {
   reviewRequest,
   getPublicFiche,
   listMap,
+  listQrBatch,
 };

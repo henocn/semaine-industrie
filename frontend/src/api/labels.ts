@@ -110,3 +110,20 @@ export function listMapPoints(params?: { region?: string; sector?: string }) {
   const q = sp.toString() ? `?${sp}` : ''
   return apiFetch<MapPoint[]>(`/labels/organizations/map${q}`)
 }
+
+export type QrBatchItem = {
+  id: string
+  name: string
+  slug: string
+  label_code: string | null
+  type: string
+  city: string | null
+  region: string | null
+  fiche_url: string
+  qr_data_url: string
+}
+
+/* Lot de QR pour impression (orga). */
+export function listQrBatch() {
+  return apiFetch<{ count: number; items: QrBatchItem[] }>('/labels/qr-batch')
+}

@@ -24,10 +24,12 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
+    "qrcode": "^1.5.4",
     "sequelize": "^6.37.7",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.6",
     "nodemon": "^3.1.10",
     "sequelize-cli": "^6.6.3"
   }

@@ -47,7 +47,7 @@
 ### 2.2 — QR + fiches publiques
 
 - [x] **2.2.1** Endpoint public `GET /organizations/:slug` (fiche)
-- [ ] **2.2.2** Endpoint / script génération QR en lot (URL fiches)
+- [x] **2.2.2** Endpoint / écran génération QR en lot (`/orga/qr`)
 - [x] **2.2.3** Page frontend fiche entreprise `/o/:slug`
 
 ### 2.3 — Carte des usines
@@ -58,9 +58,9 @@
 
 ### 2.4 — Dashboard / bilan
 
-- [ ] **2.4.1** Endpoint agrégats (labels, résas, RDV, scans quand dispo)
-- [ ] **2.4.2** Écran orga dashboard
-- [ ] **2.4.3** Page bilan publique (dimanche)
+- [x] **2.4.1** Endpoint agrégats (labels + placeholders résas/RDV/scans)
+- [x] **2.4.2** Écran orga dashboard (`/orga`)
+- [x] **2.4.3** Page bilan publique (`/bilan`)
 
 ### 2.5 — Frontend espaces connectés
 
@@ -98,4 +98,4 @@
 
 ## En cours
 
-→ **2.4** dashboard/bilan · **2.2.2** QR en lot · P1 réservations
+→ **P1** réservations visites (enseignants)

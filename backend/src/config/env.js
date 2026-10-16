@@ -21,6 +21,7 @@ const env = cleanEnv(process.env, {
   JWT_ACCESS_EXPIRES_IN: str({ default: '1d' }),
 
   ALLOWED_ORIGINS: str({ default: 'http://localhost:5173' }),
+  PUBLIC_APP_URL: str({ default: 'http://localhost:5173' }),
 });
 
 module.exports = env;
