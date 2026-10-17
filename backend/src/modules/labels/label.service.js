@@ -108,6 +108,8 @@ async function updateRequest(id, payload) {
       org.products = request.products || [];
       org.max_visitors = request.max_visitors;
       org.safety_rules = request.safety_rules;
+      org.lat = request.lat;
+      org.lng = request.lng;
       await org.save();
     }
   }

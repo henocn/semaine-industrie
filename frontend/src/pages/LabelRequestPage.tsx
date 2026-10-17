@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { createLabelRequest } from '../api/labels'
+import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { WRAP } from '../components/layout/Mark'
 
 const field =
@@ -11,12 +12,18 @@ export default function LabelRequestPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [structureType, setStructureType] = useState<'entreprise' | 'ecole'>('entreprise')
+  const [lat, setLat] = useState<number | null>(null)
+  const [lng, setLng] = useState<number | null>(null)
   const isEntreprise = structureType === 'entreprise'
 
   /* Soumet le formulaire vers l'API. */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+    if (lat == null || lng == null) {
+      setError('Placez le site sur la carte (clic).')
+      return
+    }
     setLoading(true)
     const fd = new FormData(e.currentTarget)
     const productsRaw = String(fd.get('products') || '')
@@ -40,6 +47,8 @@ export default function LabelRequestPage() {
         products,
         max_visitors: fd.get('max_visitors') ? Number(fd.get('max_visitors')) : null,
         safety_rules: isEntreprise ? String(fd.get('safety_rules') || '') || undefined : undefined,
+        lat,
+        lng,
       })
       setSent(true)
     } catch (err) {
@@ -98,6 +107,20 @@ export default function LabelRequestPage() {
                 Ville
                 <input name="city" className={field} />
               </label>
+
+              <div className="sm:col-span-2">
+                <p className="text-[15px] font-medium text-forest">Emplacement sur la carte</p>
+                <LocationPickerMap
+                  className="mt-3"
+                  lat={lat}
+                  lng={lng}
+                  onPick={(a, b) => {
+                    setLat(a)
+                    setLng(b)
+                  }}
+                />
+              </div>
+
               <label className="block text-[15px] font-medium text-forest">
                 E-mail
                 <input required type="email" name="contact_email" className={field} />

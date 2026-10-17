@@ -13,6 +13,8 @@ export type LabelRequestPayload = {
   max_visitors?: number | null
   visit_slots?: { day: string; start: string; end: string }[]
   safety_rules?: string
+  lat?: number | null
+  lng?: number | null
 }
 
 export type Organization = {
@@ -58,9 +60,19 @@ export type LabelRequest = {
   products: string[]
   max_visitors: number | null
   safety_rules?: string | null
+  lat?: string | number | null
+  lng?: string | number | null
   status: 'pending' | 'approved' | 'rejected'
   createdAt?: string
   created_at?: string
+}
+
+/* Lien Google Maps pour un point (nouvel onglet). */
+export function googleMapsUrl(lat: string | number | null | undefined, lng: string | number | null | undefined) {
+  const a = Number(lat)
+  const b = Number(lng)
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null
+  return `https://www.google.com/maps?q=${a},${b}`
 }
 
 export type MapPoint = {

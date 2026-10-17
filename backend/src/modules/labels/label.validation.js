@@ -68,6 +68,8 @@ const updateRequestSchema = Joi.object({
   sector: Joi.string().trim().max(120).allow('', null),
   products: Joi.array().items(Joi.string().trim().max(120)),
   safety_rules: Joi.string().trim().allow('', null),
+  lat: Joi.number().min(-90).max(90).allow(null),
+  lng: Joi.number().min(-180).max(180).allow(null),
 }).min(1);
 
 module.exports = {

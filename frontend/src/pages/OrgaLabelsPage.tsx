@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 're
 import { Link, useNavigate } from 'react-router-dom'
 import { getStoredUser } from '../api/auth'
 import {
+  googleMapsUrl,
   listLabelRequests,
   reviewLabelRequest,
   updateLabelRequest,
   type LabelRequest,
 } from '../api/labels'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { joinRoom, onRealtime } from '../lib/socket'
 
 const field =
@@ -23,6 +25,17 @@ export default function OrgaLabelsPage() {
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [editing, setEditing] = useState<LabelRequest | null>(null)
+  const [editLat, setEditLat] = useState<number | null>(null)
+  const [editLng, setEditLng] = useState<number | null>(null)
+
+  /* Ouvre le formulaire d'édition avec la position actuelle. */
+  function openEdit(item: LabelRequest) {
+    const a = Number(item.lat)
+    const b = Number(item.lng)
+    setEditLat(Number.isFinite(a) ? a : null)
+    setEditLng(Number.isFinite(b) ? b : null)
+    setEditing(item)
+  }
 
   /* Charge les demandes selon le filtre. */
   async function load() {
@@ -121,6 +134,8 @@ export default function OrgaLabelsPage() {
             : [],
         safety_rules:
           structure_type === 'entreprise' ? String(fd.get('safety_rules') || '') || undefined : undefined,
+        lat: editLat,
+        lng: editLng,
       })
       setItems((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
       setEditing(null)
@@ -213,13 +228,30 @@ export default function OrgaLabelsPage() {
                     {item.contact_email}
                   </a>
                 </td>
-                <td>{[item.city, item.region].filter(Boolean).join(' · ') || '—'}</td>
+                <td>
+                  <p>{[item.city, item.region].filter(Boolean).join(' · ') || '—'}</p>
+                  {(() => {
+                    const maps = googleMapsUrl(item.lat, item.lng)
+                    return maps ? (
+                      <a
+                        href={maps}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-block text-[12px] font-semibold text-forest underline underline-offset-2"
+                      >
+                        Voir
+                      </a>
+                    ) : (
+                      <span className="mt-1 block text-[12px] text-ink/35">Pas de point</span>
+                    )
+                  })()}
+                </td>
                 <td>
                   <div className="flex flex-wrap gap-1.5">
                     <IconButton
                       label="Modifier"
                       disabled={busyId === item.id}
-                      onClick={() => setEditing(item)}
+                      onClick={() => openEdit(item)}
                     >
                       <IconEdit />
                     </IconButton>
@@ -300,6 +332,18 @@ export default function OrgaLabelsPage() {
                 Ville
                 <input name="city" defaultValue={editing.city || ''} className={field} />
               </label>
+              <div className="sm:col-span-2">
+                <p className="text-[13px] font-medium text-forest">Emplacement</p>
+                <LocationPickerMap
+                  className="mt-2"
+                  lat={editLat}
+                  lng={editLng}
+                  onPick={(a, b) => {
+                    setEditLat(a)
+                    setEditLng(b)
+                  }}
+                />
+              </div>
               <label className="text-[13px] font-medium text-forest">
                 Téléphone
                 <input required name="contact_phone" defaultValue={editing.contact_phone || ''} className={field} />
