@@ -45,13 +45,14 @@ async function uniqueLabelCode(transaction) {
 /* Crée une demande de label (parcours public). */
 async function createRequest(payload) {
   const data = { ...payload };
-  /* Écoles : pas de secteur, produits, capacité ni règles sécurité. */
+  /* Écoles : pas de secteur, produits ni règles sécurité. */
   if (data.structure_type === 'ecole') {
     data.sector = null;
     data.products = [];
-    data.max_visitors = null;
     data.safety_rules = null;
   }
+  /* Référent non demandé au public : repli sur le nom de structure. */
+  data.contact_name = data.contact_name || data.structure_name;
   const row = await LabelRequest.create({
     ...data,
     status: 'pending',

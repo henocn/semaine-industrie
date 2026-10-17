@@ -34,12 +34,11 @@ export default function LabelRequestPage() {
         sector: isEntreprise ? String(fd.get('sector') || '') || undefined : undefined,
         region: String(fd.get('region') || '') || undefined,
         city: String(fd.get('city') || '') || undefined,
-        contact_name: String(fd.get('contact_name') || ''),
         contact_email: String(fd.get('contact_email') || ''),
         contact_phone: String(fd.get('contact_phone') || ''),
         description: String(fd.get('description') || '') || undefined,
         products,
-        max_visitors: isEntreprise && fd.get('max_visitors') ? Number(fd.get('max_visitors')) : null,
+        max_visitors: fd.get('max_visitors') ? Number(fd.get('max_visitors')) : null,
         safety_rules: isEntreprise ? String(fd.get('safety_rules') || '') || undefined : undefined,
       })
       setSent(true)
@@ -100,20 +99,21 @@ export default function LabelRequestPage() {
                 <input name="city" className={field} />
               </label>
               <label className="block text-[15px] font-medium text-forest">
-                Référent
-                <input required name="contact_name" className={field} />
-              </label>
-              <label className="block text-[15px] font-medium text-forest">
                 E-mail
                 <input required type="email" name="contact_email" className={field} />
               </label>
-              <label className={`block text-[15px] font-medium text-forest ${isEntreprise ? '' : 'sm:col-span-2'}`}>
+              <label className="block text-[15px] font-medium text-forest">
                 Téléphone
                 <input required name="contact_phone" type="tel" className={field} />
               </label>
-              {isEntreprise && (
-                <label className="block text-[15px] font-medium text-forest">
+              {isEntreprise ? (
+                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
                   Capacité max. visiteurs
+                  <input type="number" min={1} name="max_visitors" className={field} />
+                </label>
+              ) : (
+                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
+                  Nombre d’élèves / étudiants visiteurs (approximatif)
                   <input type="number" min={1} name="max_visitors" className={field} />
                 </label>
               )}
