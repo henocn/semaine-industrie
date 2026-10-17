@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listIndustries, type IndustryCard } from '../api/labels'
+import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 
-/* Annuaire public des industries — tableau compact, détail au clic. */
+/* Annuaire public des industries, tableau compact, détail au clic. */
 export default function IndustriesPage() {
   const [items, setItems] = useState<IndustryCard[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -16,6 +17,11 @@ export default function IndustriesPage() {
 
   return (
     <main className="py-12 sm:py-16">
+      <Seo
+        title="Industrie"
+        description="Entreprises labellisées de la Semaine de l’industrie 2026. Parcourez les fiches et découvrez les sites ouverts."
+        path="/industrie"
+      />
       <div className={WRAP}>
         <h1 className="display text-4xl sm:text-5xl">Industrie</h1>
         <p className="mt-3 max-w-xl text-lg text-ink/65">

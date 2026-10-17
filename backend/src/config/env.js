@@ -8,7 +8,7 @@ dotenv.config();
 
 const env = cleanEnv(process.env, {
   NODE_ENV: str({ choices: ['development', 'test', 'production'], default: 'development' }),
-  PORT: port({ default: 3000 }),
+  PORT: port({ default: 3005 }),
   API_PREFIX: str({ default: '/api/v1' }),
 
   DB_HOST: str({ default: 'localhost' }),

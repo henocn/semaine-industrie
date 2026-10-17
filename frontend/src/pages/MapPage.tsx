@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listMapPoints, type MapPoint } from '../api/labels'
+import { Seo } from '../components/Seo'
 import { SitesMap } from '../components/map/SitesMap'
 import { WRAP } from '../components/layout/Mark'
 
@@ -33,6 +34,11 @@ export default function MapPage() {
 
   return (
     <main className="overflow-x-hidden py-10 sm:py-14">
+      <Seo
+        title="Carte des visites"
+        description="Carte des sites industriels qui accueillent déjà des établissements pendant la Semaine de l’industrie 2026."
+        path="/carte"
+      />
       <div className={WRAP}>
         <h1 className="display text-4xl sm:text-5xl">Carte des visites</h1>
         <p className="mt-3 max-w-xl text-lg text-ink/65">

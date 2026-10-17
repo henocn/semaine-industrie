@@ -123,20 +123,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         <NavLink to="/" className={linkClass}>Site public</NavLink>
       </nav>
 
-      <div className="mt-auto space-y-4 border-t border-black pt-4">
-        <div className="px-2">
-          <p className="text-[13px] font-semibold text-forest">Semaine 16–22 nov.</p>
-          <p className="mt-1 text-[12px] leading-relaxed text-ink/50">
-            Labels, QR et carte. Réservations ensuite.
-          </p>
-          <Link
-            to="/orga/labels"
-            className="mt-3 inline-flex w-full items-center justify-center bg-forest px-3 py-2.5 text-[13px] font-semibold text-white hover:bg-ink"
-          >
-            Traiter les demandes
-          </Link>
-        </div>
-
+      <div className="mt-auto border-t border-black pt-4">
         <div className="flex items-center gap-3 px-2">
           <div className="grid h-9 w-9 place-items-center border border-black bg-forest text-[12px] font-semibold text-white">
             {(user?.first_name?.[0] || 'O').toUpperCase()}

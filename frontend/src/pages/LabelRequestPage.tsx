@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { createLabelRequest, uploadLabelGallery } from '../api/labels'
+import { Seo } from '../components/Seo'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { WRAP } from '../components/layout/Mark'
 import { assertGalleryFiles } from '../lib/imageQuality'
@@ -80,6 +81,11 @@ export default function LabelRequestPage() {
 
   return (
     <main className="py-16 sm:py-24">
+        <Seo
+          title="Demander le label"
+          description="Entreprises et établissements : demandez le label Semaine de l’industrie 2026 pour rejoindre le parcours officiel."
+          path="/label"
+        />
         <div className={`${WRAP} grid gap-14 md:grid-cols-[1fr_1.15fr]`}>
           <div>
             <h1 className="display text-4xl sm:text-5xl">Demander le label</h1>

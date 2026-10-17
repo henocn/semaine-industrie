@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { castVote, getVotes, type VoteOption } from '../api/engagement'
+import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { joinRoom, onRealtime } from '../lib/socket'
 
@@ -14,7 +15,7 @@ function voterKey() {
   return v
 }
 
-/* Vote coup de cœur (expo samedi) — scores live via Socket.IO. */
+/* Vote coup de cœur (expo samedi), scores live via Socket.IO. */
 export default function VotePage() {
   const [options, setOptions] = useState<VoteOption[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -41,6 +42,11 @@ export default function VotePage() {
 
   return (
     <main className="py-16 sm:py-24">
+        <Seo
+          title="Vote coup de cœur"
+          description="Votez pour le produit coup de cœur de l’exposition Semaine de l’industrie 2026."
+          path="/vote"
+        />
         <div className={WRAP}>
           <h1 className="display text-4xl sm:text-5xl">Produit coup de cœur</h1>
           <p className="mt-4 max-w-xl text-lg text-ink/65">Un vote par téléphone / navigateur. Sans téléphone : urne physique à l’accueil.</p>

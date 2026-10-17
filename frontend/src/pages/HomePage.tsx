@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { SPEAKERS, PLACES, PARTNERS } from '../data'
+import { Seo } from '../components/Seo'
 import { BrandLogo, CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
 
 /* Photo : déposez le fichier dans public/images. Sans fichier, un aplat discret. */
@@ -73,7 +74,7 @@ function ProgrammeTeaser() {
         <div>
           <h2 className="display text-4xl sm:text-5xl">Le programme</h2>
           <p className="mt-4 max-w-xl text-lg text-ink/70">
-            Sept jours, un thème par jour — du 16 au 22 novembre. Journée phare le vendredi 20.
+            Sept jours, un thème par jour, du 16 au 22 novembre. Journée phare le vendredi 20.
           </p>
         </div>
         <Link
@@ -225,6 +226,7 @@ function Footer() {
 export default function HomePage() {
   return (
     <>
+      <Seo path="/" />
       <main>
         <Hero />
         <About />

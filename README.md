@@ -31,7 +31,7 @@ npm run db:seed
 npm run dev
 ```
 
-Healthcheck API : `GET http://localhost:3000/api/v1/health`
+Healthcheck API : `GET http://localhost:3005/api/v1/health`
 
 Compte orga démo (après seed local) : `orga@semaine-industrie.tg` / `Orga2026!`
 
