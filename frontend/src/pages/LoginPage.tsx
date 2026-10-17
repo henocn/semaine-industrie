@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { login } from '../api/auth'
+import { Seo } from '../components/Seo'
 import { BrandLogo } from '../components/layout/Mark'
 
 const field =
   'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
 
-/* Page de connexion — hors header public. */
+/* Page de connexion, hors header public. */
 export default function LoginPage() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
@@ -31,6 +32,7 @@ export default function LoginPage() {
 
   return (
     <div className="grid h-svh overflow-hidden lg:grid-cols-2">
+      <Seo title="Connexion" path="/login" noIndex />
       <div className="relative flex h-full items-center justify-center px-6 sm:px-12">
         <Link to="/" className="absolute left-6 top-6 sm:left-10 sm:top-8">
           <BrandLogo className="h-10 w-auto" />
@@ -85,7 +87,7 @@ export default function LoginPage() {
               Portail d’administration
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-white/80">
-              Labels, passeports, visites et bilan — un seul espace pour piloter la semaine.
+              Labels, passeports, visites et bilan : un seul espace pour piloter la semaine.
             </p>
           </div>
         </div>

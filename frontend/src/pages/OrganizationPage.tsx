@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getOrganizationBySlug, type Organization } from '../api/labels'
+import { Seo } from '../components/Seo'
+import { SITE_URL } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
 
 /* Galerie utile (photo_url + gallery_urls). */
@@ -38,8 +40,24 @@ export default function OrganizationPage() {
   const images = org ? galleryOf(org) : []
   const isIndustry = org?.type === 'entreprise'
 
+  const ogImage = images[0]
+    ? (images[0].startsWith('http') ? images[0] : `${SITE_URL}${images[0]}`)
+    : undefined
+
   return (
     <main className="pb-20">
+      {org && (
+        <Seo
+          title={org.name}
+          description={
+            org.description
+            || [org.sector, org.city, org.region].filter(Boolean).join(' · ')
+            || `Fiche ${org.type === 'ecole' ? 'établissement' : 'industrie'} labellisée.`
+          }
+          path={`/o/${org.slug}`}
+          image={ogImage}
+        />
+      )}
       {error && (
         <div className={`${WRAP} py-16`}>
           <p className="text-lg text-forest">{error}</p>

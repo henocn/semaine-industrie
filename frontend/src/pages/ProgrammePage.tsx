@@ -1,13 +1,19 @@
 import { useState } from 'react'
 import { DAYS } from '../data'
+import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 
-/* Page dédiée au programme — journée phare mise en avant dans la liste. */
+/* Page dédiée au programme, journée phare mise en avant dans la liste. */
 export default function ProgrammePage() {
   const [open, setOpen] = useState<number | null>(20)
 
   return (
     <main className="bg-sage py-16 sm:py-24">
+      <Seo
+        title="Programme"
+        description="Programme officiel du 16 au 22 novembre 2026. Un thème par jour, journée phare le vendredi 20 novembre."
+        path="/programme"
+      />
       <div className={WRAP}>
         <div className="max-w-2xl">
           <h1 className="display text-4xl sm:text-5xl">Le programme</h1>

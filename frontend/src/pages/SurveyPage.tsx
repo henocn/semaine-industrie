@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getSurveyQuestions, submitSurvey, type SurveyQuestion } from '../api/surveys'
+import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 
-/* Questionnaire avant / après (1–5). */
+/* Questionnaire avant / après (notes de 1 a 5). */
 export default function SurveyPage() {
   const [params] = useSearchParams()
   const phase = (params.get('phase') === 'after' ? 'after' : 'before') as 'before' | 'after'
@@ -39,6 +40,11 @@ export default function SurveyPage() {
 
   return (
     <main className="py-16 sm:py-24">
+        <Seo
+          title="Questionnaire"
+          description="Questionnaire avant ou après visite pour la Semaine de l’industrie 2026."
+          path="/questionnaire"
+        />
         <div className={`${WRAP} max-w-2xl`}>
           <h1 className="display text-4xl">
             Questionnaire {phase === 'before' ? 'avant' : 'après'}

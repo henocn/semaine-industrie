@@ -47,6 +47,12 @@ app.use(`${env.API_PREFIX}/passports`, passportRoutes);
 app.use(`${env.API_PREFIX}/engagement`, engagementRoutes);
 app.use(`${env.API_PREFIX}/surveys`, surveyRoutes);
 
+/* 404 JSON pour les routes API inconnues. */
+app.use((req, res, next) => {
+  const ApiError = require('./utils/ApiError');
+  next(ApiError.notFound(`Route introuvable : ${req.method} ${req.originalUrl}`));
+});
+
 app.use(errorHandler);
 
 module.exports = app;

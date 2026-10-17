@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { askQuestion } from '../api/engagement'
+import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 
 const field =
@@ -28,6 +29,11 @@ export default function QuestionsPage() {
 
   return (
     <main className="py-16 sm:py-24">
+        <Seo
+          title="Questions live"
+          description="Posez une question pendant les tables rondes de la Semaine de l’industrie 2026."
+          path="/questions"
+        />
         <div className={`${WRAP} max-w-xl`}>
           <h1 className="display text-4xl">Poser une question</h1>
           <p className="mt-4 text-lg text-ink/65">Tables rondes : le modérateur triera ensuite.</p>

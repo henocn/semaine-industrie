@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { registerParticipant } from '../api/business'
+import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 
 const field =
@@ -39,6 +40,11 @@ export default function BusinessRegisterPage() {
 
   return (
     <main className="py-16 sm:py-24">
+        <Seo
+          title="Rencontres d’affaires"
+          description="Investisseurs, acheteurs et PME : inscrivez-vous aux rencontres d’affaires du vendredi 20 novembre."
+          path="/affaires"
+        />
         <div className={`${WRAP} grid gap-14 md:grid-cols-[1fr_1.15fr]`}>
           <div>
             <h1 className="display text-4xl sm:text-5xl">Rencontres d’affaires</h1>

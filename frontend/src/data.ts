@@ -3,7 +3,7 @@ export type Day = {
   slots: [string, string][]; phare?: boolean
 }
 
-/* Programme V3 (comité 16 oct. 2026) — lieux principaux à confirmer (Palais / Sarakawa). */
+/* Programme V3 (comité 16 oct. 2026). Lieux principaux à confirmer (Palais / Sarakawa). */
 export const DAYS: Day[] = [
   {
     n: 16, name: 'Lundi', theme: 'Ouverture',
@@ -23,9 +23,9 @@ export const DAYS: Day[] = [
     goal: 'Visites d’usines, Journées de la qualité (HAUQE), forum des métiers et « Ils ont commencé petit ».',
     where: 'Usines le matin ; lieu principal l’après-midi',
     slots: [
-      ['8h30', 'Visites d’usines — premier créneau (20 à 30 élèves, 90 min)'],
-      ['10h30', 'Visites d’usines — second créneau ; minute de la machine et passeport'],
-      ['9h00', 'En parallèle : HAUQE — Journées de la qualité et Prix de la qualité'],
+      ['8h30', 'Visites d’usines, premier créneau (20 à 30 élèves, 90 min)'],
+      ['10h30', 'Visites d’usines, second créneau ; minute de la machine et passeport'],
+      ['9h00', 'En parallèle : HAUQE, Journées de la qualité et Prix de la qualité'],
       ['14h00', 'Forum des métiers'],
       ['16h00', '« Ils ont commencé petit » : trois parcours, dont au moins une femme'],
     ],
@@ -113,7 +113,7 @@ export const PARTNERS = [
   'AWEP-Togo',
 ]
 
-/* Fil jeunesse V3 — pages / contenus à brancher progressivement. */
+/* Fil jeunesse V3 : pages / contenus à brancher progressivement. */
 export const YOUTH_PILLAR = {
   title: 'L’industrie à portée de main',
   steps: ['Rêver', 'Comprendre', 'Commencer'] as const,
