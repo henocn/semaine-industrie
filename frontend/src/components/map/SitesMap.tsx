@@ -7,6 +7,8 @@ type Props = {
   points: MapPoint[]
   selectedId: string | null
   onSelect: (id: string) => void
+  /** Carte plus haute (page visites). */
+  tall?: boolean
 }
 
 /* Marqueur circulaire brand (évite les PNG Leaflet cassés sous Vite). */
@@ -33,7 +35,7 @@ function popupHtml(p: MapPoint) {
 }
 
 /* Carte Leaflet centrée sur le Togo, sites + visites. */
-export function SitesMap({ points, selectedId, onSelect }: Props) {
+export function SitesMap({ points, selectedId, onSelect, tall }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const layerRef = useRef<L.LayerGroup | null>(null)
@@ -92,6 +94,7 @@ export function SitesMap({ points, selectedId, onSelect }: Props) {
       latLngs.push([lat, lng])
     }
 
+    map.invalidateSize()
     if (latLngs.length === 1) {
       map.setView(latLngs[0], 12)
     } else if (latLngs.length > 1) {
@@ -114,7 +117,13 @@ export function SitesMap({ points, selectedId, onSelect }: Props) {
   }, [selectedId, points])
 
   return (
-    <div className="relative aspect-[4/3] overflow-hidden bg-sage/60 sm:aspect-[16/10]">
+    <div
+      className={
+        tall
+          ? 'relative h-full min-h-[420px] overflow-hidden bg-sage/60 sm:min-h-[520px] lg:min-h-[640px]'
+          : 'relative aspect-[4/3] overflow-hidden bg-sage/60 sm:aspect-[16/10]'
+      }
+    >
       <div ref={containerRef} className="absolute inset-0 z-0 h-full w-full" />
       {points.length === 0 && (
         <p className="pointer-events-none absolute inset-0 z-10 grid place-items-center bg-sage/40 text-ink/50">
