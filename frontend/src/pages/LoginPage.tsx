@@ -36,11 +36,10 @@ export default function LoginPage() {
           <BrandLogo className="h-10 w-auto" />
         </Link>
 
-        <div className="w-full max-w-sm text-center">
-          <h1 className="display text-4xl">Portail d’administration</h1>
-          <p className="mt-3 text-lg text-ink/60">Connexion à l’espace organisation.</p>
+        <div className="w-full max-w-sm">
+          <h1 className="display text-4xl">Connexion</h1>
 
-          <form onSubmit={onSubmit} className="mt-10 grid gap-8 text-left">
+          <form onSubmit={onSubmit} className="mt-10 grid gap-8">
             <label className="block text-[15px] font-medium text-forest">
               E-mail
               <input
@@ -61,7 +60,7 @@ export default function LoginPage() {
                 className={field}
               />
             </label>
-            {error && <p className="text-center text-[15px] text-red-700">{error}</p>}
+            {error && <p className="text-[15px] text-red-700">{error}</p>}
             <button
               type="submit"
               disabled={loading}
@@ -80,10 +79,15 @@ export default function LoginPage() {
           className="absolute inset-0 h-full w-full object-cover opacity-45"
         />
         <div className="absolute inset-0 bg-forest/55" />
-        <div className="relative flex h-full items-end justify-center px-12 pb-14 text-center">
-          <h2 className="display max-w-md text-[clamp(1.75rem,3vw,2.5rem)] !text-white">
-            Portail d’administration
-          </h2>
+        <div className="relative flex h-full items-center justify-center px-12 text-center">
+          <div className="max-w-md">
+            <h2 className="display text-[clamp(1.75rem,3vw,2.5rem)] !text-white">
+              Portail d’administration
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-white/80">
+              Labels, passeports, visites et bilan — un seul espace pour piloter la semaine.
+            </p>
+          </div>
         </div>
       </div>
     </div>
