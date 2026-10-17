@@ -1,15 +1,15 @@
 # Semaine de l'industrie 2026
 
-Monorepo : site public + API. Hébergement VPS (Postgres, n8n) — pas de Docker ni Supabase pour front/API.
+Monorepo : site public + API. Hébergement VPS (Postgres, n8n, PM2) — pas de Docker ni Supabase pour front/API.
 
-Charte / TDR : [semaine-industrie.mdpise.tg](https://semaine-industrie.mdpise.tg/) · Proposition V3 (DEKA / MDPISE).
+Site : [semaineindustrie.tg](https://semaineindustrie.tg/)
 
 ## Structure
 
 ```
 frontend/     React + Vite + TypeScript
 backend/      Express + Sequelize + PostgreSQL
-deploy/       Nginx, systemd, scripts de mise en prod
+deploy/       setup, deploy, Nginx, PM2
 ressources/   notes locales (gitignored)
 .cursor/      skills & rules locales (gitignored)
 ```
@@ -33,19 +33,33 @@ npm run dev
 
 Healthcheck API : `GET http://localhost:3000/api/v1/health`
 
-Compte orga démo (après seed) : `orga@semaine-industrie.tg` / `Orga2026!`
+Compte orga démo (après seed local) : `orga@semaine-industrie.tg` / `Orga2026!`
 
 ## Déploiement VPS
 
-Domaine : [semaine-industrie.mdpise.tg](https://semaine-industrie.mdpise.tg/)  
-Front : `/var/www/semaine-industrie/frontend` · API : systemd `semaine-industrie-api` → `127.0.0.1:3000`
+- Domaine : `https://semaineindustrie.tg`
+- Front Nginx : `/var/www/semaine-industrie/frontend/dist`
+- API PM2 : **`industrie-api`** sur le port **3005**
 
-Fichiers dans `deploy/` :
+```bash
+# 1) Clone
+sudo mkdir -p /var/www/semaine-industrie
+sudo chown "$USER:$USER" /var/www/semaine-industrie
+git clone <url-du-repo> /var/www/semaine-industrie
+cd /var/www/semaine-industrie
 
-1. Copier `deploy/systemd/semaine-industrie-api.service` → `/etc/systemd/system/` puis `systemctl enable --now semaine-industrie-api`
-2. Copier `deploy/nginx/semaine-industrie.conf` → `sites-available`, activer, Certbot sur `semaine-industrie.mdpise.tg` (+ www)
-3. Créer `/var/www/semaine-industrie/backend/.env` depuis `deploy/env.production.example`
-4. Sur le serveur (repo cloné) : `bash deploy/deploy.sh`
-5. Backup Postgres : cron sur `deploy/postgres-backup.sh`
+# 2) Setup (une fois) — uploads, .env exemple, PM2, Nginx écrasé
+sudo bash deploy/setup.sh
 
-L’espace orga est sous `/orga` + `/login` (même build). Nginx proxyfie `/api/`, `/socket.io/` et `/uploads/`.
+# 3) Créer la BDD + user Postgres, puis éditer backend/.env
+#    (DB_*, JWT_ACCESS_SECRET, SUPERADMIN_PASSWORD, …)
+
+# 4) Premier déploiement + chaque mise à jour ensuite
+bash deploy/deploy.sh
+```
+
+`deploy.sh` force l’alignement git (`reset --hard origin/<branche>`), rebuild, migrations, seed du seul superadmin, restart PM2.
+
+Backup Postgres : cron sur `deploy/postgres-backup.sh`.
+
+Espace orga : `/orga` + `/login`.
