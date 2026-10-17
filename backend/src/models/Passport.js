@@ -2,7 +2,7 @@
 
 const { DataTypes } = require('sequelize');
 
-/* Passeport industrie (carnet jeune avec code/QR). */
+/* Passeport industrie (individuel ou groupe / classe). */
 module.exports = (sequelize) => {
   const Passport = sequelize.define(
     'Passport',
@@ -17,6 +17,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         unique: true,
       },
+      kind: {
+        type: DataTypes.ENUM('individual', 'group'),
+        allowNull: false,
+        defaultValue: 'individual',
+      },
       holder_name: {
         type: DataTypes.STRING(160),
         allowNull: true,
@@ -27,6 +32,14 @@ module.exports = (sequelize) => {
       },
       class_label: {
         type: DataTypes.STRING(80),
+        allowNull: true,
+      },
+      headcount: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      school_organization_id: {
+        type: DataTypes.UUID,
         allowNull: true,
       },
       is_active: {
