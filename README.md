@@ -37,12 +37,15 @@ Compte orga démo (après seed) : `orga@semaine-industrie.tg` / `Orga2026!`
 
 ## Déploiement VPS
 
+Domaine : [semaine-industrie.mdpise.tg](https://semaine-industrie.mdpise.tg/)  
+Front : `/var/www/semaine-industrie/frontend` · API : systemd `semaine-industrie-api` → `127.0.0.1:3000`
+
 Fichiers dans `deploy/` :
 
-1. Copier `deploy/systemd/semaine-industrie-api.service` → `/etc/systemd/system/`
-2. Copier `deploy/nginx/semaine-industrie.conf` → sites-available, activer, Certbot
+1. Copier `deploy/systemd/semaine-industrie-api.service` → `/etc/systemd/system/` puis `systemctl enable --now semaine-industrie-api`
+2. Copier `deploy/nginx/semaine-industrie.conf` → `sites-available`, activer, Certbot sur `semaine-industrie.mdpise.tg` (+ www)
 3. Créer `/var/www/semaine-industrie/backend/.env` depuis `deploy/env.production.example`
 4. Sur le serveur (repo cloné) : `bash deploy/deploy.sh`
 5. Backup Postgres : cron sur `deploy/postgres-backup.sh`
 
-Sous-domaine `admin.` sert le **même** build React ; l’espace orga est sous `/orga` + `/login`.
+L’espace orga est sous `/orga` + `/login` (même build). Nginx proxyfie `/api/`, `/socket.io/` et `/uploads/`.

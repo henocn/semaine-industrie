@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { DAYS, SPEAKERS, PLACES, PARTNERS } from '../data'
+import { SPEAKERS, PLACES, PARTNERS } from '../data'
 import { BrandLogo, CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
 
 /* Photo : déposez le fichier dans public/images. Sans fichier, un aplat discret. */
@@ -65,90 +65,23 @@ function About() {
   )
 }
 
-function Programme() {
-  const [open, setOpen] = useState<number | null>(null)
+/* Renvoi court vers la page programme (détail hors accueil). */
+function ProgrammeTeaser() {
   return (
-    <section id="programme" className="bg-sage py-16 sm:py-20">
-      <div className={WRAP}>
-        <div className="grid gap-4 md:grid-cols-[1fr_1.15fr] md:items-end">
-          <h2 className="display text-4xl sm:text-5xl">Le programme</h2>
-          <p className="text-lg text-ink/70">Un thème par jour. Fil conducteur : « L’industrie à portée de main ». Lieu principal à confirmer (Palais des congrès ou Hôtel Sarakawa).</p>
-        </div>
-        <ul className="mt-8 border-t border-forest/15">
-          {DAYS.map((d) => {
-            const isOpen = open === d.n
-            const canOpen = d.slots.length > 0
-            const red = d.phare
-            const c = (onRed: string, onSage: string) => (red ? onRed : onSage)
-            return (
-              <li key={d.n} className={red ? '-mx-4 bg-flag px-4 text-white sm:-mx-6 sm:px-6' : 'border-b border-forest/15'}>
-                <button
-                  type="button"
-                  disabled={!canOpen}
-                  aria-expanded={isOpen}
-                  onClick={() => setOpen(isOpen ? null : d.n)}
-                  className="grid w-full grid-cols-[3rem_1fr_auto] items-baseline gap-x-4 gap-y-0.5 py-4 text-left sm:grid-cols-[5rem_13rem_1fr_auto] sm:gap-x-8"
-                >
-                  <span className={'display text-2xl sm:text-3xl ' + c('!text-white', '')}>{d.n}</span>
-                  <span className={'font-semibold ' + c('text-white', 'text-forest')}>
-                    {d.name}
-                    <span className={'block text-[15px] font-normal ' + c('text-white/80', 'text-ink/60')}>{d.theme}</span>
-                  </span>
-                  <span className={'col-span-2 col-start-2 sm:col-span-1 sm:col-start-auto ' + c('text-white/90', 'text-ink/75')}>{d.goal}</span>
-                  {canOpen && (
-                    <span className={'row-start-1 col-start-3 text-2xl font-light transition-transform duration-300 sm:col-start-4 ' + c('text-white', 'text-forest') + (isOpen ? ' rotate-45' : '')} aria-hidden="true">+</span>
-                  )}
-                </button>
-                <div className="fold" data-open={isOpen}>
-                  <div>
-                    <div className="pb-6 lg:ml-[23rem]">
-                      <p className={'mb-3 text-[15px] ' + c('text-white/75', 'text-ink/55')}>{d.where}</p>
-                      <table className="w-full text-[15px]">
-                        <tbody>
-                          {d.slots.map(([h, t]) => (
-                            <tr key={h + t} className={'border-t ' + c('border-white/20', 'border-forest/10')}>
-                              <td className={'w-20 py-2 align-top font-semibold ' + c('text-white', 'text-forest')}>{h}</td>
-                              <td className={'py-2 ' + c('text-white/90', 'text-ink/80')}>{t}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
-      </div>
-    </section>
-  )
-}
-
-function Friday() {
-  return (
-    <section id="vendredi" className="bg-forest py-24 text-white sm:py-32">
-      <div className={`${WRAP} grid gap-14 md:grid-cols-2 md:items-start`}>
+    <section className="bg-sage py-16 sm:py-20">
+      <div className={`${WRAP} grid gap-8 md:grid-cols-[1fr_auto] md:items-end`}>
         <div>
-          <p className="text-lg font-semibold text-sun">Vendredi 20 novembre</p>
-          <h2 className="display mt-4 text-4xl !text-white sm:text-5xl">La journée phare</h2>
-          <p className="mt-8 text-lg leading-relaxed text-white/80">
-            Décideurs, industriels, PME et jeunes se retrouvent pour la Journée de l’industrialisation de l’Afrique : une table ronde, le Grand oral et les rencontres d’affaires.
-          </p>
-          <p className="mt-6 text-lg leading-relaxed text-white/80">
-            Le matin, deux tables rondes. L’après-midi, des rencontres d’affaires de 20 minutes, préparées à l’avance.
+          <h2 className="display text-4xl sm:text-5xl">Le programme</h2>
+          <p className="mt-4 max-w-xl text-lg text-ink/70">
+            Sept jours, un thème par jour — du 16 au 22 novembre. Journée phare le vendredi 20.
           </p>
         </div>
-        <table className="w-full self-start text-[15px]">
-          <tbody>
-            {DAYS.find((d) => d.phare)!.slots.map(([h, t]) => (
-              <tr key={h} className="border-t border-white/15">
-                <td className="w-20 py-3.5 align-top font-semibold text-sun">{h}</td>
-                <td className="py-3.5 text-white/85">{t}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Link
+          to="/programme"
+          className="inline-flex bg-forest px-8 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-ink"
+        >
+          Voir le programme
+        </Link>
       </div>
     </section>
   )
@@ -250,7 +183,7 @@ function Footer() {
         <div>
           <p className="font-semibold text-forest">La semaine</p>
           <ul className="mt-4 space-y-2.5 text-ink/70">
-            <li><a href="#programme" className="hover:text-forest">Programme</a></li>
+            <li><Link to="/programme" className="hover:text-forest">Programme</Link></li>
             <li><Link to="/carte" className="hover:text-forest">Carte des usines</Link></li>
             <li><Link to="/questions" className="hover:text-forest">Questions live</Link></li>
             <li><Link to="/vote" className="hover:text-forest">Vote samedi</Link></li>
@@ -295,8 +228,7 @@ export default function HomePage() {
       <main>
         <Hero />
         <About />
-        <Programme />
-        <Friday />
+        <ProgrammeTeaser />
         <Women />
         <Places />
         <Contact />

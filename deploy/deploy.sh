@@ -47,4 +47,10 @@ echo "==> Healthcheck"
 sleep 1
 curl -fsS "http://127.0.0.1:3000/api/v1/health" | head -c 200
 echo
-echo "OK — déployé."
+
+if command -v nginx >/dev/null 2>&1; then
+  echo "==> Nginx reload (si conf déjà installée)"
+  nginx -t && systemctl reload nginx || true
+fi
+
+echo "OK — déployé sur https://semaine-industrie.mdpise.tg"
