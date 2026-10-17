@@ -22,7 +22,7 @@ const GROUPS: NavGroup[] = [
     label: 'Participer',
     items: [
       { label: 'Demander le label', to: '/label' },
-      { label: 'Réserver une visite', to: '/visites' },
+      { label: 'Visites d’usines', to: '/visites' },
       { label: 'Rencontres d’affaires', to: '/affaires' },
     ],
   },
