@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 
 const env = require('./config/env');
+const httpLogger = require('./middlewares/httpLogger.middleware');
 const errorHandler = require('./middlewares/errorHandler.middleware');
 const healthRoutes = require('./modules/health/health.routes');
 const labelRoutes = require('./modules/labels/label.routes');
@@ -28,6 +29,7 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use(httpLogger);
 
 app.use(`${env.API_PREFIX}/health`, healthRoutes);
 app.use(`${env.API_PREFIX}/auth`, authRoutes);
