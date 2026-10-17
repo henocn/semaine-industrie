@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { castVote, getVotes, type VoteOption } from '../api/engagement'
 import { WRAP } from '../components/layout/Mark'
+import { joinRoom, onRealtime } from '../lib/socket'
 
 /* Clé locale pour un seul vote par navigateur. */
 function voterKey() {
@@ -13,7 +14,7 @@ function voterKey() {
   return v
 }
 
-/* Vote coup de cœur (expo samedi). */
+/* Vote coup de cœur (expo samedi) — scores live via Socket.IO. */
 export default function VotePage() {
   const [options, setOptions] = useState<VoteOption[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -21,6 +22,8 @@ export default function VotePage() {
 
   useEffect(() => {
     getVotes().then(setOptions).catch((err) => setError(err instanceof Error ? err.message : 'Erreur'))
+    joinRoom('votes')
+    return onRealtime<VoteOption[]>('vote:updated', setOptions)
   }, [])
 
   async function onVote(id: string) {

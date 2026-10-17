@@ -4,8 +4,9 @@ import { getStoredUser } from '../api/auth'
 import { listQuestions, reviewQuestion, type LiveQuestion } from '../api/engagement'
 import { getSurveyStats } from '../api/surveys'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { joinRoom, onRealtime } from '../lib/socket'
 
-/* Modération questions + aperçu questionnaire. */
+/* Modération questions + aperçu questionnaire (temps réel Socket.IO). */
 export default function OrgaLivePage() {
   const navigate = useNavigate()
   const user = getStoredUser()
@@ -30,11 +31,24 @@ export default function OrgaLivePage() {
       return
     }
     load()
+    joinRoom('live')
+    const offCreated = onRealtime<LiveQuestion>('question:created', (q) => {
+      setQuestions((prev) => [q, ...prev.filter((x) => x.id !== q.id)])
+    })
+    const offUpdated = onRealtime<LiveQuestion>('question:updated', (q) => {
+      setQuestions((prev) => prev.map((x) => (x.id === q.id ? q : x)))
+    })
+    const offSurvey = onRealtime<Awaited<ReturnType<typeof getSurveyStats>>>('survey:updated', setSurvey)
+    return () => {
+      offCreated()
+      offUpdated()
+      offSurvey()
+    }
   }, [navigate, user])
 
   async function onReview(id: string, status: 'approved' | 'done' | 'rejected') {
-    await reviewQuestion(id, status)
-    await load()
+    const updated = await reviewQuestion(id, status)
+    setQuestions((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
   }
 
   return (
