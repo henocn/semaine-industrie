@@ -2,11 +2,13 @@
 
 const labelService = require('./label.service');
 const ApiResponse = require('../../utils/ApiResponse');
+const { emitRealtime } = require('../../realtime/io');
 
 /* Crée une demande de label. */
 async function createRequest(req, res, next) {
   try {
     const data = await labelService.createRequest(req.body);
+    emitRealtime('label:created', data, 'orga');
     return ApiResponse.created(res, data, 'Demande de label enregistrée');
   } catch (err) {
     return next(err);

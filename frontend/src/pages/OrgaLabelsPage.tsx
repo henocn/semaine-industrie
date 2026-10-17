@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getStoredUser } from '../api/auth'
 import { listLabelRequests, reviewLabelRequest, type LabelRequest } from '../api/labels'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { joinRoom, onRealtime } from '../lib/socket'
 
 /* Écran orga : validation des demandes. */
 export default function OrgaLabelsPage() {
@@ -32,13 +33,30 @@ export default function OrgaLabelsPage() {
     }
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter])
+  }, [filter, navigate, user?.id, user?.role])
+
+  /* Ajoute en direct une nouvelle demande si elle matche le filtre. */
+  useEffect(() => {
+    if (!user || user.role !== 'orga') return
+    joinRoom('orga')
+    return onRealtime<LabelRequest>('label:created', (row) => {
+      if (filter && row.status !== filter) return
+      setItems((prev) => [row, ...prev.filter((x) => x.id !== row.id)])
+    })
+  }, [filter, user?.id, user?.role])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return items
     return items.filter((item) =>
-      [item.structure_name, item.contact_name, item.contact_email, item.city, item.sector]
+      [
+        item.structure_name,
+        item.contact_phone,
+        item.contact_email,
+        item.city,
+        item.sector,
+        item.max_visitors != null ? String(item.max_visitors) : '',
+      ]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     )
@@ -87,11 +105,13 @@ export default function OrgaLabelsPage() {
           </Link>
         </div>
 
-        <table className="orga-table min-w-[760px]">
+        <table className="orga-table min-w-[880px]">
           <thead>
             <tr>
+              <th>Téléphone</th>
               <th>Structure</th>
-              <th>Contact</th>
+              <th>Capacité / estimation</th>
+              <th>E-mail</th>
               <th>Lieu</th>
               <th>Statut</th>
               <th>Actions</th>
@@ -99,10 +119,15 @@ export default function OrgaLabelsPage() {
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={5}>Aucune demande pour ce filtre</td></tr>
+              <tr><td colSpan={7}>Aucune demande pour ce filtre</td></tr>
             )}
             {filtered.map((item) => (
               <tr key={item.id}>
+                <td>
+                  <a href={`tel:${item.contact_phone || ''}`} className="font-semibold text-forest underline underline-offset-2">
+                    {item.contact_phone || '—'}
+                  </a>
+                </td>
                 <td>
                   <p className="font-semibold text-forest">{item.structure_name}</p>
                   <p className="mt-1 text-ink/50">
@@ -114,8 +139,19 @@ export default function OrgaLabelsPage() {
                   )}
                 </td>
                 <td>
-                  <p>{item.contact_name}</p>
-                  <p className="mt-1 text-ink/55">{item.contact_email}</p>
+                  {item.max_visitors != null ? (
+                    <span className="font-semibold text-forest">{item.max_visitors}</span>
+                  ) : (
+                    '—'
+                  )}
+                  <p className="mt-1 text-[12px] text-ink/40">
+                    {item.structure_type === 'ecole' ? 'élèves / étudiants' : 'visiteurs max.'}
+                  </p>
+                </td>
+                <td>
+                  <a href={`mailto:${item.contact_email}`} className="text-ink/70 underline underline-offset-2">
+                    {item.contact_email}
+                  </a>
                 </td>
                 <td>{[item.city, item.region].filter(Boolean).join(' · ') || '—'}</td>
                 <td><StatusText status={item.status} /></td>

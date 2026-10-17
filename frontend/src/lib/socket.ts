@@ -23,8 +23,8 @@ export function getSocket(): Socket {
   return socket
 }
 
-/* Rejoint une salle métier (live / votes). */
-export function joinRoom(room: 'live' | 'votes') {
+/* Rejoint une salle métier (live / votes / orga). */
+export function joinRoom(room: 'live' | 'votes' | 'orga') {
   const s = getSocket()
   if (!s.connected) s.connect()
   const join = () => s.emit('join', room)

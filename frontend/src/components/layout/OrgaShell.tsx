@@ -1,6 +1,9 @@
-import { useState, type ReactNode } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { getStoredUser, logout } from '../../api/auth'
+import type { LabelRequest } from '../../api/labels'
+import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
+import { joinRoom, onRealtime } from '../../lib/socket'
 import { BrandLogo } from './Mark'
 
 type OrgaShellProps = {
@@ -21,13 +24,42 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 /* Shell backoffice : sidebar nette + contenu sans coins IA. */
 export function OrgaShell({ title, children, actions, searchPlaceholder, onSearch }: OrgaShellProps) {
   const user = getStoredUser()
+  const location = useLocation()
   const [open, setOpen] = useState(false)
+  const [labelAlerts, setLabelAlerts] = useState(0)
+  const [banner, setBanner] = useState<string | null>(null)
 
   /* Déconnecte et renvoie au login. */
   async function onLogout() {
     await logout()
     window.location.href = '/login'
   }
+
+  /* Écoute les nouvelles demandes label (notif + badge). */
+  useEffect(() => {
+    if (!user || user.role !== 'orga') return
+    void ensureNotifyPermission()
+    joinRoom('orga')
+    return onRealtime<LabelRequest>('label:created', (row) => {
+      const kind = row.structure_type === 'ecole' ? 'École' : 'Entreprise'
+      const msg = `${row.structure_name} · ${row.contact_phone || 'sans tél.'}`
+      setBanner(`Nouvelle demande (${kind}) : ${msg}`)
+      if (!location.pathname.startsWith('/orga/labels')) {
+        setLabelAlerts((n) => n + 1)
+      }
+      pushNotify('Nouvelle demande de label', msg, {
+        tag: `label-${row.id}`,
+        href: '/orga/labels',
+      })
+    })
+  }, [user?.id, user?.role, location.pathname])
+
+  /* Remet le badge à zéro sur la page demandes. */
+  useEffect(() => {
+    if (location.pathname.startsWith('/orga/labels')) {
+      setLabelAlerts(0)
+    }
+  }, [location.pathname])
 
   const sidebar = (
     <aside className="flex h-full w-60 flex-col border-r border-black bg-white px-3 py-5">
@@ -38,7 +70,16 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
       <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">Pilotage</p>
       <nav className="flex flex-col gap-0.5">
         <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
-        <NavLink to="/orga/labels" className={linkClass}>Demandes label</NavLink>
+        <NavLink to="/orga/labels" className={linkClass}>
+          <span className="flex w-full items-center justify-between gap-2">
+            Demandes label
+            {labelAlerts > 0 && (
+              <span className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink">
+                {labelAlerts > 9 ? '9+' : labelAlerts}
+              </span>
+            )}
+          </span>
+        </NavLink>
         <NavLink to="/orga/visites" className={linkClass}>Visites</NavLink>
         <NavLink to="/orga/affaires" className={linkClass}>Affaires</NavLink>
         <NavLink to="/orga/passeports" className={linkClass}>Passeports</NavLink>
@@ -132,6 +173,23 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
               </div>
             </div>
           </header>
+
+          {banner && (
+            <div className="flex items-center justify-between gap-3 border-b border-black bg-sun/40 px-4 py-2.5 text-[13px] text-ink sm:px-8">
+              <p>
+                <span className="font-semibold">Alerte · </span>
+                {banner}
+              </p>
+              <div className="flex shrink-0 items-center gap-3">
+                <Link to="/orga/labels" className="font-semibold text-forest underline underline-offset-2" onClick={() => setBanner(null)}>
+                  Voir
+                </Link>
+                <button type="button" className="text-ink/50 hover:text-forest" onClick={() => setBanner(null)}>
+                  Fermer
+                </button>
+              </div>
+            </div>
+          )}
 
           <main className="flex-1 px-4 py-6 sm:px-8">{children}</main>
         </div>

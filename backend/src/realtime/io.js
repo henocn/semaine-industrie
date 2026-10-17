@@ -20,7 +20,7 @@ function initRealtime(httpServer) {
   io.on('connection', (socket) => {
     logger.debug(`socket connected ${socket.id}`);
     socket.on('join', (room) => {
-      if (room === 'live' || room === 'votes') {
+      if (room === 'live' || room === 'votes' || room === 'orga') {
         socket.join(room);
       }
     });
