@@ -30,13 +30,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="relative flex flex-col px-6 py-8 sm:px-12 sm:py-10">
-        <Link to="/" className="absolute left-6 top-8 sm:left-12 sm:top-10">
+    <div className="grid h-svh overflow-hidden lg:grid-cols-2">
+      <div className="relative flex h-full items-center justify-center px-6 sm:px-12">
+        <Link to="/" className="absolute left-6 top-6 sm:left-10 sm:top-8">
           <BrandLogo className="h-10 w-auto" />
         </Link>
 
-        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-24 text-center">
+        <div className="w-full max-w-sm text-center">
           <h1 className="display text-4xl">Portail d’administration</h1>
           <p className="mt-3 text-lg text-ink/60">Connexion à l’espace organisation.</p>
 
@@ -73,15 +73,15 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="relative hidden overflow-hidden bg-forest lg:block">
+      <div className="relative hidden h-full overflow-hidden bg-forest lg:block">
         <img
           src="/images/hall.jpg"
           alt=""
           className="absolute inset-0 h-full w-full object-cover opacity-45"
         />
         <div className="absolute inset-0 bg-forest/55" />
-        <div className="relative flex h-full items-end justify-center p-12 text-center">
-          <h2 className="display max-w-md text-[clamp(2rem,3.5vw,2.75rem)] !text-white">
+        <div className="relative flex h-full items-end justify-center px-12 pb-14 text-center">
+          <h2 className="display max-w-md text-[clamp(1.75rem,3vw,2.5rem)] !text-white">
             Portail d’administration
           </h2>
         </div>
