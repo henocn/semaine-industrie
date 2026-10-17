@@ -46,7 +46,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     }
   }
 
-  /* Charge le badge (navigation + événement local + sockets). */
+  /* Charge le badge (navigation + focus + événement local + sockets). */
   useEffect(() => {
     if (!user || user.role !== 'orga') return
     void refreshPending()
@@ -54,7 +54,13 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     const onLocal = () => {
       void refreshPending()
     }
+    /* Au retour sur l'onglet admin après une demande publique. */
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void refreshPending()
+    }
     window.addEventListener(LABEL_PENDING_EVENT, onLocal)
+    window.addEventListener('focus', onVisible)
+    document.addEventListener('visibilitychange', onVisible)
 
     void ensureNotifyPermission()
     joinRoom('orga')
@@ -74,6 +80,8 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
 
     return () => {
       window.removeEventListener(LABEL_PENDING_EVENT, onLocal)
+      window.removeEventListener('focus', onVisible)
+      document.removeEventListener('visibilitychange', onVisible)
       offCreated()
       offUpdated()
     }
