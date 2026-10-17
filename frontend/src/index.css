@@ -117,6 +117,22 @@ body { background: #fff; color: var(--color-ink); font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
 }
+.orga-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #111;
+  background: #fff;
+  color: var(--color-forest);
+}
+.orga-icon-btn:hover { background: #f3f3f3; }
+.orga-icon-btn:disabled { opacity: 0.45; }
+.orga-icon-btn--ok { color: #024d3e; }
+.orga-icon-btn--danger { color: #b42318; }
+.orga-row-pending { background: #fff7e8; }
+.orga-row-approved { background: #eef8f0; }
+.orga-row-rejected { background: #fdecec; }
 .orga-input {
   width: 100%;
   border: 1px solid #111;

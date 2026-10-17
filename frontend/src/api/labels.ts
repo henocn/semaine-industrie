@@ -57,6 +57,7 @@ export type LabelRequest = {
   description: string | null
   products: string[]
   max_visitors: number | null
+  safety_rules?: string | null
   status: 'pending' | 'approved' | 'rejected'
   createdAt?: string
   created_at?: string
@@ -96,6 +97,14 @@ export function reviewLabelRequest(id: string, status: 'approved' | 'rejected', 
       body: JSON.stringify({ status, review_note }),
     },
   )
+}
+
+/* Modifie une demande (orga). */
+export function updateLabelRequest(id: string, payload: Partial<LabelRequestPayload> & { structure_type?: 'entreprise' | 'ecole' }) {
+  return apiFetch<LabelRequest>(`/labels/requests/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
 }
 
 /* Points carte des usines labellisées. */

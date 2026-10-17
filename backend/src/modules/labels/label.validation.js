@@ -55,7 +55,23 @@ const reviewSchema = Joi.object({
   review_note: Joi.string().trim().allow('', null),
 });
 
+/* Schéma de modification orga d'une demande. */
+const updateRequestSchema = Joi.object({
+  structure_name: Joi.string().trim().min(2).max(200),
+  structure_type: Joi.string().valid('entreprise', 'ecole'),
+  region: Joi.string().trim().max(120).allow('', null),
+  city: Joi.string().trim().max(120).allow('', null),
+  contact_email: Joi.string().trim().email().max(180),
+  contact_phone: Joi.string().trim().min(6).max(40),
+  description: Joi.string().trim().allow('', null),
+  max_visitors: Joi.number().integer().min(1).max(5000).allow(null),
+  sector: Joi.string().trim().max(120).allow('', null),
+  products: Joi.array().items(Joi.string().trim().max(120)),
+  safety_rules: Joi.string().trim().allow('', null),
+}).min(1);
+
 module.exports = {
   createRequestSchema,
   reviewSchema,
+  updateRequestSchema,
 };

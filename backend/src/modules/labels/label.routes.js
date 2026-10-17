@@ -5,7 +5,7 @@ const { Router } = require('express');
 const controller = require('./label.controller');
 const validate = require('../../middlewares/validate.middleware');
 const { authenticate, authorize } = require('../../middlewares/auth.middleware');
-const { createRequestSchema, reviewSchema } = require('./label.validation');
+const { createRequestSchema, reviewSchema, updateRequestSchema } = require('./label.validation');
 
 const router = Router();
 
@@ -18,6 +18,13 @@ router.get('/organizations/:slug', controller.getPublicFiche);
 router.get('/qr-batch', authenticate, authorize('orga'), controller.listQrBatch);
 router.get('/requests', authenticate, authorize('orga'), controller.listRequests);
 router.get('/requests/:id', authenticate, authorize('orga'), controller.getRequest);
+router.patch(
+  '/requests/:id',
+  authenticate,
+  authorize('orga'),
+  validate(updateRequestSchema),
+  controller.updateRequest,
+);
 router.patch(
   '/requests/:id/review',
   authenticate,

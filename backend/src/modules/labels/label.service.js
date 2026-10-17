@@ -77,6 +77,44 @@ async function getRequestById(id) {
   return row;
 }
 
+/* Met à jour une demande (orga) et synchronise la fiche si déjà labellisée. */
+async function updateRequest(id, payload) {
+  const request = await getRequestById(id);
+  const data = { ...payload };
+  const nextType = data.structure_type || request.structure_type;
+
+  if (nextType === 'ecole') {
+    data.sector = null;
+    data.products = [];
+    data.safety_rules = null;
+  }
+
+  Object.assign(request, data);
+  if (!request.contact_name) request.contact_name = request.structure_name;
+  await request.save();
+
+  if (request.organization_id) {
+    const org = await Organization.findByPk(request.organization_id);
+    if (org) {
+      org.name = request.structure_name;
+      org.type = request.structure_type;
+      org.sector = request.sector;
+      org.region = request.region;
+      org.city = request.city;
+      org.contact_email = request.contact_email;
+      org.contact_phone = request.contact_phone;
+      org.contact_name = request.contact_name;
+      org.description = request.description;
+      org.products = request.products || [];
+      org.max_visitors = request.max_visitors;
+      org.safety_rules = request.safety_rules;
+      await org.save();
+    }
+  }
+
+  return request;
+}
+
 /* Approuve ou rejette une demande ; crée l'organisation si approuvée. */
 async function reviewRequest(id, { status, review_note }) {
   return sequelize.transaction(async (transaction) => {
@@ -215,6 +253,7 @@ module.exports = {
   createRequest,
   listRequests,
   getRequestById,
+  updateRequest,
   reviewRequest,
   getPublicBySlug,
   listMapPoints,

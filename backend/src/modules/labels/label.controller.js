@@ -35,6 +35,17 @@ async function getRequest(req, res, next) {
   }
 }
 
+/* Modifie une demande (orga). */
+async function updateRequest(req, res, next) {
+  try {
+    const data = await labelService.updateRequest(req.params.id, req.body);
+    emitRealtime('label:updated', data, 'orga');
+    return ApiResponse.success(res, data, 'Demande mise à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Approuve ou rejette une demande. */
 async function reviewRequest(req, res, next) {
   try {
@@ -82,6 +93,7 @@ module.exports = {
   createRequest,
   listRequests,
   getRequest,
+  updateRequest,
   reviewRequest,
   getPublicFiche,
   listMap,
