@@ -9,14 +9,12 @@ export type LabelRequestPayload = {
   address?: string
   contact_name: string
   contact_email: string
-  contact_phone?: string
+  contact_phone: string
   description?: string
   products?: string[]
   max_visitors?: number | null
   visit_slots?: { day: string; start: string; end: string }[]
   safety_rules?: string
-  lat?: number | null
-  lng?: number | null
 }
 
 export type Organization = {

@@ -44,8 +44,16 @@ async function uniqueLabelCode(transaction) {
 
 /* Crée une demande de label (parcours public). */
 async function createRequest(payload) {
+  const data = { ...payload };
+  /* Écoles : pas de secteur, produits, capacité ni règles sécurité. */
+  if (data.structure_type === 'ecole') {
+    data.sector = null;
+    data.products = [];
+    data.max_visitors = null;
+    data.safety_rules = null;
+  }
   const row = await LabelRequest.create({
-    ...payload,
+    ...data,
     status: 'pending',
   });
   return row;

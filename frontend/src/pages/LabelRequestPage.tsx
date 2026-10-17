@@ -10,6 +10,8 @@ export default function LabelRequestPage() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [structureType, setStructureType] = useState<'entreprise' | 'ecole'>('entreprise')
+  const isEntreprise = structureType === 'entreprise'
 
   /* Soumet le formulaire vers l'API. */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -18,28 +20,28 @@ export default function LabelRequestPage() {
     setLoading(true)
     const fd = new FormData(e.currentTarget)
     const productsRaw = String(fd.get('products') || '')
-    const products = productsRaw
-      .split(',')
-      .map((p) => p.trim())
-      .filter(Boolean)
+    const products = isEntreprise
+      ? productsRaw
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean)
+      : []
 
     try {
       await createLabelRequest({
         structure_name: String(fd.get('structure_name') || ''),
-        structure_type: String(fd.get('structure_type') || 'entreprise') as 'entreprise' | 'ecole',
-        sector: String(fd.get('sector') || '') || undefined,
+        structure_type: structureType,
+        sector: isEntreprise ? String(fd.get('sector') || '') || undefined : undefined,
         region: String(fd.get('region') || '') || undefined,
         city: String(fd.get('city') || '') || undefined,
         address: String(fd.get('address') || '') || undefined,
         contact_name: String(fd.get('contact_name') || ''),
         contact_email: String(fd.get('contact_email') || ''),
-        contact_phone: String(fd.get('contact_phone') || '') || undefined,
+        contact_phone: String(fd.get('contact_phone') || ''),
         description: String(fd.get('description') || '') || undefined,
         products,
-        max_visitors: fd.get('max_visitors') ? Number(fd.get('max_visitors')) : null,
-        safety_rules: String(fd.get('safety_rules') || '') || undefined,
-        lat: fd.get('lat') ? Number(fd.get('lat')) : null,
-        lng: fd.get('lng') ? Number(fd.get('lng')) : null,
+        max_visitors: isEntreprise && fd.get('max_visitors') ? Number(fd.get('max_visitors')) : null,
+        safety_rules: isEntreprise ? String(fd.get('safety_rules') || '') || undefined : undefined,
       })
       setSent(true)
     } catch (err) {
@@ -72,17 +74,24 @@ export default function LabelRequestPage() {
                 Nom de la structure
                 <input required name="structure_name" className={field} />
               </label>
-              <label className="block text-[15px] font-medium text-forest">
+              <label className="block text-[15px] font-medium text-forest sm:col-span-2">
                 Type
-                <select name="structure_type" className={field} defaultValue="entreprise">
+                <select
+                  name="structure_type"
+                  className={field}
+                  value={structureType}
+                  onChange={(e) => setStructureType(e.target.value as 'entreprise' | 'ecole')}
+                >
                   <option value="entreprise">Entreprise</option>
                   <option value="ecole">École</option>
                 </select>
               </label>
-              <label className="block text-[15px] font-medium text-forest">
-                Secteur
-                <input name="sector" className={field} />
-              </label>
+              {isEntreprise && (
+                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
+                  Secteur
+                  <input name="sector" className={field} />
+                </label>
+              )}
               <label className="block text-[15px] font-medium text-forest">
                 Région
                 <input name="region" className={field} />
@@ -96,14 +105,6 @@ export default function LabelRequestPage() {
                 <input name="address" className={field} />
               </label>
               <label className="block text-[15px] font-medium text-forest">
-                Latitude (optionnel)
-                <input name="lat" type="number" step="any" min={-90} max={90} className={field} />
-              </label>
-              <label className="block text-[15px] font-medium text-forest">
-                Longitude (optionnel)
-                <input name="lng" type="number" step="any" min={-180} max={180} className={field} />
-              </label>
-              <label className="block text-[15px] font-medium text-forest">
                 Référent
                 <input required name="contact_name" className={field} />
               </label>
@@ -111,26 +112,32 @@ export default function LabelRequestPage() {
                 E-mail
                 <input required type="email" name="contact_email" className={field} />
               </label>
-              <label className="block text-[15px] font-medium text-forest">
-                Téléphone (optionnel)
-                <input name="contact_phone" className={field} />
+              <label className={`block text-[15px] font-medium text-forest ${isEntreprise ? '' : 'sm:col-span-2'}`}>
+                Téléphone
+                <input required name="contact_phone" type="tel" className={field} />
               </label>
-              <label className="block text-[15px] font-medium text-forest">
-                Capacité max. visiteurs
-                <input type="number" min={1} name="max_visitors" className={field} />
-              </label>
-              <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                Produits phares (séparés par des virgules)
-                <input name="products" placeholder="farine, huile…" className={field} />
-              </label>
+              {isEntreprise && (
+                <label className="block text-[15px] font-medium text-forest">
+                  Capacité max. visiteurs
+                  <input type="number" min={1} name="max_visitors" className={field} />
+                </label>
+              )}
+              {isEntreprise && (
+                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
+                  Produits phares (séparés par des virgules)
+                  <input name="products" placeholder="farine, huile…" className={field} />
+                </label>
+              )}
               <label className="block text-[15px] font-medium text-forest sm:col-span-2">
                 Description
                 <textarea name="description" rows={3} className={`${field} resize-none`} />
               </label>
-              <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                Règles de sécurité
-                <textarea name="safety_rules" rows={3} className={`${field} resize-none`} />
-              </label>
+              {isEntreprise && (
+                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
+                  Règles de sécurité
+                  <textarea name="safety_rules" rows={3} className={`${field} resize-none`} />
+                </label>
+              )}
 
               {error && <p className="text-[15px] text-red-700 sm:col-span-2">{error}</p>}
 
