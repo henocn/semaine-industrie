@@ -2,11 +2,20 @@
 
 const labelService = require('./label.service');
 const ApiResponse = require('../../utils/ApiResponse');
+const ApiError = require('../../utils/ApiError');
+const { emitRealtime } = require('../../realtime/io');
+
+/* Sérialise un modèle Sequelize pour Socket.IO. */
+function asJson(row) {
+  if (!row) return row;
+  return typeof row.toJSON === 'function' ? row.toJSON() : row;
+}
 
 /* Crée une demande de label. */
 async function createRequest(req, res, next) {
   try {
     const data = await labelService.createRequest(req.body);
+    emitRealtime('label:created', asJson(data), 'orga');
     return ApiResponse.created(res, data, 'Demande de label enregistrée');
   } catch (err) {
     return next(err);
@@ -33,11 +42,47 @@ async function getRequest(req, res, next) {
   }
 }
 
+/* Modifie une demande (orga). */
+async function updateRequest(req, res, next) {
+  try {
+    const data = await labelService.updateRequest(req.params.id, req.body);
+    emitRealtime('label:updated', asJson(data), 'orga');
+    return ApiResponse.success(res, data, 'Demande mise à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Approuve ou rejette une demande. */
 async function reviewRequest(req, res, next) {
   try {
     const data = await labelService.reviewRequest(req.params.id, req.body);
+    emitRealtime('label:updated', asJson(data.request), 'orga');
     return ApiResponse.success(res, data, 'Demande traitée');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Upload de 3 images pour une demande entreprise. */
+async function uploadGallery(req, res, next) {
+  try {
+    const files = req.files || [];
+    if (files.length !== 3) {
+      throw ApiError.badRequest('Exactement 3 images sont requises');
+    }
+    const urls = files.map((f) => `/uploads/labels/${f.filename}`);
+    return ApiResponse.created(res, { urls }, 'Images enregistrées');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Liste publique des industries labellisées. */
+async function listIndustries(req, res, next) {
+  try {
+    const data = await labelService.listPublicIndustries();
+    return ApiResponse.success(res, data);
   } catch (err) {
     return next(err);
   }
@@ -59,6 +104,7 @@ async function listMap(req, res, next) {
     const data = await labelService.listMapPoints({
       region: req.query.region,
       sector: req.query.sector,
+      type: req.query.type,
     });
     return ApiResponse.success(res, data);
   } catch (err) {
@@ -80,7 +126,10 @@ module.exports = {
   createRequest,
   listRequests,
   getRequest,
+  updateRequest,
   reviewRequest,
+  uploadGallery,
+  listIndustries,
   getPublicFiche,
   listMap,
   listQrBatch,

@@ -20,7 +20,7 @@ export default function OrgaPassportsPage() {
       return
     }
     listBookableSites().then(setSites).catch(() => undefined)
-  }, [navigate, user])
+  }, [navigate, user?.id, user?.role])
 
   async function onBatch(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -64,7 +64,7 @@ export default function OrgaPassportsPage() {
         <button
           type="button"
           onClick={() => window.print()}
-          className="rounded-xl bg-forest px-4 py-2.5 text-[13px] font-semibold text-white print:hidden"
+          className="orga-btn print:hidden"
         >
           Imprimer lot
         </button>
@@ -74,36 +74,36 @@ export default function OrgaPassportsPage() {
       {msg && <p className="mb-4 text-[14px] text-forest print:hidden">{msg}</p>}
 
       <div className="grid gap-4 xl:grid-cols-2 print:hidden">
-        <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <section className="orga-panel">
           <h2 className="text-[15px] font-semibold text-forest">Générer un lot</h2>
           <form onSubmit={onBatch} className="mt-4 grid gap-3">
-            <input name="count" type="number" min={1} max={200} defaultValue={12} className="rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px]" placeholder="Nombre" />
-            <input name="school_name" className="rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px]" placeholder="École (optionnel)" />
-            <input name="class_label" className="rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px]" placeholder="Classe (optionnel)" />
-            <button type="submit" className="rounded-xl bg-forest px-4 py-2.5 text-[13px] font-semibold text-white">Générer</button>
+            <input name="count" type="number" min={1} max={200} defaultValue={12} className="orga-input" placeholder="Nombre" />
+            <input name="school_name" className="orga-input" placeholder="École (optionnel)" />
+            <input name="class_label" className="orga-input" placeholder="Classe (optionnel)" />
+            <button type="submit" className="orga-btn">Générer</button>
           </form>
         </section>
 
-        <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <section className="orga-panel">
           <h2 className="text-[15px] font-semibold text-forest">Scanner / tamponner</h2>
           <form onSubmit={onScan} className="mt-4 grid gap-3">
-            <input required name="code" className="rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px] uppercase" placeholder="Code passeport" />
-            <select required name="organization_id" className="rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px]">
+            <input required name="code" className="orga-input uppercase" placeholder="Code passeport" />
+            <select required name="organization_id" className="orga-input">
               <option value="">Site…</option>
               {sites.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
-            <button type="submit" className="rounded-xl bg-forest px-4 py-2.5 text-[13px] font-semibold text-white">Tamponner</button>
+            <button type="submit" className="orga-btn">Tamponner</button>
           </form>
         </section>
       </div>
 
       {batch.length > 0 && (
-        <section className="mt-4 rounded-2xl bg-white p-5 shadow-sm print:shadow-none">
+        <section className="mt-4 orga-panel print:shadow-none">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 print:grid-cols-3">
             {batch.map((item) => (
-              <article key={item.code} className="break-inside-avoid rounded-2xl bg-[#f7f8f9] p-4 text-center print:border print:bg-white">
+              <article key={item.code} className="break-inside-avoid border border-black bg-white p-4 text-center print:border print:bg-white">
                 <img src={item.qr_data_url} alt={item.code} className="mx-auto h-32 w-32" />
                 <p className="mt-3 font-semibold text-forest">{item.code}</p>
                 <p className="mt-1 break-all text-[10px] text-ink/40">{item.url}</p>

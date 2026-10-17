@@ -13,8 +13,18 @@
   --color-flag: #c8102e;     /* rouge drapeau — réservé au vendredi 20 */
 }
 
-html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
-body { background: #fff; color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem;
+  overflow-x: clip;
+}
+body {
+  background: #fff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
 
 /* Titres : Bricolage Grotesque (charte logo / affiches) */
 .display {
@@ -37,4 +47,115 @@ body { background: #fff; color: var(--color-ink); font-family: var(--font-sans);
 .fold[data-open="true"] { grid-template-rows: 1fr; }
 .fold > div { overflow: hidden; }
 
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .fold { transition: none; } }
+/* Nav : fond vert qui descend du haut (toute la hauteur) + dropdown collé */
+.nav-group-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--color-forest);
+  transform: scaleY(0);
+  transform-origin: top center;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.nav-group-label {
+  position: relative;
+  overflow: hidden;
+}
+.nav-group-panel {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+.nav-group:hover .nav-group-bg,
+.nav-group:focus-within .nav-group-bg {
+  transform: scaleY(1);
+}
+.nav-group:hover .nav-group-label,
+.nav-group:focus-within .nav-group-label {
+  color: #fff;
+}
+.nav-group:hover .nav-group-panel,
+.nav-group:focus-within .nav-group-panel {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Tables backoffice : traits noirs fins, sans coins */
+.orga-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+.orga-table th,
+.orga-table td {
+  border: 1px solid #111;
+  padding: 0.65rem 0.75rem;
+  vertical-align: top;
+}
+.orga-table th {
+  font-weight: 600;
+  background: #fafafa;
+  color: #0f1f1a;
+}
+.orga-panel {
+  border: 1px solid #111;
+  background: #fff;
+  padding: 1.25rem;
+}
+.orga-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-forest);
+  color: #fff;
+  padding: 0.55rem 1rem;
+  font-size: 13px;
+  font-weight: 600;
+}
+.orga-btn:hover { background: var(--color-ink); }
+.orga-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #111;
+  background: #fff;
+  color: var(--color-forest);
+  padding: 0.55rem 1rem;
+  font-size: 13px;
+  font-weight: 600;
+}
+.orga-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #111;
+  background: #fff;
+  color: var(--color-forest);
+}
+.orga-icon-btn:hover { background: #f3f3f3; }
+.orga-icon-btn:disabled { opacity: 0.45; }
+.orga-icon-btn--ok { color: #024d3e; }
+.orga-icon-btn--danger { color: #b42318; }
+.orga-row-pending { background: #fff7e8; }
+.orga-row-approved { background: #eef8f0; }
+.orga-row-rejected { background: #fdecec; }
+.orga-input {
+  width: 100%;
+  border: 1px solid #111;
+  background: #fff;
+  padding: 0.55rem 0.75rem;
+  font-size: 13px;
+  color: var(--color-ink);
+}
+.orga-input:focus { outline: none; border-color: var(--color-forest); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .fold { transition: none; }
+  .nav-group-bg,
+  .nav-group-panel { transition: none; }
+}

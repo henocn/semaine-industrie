@@ -1,87 +1,88 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { getPublicBilan, type DashboardStats } from '../api/dashboard'
-import { Mark, WRAP } from '../components/layout/Mark'
+import { Link, useNavigate } from 'react-router-dom'
+import { getDashboardStats, type DashboardStats } from '../api/dashboard'
+import { getStoredUser } from '../api/session'
+import { OrgaShell } from '../components/layout/OrgaShell'
 
-/* Page bilan publique (chiffres de la semaine). */
+/* Bilan réservé à l'organisation (pas d'accès public). */
 export default function BilanPage() {
+  const navigate = useNavigate()
+  const user = getStoredUser()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    /* Charge le bilan public. */
+    if (!user || user.role !== 'orga') {
+      navigate('/login', { replace: true })
+      return
+    }
+
+    /* Charge le bilan orga authentifié. */
     async function load() {
       try {
-        setStats(await getPublicBilan())
+        setStats(await getDashboardStats())
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Bilan indisponible')
       }
     }
     load()
-  }, [])
+  }, [navigate, user?.id, user?.role])
 
   const ind = stats?.indicators
 
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-        <div className={`${WRAP} flex h-16 items-center justify-between`}>
-          <Link to="/" className="flex items-center gap-2.5 text-forest">
-            <Mark className="h-6 w-auto text-leaf" />
-            <span className="text-[15px] font-semibold">Semaine de l’industrie 2026</span>
-          </Link>
-          <Link to="/carte" className="text-[15px] text-ink/70 hover:text-forest">Carte</Link>
-        </div>
-      </header>
+    <OrgaShell title="Bilan">
+      {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
-      <main className="py-16 sm:py-24">
-        <div className={WRAP}>
-          <h1 className="display text-4xl sm:text-5xl">Bilan de la semaine</h1>
-          <p className="mt-4 max-w-2xl text-lg text-ink/65">
-            Chiffres publiés au fil des validations. Les indicateurs de visites et de rendez-vous seront complétés pendant l’événement.
-          </p>
-          {error && <p className="mt-6 text-red-700">{error}</p>}
-
-          {ind && (
-            <>
-              <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  ['Entreprises & écoles labellisées', ind.labels_approved],
-                  ['Sites sur la carte', ind.sites_on_map],
-                  ['Visites réservées', ind.visits_booked],
-                  ['Jeunes accueillis', ind.young_visitors],
-                  ['Rencontres d’affaires', ind.business_meetings],
-                ].map(([label, value]) => (
-                  <div key={String(label)} className="border-t border-forest/20 pt-5">
-                    <p className="display text-5xl text-forest">{value}</p>
-                    <p className="mt-3 text-lg text-ink/70">{label}</p>
-                  </div>
-                ))}
+      {ind && (
+        <>
+          <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-3">
+            {[
+              ['Labellisées', ind.labels_approved],
+              ['Sur la carte', ind.sites_on_map],
+              ['Visites réservées', ind.visits_booked],
+              ['Jeunes accueillis', ind.young_visitors],
+              ['RDV affaires', ind.business_meetings],
+              ['Scans passeport', ind.passport_scans ?? 0],
+            ].map(([label, value], i) => (
+              <div key={String(label)} className={`border border-black p-5 ${i > 0 ? 'sm:-ml-px' : ''}`}>
+                <p className="text-[13px] text-ink/50">{label}</p>
+                <p className="mt-2 text-[32px] font-semibold tracking-tight text-forest">{value}</p>
               </div>
+            ))}
+          </div>
 
-              <div className="mt-20">
-                <h2 className="display text-3xl">Annuaire Made in Togo</h2>
-                <p className="mt-3 text-ink/60">Structures labellisées, consultables aussi via QR.</p>
-                <ul className="mt-8 border-t border-forest/15">
-                  {stats.recent_labels.map((o) => (
-                    <li key={o.slug} className="flex flex-wrap items-baseline justify-between gap-3 border-b border-forest/10 py-5">
-                      <div>
-                        <p className="text-xl font-semibold text-forest">{o.name}</p>
-                        <p className="mt-1 text-[15px] text-ink/55">
-                          {[o.type === 'ecole' ? 'École' : 'Entreprise', o.city, o.region].filter(Boolean).join(' · ')}
-                        </p>
-                      </div>
-                      <Link to={`/o/${o.slug}`} className="text-[15px] font-medium text-forest underline underline-offset-4">
-                        Voir la fiche
+          <section className="orga-panel mt-0 !p-0 overflow-x-auto xl:-mt-px">
+            <div className="border-b border-black px-4 py-3">
+              <h2 className="text-[15px] font-semibold text-forest">Annuaire Made in Togo</h2>
+            </div>
+            <table className="orga-table">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Type</th>
+                  <th>Lieu</th>
+                  <th>Fiche</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recent_labels.map((o) => (
+                  <tr key={o.slug}>
+                    <td className="font-semibold text-forest">{o.name}</td>
+                    <td>{o.type === 'ecole' ? 'École' : 'Entreprise'}</td>
+                    <td>{[o.city, o.region].filter(Boolean).join(' · ')}</td>
+                    <td>
+                      <Link to={`/o/${o.slug}`} className="font-medium text-forest underline underline-offset-2">
+                        Ouvrir
                       </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </>
-          )}
-        </div>
-      </main>
-    </>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </>
+      )}
+    </OrgaShell>
   )
 }

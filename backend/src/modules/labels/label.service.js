@@ -2,7 +2,7 @@
 
 const { Op } = require('sequelize');
 const QRCode = require('qrcode');
-const { LabelRequest, Organization, sequelize } = require('../../models');
+const { LabelRequest, Organization, VisitBooking, sequelize } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
@@ -44,8 +44,26 @@ async function uniqueLabelCode(transaction) {
 
 /* Crée une demande de label (parcours public). */
 async function createRequest(payload) {
+  const data = { ...payload };
+  /* Écoles : pas de secteur, produits, galerie ni règles sécurité. */
+  if (data.structure_type === 'ecole') {
+    data.sector = null;
+    data.products = [];
+    data.safety_rules = null;
+    data.gallery_urls = [];
+    data.photo_url = null;
+  } else {
+    const gallery = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
+    if (gallery.length !== 3) {
+      throw ApiError.badRequest('Trois images de bonne qualité sont obligatoires pour une entreprise');
+    }
+    data.gallery_urls = gallery;
+    data.photo_url = gallery[0];
+  }
+  /* Référent non demandé au public : repli sur le nom de structure. */
+  data.contact_name = data.contact_name || data.structure_name;
   const row = await LabelRequest.create({
-    ...payload,
+    ...data,
     status: 'pending',
   });
   return row;
@@ -66,6 +84,48 @@ async function getRequestById(id) {
   const row = await LabelRequest.findByPk(id);
   if (!row) throw ApiError.notFound('Demande introuvable');
   return row;
+}
+
+/* Met à jour une demande (orga) et synchronise la fiche si déjà labellisée. */
+async function updateRequest(id, payload) {
+  const request = await getRequestById(id);
+  const data = { ...payload };
+  const nextType = data.structure_type || request.structure_type;
+
+  if (nextType === 'ecole') {
+    data.sector = null;
+    data.products = [];
+    data.safety_rules = null;
+  }
+
+  Object.assign(request, data);
+  if (!request.contact_name) request.contact_name = request.structure_name;
+  await request.save();
+
+  if (request.organization_id) {
+    const org = await Organization.findByPk(request.organization_id);
+    if (org) {
+      org.name = request.structure_name;
+      org.type = request.structure_type;
+      org.sector = request.sector;
+      org.region = request.region;
+      org.city = request.city;
+      org.contact_email = request.contact_email;
+      org.contact_phone = request.contact_phone;
+      org.contact_name = request.contact_name;
+      org.description = request.description;
+      org.products = request.products || [];
+      org.max_visitors = request.max_visitors;
+      org.safety_rules = request.safety_rules;
+      org.lat = request.lat;
+      org.lng = request.lng;
+      org.gallery_urls = request.gallery_urls || [];
+      org.photo_url = (request.gallery_urls && request.gallery_urls[0]) || request.photo_url;
+      await org.save();
+    }
+  }
+
+  return request;
 }
 
 /* Approuve ou rejette une demande ; crée l'organisation si approuvée. */
@@ -105,7 +165,8 @@ async function reviewRequest(id, { status, review_note }) {
         contact_phone: request.contact_phone,
         description: request.description,
         products: request.products || [],
-        photo_url: request.photo_url,
+        photo_url: (request.gallery_urls && request.gallery_urls[0]) || request.photo_url,
+        gallery_urls: request.gallery_urls || [],
         max_visitors: request.max_visitors,
         visit_slots: request.visit_slots || [],
         safety_rules: request.safety_rules,
@@ -147,8 +208,24 @@ async function getPublicBySlug(slug) {
   return org;
 }
 
-/* Points carte : organisations labellisées avec coordonnées. */
-async function listMapPoints({ region, sector } = {}) {
+/* Liste publique des industries (entreprises labellisées). */
+async function listPublicIndustries() {
+  return Organization.findAll({
+    where: {
+      type: 'entreprise',
+      label_status: 'approved',
+      is_active: true,
+    },
+    attributes: [
+      'id', 'name', 'slug', 'sector', 'region', 'city',
+      'description', 'products', 'photo_url', 'gallery_urls', 'label_code',
+    ],
+    order: [['name', 'ASC']],
+  });
+}
+
+/* Points carte : sites labellisés + arrangements de visite. */
+async function listMapPoints({ region, sector, type } = {}) {
   const where = {
     label_status: 'approved',
     is_active: true,
@@ -157,14 +234,64 @@ async function listMapPoints({ region, sector } = {}) {
   };
   if (region) where.region = region;
   if (sector) where.sector = sector;
+  if (type === 'entreprise' || type === 'ecole') where.type = type;
 
-  return Organization.findAll({
+  const orgs = await Organization.findAll({
     where,
     attributes: [
       'id', 'name', 'slug', 'type', 'sector', 'region', 'city',
-      'lat', 'lng', 'label_code', 'products',
+      'lat', 'lng', 'label_code', 'products', 'max_visitors', 'description',
     ],
     order: [['name', 'ASC']],
+  });
+
+  const siteIds = orgs.filter((o) => o.type === 'entreprise').map((o) => o.id);
+  const bookings = siteIds.length
+    ? await VisitBooking.findAll({
+        where: {
+          organization_id: { [Op.in]: siteIds },
+          status: { [Op.in]: ['pending', 'confirmed'] },
+        },
+        attributes: [
+          'organization_id',
+          'school_name',
+          'visit_day',
+          'visit_start',
+          'visit_end',
+          'headcount',
+        ],
+        order: [
+          ['visit_day', 'ASC'],
+          ['visit_start', 'ASC'],
+        ],
+      })
+    : [];
+
+  const bySite = {};
+  for (const b of bookings) {
+    const id = b.organization_id;
+    if (!bySite[id]) bySite[id] = [];
+    /* Public : pas de contacts (e-mail / téléphone). */
+    bySite[id].push({
+      school_name: b.school_name,
+      visit_day: b.visit_day,
+      visit_start: b.visit_start,
+      visit_end: b.visit_end,
+      headcount: b.headcount,
+    });
+  }
+
+  return orgs.map((o) => {
+    const json = o.toJSON();
+    const items = bySite[o.id] || [];
+    return {
+      ...json,
+      visits: {
+        groups: items.length,
+        headcount: items.reduce((sum, v) => sum + Number(v.headcount || 0), 0),
+        items,
+      },
+    };
   });
 }
 
@@ -206,8 +333,10 @@ module.exports = {
   createRequest,
   listRequests,
   getRequestById,
+  updateRequest,
   reviewRequest,
   getPublicBySlug,
+  listPublicIndustries,
   listMapPoints,
   listQrBatch,
 };

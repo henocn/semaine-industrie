@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { login } from '../api/auth'
-import { Mark } from '../components/layout/Mark'
+import { BrandLogo } from '../components/layout/Mark'
 
-/* Page de connexion — entrée du backoffice. */
+const field =
+  'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
+
+/* Page de connexion — hors header public. */
 export default function LoginPage() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
@@ -27,61 +30,63 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-svh bg-[#f3f4f6] lg:grid-cols-[1fr_1.1fr]">
-      <div className="flex flex-col justify-between p-8 sm:p-12">
-        <Link to="/" className="flex items-center gap-2.5 text-forest">
-          <Mark className="h-6 w-auto text-leaf" />
-          <span className="text-[15px] font-semibold">Semaine Industrie</span>
+    <div className="grid h-svh overflow-hidden lg:grid-cols-2">
+      <div className="relative flex h-full items-center justify-center px-6 sm:px-12">
+        <Link to="/" className="absolute left-6 top-6 sm:left-10 sm:top-8">
+          <BrandLogo className="h-10 w-auto" />
         </Link>
 
-        <div className="mx-auto w-full max-w-md rounded-3xl bg-white p-8 shadow-sm">
-          <h1 className="text-[28px] font-semibold tracking-tight text-forest">Connexion</h1>
-          <p className="mt-2 text-[14px] text-ink/50">Espace organisation et partenaires.</p>
+        <div className="w-full max-w-sm">
+          <h1 className="display text-4xl">Connexion</h1>
 
-          <form onSubmit={onSubmit} className="mt-8 grid gap-5">
-            <label className="block text-[13px] font-medium text-forest">
+          <form onSubmit={onSubmit} className="mt-10 grid gap-8">
+            <label className="block text-[15px] font-medium text-forest">
               E-mail
               <input
                 required
                 type="email"
                 name="email"
                 autoComplete="username"
-                className="mt-2 w-full rounded-xl border-0 bg-[#f3f4f6] px-4 py-3 text-[15px] text-ink focus:outline-none focus:ring-2 focus:ring-forest/15"
+                className={field}
               />
             </label>
-            <label className="block text-[13px] font-medium text-forest">
+            <label className="block text-[15px] font-medium text-forest">
               Mot de passe
               <input
                 required
                 type="password"
                 name="password"
                 autoComplete="current-password"
-                className="mt-2 w-full rounded-xl border-0 bg-[#f3f4f6] px-4 py-3 text-[15px] text-ink focus:outline-none focus:ring-2 focus:ring-forest/15"
+                className={field}
               />
             </label>
-            {error && <p className="text-[13px] text-red-700">{error}</p>}
+            {error && <p className="text-[15px] text-red-700">{error}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-forest px-5 py-3.5 text-[14px] font-semibold text-white hover:bg-ink disabled:opacity-60"
+              className="bg-forest px-8 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-ink disabled:opacity-60"
             >
               {loading ? 'Connexion…' : 'Se connecter'}
             </button>
           </form>
         </div>
-
-        <p className="text-[12px] text-ink/40">© 2026 Semaine de l’industrie</p>
       </div>
 
-      <div className="relative hidden overflow-hidden bg-forest lg:block">
-        <img src="/images/hall.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/70 to-transparent" />
-        <div className="relative flex h-full items-end p-12">
-          <div className="max-w-md text-white">
-            <p className="text-[13px] font-semibold text-sun">Backoffice</p>
-            <h2 className="mt-3 text-[36px] font-semibold leading-tight tracking-tight">
-              Piloter labels, QR et bilan depuis un seul espace.
+      <div className="relative hidden h-full overflow-hidden bg-forest lg:block">
+        <img
+          src="/images/hall.jpg"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-45"
+        />
+        <div className="absolute inset-0 bg-forest/55" />
+        <div className="relative flex h-full items-center justify-center px-12 text-center">
+          <div className="max-w-md">
+            <h2 className="display text-[clamp(1.75rem,3vw,2.5rem)] !text-white">
+              Portail d’administration
             </h2>
+            <p className="mt-4 text-lg leading-relaxed text-white/80">
+              Labels, passeports, visites et bilan — un seul espace pour piloter la semaine.
+            </p>
           </div>
         </div>
       </div>

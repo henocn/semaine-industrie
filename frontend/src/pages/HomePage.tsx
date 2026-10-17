@@ -15,29 +15,6 @@ function Photo({ name, alt, className = '', position = 'center', eager = false }
   )
 }
 
-function Header() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-      <div className={`${WRAP} flex h-16 items-center justify-between`}>
-        <a href="#top" className="flex items-center">
-          <BrandLogo className="h-10 w-auto" />
-        </a>
-        <nav className="hidden gap-1 text-[15px] text-ink/70 md:flex">
-          <a href="#programme" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Programme</a>
-          <a href="#vendredi" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Vendredi 20</a>
-          <Link to="/carte" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Carte</Link>
-          <Link to="/label" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Label</Link>
-          <Link to="/visites" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Visites</Link>
-          <Link to="/affaires" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Affaires</Link>
-          <Link to="/questions" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Forum</Link>
-          <Link to="/bilan" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Bilan</Link>
-          <a href="#contact" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Contact</a>
-        </nav>
-      </div>
-    </header>
-  )
-}
-
 function Hero() {
   return (
     <section id="top" className="relative isolate flex min-h-[520px] items-end overflow-hidden rounded-br-[4rem] bg-forest text-white sm:h-[72svh] sm:max-h-[760px] sm:rounded-br-[8rem]">
@@ -45,12 +22,11 @@ function Hero() {
         src="/images/hall.jpg"
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+        className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-45"
       />
-      {/* Voile noir léger pour la lisibilité du texte */}
-      <div className="absolute inset-0 -z-10 bg-black/65" />
+      {/* Voile forest — même traitement que le panneau login */}
+      <div className="absolute inset-0 -z-10 bg-forest/55" />
       <div className={`${WRAP} pb-14 pt-24 sm:pb-20`}>
-        <p className="mb-4 text-[13px] font-semibold uppercase tracking-[0.18em] text-leaf">Identité · édition 2026</p>
         <h1 className="display max-w-4xl text-[clamp(2.75rem,7.5vw,6rem)] !text-white">
           {CAMPAIGN_TAGLINE.replace(/\.$/, '')}<span className="text-leaf">.</span>
         </h1>
@@ -58,7 +34,7 @@ function Hero() {
           <p className="max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl">
             Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public, à Lomé et dans les régions.
           </p>
-          <p className="text-lg font-semibold [font-stretch:112%] sm:text-right">
+          <p className="text-lg font-semibold sm:text-right">
             <span className="text-sun">Du 16 au 22 novembre 2026</span><br /><span className="font-normal text-white/70">Lomé et les régions</span>
           </p>
         </div>
@@ -316,7 +292,6 @@ function Footer() {
 export default function HomePage() {
   return (
     <>
-      <Header />
       <main>
         <Hero />
         <About />

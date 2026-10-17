@@ -120,7 +120,7 @@ export default function OrgaBusinessPage() {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as typeof filter)}
-            className="rounded-xl border-0 bg-white px-3 py-2.5 text-[13px] font-medium text-forest shadow-sm"
+            className="orga-input w-auto"
           >
             <option value="pending">En attente</option>
             <option value="approved">Approuvés</option>
@@ -128,7 +128,7 @@ export default function OrgaBusinessPage() {
           </select>
           <Link
             to="/affaires"
-            className="rounded-xl bg-forest px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-ink"
+            className="orga-btn"
           >
             Formulaire +
           </Link>
@@ -143,8 +143,8 @@ export default function OrgaBusinessPage() {
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`rounded-xl px-4 py-2 text-[13px] font-semibold ${
-              tab === t ? 'bg-white text-forest shadow-sm' : 'text-ink/50 hover:bg-white/60'
+            className={`border border-black px-4 py-2 text-[13px] font-semibold ${
+              tab === t ? 'bg-forest text-white' : 'bg-white text-ink/60 hover:text-forest'
             }`}
           >
             {t === 'participants' ? 'Participants' : 'Rendez-vous'}
@@ -153,16 +153,16 @@ export default function OrgaBusinessPage() {
       </div>
 
       {tab === 'participants' && (
-        <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+        <section className="orga-panel">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[780px] text-left text-[13px]">
+            <table className="orga-table min-w-[720px]">
               <thead>
-                <tr className="border-b border-black/5 text-ink/40">
-                  <th className="pb-3 font-medium">Organisation</th>
-                  <th className="pb-3 font-medium">Profil</th>
-                  <th className="pb-3 font-medium">Offre / besoin</th>
-                  <th className="pb-3 font-medium">Statut</th>
-                  <th className="pb-3 font-medium">Actions</th>
+                <tr>
+                  <th>Organisation</th>
+                  <th>Profil</th>
+                  <th>Offre / besoin</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -170,30 +170,28 @@ export default function OrgaBusinessPage() {
                   <tr><td colSpan={5} className="py-10 text-ink/40">Aucun participant</td></tr>
                 )}
                 {filteredParticipants.map((p) => (
-                  <tr key={p.id} className="border-b border-black/[0.04] align-top last:border-0">
-                    <td className="py-4">
+                  <tr key={p.id}>
+                    <td>
                       <p className="font-semibold text-forest">{p.organization_name}</p>
                       <p className="mt-1 text-ink/50">{p.contact_name} — {p.email}</p>
                     </td>
-                    <td className="py-4">
-                      <span className="rounded-full bg-[#e8f1ee] px-2.5 py-1 text-[12px] font-medium text-forest">
-                        {p.kind}
-                      </span>
+                    <td>
+                      <span className="font-medium text-forest">{p.kind}</span>
                       {p.sector && <p className="mt-2 text-ink/45">{p.sector}</p>}
                     </td>
-                    <td className="py-4 text-ink/55">
+                    <td>
                       <p><span className="text-ink/35">Offre :</span> {p.offers || '—'}</p>
                       <p className="mt-1"><span className="text-ink/35">Cherche :</span> {p.seeks || '—'}</p>
                     </td>
-                    <td className="py-4 text-ink/55">{p.status}</td>
-                    <td className="py-4">
+                    <td>{p.status}</td>
+                    <td>
                       {p.status === 'pending' ? (
                         <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
                             disabled={busyId === p.id}
                             onClick={() => onReview(p.id, 'approved')}
-                            className="rounded-lg bg-forest px-3 py-2 text-[12px] font-semibold text-white disabled:opacity-50"
+                            className="orga-btn disabled:opacity-50"
                           >
                             Approuver
                           </button>
@@ -201,7 +199,7 @@ export default function OrgaBusinessPage() {
                             type="button"
                             disabled={busyId === p.id}
                             onClick={() => onReview(p.id, 'rejected')}
-                            className="rounded-lg bg-[#f3f4f6] px-3 py-2 text-[12px] font-semibold text-ink/70 disabled:opacity-50"
+                            className="orga-btn-ghost disabled:opacity-50"
                           >
                             Refuser
                           </button>
@@ -218,12 +216,12 @@ export default function OrgaBusinessPage() {
 
       {tab === 'meetings' && (
         <div className="space-y-4">
-          <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+          <section className="orga-panel">
             <h2 className="text-[15px] font-semibold text-forest">Créer un rendez-vous</h2>
             <form onSubmit={onCreateMeeting} className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               <label className="text-[12px] font-medium text-ink/50">
                 Participant A
-                <select required name="participant_a_id" className="mt-1 w-full rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px] text-forest">
+                <select required name="participant_a_id" className="mt-1 w-full orga-input text-forest">
                   <option value="">Choisir…</option>
                   {approvedPool.map((p) => (
                     <option key={p.id} value={p.id}>{p.organization_name} ({p.kind})</option>
@@ -232,7 +230,7 @@ export default function OrgaBusinessPage() {
               </label>
               <label className="text-[12px] font-medium text-ink/50">
                 Participant B
-                <select required name="participant_b_id" className="mt-1 w-full rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px] text-forest">
+                <select required name="participant_b_id" className="mt-1 w-full orga-input text-forest">
                   <option value="">Choisir…</option>
                   {approvedPool.map((p) => (
                     <option key={p.id} value={p.id}>{p.organization_name} ({p.kind})</option>
@@ -241,28 +239,28 @@ export default function OrgaBusinessPage() {
               </label>
               <label className="text-[12px] font-medium text-ink/50">
                 Début
-                <input required type="datetime-local" name="slot_start" className="mt-1 w-full rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px]" />
+                <input required type="datetime-local" name="slot_start" className="mt-1 w-full orga-input" />
               </label>
               <label className="text-[12px] font-medium text-ink/50">
                 Fin
-                <input required type="datetime-local" name="slot_end" className="mt-1 w-full rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px]" />
+                <input required type="datetime-local" name="slot_end" className="mt-1 w-full orga-input" />
               </label>
               <label className="text-[12px] font-medium text-ink/50">
                 Table
                 <div className="mt-1 flex gap-2">
-                  <input name="table_label" placeholder="T12" className="w-full rounded-xl bg-[#f3f4f6] px-3 py-2.5 text-[13px]" />
-                  <button type="submit" className="rounded-xl bg-forest px-4 text-[13px] font-semibold text-white">OK</button>
+                  <input name="table_label" placeholder="T12" className="w-full orga-input" />
+                  <button type="submit" className="border border-black bg-forest px-4 text-[13px] font-semibold text-white">OK</button>
                 </div>
               </label>
             </form>
           </section>
 
-          <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+          <section className="orga-panel">
             <h2 className="mb-4 text-[15px] font-semibold text-forest">{meetings.length} rendez-vous</h2>
             <ul className="space-y-3">
               {meetings.length === 0 && <li className="text-[13px] text-ink/40">Aucun rendez-vous</li>}
               {meetings.map((m) => (
-                <li key={m.id} className="rounded-2xl bg-[#f7f8f9] p-4">
+                <li key={m.id} className="border border-black bg-white p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-forest">
@@ -287,12 +285,12 @@ export default function OrgaBusinessPage() {
                       <input
                         name="note"
                         placeholder="Fiche contact (30 sec)…"
-                        className="flex-1 rounded-xl bg-white px-3 py-2.5 text-[13px]"
+                        className="flex-1 border border-black bg-white px-3 py-2.5 text-[13px]"
                       />
                       <button
                         type="submit"
                         disabled={busyId === m.id}
-                        className="rounded-xl bg-forest px-4 py-2.5 text-[12px] font-semibold text-white disabled:opacity-50"
+                        className="border border-black bg-forest px-4 py-2.5 text-[12px] font-semibold text-white disabled:opacity-50"
                       >
                         Clôturer + relance 3 mois
                       </button>

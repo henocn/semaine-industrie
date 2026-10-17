@@ -1,8 +1,10 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { PublicLayout } from './components/layout/PublicLayout'
 import BilanPage from './pages/BilanPage'
 import BookingPage from './pages/BookingPage'
 import BusinessRegisterPage from './pages/BusinessRegisterPage'
 import HomePage from './pages/HomePage'
+import IndustriesPage from './pages/IndustriesPage'
 import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
@@ -19,23 +21,27 @@ import QuestionsPage from './pages/QuestionsPage'
 import SurveyPage from './pages/SurveyPage'
 import VotePage from './pages/VotePage'
 
-/* Routeur principal : site public + label + orga. */
+/* Routeur : layout public partagé + espace orga. */
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/label" element={<LabelRequestPage />} />
-        <Route path="/visites" element={<BookingPage />} />
-        <Route path="/affaires" element={<BusinessRegisterPage />} />
-        <Route path="/carte" element={<MapPage />} />
-        <Route path="/bilan" element={<BilanPage />} />
-        <Route path="/passeport/:code" element={<PassportPage />} />
-        <Route path="/questions" element={<QuestionsPage />} />
-        <Route path="/vote" element={<VotePage />} />
-        <Route path="/questionnaire" element={<SurveyPage />} />
-        <Route path="/o/:slug" element={<OrganizationPage />} />
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/label" element={<LabelRequestPage />} />
+          <Route path="/visites" element={<BookingPage />} />
+          <Route path="/affaires" element={<BusinessRegisterPage />} />
+          <Route path="/carte" element={<MapPage />} />
+          <Route path="/industrie" element={<IndustriesPage />} />
+          <Route path="/passeport/:code" element={<PassportPage />} />
+          <Route path="/questions" element={<QuestionsPage />} />
+          <Route path="/vote" element={<VotePage />} />
+          <Route path="/questionnaire" element={<SurveyPage />} />
+          <Route path="/o/:slug" element={<OrganizationPage />} />
+        </Route>
+
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/bilan" element={<BilanPage />} />
         <Route path="/orga" element={<OrgaDashboardPage />} />
         <Route path="/orga/labels" element={<OrgaLabelsPage />} />
         <Route path="/orga/visites" element={<OrgaVisitsPage />} />

@@ -40,6 +40,8 @@ User.hasMany(RefreshToken, { foreignKey: 'user_id', as: 'refreshTokens' });
 
 VisitBooking.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 Organization.hasMany(VisitBooking, { foreignKey: 'organization_id', as: 'visitBookings' });
+VisitBooking.belongsTo(Organization, { foreignKey: 'school_organization_id', as: 'school' });
+Organization.hasMany(VisitBooking, { foreignKey: 'school_organization_id', as: 'schoolVisitBookings' });
 VisitBooking.belongsTo(User, { foreignKey: 'teacher_user_id', as: 'teacher' });
 
 BusinessMeeting.belongsTo(BusinessParticipant, { foreignKey: 'participant_a_id', as: 'participantA' });

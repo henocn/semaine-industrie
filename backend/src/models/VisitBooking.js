@@ -2,7 +2,7 @@
 
 const { DataTypes } = require('sequelize');
 
-/* Définit le modèle VisitBooking (réservation de visite par un enseignant). */
+/* Définit le modèle VisitBooking (arrangement de visite orga). */
 module.exports = (sequelize) => {
   const VisitBooking = sequelize.define(
     'VisitBooking',
@@ -15,6 +15,10 @@ module.exports = (sequelize) => {
       organization_id: {
         type: DataTypes.UUID,
         allowNull: false,
+      },
+      school_organization_id: {
+        type: DataTypes.UUID,
+        allowNull: true,
       },
       teacher_user_id: {
         type: DataTypes.UUID,

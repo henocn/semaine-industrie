@@ -1,3 +1,4 @@
+import { API_BASE } from '../config/api'
 import { apiFetch } from './client'
 
 export type LabelRequestPayload = {
@@ -6,10 +7,8 @@ export type LabelRequestPayload = {
   sector?: string
   region?: string
   city?: string
-  address?: string
-  contact_name: string
   contact_email: string
-  contact_phone?: string
+  contact_phone: string
   description?: string
   products?: string[]
   max_visitors?: number | null
@@ -17,6 +16,7 @@ export type LabelRequestPayload = {
   safety_rules?: string
   lat?: number | null
   lng?: number | null
+  gallery_urls?: string[]
 }
 
 export type Organization = {
@@ -36,8 +36,45 @@ export type Organization = {
   visit_slots: { day: string; start: string; end: string }[]
   safety_rules: string | null
   contact_name: string | null
+  contact_email?: string | null
+  contact_phone?: string | null
+  photo_url?: string | null
+  gallery_urls?: string[]
   lat: string | null
   lng: string | null
+}
+
+export type IndustryCard = {
+  id: string
+  name: string
+  slug: string
+  sector: string | null
+  region: string | null
+  city: string | null
+  description: string | null
+  products: string[]
+  photo_url: string | null
+  gallery_urls: string[]
+  label_code: string | null
+}
+
+/* Upload les 3 images galerie (multipart). */
+export async function uploadLabelGallery(files: File[]) {
+  const body = new FormData()
+  for (const file of files) body.append('gallery', file)
+  const res = await fetch(`${API_BASE}/labels/upload-gallery`, {
+    method: 'POST',
+    body,
+  })
+  const json = (await res.json()) as {
+    success: boolean
+    data?: { urls: string[] }
+    error?: { message: string }
+  }
+  if (!res.ok || !json.success || !json.data?.urls) {
+    throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
+  }
+  return json.data.urls
 }
 
 /* Envoie une demande de label. */
@@ -46,6 +83,11 @@ export function createLabelRequest(payload: LabelRequestPayload) {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+/* Liste publique des industries labellisées. */
+export function listIndustries() {
+  return apiFetch<IndustryCard[]>('/labels/organizations')
 }
 
 export type LabelRequest = {
@@ -61,9 +103,28 @@ export type LabelRequest = {
   description: string | null
   products: string[]
   max_visitors: number | null
+  safety_rules?: string | null
+  lat?: string | number | null
+  lng?: string | number | null
   status: 'pending' | 'approved' | 'rejected'
   createdAt?: string
   created_at?: string
+}
+
+/* Lien Google Maps pour un point (nouvel onglet). */
+export function googleMapsUrl(lat: string | number | null | undefined, lng: string | number | null | undefined) {
+  const a = Number(lat)
+  const b = Number(lng)
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null
+  return `https://www.google.com/maps?q=${a},${b}`
+}
+
+export type MapVisitItem = {
+  school_name: string
+  visit_day: string
+  visit_start: string
+  visit_end: string
+  headcount: number
 }
 
 export type MapPoint = {
@@ -78,6 +139,13 @@ export type MapPoint = {
   lng: string
   label_code: string | null
   products: string[]
+  max_visitors?: number | null
+  description?: string | null
+  visits?: {
+    groups: number
+    headcount: number
+    items: MapVisitItem[]
+  }
 }
 
 /* Charge la fiche publique d'une organisation labellisée. */
@@ -102,11 +170,20 @@ export function reviewLabelRequest(id: string, status: 'approved' | 'rejected', 
   )
 }
 
-/* Points carte des usines labellisées. */
-export function listMapPoints(params?: { region?: string; sector?: string }) {
+/* Modifie une demande (orga). */
+export function updateLabelRequest(id: string, payload: Partial<LabelRequestPayload> & { structure_type?: 'entreprise' | 'ecole' }) {
+  return apiFetch<LabelRequest>(`/labels/requests/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
+/* Points carte des usines labellisées (+ visites arrangées). */
+export function listMapPoints(params?: { region?: string; sector?: string; type?: 'entreprise' | 'ecole' }) {
   const sp = new URLSearchParams()
   if (params?.region) sp.set('region', params.region)
   if (params?.sector) sp.set('sector', params.sector)
+  if (params?.type) sp.set('type', params.type)
   const q = sp.toString() ? `?${sp}` : ''
   return apiFetch<MapPoint[]>(`/labels/organizations/map${q}`)
 }

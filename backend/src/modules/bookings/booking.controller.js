@@ -3,12 +3,11 @@
 const bookingService = require('./booking.service');
 const ApiResponse = require('../../utils/ApiResponse');
 
-/* POST réservation (public ou enseignant). */
+/* POST arrangement de visite (orga uniquement). */
 async function create(req, res, next) {
   try {
-    const teacherId = req.user?.role === 'enseignant' ? req.user.id : null;
-    const data = await bookingService.createBooking(req.body, teacherId);
-    return ApiResponse.created(res, data, 'Visite réservée');
+    const data = await bookingService.createBooking(req.body);
+    return ApiResponse.created(res, data, 'Visite arrangée');
   } catch (err) {
     return next(err);
   }
@@ -24,10 +23,10 @@ async function list(req, res, next) {
   }
 }
 
-/* GET sites réservables. */
+/* GET sites / écoles labellisés. */
 async function sites(req, res, next) {
   try {
-    const data = await bookingService.listBookableSites();
+    const data = await bookingService.listBookableSites({ type: req.query.type });
     return ApiResponse.success(res, data);
   } catch (err) {
     return next(err);

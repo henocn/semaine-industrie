@@ -13,7 +13,7 @@ async function stats(req, res, next) {
   }
 }
 
-/* GET bilan public (mêmes agrégats, sans détail orga sensible). */
+/* GET bilan (orga uniquement). */
 async function bilan(req, res, next) {
   try {
     const full = await dashboardService.getStats();

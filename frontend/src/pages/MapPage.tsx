@@ -2,125 +2,119 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listMapPoints, type MapPoint } from '../api/labels'
 import { SitesMap } from '../components/map/SitesMap'
-import { Mark, WRAP } from '../components/layout/Mark'
+import { WRAP } from '../components/layout/Mark'
 
-/* Page carte des usines / écoles labellisées. */
+/* Carte des sites qui ont des visites arrangées + panneau détail. */
 export default function MapPage() {
   const [points, setPoints] = useState<MapPoint[]>([])
-  const [region, setRegion] = useState('')
-  const [sector, setSector] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
 
   useEffect(() => {
-    /* Charge les points depuis l'API. */
+    /* Charge les sites entreprises, ne garde que ceux avec visites. */
     async function load() {
       try {
         setError(null)
-        const data = await listMapPoints({
-          region: region || undefined,
-          sector: sector || undefined,
-        })
-        setPoints(data)
+        const data = await listMapPoints({ type: 'entreprise' })
+        const withVisits = data.filter((p) => (p.visits?.groups ?? 0) > 0)
+        setPoints(withVisits)
+        setSelected((prev) =>
+          prev && withVisits.some((p) => p.id === prev) ? prev : withVisits[0]?.id || null,
+        )
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Carte indisponible')
       }
     }
     load()
-  }, [region, sector])
+  }, [])
 
-  const regions = useMemo(
-    () => [...new Set(points.map((p) => p.region).filter(Boolean))] as string[],
-    [points],
-  )
-  const sectors = useMemo(
-    () => [...new Set(points.map((p) => p.sector).filter(Boolean))] as string[],
-    [points],
-  )
+  const active = useMemo(() => points.find((p) => p.id === selected) || null, [points, selected])
+  const visits = active?.visits
 
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-        <div className={`${WRAP} flex h-16 items-center justify-between`}>
-          <Link to="/" className="flex items-center gap-2.5 text-forest">
-            <Mark className="h-6 w-auto text-leaf" />
-            <span className="text-[15px] font-semibold">Semaine de l’industrie 2026</span>
-          </Link>
-          <Link to="/label" className="text-[15px] text-ink/70 hover:text-forest">Demander le label</Link>
-        </div>
-      </header>
+    <main className="overflow-x-hidden py-10 sm:py-14">
+      <div className={WRAP}>
+        <h1 className="display text-4xl sm:text-5xl">Carte des visites</h1>
+        <p className="mt-3 max-w-xl text-lg text-ink/65">
+          Sites qui accueillent déjà des établissements.
+        </p>
 
-      <main className="py-12 sm:py-16">
-        <div className={WRAP}>
-          <h1 className="display text-4xl sm:text-5xl">Carte des sites ouverts</h1>
-          <p className="mt-4 max-w-2xl text-lg text-ink/65">
-            Les points apparaissent quand un label est validé. Filtrez par région ou secteur.
-          </p>
+        {error && <p className="mt-6 text-red-700">{error}</p>}
 
-          <div className="mt-8 flex flex-wrap gap-6">
-            <label className="text-[15px] font-medium text-forest">
-              Région
-              <select
-                className="ml-3 border-0 border-b border-forest/25 bg-transparent py-2 focus:outline-none"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-              >
-                <option value="">Toutes</option>
-                {regions.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </label>
-            <label className="text-[15px] font-medium text-forest">
-              Secteur
-              <select
-                className="ml-3 border-0 border-b border-forest/25 bg-transparent py-2 focus:outline-none"
-                value={sector}
-                onChange={(e) => setSector(e.target.value)}
-              >
-                <option value="">Tous</option>
-                {sectors.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </label>
-          </div>
+        {!error && points.length === 0 && (
+          <p className="mt-10 text-ink/50">Aucune visite arrangée pour le moment.</p>
+        )}
 
-          {error && <p className="mt-6 text-red-700">{error}</p>}
+        {points.length > 0 && (
+          <div className="mt-8 grid gap-5 lg:h-[min(72vh,740px)] lg:grid-cols-[minmax(0,1.8fr)_minmax(260px,0.95fr)] lg:items-stretch lg:overflow-hidden">
+            <div className="min-h-[360px] min-w-0 overflow-hidden sm:min-h-[440px] lg:min-h-0 lg:h-full">
+              <SitesMap
+                points={points}
+                selectedId={selected}
+                onSelect={setSelected}
+                tall
+              />
+            </div>
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
-            <SitesMap
-              points={points}
-              selectedId={selected}
-              onSelect={setSelected}
-            />
+            <aside className="min-h-0 min-w-0 overflow-y-auto border border-forest/15 p-5">
+              {!active && <p className="text-ink/50">Sélectionnez un site sur la carte.</p>}
 
-            <ul className="border-t border-forest/15">
-              {points.map((p) => (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    onClick={() => setSelected(p.id)}
-                    className={`w-full border-b border-forest/15 py-4 text-left transition-colors ${selected === p.id ? 'bg-sage/50' : 'hover:bg-sage/30'}`}
+              {active && (
+                <>
+                  <p className="text-[13px] font-semibold uppercase tracking-wide text-leaf">
+                    {active.label_code ? `Label ${active.label_code}` : 'Site labellisé'}
+                  </p>
+                  <h2 className="display mt-2 text-3xl text-forest">{active.name}</h2>
+                  <p className="mt-2 text-[15px] text-ink/60">
+                    {[active.city, active.region, active.sector].filter(Boolean).join(' · ')}
+                  </p>
+
+                  <div className="mt-6 grid grid-cols-2 gap-3 border-y border-forest/15 py-4">
+                    <div>
+                      <p className="text-[28px] font-semibold tracking-tight text-forest">
+                        {visits?.groups ?? 0}
+                      </p>
+                      <p className="text-[13px] text-ink/55">groupes</p>
+                    </div>
+                    <div>
+                      <p className="text-[28px] font-semibold tracking-tight text-forest">
+                        {visits?.headcount ?? 0}
+                      </p>
+                      <p className="text-[13px] text-ink/55">visiteurs</p>
+                    </div>
+                  </div>
+
+                  <h3 className="mt-6 text-[15px] font-semibold text-forest">Qui vient</h3>
+                  <ul className="mt-3 space-y-3">
+                    {visits!.items.map((v, i) => (
+                      <li
+                        key={`${v.school_name}-${v.visit_day}-${v.visit_start}-${i}`}
+                        className="border border-forest/10 p-3"
+                      >
+                        <p className="font-semibold text-forest">{v.school_name}</p>
+                        <p className="mt-1 text-[14px] text-ink/65">
+                          {v.visit_day} · {v.visit_start}–{v.visit_end}
+                        </p>
+                        <p className="mt-1 text-[14px] text-ink/55">
+                          <span className="font-semibold text-forest">{v.headcount}</span> élèves /
+                          étudiants
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link
+                    to={`/o/${active.slug}`}
+                    className="mt-6 inline-block text-[15px] font-medium text-forest underline decoration-forest/30 underline-offset-4"
                   >
-                    <p className="font-semibold text-forest">{p.name}</p>
-                    <p className="mt-1 text-[15px] text-ink/60">
-                      {[p.city, p.region, p.sector].filter(Boolean).join(' · ')}
-                    </p>
-                    <Link
-                      to={`/o/${p.slug}`}
-                      className="mt-2 inline-block text-[15px] text-forest underline decoration-forest/30 underline-offset-4"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Voir la fiche
-                    </Link>
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    Voir la fiche
+                  </Link>
+                </>
+              )}
+            </aside>
           </div>
-        </div>
-      </main>
-    </>
+        )}
+      </div>
+    </main>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { getSurveyQuestions, submitSurvey, type SurveyQuestion } from '../api/surveys'
-import { Mark, WRAP } from '../components/layout/Mark'
+import { WRAP } from '../components/layout/Mark'
 
 /* Questionnaire avant / après (1–5). */
 export default function SurveyPage() {
@@ -38,16 +38,7 @@ export default function SurveyPage() {
   }
 
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-        <div className={`${WRAP} flex h-16 items-center justify-between`}>
-          <Link to="/" className="flex items-center gap-2.5 text-forest">
-            <Mark className="h-6 w-auto text-leaf" />
-            <span className="text-[15px] font-semibold">Semaine de l’industrie 2026</span>
-          </Link>
-        </div>
-      </header>
-      <main className="py-16 sm:py-24">
+    <main className="py-16 sm:py-24">
         <div className={`${WRAP} max-w-2xl`}>
           <h1 className="display text-4xl">
             Questionnaire {phase === 'before' ? 'avant' : 'après'}
@@ -78,6 +69,5 @@ export default function SurveyPage() {
           )}
         </div>
       </main>
-    </>
   )
 }

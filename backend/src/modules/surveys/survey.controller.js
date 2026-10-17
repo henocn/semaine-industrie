@@ -2,6 +2,7 @@
 
 const surveyService = require('./survey.service');
 const ApiResponse = require('../../utils/ApiResponse');
+const { emitRealtime } = require('../../realtime/io');
 
 async function questions(req, res, next) {
   try {
@@ -14,6 +15,8 @@ async function questions(req, res, next) {
 async function submit(req, res, next) {
   try {
     const data = await surveyService.submit(req.body);
+    const stats = await surveyService.getStats();
+    emitRealtime('survey:updated', stats, 'live');
     return ApiResponse.created(res, data, 'Réponses enregistrées');
   } catch (err) {
     return next(err);
