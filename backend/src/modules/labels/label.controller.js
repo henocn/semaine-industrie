@@ -50,6 +50,7 @@ async function updateRequest(req, res, next) {
 async function reviewRequest(req, res, next) {
   try {
     const data = await labelService.reviewRequest(req.params.id, req.body);
+    emitRealtime('label:updated', data.request, 'orga');
     return ApiResponse.success(res, data, 'Demande traitée');
   } catch (err) {
     return next(err);

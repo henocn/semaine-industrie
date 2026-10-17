@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { getStoredUser, logout } from '../../api/auth'
-import type { LabelRequest } from '../../api/labels'
+import { listLabelRequests, type LabelRequest } from '../../api/labels'
 import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
 import { joinRoom, onRealtime } from '../../lib/socket'
 import { BrandLogo } from './Mark'
@@ -26,7 +26,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
   const user = getStoredUser()
   const location = useLocation()
   const [open, setOpen] = useState(false)
-  const [labelAlerts, setLabelAlerts] = useState(0)
+  const [pendingCount, setPendingCount] = useState(0)
   const [banner, setBanner] = useState<string | null>(null)
 
   /* Déconnecte et renvoie au login. */
@@ -35,31 +35,45 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     window.location.href = '/login'
   }
 
+  /* Compte les demandes encore en attente. */
+  async function refreshPending() {
+    try {
+      const rows = await listLabelRequests('pending')
+      setPendingCount(rows.length)
+    } catch {
+      // ignore (session expirée gérée ailleurs)
+    }
+  }
+
+  /* Charge le badge à l'ouverture du backoffice. */
+  useEffect(() => {
+    if (!user || user.role !== 'orga') return
+    void refreshPending()
+  }, [user?.id, user?.role, location.pathname])
+
   /* Écoute les nouvelles demandes label (notif + badge). */
   useEffect(() => {
     if (!user || user.role !== 'orga') return
     void ensureNotifyPermission()
     joinRoom('orga')
-    return onRealtime<LabelRequest>('label:created', (row) => {
+    const offCreated = onRealtime<LabelRequest>('label:created', (row) => {
       const kind = row.structure_type === 'ecole' ? 'École' : 'Entreprise'
       const msg = `${row.structure_name} · ${row.contact_phone || 'sans tél.'}`
       setBanner(`Nouvelle demande (${kind}) : ${msg}`)
-      if (!location.pathname.startsWith('/orga/labels')) {
-        setLabelAlerts((n) => n + 1)
-      }
+      if (row.status === 'pending') setPendingCount((n) => n + 1)
       pushNotify('Nouvelle demande de label', msg, {
         tag: `label-${row.id}`,
         href: '/orga/labels',
       })
     })
-  }, [user?.id, user?.role, location.pathname])
-
-  /* Remet le badge à zéro sur la page demandes. */
-  useEffect(() => {
-    if (location.pathname.startsWith('/orga/labels')) {
-      setLabelAlerts(0)
+    const offUpdated = onRealtime<LabelRequest>('label:updated', () => {
+      void refreshPending()
+    })
+    return () => {
+      offCreated()
+      offUpdated()
     }
-  }, [location.pathname])
+  }, [user?.id, user?.role])
 
   const sidebar = (
     <aside className="flex h-full w-60 flex-col border-r border-black bg-white px-3 py-5">
@@ -73,9 +87,12 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         <NavLink to="/orga/labels" className={linkClass}>
           <span className="flex w-full items-center justify-between gap-2">
             Demandes label
-            {labelAlerts > 0 && (
-              <span className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink">
-                {labelAlerts > 9 ? '9+' : labelAlerts}
+            {pendingCount > 0 && (
+              <span
+                className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
+                title={`${pendingCount} en attente`}
+              >
+                {pendingCount > 99 ? '99+' : pendingCount}
               </span>
             )}
           </span>
