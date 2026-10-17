@@ -1,7 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { PublicLayout } from './components/layout/PublicLayout'
 import BilanPage from './pages/BilanPage'
-import BookingPage from './pages/BookingPage'
 import BusinessRegisterPage from './pages/BusinessRegisterPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
@@ -17,6 +16,7 @@ import OrgaPassportsPage from './pages/OrgaPassportsPage'
 import OrgaQrPage from './pages/OrgaQrPage'
 import OrgaVisitsPage from './pages/OrgaVisitsPage'
 import PassportPage from './pages/PassportPage'
+import ProgrammePage from './pages/ProgrammePage'
 import QuestionsPage from './pages/QuestionsPage'
 import SurveyPage from './pages/SurveyPage'
 import VotePage from './pages/VotePage'
@@ -28,8 +28,8 @@ export default function App() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/programme" element={<ProgrammePage />} />
           <Route path="/label" element={<LabelRequestPage />} />
-          <Route path="/visites" element={<BookingPage />} />
           <Route path="/affaires" element={<BusinessRegisterPage />} />
           <Route path="/carte" element={<MapPage />} />
           <Route path="/industrie" element={<IndustriesPage />} />

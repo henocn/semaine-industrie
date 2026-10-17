@@ -3,6 +3,17 @@
 const passportService = require('./passport.service');
 const ApiResponse = require('../../utils/ApiResponse');
 
+/* Crée un passeport de groupe (un code pour la classe). */
+async function createGroup(req, res, next) {
+  try {
+    const data = await passportService.createGroup(req.body);
+    return ApiResponse.created(res, data, 'Passeport de groupe créé');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Crée un lot de passeports individuels. */
 async function createBatch(req, res, next) {
   try {
     const data = await passportService.createBatch(req.body);
@@ -12,6 +23,7 @@ async function createBatch(req, res, next) {
   }
 }
 
+/* Fiche publique par code. */
 async function getByCode(req, res, next) {
   try {
     const data = await passportService.getByCode(req.params.code);
@@ -21,6 +33,7 @@ async function getByCode(req, res, next) {
   }
 }
 
+/* Tamponne une visite (un site = un tampon, pour tout le groupe). */
 async function scan(req, res, next) {
   try {
     const data = await passportService.scanVisit(req.body);
@@ -30,4 +43,4 @@ async function scan(req, res, next) {
   }
 }
 
-module.exports = { createBatch, getByCode, scan };
+module.exports = { createGroup, createBatch, getByCode, scan };

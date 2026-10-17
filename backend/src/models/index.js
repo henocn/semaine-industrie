@@ -51,6 +51,8 @@ PassportVisit.belongsTo(Passport, { foreignKey: 'passport_id', as: 'passport' })
 Passport.hasMany(PassportVisit, { foreignKey: 'passport_id', as: 'visits' });
 PassportVisit.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 Organization.hasMany(PassportVisit, { foreignKey: 'organization_id', as: 'passportVisits' });
+Passport.belongsTo(Organization, { foreignKey: 'school_organization_id', as: 'school' });
+Organization.hasMany(Passport, { foreignKey: 'school_organization_id', as: 'groupPassports' });
 
 SurveyResponse.belongsTo(Passport, { foreignKey: 'passport_id', as: 'passport' });
 Passport.hasMany(SurveyResponse, { foreignKey: 'passport_id', as: 'surveys' });

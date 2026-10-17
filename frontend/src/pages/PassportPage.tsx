@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { getPassport, type Passport } from '../api/passports'
 import { WRAP } from '../components/layout/Mark'
 
-/* Page publique « mon passeport ». */
+/* Page publique « mon passeport » (groupe ou individuel). */
 export default function PassportPage() {
   const { code = '' } = useParams()
   const [passport, setPassport] = useState<Passport | null>(null)
@@ -16,6 +16,8 @@ export default function PassportPage() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Introuvable'))
   }, [code])
 
+  const isGroup = passport?.kind === 'group'
+
   return (
     <main className="py-16 sm:py-24">
         <div className={WRAP}>
@@ -23,12 +25,23 @@ export default function PassportPage() {
           {!error && !passport && <p className="text-ink/55">Chargement…</p>}
           {passport && (
             <>
-              <p className="text-[15px] font-semibold text-leaf">Passeport {passport.code}</p>
+              <p className="text-[15px] font-semibold text-leaf">
+                {isGroup ? 'Passeport de groupe' : 'Passeport'} {passport.code}
+              </p>
               <h1 className="display mt-3 text-4xl sm:text-5xl">
-                {passport.holder_name || 'Parcours industrie'}
+                {isGroup
+                  ? (passport.school_name || passport.holder_name || 'Parcours commun')
+                  : (passport.holder_name || 'Parcours industrie')}
               </h1>
               <p className="mt-4 text-lg text-ink/65">
-                {[passport.school_name, passport.class_label].filter(Boolean).join(' · ') || 'Visites tamponnées ci-dessous'}
+                {isGroup
+                  ? [
+                      passport.class_label,
+                      passport.headcount ? `${passport.headcount} élèves` : null,
+                      'un tampon par site pour toute la classe',
+                    ].filter(Boolean).join(' · ')
+                  : ([passport.school_name, passport.class_label].filter(Boolean).join(' · ')
+                    || 'Visites tamponnées ci-dessous')}
               </p>
 
               <ul className="mt-12 border-t border-forest/15">

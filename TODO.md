@@ -107,12 +107,12 @@
 
 ## PHASE 7 — Alignement TDR V3 + charte MDPISE
 
-> Réf. : `ressources/NOTES-v3-mdpise.md` · https://semaine-industrie.mdpise.tg/ · Proposition V3 PDF
+> Réf. : `ressources/NOTES-v3-mdpise.md` · https://semaineindustrie.tg/ · Proposition V3 PDF
 
 - [x] **7.1** Notes V3 + écarts documentés
 - [x] **7.2** Charte : couleurs `#024D3E` / `#00A85A` / `#7ED321` / `#F6C800` + typo Bricolage / Space Grotesk
 - [x] **7.3** Programme front aligné V3 (plus CETEF ; PIA, Grand oral, expo)
-- [x] **7.4** Domaine deploy → `semaine-industrie.mdpise.tg`
+- [x] **7.4** Domaine deploy → `semaineindustrie.tg`
 - [x] **7.4b** Inspection visuelle site MDPISE + assets `public/brand/` + logo réel en header
 - [ ] **7.4c** Hero / UI calqués sur visuel maître + motif d’ascension (pas seulement tokens)
 - [ ] **7.5** Grand oral : appel à idées + présélection + vote public (QR)

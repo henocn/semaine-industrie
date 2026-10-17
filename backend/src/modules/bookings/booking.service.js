@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const { VisitBooking, Organization } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
+const passportService = require('../passports/passport.service');
 
 /* Crée un arrangement de visite (orga) à partir du site et de l'école. */
 async function createBooking(payload) {
@@ -83,6 +84,18 @@ async function createBooking(payload) {
     visit_end: booking.visit_end,
     site: site.name,
   });
+
+  /* Un seul passeport de groupe pour l'école : un tampon = tout le parcours commun. */
+  try {
+    await passportService.ensureGroupStampForBooking({
+      school,
+      site,
+      headcount,
+      scanned_by: 'arrangement orga',
+    });
+  } catch {
+    /* La résa reste valide même si le tampon échoue. */
+  }
 
   return getBookingById(booking.id);
 }
