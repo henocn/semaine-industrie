@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { getStoredUser, logout } from '../../api/auth'
-import { Mark } from './Mark'
+import { BrandLogo } from './Mark'
 
 type OrgaShellProps = {
   title: string
@@ -12,11 +12,13 @@ type OrgaShellProps = {
 }
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-colors ${
-    isActive ? 'bg-white text-forest shadow-sm' : 'text-ink/60 hover:bg-white/70 hover:text-forest'
+  `flex items-center border-l-2 px-3 py-2 text-[14px] font-medium transition-colors ${
+    isActive
+      ? 'border-forest bg-forest/5 text-forest'
+      : 'border-transparent text-ink/65 hover:bg-black/[0.03] hover:text-forest'
   }`
 
-/* Shell backoffice : sidebar + topbar (inspiré du layout type DataStack). */
+/* Shell backoffice : sidebar nette + contenu sans coins IA. */
 export function OrgaShell({ title, children, actions, searchPlaceholder, onSearch }: OrgaShellProps) {
   const user = getStoredUser()
   const [open, setOpen] = useState(false)
@@ -28,14 +30,13 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
   }
 
   const sidebar = (
-    <aside className="flex h-full w-64 flex-col border-r border-black/5 bg-[#f3f4f6] px-4 py-5">
-      <Link to="/orga" className="mb-8 flex items-center gap-2.5 px-2 text-forest">
-        <Mark className="h-6 w-auto text-leaf" />
-        <span className="text-[15px] font-semibold tracking-tight">Semaine Industrie</span>
+    <aside className="flex h-full w-60 flex-col border-r border-black bg-white px-3 py-5">
+      <Link to="/orga" className="mb-8 flex items-center px-2">
+        <BrandLogo className="h-9 w-auto" />
       </Link>
 
-      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink/35">Pilotage</p>
-      <nav className="flex flex-col gap-1">
+      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">Pilotage</p>
+      <nav className="flex flex-col gap-0.5">
         <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
         <NavLink to="/orga/labels" className={linkClass}>Demandes label</NavLink>
         <NavLink to="/orga/visites" className={linkClass}>Visites</NavLink>
@@ -46,28 +47,28 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         <NavLink to="/bilan" className={linkClass}>Bilan</NavLink>
       </nav>
 
-      <p className="mb-2 mt-8 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink/35">Public</p>
-      <nav className="flex flex-col gap-1">
+      <p className="mb-2 mt-8 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">Public</p>
+      <nav className="flex flex-col gap-0.5">
         <NavLink to="/carte" className={linkClass}>Carte des sites</NavLink>
         <NavLink to="/" className={linkClass}>Site public</NavLink>
       </nav>
 
-      <div className="mt-auto space-y-3 pt-8">
-        <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <div className="mt-auto space-y-4 border-t border-black pt-4">
+        <div className="px-2">
           <p className="text-[13px] font-semibold text-forest">Semaine 16–22 nov.</p>
           <p className="mt-1 text-[12px] leading-relaxed text-ink/50">
-            Labels, QR et carte prêts. Réservations ensuite.
+            Labels, QR et carte. Réservations ensuite.
           </p>
           <Link
             to="/orga/labels"
-            className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-forest px-3 py-2.5 text-[13px] font-semibold text-white hover:bg-ink"
+            className="mt-3 inline-flex w-full items-center justify-center bg-forest px-3 py-2.5 text-[13px] font-semibold text-white hover:bg-ink"
           >
             Traiter les demandes
           </Link>
         </div>
 
-        <div className="flex items-center gap-3 rounded-2xl px-2 py-2">
-          <div className="grid h-10 w-10 place-items-center rounded-full bg-forest text-[13px] font-semibold text-white">
+        <div className="flex items-center gap-3 px-2">
+          <div className="grid h-9 w-9 place-items-center border border-black bg-forest text-[12px] font-semibold text-white">
             {(user?.first_name?.[0] || 'O').toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
@@ -79,7 +80,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
           <button
             type="button"
             onClick={onLogout}
-            className="rounded-lg px-2 py-1 text-[12px] font-medium text-ink/50 hover:bg-white hover:text-forest"
+            className="px-2 py-1 text-[12px] font-medium text-ink/50 hover:text-forest"
             title="Déconnexion"
           >
             Exit
@@ -90,27 +91,27 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
   )
 
   return (
-    <div className="min-h-svh bg-[#f3f4f6] text-ink">
+    <div className="min-h-svh bg-white text-ink">
       <div className="flex min-h-svh">
         <div className="hidden md:block">{sidebar}</div>
 
         {open && (
           <div className="fixed inset-0 z-50 md:hidden">
-            <button type="button" className="absolute inset-0 bg-black/30" aria-label="Fermer" onClick={() => setOpen(false)} />
-            <div className="absolute inset-y-0 left-0 shadow-xl">{sidebar}</div>
+            <button type="button" className="absolute inset-0 bg-black/40" aria-label="Fermer" onClick={() => setOpen(false)} />
+            <div className="absolute inset-y-0 left-0 border-r border-black bg-white">{sidebar}</div>
           </div>
         )}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex items-center gap-4 px-4 py-4 sm:px-8">
+          <header className="flex items-center gap-4 border-b border-black px-4 py-3 sm:px-8">
             <button
               type="button"
-              className="rounded-xl bg-white px-3 py-2 text-[13px] font-medium text-forest shadow-sm md:hidden"
+              className="border border-black px-3 py-2 text-[13px] font-medium text-forest md:hidden"
               onClick={() => setOpen(true)}
             >
               Menu
             </button>
-            <h1 className="text-[22px] font-semibold tracking-tight text-forest">{title}</h1>
+            <h1 className="text-[20px] font-semibold tracking-tight text-forest">{title}</h1>
 
             {onSearch && (
               <label className="relative mx-auto hidden w-full max-w-md md:block">
@@ -119,20 +120,20 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
                   type="search"
                   placeholder={searchPlaceholder || 'Rechercher…'}
                   onChange={(e) => onSearch(e.target.value)}
-                  className="w-full rounded-full border-0 bg-white py-2.5 pl-9 pr-4 text-[14px] text-ink shadow-sm placeholder:text-ink/35 focus:outline-none focus:ring-2 focus:ring-forest/15"
+                  className="w-full border border-black bg-white py-2 pl-9 pr-3 text-[14px] text-ink placeholder:text-ink/35 focus:outline-none"
                 />
               </label>
             )}
 
             <div className="ml-auto flex items-center gap-3">
               {actions}
-              <div className="hidden h-9 w-9 place-items-center rounded-full bg-white text-[12px] font-semibold text-forest shadow-sm sm:grid">
+              <div className="hidden h-9 w-9 place-items-center border border-black text-[12px] font-semibold text-forest sm:grid">
                 {(user?.first_name?.[0] || 'O').toUpperCase()}
               </div>
             </div>
           </header>
 
-          <main className="flex-1 px-4 pb-8 sm:px-8">{children}</main>
+          <main className="flex-1 px-4 py-6 sm:px-8">{children}</main>
         </div>
       </div>
     </div>

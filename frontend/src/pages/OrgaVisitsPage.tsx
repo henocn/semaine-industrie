@@ -42,50 +42,47 @@ export default function OrgaVisitsPage() {
       searchPlaceholder="Rechercher une classe…"
       onSearch={setQuery}
       actions={
-        <Link
-          to="/visites"
-          className="rounded-xl bg-forest px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-ink"
-        >
+        <Link to="/visites" className="orga-btn">
           Formulaire +
         </Link>
       }
     >
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
-      <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="mb-4 text-[15px] font-semibold text-forest">
-          {filtered.length} réservation{filtered.length > 1 ? 's' : ''}
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-black/5 text-ink/40">
-                <th className="pb-3 font-medium">École</th>
-                <th className="pb-3 font-medium">Site</th>
-                <th className="pb-3 font-medium">Créneau</th>
-                <th className="pb-3 font-medium">Effectif</th>
-                <th className="pb-3 font-medium">Enseignant</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 && (
-                <tr><td colSpan={5} className="py-10 text-ink/40">Aucune réservation</td></tr>
-              )}
-              {filtered.map((b) => (
-                <tr key={b.id} className="border-b border-black/[0.04] last:border-0">
-                  <td className="py-3.5 font-medium text-forest">{b.school_name}</td>
-                  <td className="py-3.5 text-ink/60">{b.organization?.name || '—'}</td>
-                  <td className="py-3.5 text-ink/60">{b.visit_day} {b.visit_start}–{b.visit_end}</td>
-                  <td className="py-3.5 font-semibold text-forest">{b.headcount}</td>
-                  <td className="py-3.5 text-ink/55">
-                    <p>{b.teacher_name}</p>
-                    <p className="mt-0.5">{b.teacher_email}</p>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <section className="orga-panel !p-0 overflow-x-auto">
+        <div className="border-b border-black px-4 py-3">
+          <h2 className="text-[15px] font-semibold text-forest">
+            {filtered.length} réservation{filtered.length > 1 ? 's' : ''}
+          </h2>
         </div>
+        <table className="orga-table min-w-[720px]">
+          <thead>
+            <tr>
+              <th>École</th>
+              <th>Site</th>
+              <th>Créneau</th>
+              <th>Effectif</th>
+              <th>Enseignant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr><td colSpan={5}>Aucune réservation</td></tr>
+            )}
+            {filtered.map((b) => (
+              <tr key={b.id}>
+                <td className="font-medium text-forest">{b.school_name}</td>
+                <td>{b.organization?.name || '—'}</td>
+                <td>{b.visit_day} {b.visit_start}–{b.visit_end}</td>
+                <td className="font-semibold text-forest">{b.headcount}</td>
+                <td>
+                  <p>{b.teacher_name}</p>
+                  <p className="mt-0.5 text-ink/55">{b.teacher_email}</p>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </OrgaShell>
   )

@@ -36,7 +36,7 @@ export default function BilanPage() {
 
       {ind && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-3">
             {[
               ['Labellisées', ind.labels_approved],
               ['Sur la carte', ind.sites_on_map],
@@ -44,31 +44,42 @@ export default function BilanPage() {
               ['Jeunes accueillis', ind.young_visitors],
               ['RDV affaires', ind.business_meetings],
               ['Scans passeport', ind.passport_scans ?? 0],
-            ].map(([label, value]) => (
-              <div key={String(label)} className="rounded-2xl bg-white p-5 shadow-sm">
+            ].map(([label, value], i) => (
+              <div key={String(label)} className={`border border-black p-5 ${i > 0 ? 'sm:-ml-px' : ''}`}>
                 <p className="text-[13px] text-ink/50">{label}</p>
                 <p className="mt-2 text-[32px] font-semibold tracking-tight text-forest">{value}</p>
               </div>
             ))}
           </div>
 
-          <section className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
-            <h2 className="text-[15px] font-semibold text-forest">Annuaire Made in Togo</h2>
-            <ul className="mt-4 divide-y divide-black/5">
-              {stats.recent_labels.map((o) => (
-                <li key={o.slug} className="flex flex-wrap items-baseline justify-between gap-3 py-3">
-                  <div>
-                    <p className="text-[14px] font-semibold text-forest">{o.name}</p>
-                    <p className="mt-0.5 text-[13px] text-ink/50">
-                      {[o.type === 'ecole' ? 'École' : 'Entreprise', o.city, o.region].filter(Boolean).join(' · ')}
-                    </p>
-                  </div>
-                  <Link to={`/o/${o.slug}`} className="text-[13px] font-medium text-forest underline underline-offset-4">
-                    Fiche
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <section className="orga-panel mt-0 !p-0 overflow-x-auto xl:-mt-px">
+            <div className="border-b border-black px-4 py-3">
+              <h2 className="text-[15px] font-semibold text-forest">Annuaire Made in Togo</h2>
+            </div>
+            <table className="orga-table">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Type</th>
+                  <th>Lieu</th>
+                  <th>Fiche</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recent_labels.map((o) => (
+                  <tr key={o.slug}>
+                    <td className="font-semibold text-forest">{o.name}</td>
+                    <td>{o.type === 'ecole' ? 'École' : 'Entreprise'}</td>
+                    <td>{[o.city, o.region].filter(Boolean).join(' · ')}</td>
+                    <td>
+                      <Link to={`/o/${o.slug}`} className="font-medium text-forest underline underline-offset-2">
+                        Ouvrir
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </section>
         </>
       )}

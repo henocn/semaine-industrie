@@ -48,7 +48,7 @@ export default function OrgaQrPage() {
         <button
           type="button"
           onClick={() => window.print()}
-          className="rounded-xl bg-forest px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-ink print:hidden"
+          className="orga-btn print:hidden"
         >
           Imprimer +
         </button>
@@ -56,7 +56,7 @@ export default function OrgaQrPage() {
     >
       {error && <p className="mb-4 text-[14px] text-red-700 print:hidden">{error}</p>}
 
-      <section className="rounded-2xl bg-white p-5 shadow-sm print:shadow-none sm:p-6">
+      <section className="orga-panel print:shadow-none sm:p-6">
         <div className="mb-5 flex items-end justify-between gap-3 print:hidden">
           <div>
             <h2 className="text-[15px] font-semibold text-forest">Lot prêt à imprimer</h2>
@@ -70,8 +70,8 @@ export default function OrgaQrPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 print:grid-cols-3">
           {filtered.map((item) => (
-            <article key={item.id} className="break-inside-avoid rounded-2xl bg-[#f7f8f9] p-5 print:border print:border-black/10 print:bg-white">
-              <img src={item.qr_data_url} alt={`QR ${item.name}`} className="mx-auto h-36 w-36 rounded-xl bg-white p-2" />
+            <article key={item.id} className="break-inside-avoid border border-black bg-white p-5 print:border print:border-black/10 print:bg-white">
+              <img src={item.qr_data_url} alt={`QR ${item.name}`} className="mx-auto h-36 w-36 border border-black bg-white p-2" />
               <p className="mt-4 text-center text-[15px] font-semibold text-forest">{item.name}</p>
               <p className="mt-1 text-center text-[12px] text-ink/50">
                 {item.label_code}
