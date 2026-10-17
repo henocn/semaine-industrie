@@ -10,6 +10,7 @@ import {
 } from '../api/labels'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
+import { notifyLabelPendingChanged } from '../lib/labelPending'
 import { joinRoom, onRealtime } from '../lib/socket'
 
 const field =
@@ -42,6 +43,7 @@ export default function OrgaLabelsPage() {
     try {
       setError(null)
       setItems(await listLabelRequests(filter || undefined))
+      notifyLabelPendingChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Chargement impossible')
       navigate('/login')
@@ -100,6 +102,7 @@ export default function OrgaLabelsPage() {
     setBusyId(id)
     try {
       await reviewLabelRequest(id, status)
+      notifyLabelPendingChanged()
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Action impossible')
@@ -139,6 +142,7 @@ export default function OrgaLabelsPage() {
       })
       setItems((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
       setEditing(null)
+      notifyLabelPendingChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Modification impossible')
     } finally {

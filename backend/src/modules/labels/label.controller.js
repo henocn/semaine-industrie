@@ -4,11 +4,17 @@ const labelService = require('./label.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const { emitRealtime } = require('../../realtime/io');
 
+/* Sérialise un modèle Sequelize pour Socket.IO. */
+function asJson(row) {
+  if (!row) return row;
+  return typeof row.toJSON === 'function' ? row.toJSON() : row;
+}
+
 /* Crée une demande de label. */
 async function createRequest(req, res, next) {
   try {
     const data = await labelService.createRequest(req.body);
-    emitRealtime('label:created', data, 'orga');
+    emitRealtime('label:created', asJson(data), 'orga');
     return ApiResponse.created(res, data, 'Demande de label enregistrée');
   } catch (err) {
     return next(err);
@@ -39,7 +45,7 @@ async function getRequest(req, res, next) {
 async function updateRequest(req, res, next) {
   try {
     const data = await labelService.updateRequest(req.params.id, req.body);
-    emitRealtime('label:updated', data, 'orga');
+    emitRealtime('label:updated', asJson(data), 'orga');
     return ApiResponse.success(res, data, 'Demande mise à jour');
   } catch (err) {
     return next(err);
@@ -50,7 +56,7 @@ async function updateRequest(req, res, next) {
 async function reviewRequest(req, res, next) {
   try {
     const data = await labelService.reviewRequest(req.params.id, req.body);
-    emitRealtime('label:updated', data.request, 'orga');
+    emitRealtime('label:updated', asJson(data.request), 'orga');
     return ApiResponse.success(res, data, 'Demande traitée');
   } catch (err) {
     return next(err);

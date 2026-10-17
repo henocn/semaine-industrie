@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { getStoredUser, logout } from '../../api/auth'
 import { listLabelRequests, type LabelRequest } from '../../api/labels'
+import { LABEL_PENDING_EVENT } from '../../lib/labelPending'
 import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
 import { joinRoom, onRealtime } from '../../lib/socket'
 import { BrandLogo } from './Mark'
@@ -45,22 +46,23 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     }
   }
 
-  /* Charge le badge à l'ouverture du backoffice. */
+  /* Charge le badge (navigation + événement local + sockets). */
   useEffect(() => {
     if (!user || user.role !== 'orga') return
     void refreshPending()
-  }, [user?.id, user?.role, location.pathname])
 
-  /* Écoute les nouvelles demandes label (notif + badge). */
-  useEffect(() => {
-    if (!user || user.role !== 'orga') return
+    const onLocal = () => {
+      void refreshPending()
+    }
+    window.addEventListener(LABEL_PENDING_EVENT, onLocal)
+
     void ensureNotifyPermission()
     joinRoom('orga')
     const offCreated = onRealtime<LabelRequest>('label:created', (row) => {
       const kind = row.structure_type === 'ecole' ? 'École' : 'Entreprise'
       const msg = `${row.structure_name} · ${row.contact_phone || 'sans tél.'}`
       setBanner(`Nouvelle demande (${kind}) : ${msg}`)
-      if (row.status === 'pending') setPendingCount((n) => n + 1)
+      void refreshPending()
       pushNotify('Nouvelle demande de label', msg, {
         tag: `label-${row.id}`,
         href: '/orga/labels',
@@ -69,11 +71,13 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     const offUpdated = onRealtime<LabelRequest>('label:updated', () => {
       void refreshPending()
     })
+
     return () => {
+      window.removeEventListener(LABEL_PENDING_EVENT, onLocal)
       offCreated()
       offUpdated()
     }
-  }, [user?.id, user?.role])
+  }, [user?.id, user?.role, location.pathname])
 
   const sidebar = (
     <aside className="flex h-full w-60 flex-col border-r border-black bg-white px-3 py-5">
