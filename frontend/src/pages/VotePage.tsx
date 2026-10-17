@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { castVote, getVotes, type VoteOption } from '../api/engagement'
-import { Mark, WRAP } from '../components/layout/Mark'
+import { WRAP } from '../components/layout/Mark'
 
 /* Clé locale pour un seul vote par navigateur. */
 function voterKey() {
@@ -38,16 +37,7 @@ export default function VotePage() {
   const total = options.reduce((s, o) => s + o.votes, 0) || 1
 
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-        <div className={`${WRAP} flex h-16 items-center justify-between`}>
-          <Link to="/" className="flex items-center gap-2.5 text-forest">
-            <Mark className="h-6 w-auto text-leaf" />
-            <span className="text-[15px] font-semibold">Semaine de l’industrie 2026</span>
-          </Link>
-        </div>
-      </header>
-      <main className="py-16 sm:py-24">
+    <main className="py-16 sm:py-24">
         <div className={WRAP}>
           <h1 className="display text-4xl sm:text-5xl">Produit coup de cœur</h1>
           <p className="mt-4 max-w-xl text-lg text-ink/65">Un vote par téléphone / navigateur. Sans téléphone : urne physique à l’accueil.</p>
@@ -80,6 +70,5 @@ export default function VotePage() {
           </ul>
         </div>
       </main>
-    </>
   )
 }

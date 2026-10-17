@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { askQuestion } from '../api/engagement'
-import { Mark, WRAP } from '../components/layout/Mark'
+import { WRAP } from '../components/layout/Mark'
 
 const field =
   'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink focus:border-forest focus:outline-none'
@@ -28,17 +27,7 @@ export default function QuestionsPage() {
   }
 
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-        <div className={`${WRAP} flex h-16 items-center justify-between`}>
-          <Link to="/" className="flex items-center gap-2.5 text-forest">
-            <Mark className="h-6 w-auto text-leaf" />
-            <span className="text-[15px] font-semibold">Semaine de l’industrie 2026</span>
-          </Link>
-          <Link to="/vote" className="text-[15px] text-ink/70 hover:text-forest">Vote</Link>
-        </div>
-      </header>
-      <main className="py-16 sm:py-24">
+    <main className="py-16 sm:py-24">
         <div className={`${WRAP} max-w-xl`}>
           <h1 className="display text-4xl">Poser une question</h1>
           <p className="mt-4 text-lg text-ink/65">Tables rondes : le modérateur triera ensuite.</p>
@@ -62,6 +51,5 @@ export default function QuestionsPage() {
           )}
         </div>
       </main>
-    </>
   )
 }

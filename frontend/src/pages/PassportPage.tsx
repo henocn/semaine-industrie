@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { getPassport, type Passport } from '../api/passports'
-import { Mark, WRAP } from '../components/layout/Mark'
+import { WRAP } from '../components/layout/Mark'
 
 /* Page publique « mon passeport ». */
 export default function PassportPage() {
@@ -17,20 +17,7 @@ export default function PassportPage() {
   }, [code])
 
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-        <div className={`${WRAP} flex h-16 items-center justify-between`}>
-          <Link to="/" className="flex items-center gap-2.5 text-forest">
-            <Mark className="h-6 w-auto text-leaf" />
-            <span className="text-[15px] font-semibold">Semaine de l’industrie 2026</span>
-          </Link>
-          <Link to={`/questionnaire?code=${code}&phase=after`} className="text-[15px] text-ink/70 hover:text-forest">
-            Questionnaire
-          </Link>
-        </div>
-      </header>
-
-      <main className="py-16 sm:py-24">
+    <main className="py-16 sm:py-24">
         <div className={WRAP}>
           {error && <p className="text-lg text-forest">{error}</p>}
           {!error && !passport && <p className="text-ink/55">Chargement…</p>}
@@ -64,6 +51,5 @@ export default function PassportPage() {
           )}
         </div>
       </main>
-    </>
   )
 }

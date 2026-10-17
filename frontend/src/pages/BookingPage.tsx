@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { createBooking, listBookableSites, type BookableSite } from '../api/bookings'
-import { Mark, WRAP } from '../components/layout/Mark'
+import { WRAP } from '../components/layout/Mark'
 
 const field =
   'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink focus:border-forest focus:outline-none'
@@ -63,18 +62,7 @@ export default function BookingPage() {
   }
 
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-        <div className={`${WRAP} flex h-16 items-center justify-between`}>
-          <Link to="/" className="flex items-center gap-2.5 text-forest">
-            <Mark className="h-6 w-auto text-leaf" />
-            <span className="text-[15px] font-semibold">Semaine de l’industrie 2026</span>
-          </Link>
-          <Link to="/carte" className="text-[15px] text-ink/70 hover:text-forest">Carte</Link>
-        </div>
-      </header>
-
-      <main className="py-16 sm:py-24">
+    <main className="py-16 sm:py-24">
         <div className={`${WRAP} grid gap-14 md:grid-cols-[1fr_1.15fr]`}>
           <div>
             <h1 className="display text-4xl sm:text-5xl">Réserver une visite</h1>
@@ -169,6 +157,5 @@ export default function BookingPage() {
           )}
         </div>
       </main>
-    </>
   )
 }

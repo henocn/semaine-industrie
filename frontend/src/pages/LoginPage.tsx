@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { login } from '../api/auth'
-import { Mark } from '../components/layout/Mark'
 
 /* Page de connexion — entrée du backoffice. */
 export default function LoginPage() {
@@ -27,13 +26,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-svh bg-[#f3f4f6] lg:grid-cols-[1fr_1.1fr]">
-      <div className="flex flex-col justify-between p-8 sm:p-12">
-        <Link to="/" className="flex items-center gap-2.5 text-forest">
-          <Mark className="h-6 w-auto text-leaf" />
-          <span className="text-[15px] font-semibold">Semaine Industrie</span>
-        </Link>
-
+    <div className="grid min-h-[calc(100svh-4rem)] bg-[#f3f4f6] lg:grid-cols-[1fr_1.1fr]">
+      <div className="flex flex-col justify-center p-8 sm:p-12">
         <div className="mx-auto w-full max-w-md rounded-3xl bg-white p-8 shadow-sm">
           <h1 className="text-[28px] font-semibold tracking-tight text-forest">Connexion</h1>
           <p className="mt-2 text-[14px] text-ink/50">Espace organisation et partenaires.</p>
@@ -69,8 +63,6 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-
-        <p className="text-[12px] text-ink/40">© 2026 Semaine de l’industrie</p>
       </div>
 
       <div className="relative hidden overflow-hidden bg-forest lg:block">

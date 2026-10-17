@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listMapPoints, type MapPoint } from '../api/labels'
 import { SitesMap } from '../components/map/SitesMap'
-import { Mark, WRAP } from '../components/layout/Mark'
+import { WRAP } from '../components/layout/Mark'
 
 /* Page carte des usines / écoles labellisées. */
 export default function MapPage() {
@@ -39,18 +39,7 @@ export default function MapPage() {
   )
 
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-        <div className={`${WRAP} flex h-16 items-center justify-between`}>
-          <Link to="/" className="flex items-center gap-2.5 text-forest">
-            <Mark className="h-6 w-auto text-leaf" />
-            <span className="text-[15px] font-semibold">Semaine de l’industrie 2026</span>
-          </Link>
-          <Link to="/label" className="text-[15px] text-ink/70 hover:text-forest">Demander le label</Link>
-        </div>
-      </header>
-
-      <main className="py-12 sm:py-16">
+    <main className="py-12 sm:py-16">
         <div className={WRAP}>
           <h1 className="display text-4xl sm:text-5xl">Carte des sites ouverts</h1>
           <p className="mt-4 max-w-2xl text-lg text-ink/65">
@@ -121,6 +110,5 @@ export default function MapPage() {
           </div>
         </div>
       </main>
-    </>
   )
 }

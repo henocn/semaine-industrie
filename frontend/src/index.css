@@ -37,4 +37,44 @@ body { background: #fff; color: var(--color-ink); font-family: var(--font-sans);
 .fold[data-open="true"] { grid-template-rows: 1fr; }
 .fold > div { overflow: hidden; }
 
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .fold { transition: none; } }
+/* Nav : fond vert qui descend du haut (toute la hauteur) + dropdown collé */
+.nav-group-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--color-forest);
+  transform: scaleY(0);
+  transform-origin: top center;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.nav-group-label {
+  position: relative;
+  overflow: hidden;
+}
+.nav-group-panel {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+.nav-group:hover .nav-group-bg,
+.nav-group:focus-within .nav-group-bg {
+  transform: scaleY(1);
+}
+.nav-group:hover .nav-group-label,
+.nav-group:focus-within .nav-group-label {
+  color: #fff;
+}
+.nav-group:hover .nav-group-panel,
+.nav-group:focus-within .nav-group-panel {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .fold { transition: none; }
+  .nav-group-bg,
+  .nav-group-panel { transition: none; }
+}
