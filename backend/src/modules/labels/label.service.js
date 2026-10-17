@@ -259,9 +259,6 @@ async function listMapPoints({ region, sector, type } = {}) {
           'visit_start',
           'visit_end',
           'headcount',
-          'teacher_name',
-          'teacher_email',
-          'teacher_phone',
         ],
         order: [
           ['visit_day', 'ASC'],
@@ -274,15 +271,13 @@ async function listMapPoints({ region, sector, type } = {}) {
   for (const b of bookings) {
     const id = b.organization_id;
     if (!bySite[id]) bySite[id] = [];
+    /* Public : pas de contacts (e-mail / téléphone). */
     bySite[id].push({
       school_name: b.school_name,
       visit_day: b.visit_day,
       visit_start: b.visit_start,
       visit_end: b.visit_end,
       headcount: b.headcount,
-      contact_name: b.teacher_name,
-      contact_email: b.teacher_email,
-      contact_phone: b.teacher_phone,
     });
   }
 

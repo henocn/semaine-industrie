@@ -14,9 +14,9 @@ export function PublicLayout() {
   }, [pathname, hash])
 
   return (
-    <>
+    <div className="min-h-svh overflow-x-clip">
       <SiteHeader />
       <Outlet />
-    </>
+    </div>
   )
 }

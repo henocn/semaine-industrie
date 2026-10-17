@@ -13,8 +13,18 @@
   --color-flag: #c8102e;     /* rouge drapeau — réservé au vendredi 20 */
 }
 
-html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
-body { background: #fff; color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem;
+  overflow-x: clip;
+}
+body {
+  background: #fff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
 
 /* Titres : Bricolage Grotesque (charte logo / affiches) */
 .display {

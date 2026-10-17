@@ -125,9 +125,6 @@ export type MapVisitItem = {
   visit_start: string
   visit_end: string
   headcount: number
-  contact_name: string
-  contact_email: string
-  contact_phone: string | null
 }
 
 export type MapPoint = {

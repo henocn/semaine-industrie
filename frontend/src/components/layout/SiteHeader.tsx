@@ -57,7 +57,8 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
 }
 
 /* Groupe desktop : fond vert descendant + dropdown collé. */
-function DesktopGroup({ group }: { group: NavGroup }) {
+function DesktopGroup({ group, align = 'left' }: { group: NavGroup; align?: 'left' | 'right' }) {
+  const panelPos = align === 'right' ? 'right-0 left-auto' : 'left-0'
   return (
     <div className="nav-group relative flex h-full">
       <button
@@ -67,7 +68,7 @@ function DesktopGroup({ group }: { group: NavGroup }) {
         <span className="nav-group-bg" aria-hidden="true" />
         <span className="relative z-10">{group.label}</span>
       </button>
-      <div className="nav-group-panel absolute left-0 top-full z-20 min-w-full w-52 bg-white shadow-lg shadow-forest/10">
+      <div className={`nav-group-panel absolute top-full z-20 w-52 min-w-full bg-white shadow-lg shadow-forest/10 ${panelPos}`}>
         {group.items.map((item) => (
           <NavLink key={item.label} item={item} />
         ))}
@@ -88,8 +89,12 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden h-16 items-stretch md:flex" aria-label="Navigation principale">
-          {GROUPS.map((group) => (
-            <DesktopGroup key={group.label} group={group} />
+          {GROUPS.map((group, i) => (
+            <DesktopGroup
+              key={group.label}
+              group={group}
+              align={i === GROUPS.length - 1 ? 'right' : 'left'}
+            />
           ))}
         </nav>
 

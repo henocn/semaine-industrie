@@ -99,7 +99,7 @@ export default function OrganizationPage() {
                       key={src}
                       type="button"
                       onClick={() => setActiveImg(i)}
-                      className={`aspect-[4/3] overflow-hidden ${i === activeImg ? 'ring-2 ring-forest ring-offset-2' : ''}`}
+                      className={`aspect-[4/3] overflow-hidden ${i === activeImg ? 'outline outline-2 outline-offset-2 outline-forest' : ''}`}
                     >
                       <img src={src} alt="" className="h-full w-full object-cover" />
                     </button>

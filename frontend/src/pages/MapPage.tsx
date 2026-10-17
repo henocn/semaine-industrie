@@ -36,7 +36,7 @@ export default function MapPage() {
       <div className={WRAP}>
         <h1 className="display text-4xl sm:text-5xl">Carte des visites</h1>
         <p className="mt-3 max-w-xl text-lg text-ink/65">
-          Sites qui accueillent déjà des établissements. La carte s’adapte pour tous les afficher.
+          Sites qui accueillent déjà des établissements.
         </p>
 
         {error && <p className="mt-6 text-red-700">{error}</p>}
@@ -99,16 +99,6 @@ export default function MapPage() {
                           <span className="font-semibold text-forest">{v.headcount}</span> élèves /
                           étudiants
                         </p>
-                        <p className="mt-2 text-[13px] text-ink/50">
-                          {v.contact_name}
-                          {v.contact_phone ? ` · ${v.contact_phone}` : ''}
-                        </p>
-                        <a
-                          href={`mailto:${v.contact_email}`}
-                          className="mt-1 inline-block break-all text-[13px] text-forest underline underline-offset-2"
-                        >
-                          {v.contact_email}
-                        </a>
                       </li>
                     ))}
                   </ul>
