@@ -15,7 +15,7 @@ export function pushNotify(title: string, body: string, options?: { tag?: string
   const n = new Notification(title, {
     body,
     tag: options?.tag,
-    icon: '/brand/logo-mark.png',
+    icon: '/favicon.svg',
   })
   if (options?.href) {
     n.onclick = () => {
