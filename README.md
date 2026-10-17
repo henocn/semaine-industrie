@@ -2,6 +2,8 @@
 
 Monorepo : site public + API. Hébergement VPS (Postgres, n8n) — pas de Docker ni Supabase pour front/API.
 
+Charte / TDR : [semaine-industrie.mdpise.tg](https://semaine-industrie.mdpise.tg/) · Proposition V3 (DEKA / MDPISE).
+
 ## Structure
 
 ```

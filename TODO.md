@@ -101,10 +101,28 @@
 
 - [x] **6.1** Carte Leaflet + seed sites démo (lat/lng)
 - [x] **6.2** Coordonnées optionnelles sur demande de label
-- [ ] **6.3** WhatsApp / Meta réel via n8n (quand webhook prod)
+- [ ] **6.3** WhatsApp Business réel via n8n (outil 06 V3)
+
+---
+
+## PHASE 7 — Alignement TDR V3 + charte MDPISE
+
+> Réf. : `ressources/NOTES-v3-mdpise.md` · https://semaine-industrie.mdpise.tg/ · Proposition V3 PDF
+
+- [x] **7.1** Notes V3 + écarts documentés
+- [x] **7.2** Charte : couleurs `#024D3E` / `#00A85A` / `#7ED321` / `#F6C800` + typo Bricolage / Space Grotesk
+- [x] **7.3** Programme front aligné V3 (plus CETEF ; PIA, Grand oral, expo)
+- [x] **7.4** Domaine deploy → `semaine-industrie.mdpise.tg`
+- [x] **7.4b** Inspection visuelle site MDPISE + assets `public/brand/` + logo réel en header
+- [ ] **7.4c** Hero / UI calqués sur visuel maître + motif d’ascension (pas seulement tokens)
+- [ ] **7.5** Grand oral : appel à idées + présélection + vote public (QR)
+- [ ] **7.6** Kit « Démarrer » + fiches machines (QR) + feuille de route
+- [ ] **7.7** Certificat de participation (passeport)
+- [ ] **7.8** Annuaire « Made in Togo » (page dédiée)
+- [ ] **7.9** Label : libellés Usine ouverte / École partenaire (kit)
 
 ---
 
 ## En cours
 
-→ **P5.5** appliquer sur le VPS (accès SSH requis) · polish 6.3 ensuite
+→ **P7** écarts V3 (Grand oral, kit Démarrer, certificat) · **P5.5** VPS · **6.3** WhatsApp

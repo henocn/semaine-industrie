@@ -1,19 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { DAYS, SPEAKERS, PLACES, PARTNERS } from '../data'
-
-const WRAP = 'mx-auto w-full max-w-6xl px-5 sm:px-8'
-
-/* Symbole de la charte : trois feuilles qui montent */
-function Mark({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 48" className={className} aria-hidden="true" fill="currentColor">
-      <path d="M4 28h10a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H8a6 6 0 0 1-6-6v-9a2 2 0 0 1 2-2z" />
-      <path d="M27 16h9a3 3 0 0 1 3 3v4c0 10-8 18-18 18h-1a2 2 0 0 1-2-2v-6c0-9 3-17 9-17z" />
-      <path d="M51 3h9a2 2 0 0 1 2 2v3c0 9-7 16-16 16h-2a2 2 0 0 1-2-2V17C42 9 45 3 51 3z" />
-    </svg>
-  )
-}
+import { BrandLogo, CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
 
 /* Photo : déposez le fichier dans public/images. Sans fichier, un aplat discret. */
 function Photo({ name, alt, className = '', position = 'center', eager = false }: { name: string; alt: string; className?: string; position?: string; eager?: boolean }) {
@@ -31,9 +19,8 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
       <div className={`${WRAP} flex h-16 items-center justify-between`}>
-        <a href="#top" className="flex items-center gap-2.5 text-forest">
-          <Mark className="h-6 w-auto text-leaf" />
-          <span className="text-[15px] font-semibold [font-stretch:112%]">Semaine de l’industrie 2026</span>
+        <a href="#top" className="flex items-center">
+          <BrandLogo className="h-10 w-auto" />
         </a>
         <nav className="hidden gap-1 text-[15px] text-ink/70 md:flex">
           <a href="#programme" className="rounded-full px-4 py-2 transition-colors hover:bg-forest hover:text-white">Programme</a>
@@ -63,7 +50,10 @@ function Hero() {
       {/* Voile noir léger pour la lisibilité du texte */}
       <div className="absolute inset-0 -z-10 bg-black/65" />
       <div className={`${WRAP} pb-14 pt-24 sm:pb-20`}>
-        <h1 className="display max-w-4xl text-[clamp(2.75rem,7.5vw,6rem)] !text-white">L’industrie togolaise en mouvement</h1>
+        <p className="mb-4 text-[13px] font-semibold uppercase tracking-[0.18em] text-leaf">Identité · édition 2026</p>
+        <h1 className="display max-w-4xl text-[clamp(2.75rem,7.5vw,6rem)] !text-white">
+          {CAMPAIGN_TAGLINE.replace(/\.$/, '')}<span className="text-leaf">.</span>
+        </h1>
         <div className="mt-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
           <p className="max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl">
             Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public, à Lomé et dans les régions.
@@ -106,7 +96,7 @@ function Programme() {
       <div className={WRAP}>
         <div className="grid gap-4 md:grid-cols-[1fr_1.15fr] md:items-end">
           <h2 className="display text-4xl sm:text-5xl">Le programme</h2>
-          <p className="text-lg text-ink/70">Un thème par jour. Hors visites d’usines, les activités ont lieu au CETEF Togo 2000, à Lomé.</p>
+          <p className="text-lg text-ink/70">Un thème par jour. Fil conducteur : « L’industrie à portée de main ». Lieu principal à confirmer (Palais des congrès ou Hôtel Sarakawa).</p>
         </div>
         <ul className="mt-8 border-t border-forest/15">
           {DAYS.map((d) => {
@@ -167,7 +157,7 @@ function Friday() {
           <p className="text-lg font-semibold text-sun">Vendredi 20 novembre</p>
           <h2 className="display mt-4 text-4xl !text-white sm:text-5xl">La journée phare</h2>
           <p className="mt-8 text-lg leading-relaxed text-white/80">
-            Décideurs, industriels, PME et investisseurs se retrouvent au CETEF Togo 2000 pour la Journée de l’industrialisation de l’Afrique.
+            Décideurs, industriels, PME et jeunes se retrouvent pour la Journée de l’industrialisation de l’Afrique : une table ronde, le Grand oral et les rencontres d’affaires.
           </p>
           <p className="mt-6 text-lg leading-relaxed text-white/80">
             Le matin, deux tables rondes. L’après-midi, des rencontres d’affaires de 20 minutes, préparées à l’avance.
@@ -275,10 +265,11 @@ function Footer() {
       <div className={`${WRAP} grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]`}>
         <div>
           <img
-            src="/images/armoiries.png"
+            src="/brand/bloc-ministere-mdpise.png"
             alt="République togolaise, Ministère délégué chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique"
             className="h-28 w-auto"
           />
+          <BrandLogo className="mt-6 h-12 w-auto" />
         </div>
         <div>
           <p className="font-semibold text-forest">La semaine</p>
@@ -312,7 +303,8 @@ function Footer() {
         <div className={`${WRAP} flex flex-col gap-3 py-6 text-sm text-ink/55 sm:flex-row sm:items-center sm:justify-between`}>
           <p>© 2026 Semaine de l’industrie · République togolaise</p>
           <p className="flex items-center gap-2 font-semibold text-forest">
-            <Mark className="h-5 w-auto text-leaf" />#SemaineIndustrie2026
+            <img src="/brand/symbole-couleur-transparent.png" alt="" className="h-6 w-auto" aria-hidden="true" />
+            #SemaineIndustrie2026
           </p>
         </div>
       </div>

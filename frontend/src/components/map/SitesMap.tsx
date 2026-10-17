@@ -11,7 +11,7 @@ type Props = {
 
 /* Marqueur circulaire brand (évite les PNG Leaflet cassés sous Vite). */
 function makeIcon(active: boolean) {
-  const fill = active ? '#f2c200' : '#0f3d2e'
+  const fill = active ? '#f6c800' : '#024d3e'
   return L.divIcon({
     className: '',
     html: `<span style="display:block;width:14px;height:14px;border-radius:999px;background:${fill};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></span>`,

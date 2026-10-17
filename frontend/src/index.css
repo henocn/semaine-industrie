@@ -1,27 +1,36 @@
 @import "tailwindcss";
 
+/* Charte MDPISE — https://semaine-industrie.mdpise.tg/ */
 @theme {
-  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
-  --color-forest: #0f3d2e;   /* vert institutionnel, texte des titres et fonds forts */
-  --color-ink: #1b2622;      /* texte courant */
-  --color-sage: #e9eee8;     /* fond de section clair */
-  --color-leaf: #5aa832;     /* vert de la charte, usage ponctuel */
-  --color-sun: #f2c200;      /* dates */
-  --color-flag: #c8102e;     /* rouge du drapeau, réservé au vendredi 20 */
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --color-forest: #024d3e;   /* vert profond — ancrage institutionnel */
+  --color-ink: #0f1f1a;      /* texte courant */
+  --color-sage: #e8f0ec;     /* fond de section clair */
+  --color-leaf: #7ed321;     /* vert lime — croissance / édition */
+  --color-energy: #00a85a;   /* vert énergie — production */
+  --color-sun: #f6c800;      /* or — accent journée phare */
+  --color-flag: #c8102e;     /* rouge drapeau — réservé au vendredi 20 */
 }
 
 html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
 body { background: #fff; color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 
-/* Titres : la même famille, en largeur étendue */
-.display { font-stretch: 118%; font-weight: 750; letter-spacing: -0.025em; line-height: 0.98; color: var(--color-forest); }
+/* Titres : Bricolage Grotesque (charte logo / affiches) */
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  color: var(--color-forest);
+}
 
-/* La forme feuille de la charte, réservée aux photographies */
+/* Forme feuille de la charte, réservée aux photographies */
 .leaf { border-radius: 0 7rem 0 0; }
 .leaf-alt { border-radius: 6rem 0 0 0; }
 @media (max-width: 640px) { .leaf { border-radius: 0 3.5rem 0 0; } .leaf-alt { border-radius: 3rem 0 0 0; } }
 
-:focus-visible { outline: 2px solid var(--color-leaf); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--color-energy); outline-offset: 3px; }
 
 /* Accordéon du programme */
 .fold { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s cubic-bezier(.2,.8,.2,1); }
