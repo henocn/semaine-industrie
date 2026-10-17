@@ -16,6 +16,9 @@ async function createBooking(payload) {
     },
   });
   if (!site) throw ApiError.notFound('Site industriel introuvable ou non labellisé');
+  if (site.lat == null || site.lng == null) {
+    throw ApiError.badRequest('Ce site n’a pas de position carte — ajoutez lat/lng via Demandes label → Modifier');
+  }
 
   const school = await Organization.findOne({
     where: {
@@ -107,7 +110,7 @@ async function listBookings({ status } = {}) {
   return VisitBooking.findAll({
     where,
     include: [
-      { model: Organization, as: 'organization', attributes: ['id', 'name', 'slug', 'city'] },
+      { model: Organization, as: 'organization', attributes: ['id', 'name', 'slug', 'city', 'lat', 'lng'] },
       {
         model: Organization,
         as: 'school',
@@ -122,12 +125,18 @@ async function listBookings({ status } = {}) {
 async function listBookableSites({ type } = {}) {
   const where = { label_status: 'approved', is_active: true };
   if (type === 'entreprise' || type === 'ecole') where.type = type;
+  /* Sites visite : uniquement ceux placés sur la carte. */
+  if (type === 'entreprise') {
+    where.lat = { [Op.ne]: null };
+    where.lng = { [Op.ne]: null };
+  }
 
   return Organization.findAll({
     where,
     attributes: [
       'id', 'name', 'slug', 'city', 'region', 'sector', 'type',
       'max_visitors', 'visit_slots', 'contact_name', 'contact_email', 'contact_phone',
+      'lat', 'lng',
     ],
     order: [['name', 'ASC']],
   });

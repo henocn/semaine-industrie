@@ -131,8 +131,13 @@ export default function OrgaVisitsPage() {
         <section className="orga-panel mb-6">
           <h2 className="text-[15px] font-semibold text-forest">Nouvel arrangement</h2>
           <p className="mt-1 text-[13px] text-ink/50">
-            Site → établissement → créneau. Contact et effectif viennent de la fiche école.
+            Site → établissement → créneau. Seuls les sites avec position carte sont proposés.
           </p>
+          {sites.length === 0 && (
+            <p className="mt-3 text-[13px] text-red-700">
+              Aucun site positionné. Approuvez une entreprise avec emplacement (carte) dans Demandes label.
+            </p>
+          )}
 
           <form onSubmit={onArrange} className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="text-[13px] font-medium text-forest sm:col-span-2">
@@ -247,11 +252,24 @@ export default function OrgaVisitsPage() {
             {filtered.length === 0 && (
               <tr><td colSpan={6}>Aucun arrangement</td></tr>
             )}
-            {filtered.map((b, i) => (
-              <tr key={b.id}>
+            {filtered.map((b, i) => {
+              const onMap =
+                b.organization?.lat != null &&
+                b.organization?.lng != null &&
+                Number.isFinite(Number(b.organization.lat)) &&
+                Number.isFinite(Number(b.organization.lng))
+              return (
+              <tr key={b.id} className={onMap ? undefined : 'orga-row-pending'}>
                 <td className="font-semibold text-forest">{i + 1}</td>
                 <td className="font-medium text-forest">{b.school_name}</td>
-                <td>{b.organization?.name || '—'}</td>
+                <td>
+                  <p>{b.organization?.name || '—'}</p>
+                  {!onMap && (
+                    <p className="mt-1 text-[12px] font-medium text-red-700">
+                      Hors carte — ajoutez une position au site
+                    </p>
+                  )}
+                </td>
                 <td>{b.visit_day} {b.visit_start}–{b.visit_end}</td>
                 <td className="font-semibold text-forest">{b.headcount}</td>
                 <td>
@@ -263,7 +281,8 @@ export default function OrgaVisitsPage() {
                   </a>
                 </td>
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
       </section>

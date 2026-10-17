@@ -26,7 +26,14 @@ export type VisitBooking = {
   visit_end: string
   headcount: number
   status: string
-  organization?: { id: string; name: string; slug: string; city: string | null }
+  organization?: {
+    id: string
+    name: string
+    slug: string
+    city: string | null
+    lat?: string | number | null
+    lng?: string | number | null
+  }
   school?: {
     id: string
     name: string
