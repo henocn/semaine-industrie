@@ -22,10 +22,10 @@ function Hero() {
         src="/images/hall.jpg"
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+        className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-45"
       />
-      {/* Voile noir léger pour la lisibilité du texte */}
-      <div className="absolute inset-0 -z-10 bg-black/65" />
+      {/* Voile forest — même traitement que le panneau login */}
+      <div className="absolute inset-0 -z-10 bg-forest/55" />
       <div className={`${WRAP} pb-14 pt-24 sm:pb-20`}>
         <h1 className="display max-w-4xl text-[clamp(2.75rem,7.5vw,6rem)] !text-white">
           {CAMPAIGN_TAGLINE.replace(/\.$/, '')}<span className="text-leaf">.</span>
@@ -34,7 +34,7 @@ function Hero() {
           <p className="max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl">
             Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public, à Lomé et dans les régions.
           </p>
-          <p className="text-lg font-semibold [font-stretch:112%] sm:text-right">
+          <p className="text-lg font-semibold sm:text-right">
             <span className="text-sun">Du 16 au 22 novembre 2026</span><br /><span className="font-normal text-white/70">Lomé et les régions</span>
           </p>
         </div>

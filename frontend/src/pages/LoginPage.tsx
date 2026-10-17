@@ -31,16 +31,16 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col px-6 py-8 sm:px-12 sm:py-10">
-        <Link to="/" className="self-start">
+      <div className="relative flex flex-col px-6 py-8 sm:px-12 sm:py-10">
+        <Link to="/" className="absolute left-6 top-8 sm:left-12 sm:top-10">
           <BrandLogo className="h-10 w-auto" />
         </Link>
 
-        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-12">
-          <h1 className="display text-4xl">Connexion</h1>
-          <p className="mt-3 text-lg text-ink/60">Espace organisation.</p>
+        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-24 text-center">
+          <h1 className="display text-4xl">Portail d’administration</h1>
+          <p className="mt-3 text-lg text-ink/60">Connexion à l’espace organisation.</p>
 
-          <form onSubmit={onSubmit} className="mt-10 grid gap-8">
+          <form onSubmit={onSubmit} className="mt-10 grid gap-8 text-left">
             <label className="block text-[15px] font-medium text-forest">
               E-mail
               <input
@@ -61,7 +61,7 @@ export default function LoginPage() {
                 className={field}
               />
             </label>
-            {error && <p className="text-[15px] text-red-700">{error}</p>}
+            {error && <p className="text-center text-[15px] text-red-700">{error}</p>}
             <button
               type="submit"
               disabled={loading}
@@ -74,15 +74,16 @@ export default function LoginPage() {
       </div>
 
       <div className="relative hidden overflow-hidden bg-forest lg:block">
-        <img src="/images/hall.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-45" />
+        <img
+          src="/images/hall.jpg"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-45"
+        />
         <div className="absolute inset-0 bg-forest/55" />
-        <div className="relative flex h-full items-end p-12">
-          <div className="max-w-md text-white">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-leaf">Backoffice</p>
-            <h2 className="display mt-4 text-[clamp(2rem,3.5vw,2.75rem)] !text-white">
-              Labels, passeports et bilan — un seul espace.
-            </h2>
-          </div>
+        <div className="relative flex h-full items-end justify-center p-12 text-center">
+          <h2 className="display max-w-md text-[clamp(2rem,3.5vw,2.75rem)] !text-white">
+            Portail d’administration
+          </h2>
         </div>
       </div>
     </div>

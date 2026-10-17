@@ -86,19 +86,11 @@ export function SiteHeader() {
           <BrandLogo className="h-10 w-auto" />
         </Link>
 
-        <div className="hidden h-16 items-stretch md:flex">
-          <nav className="flex h-16 items-stretch" aria-label="Navigation principale">
-            {GROUPS.map((group) => (
-              <DesktopGroup key={group.label} group={group} />
-            ))}
-          </nav>
-          <Link
-            to="/login"
-            className="relative z-10 ml-2 flex items-center px-4 text-[14px] font-medium text-forest/70 transition-colors hover:text-forest"
-          >
-            Connexion
-          </Link>
-        </div>
+        <nav className="hidden h-16 items-stretch md:flex" aria-label="Navigation principale">
+          {GROUPS.map((group) => (
+            <DesktopGroup key={group.label} group={group} />
+          ))}
+        </nav>
 
         <button
           type="button"
@@ -131,10 +123,6 @@ export function SiteHeader() {
                 </div>
               </div>
             ))}
-            <NavLink
-              item={{ label: 'Connexion', to: '/login' }}
-              onNavigate={() => setOpen(false)}
-            />
           </div>
         </div>
       )}
