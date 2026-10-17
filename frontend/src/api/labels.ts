@@ -75,6 +75,17 @@ export function googleMapsUrl(lat: string | number | null | undefined, lng: stri
   return `https://www.google.com/maps?q=${a},${b}`
 }
 
+export type MapVisitItem = {
+  school_name: string
+  visit_day: string
+  visit_start: string
+  visit_end: string
+  headcount: number
+  contact_name: string
+  contact_email: string
+  contact_phone: string | null
+}
+
 export type MapPoint = {
   id: string
   name: string
@@ -87,6 +98,13 @@ export type MapPoint = {
   lng: string
   label_code: string | null
   products: string[]
+  max_visitors?: number | null
+  description?: string | null
+  visits?: {
+    groups: number
+    headcount: number
+    items: MapVisitItem[]
+  }
 }
 
 /* Charge la fiche publique d'une organisation labellisée. */
@@ -119,11 +137,12 @@ export function updateLabelRequest(id: string, payload: Partial<LabelRequestPayl
   })
 }
 
-/* Points carte des usines labellisées. */
-export function listMapPoints(params?: { region?: string; sector?: string }) {
+/* Points carte des usines labellisées (+ visites arrangées). */
+export function listMapPoints(params?: { region?: string; sector?: string; type?: 'entreprise' | 'ecole' }) {
   const sp = new URLSearchParams()
   if (params?.region) sp.set('region', params.region)
   if (params?.sector) sp.set('sector', params.sector)
+  if (params?.type) sp.set('type', params.type)
   const q = sp.toString() ? `?${sp}` : ''
   return apiFetch<MapPoint[]>(`/labels/organizations/map${q}`)
 }

@@ -79,6 +79,7 @@ async function listMap(req, res, next) {
     const data = await labelService.listMapPoints({
       region: req.query.region,
       sector: req.query.sector,
+      type: req.query.type,
     });
     return ApiResponse.success(res, data);
   } catch (err) {

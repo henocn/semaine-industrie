@@ -2,7 +2,7 @@
 
 const { Op } = require('sequelize');
 const QRCode = require('qrcode');
-const { LabelRequest, Organization, sequelize } = require('../../models');
+const { LabelRequest, Organization, VisitBooking, sequelize } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
@@ -196,8 +196,8 @@ async function getPublicBySlug(slug) {
   return org;
 }
 
-/* Points carte : organisations labellisées avec coordonnées. */
-async function listMapPoints({ region, sector } = {}) {
+/* Points carte : sites labellisés + arrangements de visite. */
+async function listMapPoints({ region, sector, type } = {}) {
   const where = {
     label_status: 'approved',
     is_active: true,
@@ -206,14 +206,69 @@ async function listMapPoints({ region, sector } = {}) {
   };
   if (region) where.region = region;
   if (sector) where.sector = sector;
+  if (type === 'entreprise' || type === 'ecole') where.type = type;
 
-  return Organization.findAll({
+  const orgs = await Organization.findAll({
     where,
     attributes: [
       'id', 'name', 'slug', 'type', 'sector', 'region', 'city',
-      'lat', 'lng', 'label_code', 'products',
+      'lat', 'lng', 'label_code', 'products', 'max_visitors', 'description',
     ],
     order: [['name', 'ASC']],
+  });
+
+  const siteIds = orgs.filter((o) => o.type === 'entreprise').map((o) => o.id);
+  const bookings = siteIds.length
+    ? await VisitBooking.findAll({
+        where: {
+          organization_id: { [Op.in]: siteIds },
+          status: { [Op.in]: ['pending', 'confirmed'] },
+        },
+        attributes: [
+          'organization_id',
+          'school_name',
+          'visit_day',
+          'visit_start',
+          'visit_end',
+          'headcount',
+          'teacher_name',
+          'teacher_email',
+          'teacher_phone',
+        ],
+        order: [
+          ['visit_day', 'ASC'],
+          ['visit_start', 'ASC'],
+        ],
+      })
+    : [];
+
+  const bySite = {};
+  for (const b of bookings) {
+    const id = b.organization_id;
+    if (!bySite[id]) bySite[id] = [];
+    bySite[id].push({
+      school_name: b.school_name,
+      visit_day: b.visit_day,
+      visit_start: b.visit_start,
+      visit_end: b.visit_end,
+      headcount: b.headcount,
+      contact_name: b.teacher_name,
+      contact_email: b.teacher_email,
+      contact_phone: b.teacher_phone,
+    });
+  }
+
+  return orgs.map((o) => {
+    const json = o.toJSON();
+    const items = bySite[o.id] || [];
+    return {
+      ...json,
+      visits: {
+        groups: items.length,
+        headcount: items.reduce((sum, v) => sum + Number(v.headcount || 0), 0),
+        items,
+      },
+    };
   });
 }
 
