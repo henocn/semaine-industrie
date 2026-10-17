@@ -34,7 +34,6 @@ export default function LabelRequestPage() {
         sector: isEntreprise ? String(fd.get('sector') || '') || undefined : undefined,
         region: String(fd.get('region') || '') || undefined,
         city: String(fd.get('city') || '') || undefined,
-        address: String(fd.get('address') || '') || undefined,
         contact_name: String(fd.get('contact_name') || ''),
         contact_email: String(fd.get('contact_email') || ''),
         contact_phone: String(fd.get('contact_phone') || ''),
@@ -99,10 +98,6 @@ export default function LabelRequestPage() {
               <label className="block text-[15px] font-medium text-forest">
                 Ville
                 <input name="city" className={field} />
-              </label>
-              <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                Adresse
-                <input name="address" className={field} />
               </label>
               <label className="block text-[15px] font-medium text-forest">
                 Référent

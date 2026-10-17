@@ -6,7 +6,6 @@ export type LabelRequestPayload = {
   sector?: string
   region?: string
   city?: string
-  address?: string
   contact_name: string
   contact_email: string
   contact_phone: string
