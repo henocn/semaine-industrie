@@ -31,7 +31,7 @@ export function getDashboardStats() {
   return apiFetch<DashboardStats>('/dashboard/stats')
 }
 
-/* Bilan public. */
+/* Bilan orga (auth requise). */
 export function getPublicBilan() {
   return apiFetch<DashboardStats>('/dashboard/bilan')
 }

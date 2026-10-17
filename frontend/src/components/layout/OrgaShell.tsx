@@ -43,12 +43,12 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         <NavLink to="/orga/passeports" className={linkClass}>Passeports</NavLink>
         <NavLink to="/orga/live" className={linkClass}>Live & mesures</NavLink>
         <NavLink to="/orga/qr" className={linkClass}>QR / impression</NavLink>
+        <NavLink to="/bilan" className={linkClass}>Bilan</NavLink>
       </nav>
 
       <p className="mb-2 mt-8 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink/35">Public</p>
       <nav className="flex flex-col gap-1">
         <NavLink to="/carte" className={linkClass}>Carte des sites</NavLink>
-        <NavLink to="/bilan" className={linkClass}>Bilan</NavLink>
         <NavLink to="/" className={linkClass}>Site public</NavLink>
       </nav>
 

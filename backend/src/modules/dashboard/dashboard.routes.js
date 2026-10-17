@@ -7,7 +7,7 @@ const { authenticate, authorize } = require('../../middlewares/auth.middleware')
 
 const router = Router();
 
-router.get('/bilan', controller.bilan);
+router.get('/bilan', authenticate, authorize('orga'), controller.bilan);
 router.get('/stats', authenticate, authorize('orga'), controller.stats);
 
 module.exports = router;

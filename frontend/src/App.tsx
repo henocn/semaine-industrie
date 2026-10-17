@@ -31,15 +31,15 @@ export default function App() {
           <Route path="/visites" element={<BookingPage />} />
           <Route path="/affaires" element={<BusinessRegisterPage />} />
           <Route path="/carte" element={<MapPage />} />
-          <Route path="/bilan" element={<BilanPage />} />
           <Route path="/passeport/:code" element={<PassportPage />} />
           <Route path="/questions" element={<QuestionsPage />} />
           <Route path="/vote" element={<VotePage />} />
           <Route path="/questionnaire" element={<SurveyPage />} />
           <Route path="/o/:slug" element={<OrganizationPage />} />
-          <Route path="/login" element={<LoginPage />} />
         </Route>
 
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/bilan" element={<BilanPage />} />
         <Route path="/orga" element={<OrgaDashboardPage />} />
         <Route path="/orga/labels" element={<OrgaLabelsPage />} />
         <Route path="/orga/visites" element={<OrgaVisitsPage />} />
