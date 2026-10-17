@@ -74,6 +74,11 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(500),
         allowNull: true,
       },
+      gallery_urls: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+        defaultValue: [],
+      },
       label_code: {
         type: DataTypes.STRING(40),
         allowNull: true,

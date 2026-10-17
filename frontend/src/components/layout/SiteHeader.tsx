@@ -29,6 +29,7 @@ const GROUPS: NavGroup[] = [
   {
     label: 'Explorer',
     items: [
+      { label: 'Industrie', to: '/industrie' },
       { label: 'Carte & visites', to: '/carte' },
       { label: 'Questions live', to: '/questions' },
       { label: 'Vote', to: '/vote' },

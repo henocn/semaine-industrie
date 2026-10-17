@@ -45,11 +45,20 @@ async function uniqueLabelCode(transaction) {
 /* Crée une demande de label (parcours public). */
 async function createRequest(payload) {
   const data = { ...payload };
-  /* Écoles : pas de secteur, produits ni règles sécurité. */
+  /* Écoles : pas de secteur, produits, galerie ni règles sécurité. */
   if (data.structure_type === 'ecole') {
     data.sector = null;
     data.products = [];
     data.safety_rules = null;
+    data.gallery_urls = [];
+    data.photo_url = null;
+  } else {
+    const gallery = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
+    if (gallery.length !== 3) {
+      throw ApiError.badRequest('Trois images de bonne qualité sont obligatoires pour une entreprise');
+    }
+    data.gallery_urls = gallery;
+    data.photo_url = gallery[0];
   }
   /* Référent non demandé au public : repli sur le nom de structure. */
   data.contact_name = data.contact_name || data.structure_name;
@@ -110,6 +119,8 @@ async function updateRequest(id, payload) {
       org.safety_rules = request.safety_rules;
       org.lat = request.lat;
       org.lng = request.lng;
+      org.gallery_urls = request.gallery_urls || [];
+      org.photo_url = (request.gallery_urls && request.gallery_urls[0]) || request.photo_url;
       await org.save();
     }
   }
@@ -154,7 +165,8 @@ async function reviewRequest(id, { status, review_note }) {
         contact_phone: request.contact_phone,
         description: request.description,
         products: request.products || [],
-        photo_url: request.photo_url,
+        photo_url: (request.gallery_urls && request.gallery_urls[0]) || request.photo_url,
+        gallery_urls: request.gallery_urls || [],
         max_visitors: request.max_visitors,
         visit_slots: request.visit_slots || [],
         safety_rules: request.safety_rules,
@@ -194,6 +206,22 @@ async function getPublicBySlug(slug) {
   });
   if (!org) throw ApiError.notFound('Fiche introuvable');
   return org;
+}
+
+/* Liste publique des industries (entreprises labellisées). */
+async function listPublicIndustries() {
+  return Organization.findAll({
+    where: {
+      type: 'entreprise',
+      label_status: 'approved',
+      is_active: true,
+    },
+    attributes: [
+      'id', 'name', 'slug', 'sector', 'region', 'city',
+      'description', 'products', 'photo_url', 'gallery_urls', 'label_code',
+    ],
+    order: [['name', 'ASC']],
+  });
 }
 
 /* Points carte : sites labellisés + arrangements de visite. */
@@ -313,6 +341,7 @@ module.exports = {
   updateRequest,
   reviewRequest,
   getPublicBySlug,
+  listPublicIndustries,
   listMapPoints,
   listQrBatch,
 };

@@ -7,11 +7,10 @@ type Props = {
   points: MapPoint[]
   selectedId: string | null
   onSelect: (id: string) => void
-  /** Carte plus haute (page visites). */
   tall?: boolean
 }
 
-/* Marqueur circulaire brand (évite les PNG Leaflet cassés sous Vite). */
+/* Marqueur circulaire brand. */
 function makeIcon(active: boolean, hasVisits: boolean) {
   const fill = active ? '#f6c800' : hasVisits ? '#00a85a' : '#024d3e'
   return L.divIcon({
@@ -34,7 +33,7 @@ function popupHtml(p: MapPoint) {
   return `<strong>${p.name}</strong><br/>${place}${visitLine}`
 }
 
-/* Carte Leaflet centrée sur le Togo, sites + visites. */
+/* Carte Leaflet : s'adapte pour montrer tous les points. */
 export function SitesMap({ points, selectedId, onSelect, tall }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -49,7 +48,7 @@ export function SitesMap({ points, selectedId, onSelect, tall }: Props) {
     if (!containerRef.current || mapRef.current) return
 
     const map = L.map(containerRef.current, {
-      scrollWheelZoom: false,
+      scrollWheelZoom: true,
       zoomControl: true,
     }).setView([8.6, 1.2], 7)
 
@@ -61,7 +60,11 @@ export function SitesMap({ points, selectedId, onSelect, tall }: Props) {
     layerRef.current = L.layerGroup().addTo(map)
     mapRef.current = map
 
+    const onResize = () => map.invalidateSize()
+    window.addEventListener('resize', onResize)
+
     return () => {
+      window.removeEventListener('resize', onResize)
       map.remove()
       mapRef.current = null
       layerRef.current = null
@@ -94,14 +97,20 @@ export function SitesMap({ points, selectedId, onSelect, tall }: Props) {
       latLngs.push([lat, lng])
     }
 
-    map.invalidateSize()
-    if (latLngs.length === 1) {
-      map.setView(latLngs[0], 12)
-    } else if (latLngs.length > 1) {
-      map.fitBounds(L.latLngBounds(latLngs), { padding: [40, 40], maxZoom: 12 })
-    } else {
-      map.setView([8.6, 1.2], 7)
-    }
+    requestAnimationFrame(() => {
+      map.invalidateSize()
+      if (latLngs.length === 1) {
+        map.setView(latLngs[0], 12)
+      } else if (latLngs.length > 1) {
+        map.fitBounds(L.latLngBounds(latLngs), {
+          padding: [48, 48],
+          maxZoom: 13,
+          animate: false,
+        })
+      } else {
+        map.setView([8.6, 1.2], 7)
+      }
+    })
   }, [points])
 
   useEffect(() => {
@@ -120,7 +129,7 @@ export function SitesMap({ points, selectedId, onSelect, tall }: Props) {
     <div
       className={
         tall
-          ? 'relative h-full min-h-[420px] overflow-hidden bg-sage/60 sm:min-h-[520px] lg:min-h-[640px]'
+          ? 'relative h-full min-h-[360px] w-full overflow-hidden bg-sage/60'
           : 'relative aspect-[4/3] overflow-hidden bg-sage/60 sm:aspect-[16/10]'
       }
     >

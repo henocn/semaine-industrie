@@ -2,6 +2,7 @@
 
 const labelService = require('./label.service');
 const ApiResponse = require('../../utils/ApiResponse');
+const ApiError = require('../../utils/ApiError');
 const { emitRealtime } = require('../../realtime/io');
 
 /* Sérialise un modèle Sequelize pour Socket.IO. */
@@ -63,6 +64,30 @@ async function reviewRequest(req, res, next) {
   }
 }
 
+/* Upload de 3 images pour une demande entreprise. */
+async function uploadGallery(req, res, next) {
+  try {
+    const files = req.files || [];
+    if (files.length !== 3) {
+      throw ApiError.badRequest('Exactement 3 images sont requises');
+    }
+    const urls = files.map((f) => `/uploads/labels/${f.filename}`);
+    return ApiResponse.created(res, { urls }, 'Images enregistrées');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Liste publique des industries labellisées. */
+async function listIndustries(req, res, next) {
+  try {
+    const data = await labelService.listPublicIndustries();
+    return ApiResponse.success(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Fiche publique par slug. */
 async function getPublicFiche(req, res, next) {
   try {
@@ -103,6 +128,8 @@ module.exports = {
   getRequest,
   updateRequest,
   reviewRequest,
+  uploadGallery,
+  listIndustries,
   getPublicFiche,
   listMap,
   listQrBatch,

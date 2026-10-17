@@ -32,11 +32,11 @@ export default function MapPage() {
   const visits = active?.visits
 
   return (
-    <main className="py-10 sm:py-14">
+    <main className="overflow-x-hidden py-10 sm:py-14">
       <div className={WRAP}>
         <h1 className="display text-4xl sm:text-5xl">Carte des visites</h1>
         <p className="mt-3 max-w-xl text-lg text-ink/65">
-          Uniquement les sites qui accueillent déjà des établissements. Cliquez un point pour le détail.
+          Sites qui accueillent déjà des établissements. La carte s’adapte pour tous les afficher.
         </p>
 
         {error && <p className="mt-6 text-red-700">{error}</p>}
@@ -46,8 +46,8 @@ export default function MapPage() {
         )}
 
         {points.length > 0 && (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.75fr)_minmax(280px,1fr)] lg:items-stretch">
-            <div className="min-h-[420px] sm:min-h-[520px] lg:min-h-[640px]">
+          <div className="mt-8 grid gap-5 lg:h-[min(72vh,740px)] lg:grid-cols-[minmax(0,1.8fr)_minmax(260px,0.95fr)] lg:items-stretch lg:overflow-hidden">
+            <div className="min-h-[360px] min-w-0 overflow-hidden sm:min-h-[440px] lg:min-h-0 lg:h-full">
               <SitesMap
                 points={points}
                 selectedId={selected}
@@ -56,10 +56,8 @@ export default function MapPage() {
               />
             </div>
 
-            <aside className="min-w-0 border border-forest/15 p-5 lg:overflow-y-auto lg:max-h-[640px]">
-              {!active && (
-                <p className="text-ink/50">Sélectionnez un site sur la carte.</p>
-              )}
+            <aside className="min-h-0 min-w-0 overflow-y-auto border border-forest/15 p-5">
+              {!active && <p className="text-ink/50">Sélectionnez un site sur la carte.</p>}
 
               {active && (
                 <>
@@ -70,24 +68,13 @@ export default function MapPage() {
                   <p className="mt-2 text-[15px] text-ink/60">
                     {[active.city, active.region, active.sector].filter(Boolean).join(' · ')}
                   </p>
-                  {active.max_visitors != null && (
-                    <p className="mt-3 text-[14px] text-ink/55">
-                      Capacité max. :{' '}
-                      <span className="font-semibold text-forest">{active.max_visitors}</span> / créneau
-                    </p>
-                  )}
-                  {active.description && (
-                    <p className="mt-4 text-[15px] leading-relaxed text-ink/75">{active.description}</p>
-                  )}
 
                   <div className="mt-6 grid grid-cols-2 gap-3 border-y border-forest/15 py-4">
                     <div>
                       <p className="text-[28px] font-semibold tracking-tight text-forest">
                         {visits?.groups ?? 0}
                       </p>
-                      <p className="text-[13px] text-ink/55">
-                        groupe{(visits?.groups ?? 0) > 1 ? 's' : ''}
-                      </p>
+                      <p className="text-[13px] text-ink/55">groupes</p>
                     </div>
                     <div>
                       <p className="text-[28px] font-semibold tracking-tight text-forest">
@@ -118,7 +105,7 @@ export default function MapPage() {
                         </p>
                         <a
                           href={`mailto:${v.contact_email}`}
-                          className="mt-1 inline-block text-[13px] text-forest underline underline-offset-2"
+                          className="mt-1 inline-block break-all text-[13px] text-forest underline underline-offset-2"
                         >
                           {v.contact_email}
                         </a>
@@ -130,7 +117,7 @@ export default function MapPage() {
                     to={`/o/${active.slug}`}
                     className="mt-6 inline-block text-[15px] font-medium text-forest underline decoration-forest/30 underline-offset-4"
                   >
-                    Voir la fiche complète
+                    Voir la fiche
                   </Link>
                 </>
               )}

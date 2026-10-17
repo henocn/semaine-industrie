@@ -1,6 +1,7 @@
 'use strict';
 
 /* Configure Express : sécurité, CORS, routes, erreurs. */
+const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -21,7 +22,11 @@ const surveyRoutes = require('./modules/surveys/survey.routes');
 const app = express();
 
 app.set('trust proxy', 'loopback');
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }),
+);
 app.use(
   cors({
     origin: env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()),
@@ -29,6 +34,7 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(httpLogger);
 
 app.use(`${env.API_PREFIX}/health`, healthRoutes);

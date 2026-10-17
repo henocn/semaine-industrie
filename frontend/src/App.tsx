@@ -4,6 +4,7 @@ import BilanPage from './pages/BilanPage'
 import BookingPage from './pages/BookingPage'
 import BusinessRegisterPage from './pages/BusinessRegisterPage'
 import HomePage from './pages/HomePage'
+import IndustriesPage from './pages/IndustriesPage'
 import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/visites" element={<BookingPage />} />
           <Route path="/affaires" element={<BusinessRegisterPage />} />
           <Route path="/carte" element={<MapPage />} />
+          <Route path="/industrie" element={<IndustriesPage />} />
           <Route path="/passeport/:code" element={<PassportPage />} />
           <Route path="/questions" element={<QuestionsPage />} />
           <Route path="/vote" element={<VotePage />} />

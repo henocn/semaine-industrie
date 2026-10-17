@@ -1,3 +1,4 @@
+import { API_BASE } from '../config/api'
 import { apiFetch } from './client'
 
 export type LabelRequestPayload = {
@@ -15,6 +16,7 @@ export type LabelRequestPayload = {
   safety_rules?: string
   lat?: number | null
   lng?: number | null
+  gallery_urls?: string[]
 }
 
 export type Organization = {
@@ -34,8 +36,45 @@ export type Organization = {
   visit_slots: { day: string; start: string; end: string }[]
   safety_rules: string | null
   contact_name: string | null
+  contact_email?: string | null
+  contact_phone?: string | null
+  photo_url?: string | null
+  gallery_urls?: string[]
   lat: string | null
   lng: string | null
+}
+
+export type IndustryCard = {
+  id: string
+  name: string
+  slug: string
+  sector: string | null
+  region: string | null
+  city: string | null
+  description: string | null
+  products: string[]
+  photo_url: string | null
+  gallery_urls: string[]
+  label_code: string | null
+}
+
+/* Upload les 3 images galerie (multipart). */
+export async function uploadLabelGallery(files: File[]) {
+  const body = new FormData()
+  for (const file of files) body.append('gallery', file)
+  const res = await fetch(`${API_BASE}/labels/upload-gallery`, {
+    method: 'POST',
+    body,
+  })
+  const json = (await res.json()) as {
+    success: boolean
+    data?: { urls: string[] }
+    error?: { message: string }
+  }
+  if (!res.ok || !json.success || !json.data?.urls) {
+    throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
+  }
+  return json.data.urls
 }
 
 /* Envoie une demande de label. */
@@ -44,6 +83,11 @@ export function createLabelRequest(payload: LabelRequestPayload) {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+/* Liste publique des industries labellisées. */
+export function listIndustries() {
+  return apiFetch<IndustryCard[]>('/labels/organizations')
 }
 
 export type LabelRequest = {

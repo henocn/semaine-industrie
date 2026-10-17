@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { createLabelRequest } from '../api/labels'
+import { createLabelRequest, uploadLabelGallery } from '../api/labels'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { WRAP } from '../components/layout/Mark'
+import { assertGalleryFiles } from '../lib/imageQuality'
 
 const field =
   'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
@@ -14,7 +15,16 @@ export default function LabelRequestPage() {
   const [structureType, setStructureType] = useState<'entreprise' | 'ecole'>('entreprise')
   const [lat, setLat] = useState<number | null>(null)
   const [lng, setLng] = useState<number | null>(null)
+  const [previews, setPreviews] = useState<string[]>([])
   const isEntreprise = structureType === 'entreprise'
+
+  /* Prévisualise les 3 images choisies. */
+  function onGalleryChange(files: FileList | null) {
+    setPreviews([])
+    if (!files?.length) return
+    const urls = Array.from(files).slice(0, 3).map((f) => URL.createObjectURL(f))
+    setPreviews(urls)
+  }
 
   /* Soumet le formulaire vers l'API. */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -25,7 +35,8 @@ export default function LabelRequestPage() {
       return
     }
     setLoading(true)
-    const fd = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const fd = new FormData(form)
     const productsRaw = String(fd.get('products') || '')
     const products = isEntreprise
       ? productsRaw
@@ -35,6 +46,14 @@ export default function LabelRequestPage() {
       : []
 
     try {
+      let gallery_urls: string[] | undefined
+      if (isEntreprise) {
+        const input = form.elements.namedItem('gallery') as HTMLInputElement
+        const files = input.files ? Array.from(input.files) : []
+        await assertGalleryFiles(files)
+        gallery_urls = await uploadLabelGallery(files)
+      }
+
       await createLabelRequest({
         structure_name: String(fd.get('structure_name') || ''),
         structure_type: structureType,
@@ -49,6 +68,7 @@ export default function LabelRequestPage() {
         safety_rules: isEntreprise ? String(fd.get('safety_rules') || '') || undefined : undefined,
         lat,
         lng,
+        gallery_urls,
       })
       setSent(true)
     } catch (err) {
@@ -66,9 +86,11 @@ export default function LabelRequestPage() {
             <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/70">
               Entreprises et écoles : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent.
             </p>
-            <p className="mt-4 max-w-md text-[15px] text-ink/55">
-              Sans accès web, l’organisation peut aussi saisir la demande pour vous lors d’un appel.
-            </p>
+            {isEntreprise && (
+              <p className="mt-4 max-w-md text-[15px] text-ink/55">
+                Entreprises : 3 photos nettes (min. 1000×700, max 5 Mo) pour la fiche Industrie.
+              </p>
+            )}
           </div>
 
           {sent ? (
@@ -120,6 +142,35 @@ export default function LabelRequestPage() {
                   }}
                 />
               </div>
+
+              {isEntreprise && (
+                <div className="sm:col-span-2">
+                  <label className="block text-[15px] font-medium text-forest">
+                    3 photos (usine, produits, équipe…)
+                    <input
+                      required
+                      name="gallery"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      className="mt-3 block w-full text-[14px] text-ink/70 file:mr-4 file:border file:border-forest file:bg-white file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-forest"
+                      onChange={(e) => onGalleryChange(e.target.files)}
+                    />
+                  </label>
+                  <p className="mt-2 text-[13px] text-ink/45">
+                    Exactement 3 fichiers · JPEG/PNG/WebP · min. 1000×700 px · max 5 Mo chacun
+                  </p>
+                  {previews.length > 0 && (
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      {previews.map((src) => (
+                        <div key={src} className="aspect-[4/3] overflow-hidden bg-sage/40">
+                          <img src={src} alt="" className="h-full w-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <label className="block text-[15px] font-medium text-forest">
                 E-mail

@@ -18,6 +18,12 @@ lerna-debug.log*
 .env.*
 !.env.example
 
+# Uploads runtime (garder les dossiers via .gitkeep)
+backend/uploads/**
+!backend/uploads/.gitkeep
+!backend/uploads/labels/
+!backend/uploads/labels/.gitkeep
+
 # Local project folders (not versioned)
 .cursor/
 ressources/
