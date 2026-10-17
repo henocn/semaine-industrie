@@ -27,7 +27,7 @@ export default function OrgaQrPage() {
       }
     }
     load()
-  }, [navigate, user])
+  }, [navigate, user?.id, user?.role])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

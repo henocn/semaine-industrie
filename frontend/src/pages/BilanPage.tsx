@@ -26,7 +26,7 @@ export default function BilanPage() {
       }
     }
     load()
-  }, [navigate, user])
+  }, [navigate, user?.id, user?.role])
 
   const ind = stats?.indicators
 

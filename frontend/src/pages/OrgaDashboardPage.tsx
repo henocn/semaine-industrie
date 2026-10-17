@@ -26,7 +26,7 @@ export default function OrgaDashboardPage() {
       }
     }
     load()
-  }, [navigate, user])
+  }, [navigate, user?.id, user?.role])
 
   const ind = stats?.indicators
   const total = Math.max(ind?.requests_total ?? 0, 1)

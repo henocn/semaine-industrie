@@ -20,7 +20,7 @@ export default function OrgaPassportsPage() {
       return
     }
     listBookableSites().then(setSites).catch(() => undefined)
-  }, [navigate, user])
+  }, [navigate, user?.id, user?.role])
 
   async function onBatch(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()

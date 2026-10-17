@@ -24,7 +24,7 @@ export default function OrgaVisitsPage() {
         setError(err instanceof Error ? err.message : 'Erreur')
         navigate('/login')
       })
-  }, [navigate, user])
+  }, [navigate, user?.id, user?.role])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

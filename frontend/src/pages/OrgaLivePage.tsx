@@ -44,7 +44,7 @@ export default function OrgaLivePage() {
       offUpdated()
       offSurvey()
     }
-  }, [navigate, user])
+  }, [navigate, user?.id, user?.role])
 
   async function onReview(id: string, status: 'approved' | 'done' | 'rejected') {
     const updated = await reviewQuestion(id, status)
