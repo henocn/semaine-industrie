@@ -21,9 +21,8 @@ function verify(req, res) {
   return res.status(403).send('Forbidden');
 }
 
-/* Reçoit les événements WhatsApp et répond en arrière-plan. */
+/* Reçoit les événements WhatsApp (webhook direct) et répond en arrière-plan. */
 async function webhook(req, res) {
-  // Meta exige une réponse rapide 200 avant le traitement métier.
   res.status(200).json({ success: true });
 
   try {
@@ -32,6 +31,7 @@ async function webhook(req, res) {
       logger.info('[whatsapp] reply', {
         from: result.from,
         text: result.text,
+        interactiveId: result.interactiveId,
         ok: result.sent?.ok,
       });
     }
@@ -40,7 +40,26 @@ async function webhook(req, res) {
   }
 }
 
-/* Envoie un message texte (appelé par n8n). */
+/* Point d'entrée n8n : traite le payload et répond (menus boutons / listes). */
+async function inbound(req, res, next) {
+  try {
+    if (!isInternalAuthorized(req)) {
+      return res.status(403).json({ success: false, error: 'Forbidden' });
+    }
+    const result = await whatsappService.processInbound(req.body);
+    if (!result.handled) {
+      return ApiResponse.success(res, { handled: false }, 'Ignoré');
+    }
+    if (result.sent && result.sent.ok === false) {
+      return res.status(502).json({ success: false, error: 'send_failed', data: result });
+    }
+    return ApiResponse.success(res, result, 'Traité');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Envoie un message texte (appel interne / n8n). */
 async function send(req, res, next) {
   try {
     if (!isInternalAuthorized(req)) {
@@ -65,5 +84,6 @@ async function send(req, res, next) {
 module.exports = {
   verify,
   webhook,
+  inbound,
   send,
 };

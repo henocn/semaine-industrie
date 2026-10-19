@@ -6,6 +6,8 @@ const { LabelRequest, Organization, VisitBooking, sequelize } = require('../../m
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
+const whatsappService = require('../whatsapp/whatsapp.service');
+const logger = require('../../utils/logger');
 
 /* Transforme un nom en slug URL. */
 function slugify(text) {
@@ -130,7 +132,7 @@ async function updateRequest(id, payload) {
 
 /* Approuve ou rejette une demande ; crée l'organisation si approuvée. */
 async function reviewRequest(id, { status, review_note }) {
-  return sequelize.transaction(async (transaction) => {
+  const result = await sequelize.transaction(async (transaction) => {
     const request = await LabelRequest.findByPk(id, { transaction, lock: true });
     if (!request) throw ApiError.notFound('Demande introuvable');
     if (request.status !== 'pending') {
@@ -187,12 +189,22 @@ async function reviewRequest(id, { status, review_note }) {
       slug: organization.slug,
       label_code: organization.label_code,
       contact_email: organization.contact_email,
+      contact_phone: organization.contact_phone,
       contact_name: organization.contact_name,
       fiche_url: `${env.PUBLIC_APP_URL.replace(/\/$/, '')}/o/${organization.slug}`,
     });
 
     return { request, organization };
   });
+
+  /* WhatsApp : récap + code de suivi (hors transaction). */
+  if (result.organization) {
+    whatsappService.notifyLabelApproved(result.organization).catch((err) => {
+      logger.warn('[label] notify WhatsApp failed', err.message);
+    });
+  }
+
+  return result;
 }
 
 /* Fiche publique d'une organisation labellisée. */

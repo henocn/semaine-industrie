@@ -8,6 +8,7 @@ const router = Router();
 
 router.get('/webhook', controller.verify);
 router.post('/webhook', controller.webhook);
+router.post('/inbound', controller.inbound);
 router.post('/send', controller.send);
 
 module.exports = router;

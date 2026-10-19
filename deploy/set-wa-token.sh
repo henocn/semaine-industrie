@@ -1,4 +1,16 @@
 #!/usr/bin/env bash
+# Installe WHATSAPP_TOKEN sur l'API (+ n8n) et redémarre proprement PM2.
+#
+# Jeton PERMANENT (recommandé) :
+# 1. business.facebook.com > Paramètres Business > Utilisateurs > Utilisateurs système
+# 2. Créer / ouvrir un utilisateur système (rôle Admin)
+# 3. Ajouter les actifs : appli « Industrie TOGO » + compte WhatsApp Business
+# 4. Générer un jeton : jamais d'expiration
+#    permissions : whatsapp_business_messaging, whatsapp_business_management
+# 5. bash deploy/set-wa-token.sh 'EAA...'
+#
+# Les jetons Graph Explorer expirent ~24h : à éviter en prod.
+#
 # Usage: bash deploy/set-wa-token.sh 'EAAxxxx...'
 set -euo pipefail
 TOKEN="${1:-}"
