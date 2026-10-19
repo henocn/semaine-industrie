@@ -159,7 +159,6 @@ function mainMenuPayload(to) {
         ],
       },
       {
-      {
         title: 'Accès privé',
         rows: [{ id: 'menu_suivi', title: 'Mon espace' }],
       },
