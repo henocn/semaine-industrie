@@ -151,13 +151,17 @@ function mainMenuPayload(to) {
     header: "L'industrie à portée de main",
     sections: [
       {
-        title: 'Menu',
+        title: 'Découvrir',
         rows: [
           { id: 'menu_programme', title: 'Programme' },
           { id: 'menu_label', title: 'Demander le label' },
-          { id: 'menu_suivi', title: 'Code de suivi' },
-          { id: 'menu_ressources', title: 'Mes ressources' },
+          { id: 'menu_infos', title: 'Informations' },
         ],
+      },
+      {
+      {
+        title: 'Accès privé',
+        rows: [{ id: 'menu_suivi', title: 'Mon espace' }],
       },
     ],
   };
@@ -421,7 +425,7 @@ async function handleInteractive(from, id, phoneNumberId) {
         body: 'Suite',
         buttons: [
           { id: 'menu_home', title: 'Menu' },
-          { id: 'menu_suivi', title: 'Mon suivi' },
+          { id: 'menu_suivi', title: 'Mon espace' },
         ],
       });
     }
@@ -437,7 +441,26 @@ async function handleInteractive(from, id, phoneNumberId) {
         body: 'Suite',
         buttons: [
           { id: 'menu_home', title: 'Menu' },
-          { id: 'menu_suivi', title: 'Saisir code' },
+          { id: 'menu_suivi', title: 'Mon espace' },
+        ],
+      });
+    case 'menu_infos':
+      await sendText({
+        to: from,
+        phoneNumberId,
+        body:
+          'Informations\n\n' +
+          'Email : info@semaineindustrie.tg\n' +
+          `Site : ${SITE()}\n` +
+          'Contact : 70 00 00 00',
+      });
+      return sendButtons({
+        to: from,
+        phoneNumberId,
+        body: 'Suite',
+        buttons: [
+          { id: 'menu_home', title: 'Menu' },
+          { id: 'menu_suivi', title: 'Mon espace' },
         ],
       });
     case 'menu_ressources':
@@ -551,10 +574,13 @@ async function handleText(from, text, phoneNumberId) {
 
   if (t === '1' || t.includes('programme')) return handleInteractive(from, 'menu_programme', phoneNumberId);
   if (t === '2' || t.includes('label')) return handleInteractive(from, 'menu_label', phoneNumberId);
+  if (t.includes('info') || t.includes('contact') || t.includes('email')) {
+    return handleInteractive(from, 'menu_infos', phoneNumberId);
+  }
   if (t.includes('ressource') || t.includes('telecharg') || t.includes('document')) {
     return handleInteractive(from, 'menu_ressources', phoneNumberId);
   }
-  if (t.includes('suivi') || t.includes('code')) {
+  if (t.includes('suivi') || t.includes('espace') || t.includes('code')) {
     return handleInteractive(from, 'menu_suivi', phoneNumberId);
   }
 
