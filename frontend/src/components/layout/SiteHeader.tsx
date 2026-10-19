@@ -91,6 +91,7 @@ const GROUPS: NavGroup[] = [
     label: 'À propos',
     items: [
       { label: 'Programme', to: '/programme', icon: Icon.calendar },
+      { label: 'Ressources', to: '/ressources', icon: Icon.clipboard },
       { label: 'Contact', to: '/#contact', icon: Icon.mail },
     ],
   },

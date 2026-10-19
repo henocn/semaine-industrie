@@ -101,7 +101,8 @@ export default function LabelRequestPage() {
 
           {sent ? (
             <p className="self-center text-xl text-forest">
-              Merci. Votre demande est enregistrée. Vous serez contacté après validation.
+              Merci. Votre demande est enregistrée. Après acceptation, vous recevrez un code de
+              suivi privé pour télécharger votre label et le programme.
             </p>
           ) : (
             <form onSubmit={onSubmit} className="grid gap-8 sm:grid-cols-2">

@@ -130,8 +130,33 @@ async function updateRequest(id, payload) {
   return request;
 }
 
+/* Retire les champs sensibles d'une fiche publique. */
+function toPublicOrg(org) {
+  const json = typeof org.toJSON === 'function' ? org.toJSON() : { ...org };
+  delete json.label_code;
+  delete json.label_document_url;
+  delete json.contact_email;
+  delete json.contact_phone;
+  return json;
+}
+
+/* URL absolue pour un chemin /uploads/... */
+function absolutePublicUrl(pathOrUrl) {
+  if (!pathOrUrl) return null;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  const base = env.PUBLIC_APP_URL.replace(/\/$/, '');
+  return `${base}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+}
+
 /* Approuve ou rejette une demande ; crée l'organisation si approuvée. */
-async function reviewRequest(id, { status, review_note }) {
+async function reviewRequest(id, { status, review_note, label_document_url }) {
+  if (status === 'approved') {
+    const doc = String(label_document_url || '').trim();
+    if (!doc || !doc.startsWith('/uploads/docs/')) {
+      throw ApiError.badRequest('Le PDF du label est obligatoire pour approuver');
+    }
+  }
+
   const result = await sequelize.transaction(async (transaction) => {
     const request = await LabelRequest.findByPk(id, { transaction, lock: true });
     if (!request) throw ApiError.notFound('Demande introuvable');
@@ -173,6 +198,7 @@ async function reviewRequest(id, { status, review_note }) {
         visit_slots: request.visit_slots || [],
         safety_rules: request.safety_rules,
         label_code,
+        label_document_url: String(label_document_url).trim(),
         label_status: 'approved',
         labeled_at: new Date(),
         is_active: true,
@@ -207,7 +233,7 @@ async function reviewRequest(id, { status, review_note }) {
   return result;
 }
 
-/* Fiche publique d'une organisation labellisée. */
+/* Fiche publique d'une organisation labellisée (sans code de suivi). */
 async function getPublicBySlug(slug) {
   const org = await Organization.findOne({
     where: {
@@ -217,12 +243,12 @@ async function getPublicBySlug(slug) {
     },
   });
   if (!org) throw ApiError.notFound('Fiche introuvable');
-  return org;
+  return toPublicOrg(org);
 }
 
 /* Liste publique des industries (entreprises labellisées). */
 async function listPublicIndustries() {
-  return Organization.findAll({
+  const rows = await Organization.findAll({
     where: {
       type: 'entreprise',
       label_status: 'approved',
@@ -230,10 +256,64 @@ async function listPublicIndustries() {
     },
     attributes: [
       'id', 'name', 'slug', 'sector', 'region', 'city',
-      'description', 'products', 'photo_url', 'gallery_urls', 'label_code',
+      'description', 'products', 'photo_url', 'gallery_urls',
     ],
     order: [['name', 'ASC']],
   });
+  return rows.map((r) => toPublicOrg(r));
+}
+
+/* Vérifie un code de suivi et renvoie les liens de téléchargement. */
+async function verifyTrackingCode(rawCode) {
+  const code = String(rawCode || '')
+    .trim()
+    .toUpperCase();
+  if (!/^SI\d{2}-\d{4}$/.test(code)) {
+    throw ApiError.badRequest('Code de suivi invalide');
+  }
+  const org = await Organization.findOne({
+    where: {
+      label_code: code,
+      label_status: 'approved',
+      is_active: true,
+    },
+  });
+  if (!org) throw ApiError.notFound('Code de suivi introuvable');
+  if (!org.label_document_url) {
+    throw ApiError.conflict('Document label pas encore disponible');
+  }
+
+  return {
+    organization_name: org.name,
+    type: org.type,
+    label_pdf_url: absolutePublicUrl(org.label_document_url),
+    programme_pdf_url: absolutePublicUrl(getProgrammePdfPath()),
+  };
+}
+
+/* Met à jour l'URL du PDF programme (orga). */
+async function setProgrammePdfUrl(url) {
+  const path = String(url || '').trim();
+  if (!path.startsWith('/uploads/docs/')) {
+    throw ApiError.badRequest('Chemin PDF programme invalide');
+  }
+  /* Persistance simple via .env non possible ici : on écrit un fichier pointeur. */
+  const fs = require('fs');
+  const pointer = require('path').join(__dirname, '../../../uploads/docs/programme-current.txt');
+  fs.writeFileSync(pointer, path, 'utf8');
+  return { programme_pdf_url: absolutePublicUrl(path), path };
+}
+
+/* Lit le PDF programme courant (pointeur ou env). */
+function getProgrammePdfPath() {
+  const fs = require('fs');
+  const pathMod = require('path');
+  const pointer = pathMod.join(__dirname, '../../../uploads/docs/programme-current.txt');
+  if (fs.existsSync(pointer)) {
+    const stored = fs.readFileSync(pointer, 'utf8').trim();
+    if (stored.startsWith('/uploads/docs/')) return stored;
+  }
+  return env.PROGRAMME_PDF_URL;
 }
 
 /* Points carte : sites labellisés + arrangements de visite. */
@@ -252,7 +332,7 @@ async function listMapPoints({ region, sector, type } = {}) {
     where,
     attributes: [
       'id', 'name', 'slug', 'type', 'sector', 'region', 'city',
-      'lat', 'lng', 'label_code', 'products', 'max_visitors', 'description',
+      'lat', 'lng', 'products', 'max_visitors', 'description',
     ],
     order: [['name', 'ASC']],
   });
@@ -294,7 +374,7 @@ async function listMapPoints({ region, sector, type } = {}) {
   }
 
   return orgs.map((o) => {
-    const json = o.toJSON();
+    const json = toPublicOrg(o);
     const items = bySite[o.id] || [];
     return {
       ...json,
@@ -351,4 +431,9 @@ module.exports = {
   listPublicIndustries,
   listMapPoints,
   listQrBatch,
+  verifyTrackingCode,
+  setProgrammePdfUrl,
+  getProgrammePdfPath,
+  absolutePublicUrl,
+  toPublicOrg,
 };

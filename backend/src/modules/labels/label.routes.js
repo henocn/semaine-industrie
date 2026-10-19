@@ -5,22 +5,30 @@ const { Router } = require('express');
 const controller = require('./label.controller');
 const validate = require('../../middlewares/validate.middleware');
 const { authenticate, authorize } = require('../../middlewares/auth.middleware');
-const { uploadGallery } = require('../../middlewares/upload.middleware');
-const { createRequestSchema, reviewSchema, updateRequestSchema } = require('./label.validation');
+const {
+  uploadGallery,
+  uploadLabelPdf,
+  uploadProgrammePdf,
+} = require('../../middlewares/upload.middleware');
+const { createRequestSchema, updateRequestSchema } = require('./label.validation');
+const ApiError = require('../../utils/ApiError');
 
 const router = Router();
 
+/* Wrap multer pour renvoyer une erreur API propre. */
+function withUpload(middleware, nextHandler) {
+  return (req, res, next) => {
+    middleware(req, res, (err) => {
+      if (err) return next(ApiError.badRequest(err.message || 'Upload impossible'));
+      return nextHandler(req, res, next);
+    });
+  };
+}
+
 // Public
-router.post('/upload-gallery', (req, res, next) => {
-  uploadGallery(req, res, (err) => {
-    if (err) {
-      const ApiError = require('../../utils/ApiError');
-      return next(ApiError.badRequest(err.message || 'Upload impossible'));
-    }
-    return controller.uploadGallery(req, res, next);
-  });
-});
+router.post('/upload-gallery', withUpload(uploadGallery, controller.uploadGallery));
 router.post('/requests', validate(createRequestSchema), controller.createRequest);
+router.post('/verify-code', controller.verifyCode);
 router.get('/organizations', controller.listIndustries);
 router.get('/organizations/map', controller.listMap);
 router.get('/organizations/:slug', controller.getPublicFiche);
@@ -40,8 +48,13 @@ router.patch(
   '/requests/:id/review',
   authenticate,
   authorize('orga'),
-  validate(reviewSchema),
-  controller.reviewRequest,
+  withUpload(uploadLabelPdf, controller.reviewRequest),
+);
+router.post(
+  '/programme-pdf',
+  authenticate,
+  authorize('orga'),
+  withUpload(uploadProgrammePdf, controller.uploadProgramme),
 );
 
 module.exports = router;

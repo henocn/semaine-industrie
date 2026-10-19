@@ -1,5 +1,6 @@
 import { API_BASE } from '../config/api'
 import { apiFetch } from './client'
+import { getAccessToken } from './session'
 
 export type LabelRequestPayload = {
   structure_name: string
@@ -30,7 +31,6 @@ export type Organization = {
   address: string | null
   description: string | null
   products: string[]
-  label_code: string | null
   label_status: string
   max_visitors: number | null
   visit_slots: { day: string; start: string; end: string }[]
@@ -55,7 +55,13 @@ export type IndustryCard = {
   products: string[]
   photo_url: string | null
   gallery_urls: string[]
-  label_code: string | null
+}
+
+export type TrackingResources = {
+  organization_name: string
+  type: string
+  label_pdf_url: string
+  programme_pdf_url: string
 }
 
 /* Upload les 3 images galerie (multipart). */
@@ -137,7 +143,6 @@ export type MapPoint = {
   city: string | null
   lat: string
   lng: string
-  label_code: string | null
   products: string[]
   max_visitors?: number | null
   description?: string | null
@@ -159,15 +164,64 @@ export function listLabelRequests(status?: string) {
   return apiFetch<LabelRequest[]>(`/labels/requests${q}`)
 }
 
-/* Approuve ou rejette une demande. */
-export function reviewLabelRequest(id: string, status: 'approved' | 'rejected', review_note?: string) {
-  return apiFetch<{ request: LabelRequest; organization: Organization | null }>(
-    `/labels/requests/${id}/review`,
-    {
-      method: 'PATCH',
-      body: JSON.stringify({ status, review_note }),
-    },
-  )
+/* Approuve ou rejette une demande (PDF obligatoire si approved). */
+export async function reviewLabelRequest(
+  id: string,
+  status: 'approved' | 'rejected',
+  options?: { review_note?: string; labelPdf?: File | null },
+) {
+  const token = getAccessToken()
+  const body = new FormData()
+  body.append('status', status)
+  if (options?.review_note) body.append('review_note', options.review_note)
+  if (status === 'approved') {
+    if (!options?.labelPdf) throw new Error('Joignez le PDF du label pour approuver')
+    body.append('label_pdf', options.labelPdf)
+  }
+
+  const res = await fetch(`${API_BASE}/labels/requests/${id}/review`, {
+    method: 'PATCH',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body,
+  })
+  const json = (await res.json()) as {
+    success: boolean
+    data?: { request: LabelRequest; organization: Organization | null }
+    error?: { message: string }
+  }
+  if (!res.ok || !json.success || !json.data) {
+    throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
+  }
+  return json.data
+}
+
+/* Vérifie un code de suivi et renvoie les URLs de téléchargement. */
+export function verifyTrackingCode(code: string) {
+  return apiFetch<TrackingResources>('/labels/verify-code', {
+    method: 'POST',
+    body: JSON.stringify({ code: code.trim().toUpperCase() }),
+  })
+}
+
+/* Upload du PDF programme officiel (orga). */
+export async function uploadProgrammePdf(file: File) {
+  const token = getAccessToken()
+  const body = new FormData()
+  body.append('programme_pdf', file)
+  const res = await fetch(`${API_BASE}/labels/programme-pdf`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body,
+  })
+  const json = (await res.json()) as {
+    success: boolean
+    data?: { programme_pdf_url: string; path: string }
+    error?: { message: string }
+  }
+  if (!res.ok || !json.success || !json.data) {
+    throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
+  }
+  return json.data
 }
 
 /* Modifie une demande (orga). */

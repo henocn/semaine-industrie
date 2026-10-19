@@ -84,6 +84,10 @@ module.exports = (sequelize) => {
         allowNull: true,
         unique: true,
       },
+      label_document_url: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+      },
       label_status: {
         type: DataTypes.ENUM('draft', 'pending', 'approved', 'rejected'),
         allowNull: false,

@@ -68,7 +68,7 @@ export default function MapPage() {
               {active && (
                 <>
                   <p className="text-[13px] font-semibold uppercase tracking-wide text-leaf">
-                    {active.label_code ? `Label ${active.label_code}` : 'Site labellisé'}
+                    Site labellisé
                   </p>
                   <h2 className="display mt-2 text-3xl text-forest">{active.name}</h2>
                   <p className="mt-2 text-[15px] text-ink/60">

@@ -29,6 +29,9 @@ const env = cleanEnv(process.env, {
   WHATSAPP_TOKEN: str({ default: '' }),
   WHATSAPP_PHONE_NUMBER_ID: str({ default: '' }),
   WHATSAPP_VERIFY_TOKEN: str({ default: 'si2026-wa-verify' }),
+
+  /* PDF programme officiel (chemin public ou URL absolue). */
+  PROGRAMME_PDF_URL: str({ default: '/uploads/docs/programme-si2026.pdf' }),
 });
 
 module.exports = env;

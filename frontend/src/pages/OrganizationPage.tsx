@@ -84,7 +84,7 @@ export default function OrganizationPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-forest/90 via-forest/35 to-transparent" />
               <div className={`absolute inset-x-0 bottom-0 ${WRAP} pb-10 pt-24`}>
                 <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-sun">
-                  {org.label_code ? `Label ${org.label_code}` : 'Industrie labellisée'}
+                  Industrie labellisée
                 </p>
                 <h1 className="display mt-3 max-w-3xl text-4xl text-white sm:text-5xl md:text-6xl">
                   {org.name}
@@ -96,9 +96,7 @@ export default function OrganizationPage() {
             </div>
           ) : (
             <div className={`${WRAP} pt-16 sm:pt-24`}>
-              <p className="text-[15px] font-semibold text-leaf">
-                {org.label_code ? `Label ${org.label_code}` : 'Structure labellisée'}
-              </p>
+              <p className="text-[15px] font-semibold text-leaf">Structure labellisée</p>
               <h1 className="display mt-3 text-4xl sm:text-5xl">{org.name}</h1>
               <p className="mt-4 text-lg text-ink/65">
                 {[org.type === 'ecole' ? 'École' : 'Entreprise', org.sector, org.city, org.region]

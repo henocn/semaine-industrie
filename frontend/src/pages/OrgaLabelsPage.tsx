@@ -6,6 +6,7 @@ import {
   listLabelRequests,
   reviewLabelRequest,
   updateLabelRequest,
+  uploadProgrammePdf,
   type LabelRequest,
 } from '../api/labels'
 import { OrgaShell } from '../components/layout/OrgaShell'
@@ -24,10 +25,13 @@ export default function OrgaLabelsPage() {
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | ''>('')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [editing, setEditing] = useState<LabelRequest | null>(null)
   const [editLat, setEditLat] = useState<number | null>(null)
   const [editLng, setEditLng] = useState<number | null>(null)
+  const [approveTarget, setApproveTarget] = useState<LabelRequest | null>(null)
+  const [approvePdf, setApprovePdf] = useState<File | null>(null)
 
   /* Ouvre le formulaire d'édition avec la position actuelle. */
   function openEdit(item: LabelRequest) {
@@ -97,15 +101,37 @@ export default function OrgaLabelsPage() {
     )
   }, [items, query])
 
-  /* Approuve ou rejette une demande. */
-  async function onReview(id: string, status: 'approved' | 'rejected') {
+  /* Rejette une demande. */
+  async function onReject(id: string) {
     setBusyId(id)
     try {
-      await reviewLabelRequest(id, status)
+      await reviewLabelRequest(id, 'rejected')
       notifyLabelPendingChanged()
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Action impossible')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  /* Approuve avec PDF label obligatoire. */
+  async function onConfirmApprove(e: FormEvent) {
+    e.preventDefault()
+    if (!approveTarget || !approvePdf) {
+      setError('Joignez le PDF du label')
+      return
+    }
+    setBusyId(approveTarget.id)
+    setError(null)
+    try {
+      await reviewLabelRequest(approveTarget.id, 'approved', { labelPdf: approvePdf })
+      setApproveTarget(null)
+      setApprovePdf(null)
+      notifyLabelPendingChanged()
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Approbation impossible')
     } finally {
       setBusyId(null)
     }
@@ -156,6 +182,28 @@ export default function OrgaLabelsPage() {
       searchPlaceholder="Rechercher une structure…"
       onSearch={setQuery}
       actions={
+        <>
+        <label className="orga-btn-ghost cursor-pointer">
+          Programme PDF
+          <input
+            type="file"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              e.target.value = ''
+              if (!file) return
+              try {
+                await uploadProgrammePdf(file)
+                setError(null)
+                setInfo('Programme PDF mis à jour')
+              } catch (err) {
+                setInfo(null)
+                setError(err instanceof Error ? err.message : 'Upload programme impossible')
+              }
+            }}
+          />
+        </label>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value as typeof filter)}
@@ -166,9 +214,11 @@ export default function OrgaLabelsPage() {
           <option value="approved">Approuvées</option>
           <option value="rejected">Refusées</option>
         </select>
+        </>
       }
     >
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
+      {info && <p className="mb-4 text-[14px] text-forest">{info}</p>}
 
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
@@ -265,7 +315,10 @@ export default function OrgaLabelsPage() {
                           label="Approuver"
                           variant="ok"
                           disabled={busyId === item.id}
-                          onClick={() => onReview(item.id, 'approved')}
+                          onClick={() => {
+                            setApprovePdf(null)
+                            setApproveTarget(item)
+                          }}
                         >
                           <IconCheck />
                         </IconButton>
@@ -273,7 +326,7 @@ export default function OrgaLabelsPage() {
                           label="Refuser"
                           variant="danger"
                           disabled={busyId === item.id}
-                          onClick={() => onReview(item.id, 'rejected')}
+                          onClick={() => onReject(item.id)}
                         >
                           <IconX />
                         </IconButton>
@@ -380,6 +433,49 @@ export default function OrgaLabelsPage() {
               </button>
               <button type="submit" className="orga-btn" disabled={busyId === editing.id}>
                 Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {approveTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <form
+            onSubmit={onConfirmApprove}
+            className="w-full max-w-md border border-black bg-white p-5"
+          >
+            <h3 className="text-[16px] font-semibold text-forest">Approuver avec label PDF</h3>
+            <p className="mt-2 text-[13px] text-ink/60">
+              {approveTarget.structure_name} — joignez le document officiel du label (PDF).
+            </p>
+            <label className="mt-4 block text-[13px] font-medium text-forest">
+              PDF du label
+              <input
+                required
+                type="file"
+                accept="application/pdf,.pdf"
+                className="mt-1 block w-full text-[13px]"
+                onChange={(e) => setApprovePdf(e.target.files?.[0] || null)}
+              />
+            </label>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="orga-btn-ghost"
+                onClick={() => {
+                  setApproveTarget(null)
+                  setApprovePdf(null)
+                }}
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="orga-btn"
+                disabled={busyId === approveTarget.id || !approvePdf}
+              >
+                Approuver
               </button>
             </div>
           </form>

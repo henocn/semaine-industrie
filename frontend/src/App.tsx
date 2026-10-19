@@ -17,6 +17,7 @@ import OrgaQrPage from './pages/OrgaQrPage'
 import OrgaVisitsPage from './pages/OrgaVisitsPage'
 import PassportPage from './pages/PassportPage'
 import ProgrammePage from './pages/ProgrammePage'
+import ResourcesPage from './pages/ResourcesPage'
 import QuestionsPage from './pages/QuestionsPage'
 import SurveyPage from './pages/SurveyPage'
 import VotePage from './pages/VotePage'
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/programme" element={<ProgrammePage />} />
           <Route path="/label" element={<LabelRequestPage />} />
+          <Route path="/ressources" element={<ResourcesPage />} />
           <Route path="/affaires" element={<BusinessRegisterPage />} />
           <Route path="/carte" element={<MapPage />} />
           <Route path="/industrie" element={<IndustriesPage />} />

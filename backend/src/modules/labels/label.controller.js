@@ -53,10 +53,26 @@ async function updateRequest(req, res, next) {
   }
 }
 
-/* Approuve ou rejette une demande. */
+/* Approuve ou rejette une demande (multipart si PDF label). */
 async function reviewRequest(req, res, next) {
   try {
-    const data = await labelService.reviewRequest(req.params.id, req.body);
+    const status = String(req.body?.status || '').trim();
+    const review_note = req.body?.review_note || null;
+    let label_document_url = req.body?.label_document_url || null;
+
+    if (req.file) {
+      label_document_url = `/uploads/docs/${req.file.filename}`;
+    }
+
+    if (!['approved', 'rejected'].includes(status)) {
+      throw ApiError.badRequest('status invalide');
+    }
+
+    const data = await labelService.reviewRequest(req.params.id, {
+      status,
+      review_note,
+      label_document_url,
+    });
     emitRealtime('label:updated', asJson(data.request), 'orga');
     return ApiResponse.success(res, data, 'Demande traitée');
   } catch (err) {
@@ -73,6 +89,28 @@ async function uploadGallery(req, res, next) {
     }
     const urls = files.map((f) => `/uploads/labels/${f.filename}`);
     return ApiResponse.created(res, { urls }, 'Images enregistrées');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Enregistre le PDF programme officiel. */
+async function uploadProgramme(req, res, next) {
+  try {
+    if (!req.file) throw ApiError.badRequest('PDF programme requis');
+    const path = `/uploads/docs/${req.file.filename}`;
+    const data = await labelService.setProgrammePdfUrl(path);
+    return ApiResponse.success(res, data, 'Programme PDF enregistré');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Vérifie un code de suivi et renvoie les téléchargements. */
+async function verifyCode(req, res, next) {
+  try {
+    const data = await labelService.verifyTrackingCode(req.body?.code);
+    return ApiResponse.success(res, data, 'Code valide');
   } catch (err) {
     return next(err);
   }
@@ -129,6 +167,8 @@ module.exports = {
   updateRequest,
   reviewRequest,
   uploadGallery,
+  uploadProgramme,
+  verifyCode,
   listIndustries,
   getPublicFiche,
   listMap,

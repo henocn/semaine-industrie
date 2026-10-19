@@ -87,6 +87,35 @@ async function sendButtons({ to, body, buttons, phoneNumberId, header }) {
   return graphSend(phoneNumberId, { to, type: 'interactive', interactive });
 }
 
+/* Envoie un document PDF via URL publique HTTPS. */
+async function sendDocument({ to, link, filename, phoneNumberId, caption }) {
+  const doc = {
+    link: String(link),
+    filename: String(filename || 'document.pdf').slice(0, 240),
+  };
+  if (caption) doc.caption = String(caption).slice(0, 1024);
+  return graphSend(phoneNumberId, { to, type: 'document', document: doc });
+}
+
+/* URL absolue pour un chemin local. */
+function absUrl(pathOrUrl) {
+  if (!pathOrUrl) return null;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  return `${SITE()}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+}
+
+/* Chemin PDF programme (pointeur ou défaut env). */
+function programmePdfPath() {
+  const fs = require('fs');
+  const pathMod = require('path');
+  const pointer = pathMod.join(__dirname, '../../../uploads/docs/programme-current.txt');
+  if (fs.existsSync(pointer)) {
+    const stored = fs.readFileSync(pointer, 'utf8').trim();
+    if (stored.startsWith('/uploads/docs/')) return stored;
+  }
+  return env.PROGRAMME_PDF_URL || '/uploads/docs/programme-si2026.pdf';
+}
+
 /* Envoie un menu liste WhatsApp. */
 async function sendList({ to, body, buttonLabel, sections, phoneNumberId, header }) {
   const interactive = {
@@ -110,36 +139,24 @@ async function sendList({ to, body, buttonLabel, sections, phoneNumberId, header
   return graphSend(phoneNumberId, { to, type: 'interactive', interactive });
 }
 
-/* Menu principal (liste). */
+/* Menu principal (liste, sans sous-textes). */
 function mainMenuPayload(to) {
   return {
     to,
     body:
       "Bienvenue dans la Semaine de l'industrie 2026.\n" +
       '16-22 novembre, Togo.\n\n' +
-      'Choisissez une option dans le menu.',
+      'Choisissez une option.',
     buttonLabel: 'Ouvrir le menu',
     header: "L'industrie à portée de main",
     sections: [
       {
-        title: 'Découvrir',
+        title: 'Menu',
         rows: [
-          { id: 'menu_programme', title: 'Programme', description: 'Jours et temps forts' },
-          { id: 'menu_carte', title: 'Carte des visites', description: 'Sites qui accueillent' },
-          { id: 'menu_industrie', title: 'Annuaire industrie', description: 'Fiches labellisées' },
-          { id: 'menu_label', title: 'Demander le label', description: 'Entreprise ou école' },
-          { id: 'menu_affaires', title: "Rencontres d'affaires", description: 'Vendredi 20 novembre' },
-          { id: 'menu_vote', title: 'Vote', description: "Coup de cœur exposition" },
-        ],
-      },
-      {
-        title: 'Mon suivi',
-        rows: [
-          {
-            id: 'menu_suivi',
-            title: 'Code de suivi',
-            description: 'Label, visites, documents',
-          },
+          { id: 'menu_programme', title: 'Programme' },
+          { id: 'menu_label', title: 'Demander le label' },
+          { id: 'menu_suivi', title: 'Code de suivi' },
+          { id: 'menu_ressources', title: 'Mes ressources' },
         ],
       },
     ],
@@ -151,22 +168,20 @@ function suiviMenuPayload(to, org) {
   const typeLabel = org.type === 'ecole' ? 'École' : 'Entreprise';
   return {
     to,
-    body:
-      `${typeLabel} : ${org.name}\n` +
-      `Code : ${org.label_code}\n\n` +
-      'Que souhaitez-vous consulter ?',
+    body: `${typeLabel} : ${org.name}\nQue souhaitez-vous ?`,
     buttonLabel: 'Mon espace',
     header: 'Suivi label',
     sections: [
       {
-        title: 'Espace label',
+        title: 'Espace',
         rows: [
-          { id: 'suivi_recap', title: 'Récap label', description: 'Résumé et fiche' },
-          { id: 'suivi_docs', title: 'Documents', description: 'Fiche et ressources' },
-          { id: 'suivi_visites', title: 'Mes visites', description: 'Prochaines programmations' },
-          { id: 'suivi_itineraire', title: 'Itinéraire', description: 'Adresse et carte' },
-          { id: 'suivi_autre', title: 'Autre code', description: 'Saisir un autre code' },
-          { id: 'menu_home', title: 'Menu principal', description: 'Retour' },
+          { id: 'suivi_recap', title: 'Récap label' },
+          { id: 'suivi_label_pdf', title: 'PDF du label' },
+          { id: 'suivi_programme', title: 'PDF programme' },
+          { id: 'suivi_visites', title: 'Mes visites' },
+          { id: 'suivi_itineraire', title: 'Itinéraire' },
+          { id: 'suivi_autre', title: 'Autre code' },
+          { id: 'menu_home', title: 'Menu principal' },
         ],
       },
     ],
@@ -266,21 +281,41 @@ function formatRecap(org) {
   return lines.filter(Boolean).join('\n');
 }
 
-/* Formate les documents / liens utiles. */
-function formatDocs(org) {
-  const fiche = `${SITE()}/o/${org.slug}`;
-  const lines = [
-    'Documents et liens',
-    '',
-    `Code : ${org.label_code}`,
-    `Fiche label : ${fiche}`,
-    org.type === 'entreprise' ? `Annuaire : ${SITE()}/industrie` : `Carte des visites : ${SITE()}/carte`,
-    `Programme : ${SITE()}/programme`,
-  ];
-  if (Array.isArray(org.gallery_urls) && org.gallery_urls.length) {
-    lines.push('', `${org.gallery_urls.length} image(s) sur la fiche.`);
+/* Envoie le PDF label et/ou programme pour une org liée. */
+async function sendOrgDocuments(from, org, phoneNumberId, which) {
+  const wantLabel = which === 'label' || which === 'both';
+  const wantProg = which === 'programme' || which === 'both';
+  let last = { ok: true };
+
+  if (wantLabel) {
+    if (!org.label_document_url) {
+      await sendText({
+        to: from,
+        phoneNumberId,
+        body: 'PDF du label pas encore disponible. Contactez l\'organisation.',
+      });
+    } else {
+      last = await sendDocument({
+        to: from,
+        phoneNumberId,
+        link: absUrl(org.label_document_url),
+        filename: `Label-${org.label_code || 'SI'}.pdf`,
+        caption: `Label officiel — ${org.name}`,
+      });
+    }
   }
-  return lines.join('\n');
+
+  if (wantProg) {
+    last = await sendDocument({
+      to: from,
+      phoneNumberId,
+      link: absUrl(programmePdfPath()),
+      filename: 'Programme-SI2026.pdf',
+      caption: 'Programme officiel Semaine de l\'industrie 2026',
+    });
+  }
+
+  return last;
 }
 
 /* Formate l'itinéraire / adresse. */
@@ -365,68 +400,62 @@ async function handleInteractive(from, id, phoneNumberId) {
   switch (id) {
     case 'menu_home':
       return replyMainMenu(from, phoneNumberId);
-    case 'menu_programme':
-      await sendText({
+    case 'menu_programme': {
+      const sent = await sendDocument({
         to: from,
         phoneNumberId,
-        body:
-          'Programme officiel\n\n' +
-          'Du 16 au 22 novembre 2026.\n' +
-          'Journée phare : vendredi 20 novembre.\n\n' +
-          `${SITE()}/programme`,
+        link: absUrl(programmePdfPath()),
+        filename: 'Programme-SI2026.pdf',
+        caption: 'Programme officiel — aussi sur le site après code de suivi.',
       });
+      if (!sent.ok) {
+        await sendText({
+          to: from,
+          phoneNumberId,
+          body: `Programme web : ${SITE()}/programme\nRessources : ${SITE()}/ressources`,
+        });
+      }
       return sendButtons({
         to: from,
         phoneNumberId,
-        body: 'Autre chose ?',
+        body: 'Suite',
         buttons: [
           { id: 'menu_home', title: 'Menu' },
           { id: 'menu_suivi', title: 'Mon suivi' },
         ],
       });
+    }
     case 'menu_label':
       await sendText({
         to: from,
         phoneNumberId,
-        body: `Demander le label\n\n${SITE()}/label\n\nAprès acceptation, vous recevrez un code de suivi (ex. SI26-1234).`,
+        body: `Demander le label\n\n${SITE()}/label\n\nAprès acceptation, vous recevez un code de suivi privé.`,
       });
       return sendButtons({
         to: from,
         phoneNumberId,
-        body: 'Continuer',
+        body: 'Suite',
         buttons: [
           { id: 'menu_home', title: 'Menu' },
           { id: 'menu_suivi', title: 'Saisir code' },
         ],
       });
-    case 'menu_carte':
-      await sendText({
+    case 'menu_ressources':
+      if (session.orgId && session.labelCode) {
+        const org = await findOrgByCode(session.labelCode);
+        if (org) {
+          await sendOrgDocuments(from, org, phoneNumberId, 'both');
+          return replySuiviMenu(from, org, phoneNumberId);
+        }
+      }
+      setSession(from, { mode: 'await_code' });
+      return sendText({
         to: from,
         phoneNumberId,
-        body: `Carte des visites\n\n${SITE()}/carte`,
+        body:
+          'Pour télécharger votre label et le programme, entrez votre code de suivi.\n' +
+          `Aussi sur le site : ${SITE()}/ressources`,
       });
-      return replyMainMenu(from, phoneNumberId);
-    case 'menu_industrie':
-      await sendText({
-        to: from,
-        phoneNumberId,
-        body: `Annuaire industrie\n\n${SITE()}/industrie`,
-      });
-      return replyMainMenu(from, phoneNumberId);
-    case 'menu_affaires':
-      await sendText({
-        to: from,
-        phoneNumberId,
-        body: `Rencontres d'affaires\n\n${SITE()}/affaires`,
-      });
-      return replyMainMenu(from, phoneNumberId);
-    case 'menu_vote':
-      await sendText({
-        to: from,
-        phoneNumberId,
-        body: `Vote coup de cœur\n\n${SITE()}/vote`,
-      });
-      return replyMainMenu(from, phoneNumberId);
     case 'menu_suivi':
       if (session.orgId && session.labelCode) {
         const org = await findOrgByCode(session.labelCode);
@@ -448,7 +477,8 @@ async function handleInteractive(from, id, phoneNumberId) {
         body: 'Entrez le nouveau code de suivi (ex. SI26-1234).',
       });
     case 'suivi_recap':
-    case 'suivi_docs':
+    case 'suivi_label_pdf':
+    case 'suivi_programme':
     case 'suivi_visites':
     case 'suivi_itineraire': {
       const org = session.labelCode
@@ -462,12 +492,17 @@ async function handleInteractive(from, id, phoneNumberId) {
           body: 'Session expirée. Entrez à nouveau votre code de suivi.',
         });
       }
-      let body = '';
-      if (id === 'suivi_recap') body = formatRecap(org);
-      else if (id === 'suivi_docs') body = formatDocs(org);
-      else if (id === 'suivi_visites') body = await formatVisites(org);
-      else body = formatItineraire(org);
-      await sendText({ to: from, phoneNumberId, body });
+      if (id === 'suivi_label_pdf') {
+        await sendOrgDocuments(from, org, phoneNumberId, 'label');
+      } else if (id === 'suivi_programme') {
+        await sendOrgDocuments(from, org, phoneNumberId, 'programme');
+      } else {
+        let body = '';
+        if (id === 'suivi_recap') body = formatRecap(org);
+        else if (id === 'suivi_visites') body = await formatVisites(org);
+        else body = formatItineraire(org);
+        await sendText({ to: from, phoneNumberId, body });
+      }
       return sendButtons({
         to: from,
         phoneNumberId,
@@ -516,14 +551,9 @@ async function handleText(from, text, phoneNumberId) {
 
   if (t === '1' || t.includes('programme')) return handleInteractive(from, 'menu_programme', phoneNumberId);
   if (t === '2' || t.includes('label')) return handleInteractive(from, 'menu_label', phoneNumberId);
-  if (t === '3' || t.includes('carte') || t.includes('visite')) {
-    return handleInteractive(from, 'menu_carte', phoneNumberId);
+  if (t.includes('ressource') || t.includes('telecharg') || t.includes('document')) {
+    return handleInteractive(from, 'menu_ressources', phoneNumberId);
   }
-  if (t === '4' || t.includes('industrie')) return handleInteractive(from, 'menu_industrie', phoneNumberId);
-  if (t === '5' || t.includes('affaire') || t.includes('b2b')) {
-    return handleInteractive(from, 'menu_affaires', phoneNumberId);
-  }
-  if (t === '6' || t.includes('vote')) return handleInteractive(from, 'menu_vote', phoneNumberId);
   if (t.includes('suivi') || t.includes('code')) {
     return handleInteractive(from, 'menu_suivi', phoneNumberId);
   }
@@ -576,8 +606,9 @@ async function notifyLabelApproved(organization) {
     `Code de suivi : ${organization.label_code}`,
     `Fiche : ${SITE()}/o/${organization.slug}`,
     '',
-    'Gardez ce code. Sur WhatsApp, ouvrez le menu puis « Code de suivi »,',
-    'ou envoyez directement votre code pour voir récap, documents et visites.',
+    'Ce code est privé. Ne le partagez pas.',
+    'Sur WhatsApp : menu → Code de suivi, ou envoyez le code.',
+    `Sur le site : ${SITE()}/ressources`,
   ].join('\n');
 
   const sent = await sendText({ to, body });
@@ -587,6 +618,9 @@ async function notifyLabelApproved(organization) {
       labelCode: organization.label_code,
       orgId: organization.id,
     });
+    if (organization.label_document_url) {
+      await sendOrgDocuments(to, organization, undefined, 'both');
+    }
     await sendButtons({
       to,
       body: 'Accéder à votre espace',
@@ -621,6 +655,7 @@ module.exports = {
   sendText,
   sendButtons,
   sendList,
+  sendDocument,
   processInbound,
   handleWebhook,
   notifyLabelApproved,
