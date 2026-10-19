@@ -21,6 +21,19 @@ fi
 ENVF=/var/www/semaine-industrie/backend/.env
 N8N_ENV=/root/n8n/n8n/.env
 
+# Valider AVANT d'écrire (évite d'écraser un jeton qui marche)
+CODE=$(curl -s -o /tmp/wa_tok.json -w '%{http_code}' \
+  -X POST 'https://graph.facebook.com/v21.0/1454431384412339/messages' \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H 'Content-Type: application/json' \
+  -d '{"messaging_product":"whatsapp","to":"22870815285","type":"text","text":{"body":"Nouveau jeton WhatsApp OK"}}')
+echo "graph_status=${CODE}"
+head -c 200 /tmp/wa_tok.json; echo
+if [[ "$CODE" != "200" ]]; then
+  echo "Token invalide: .env non modifié"
+  exit 1
+fi
+
 # Upsert API .env
 tmp=$(mktemp)
 grep -v '^WHATSAPP_TOKEN=' "$ENVF" >"$tmp"
@@ -35,18 +48,6 @@ printf 'WHATSAPP_TOKEN=%s\n' "$TOKEN" >>"$tmp"
 printf 'N8N_BLOCK_ENV_ACCESS_IN_NODE=false\n' >>"$tmp"
 mv "$tmp" "$N8N_ENV"
 chmod 600 "$N8N_ENV"
-
-CODE=$(curl -s -o /tmp/wa_tok.json -w '%{http_code}' \
-  -X POST 'https://graph.facebook.com/v21.0/1454431384412339/messages' \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H 'Content-Type: application/json' \
-  -d '{"messaging_product":"whatsapp","to":"22870815285","type":"text","text":{"body":"Nouveau jeton WhatsApp OK"}}')
-echo "graph_status=${CODE}"
-head -c 200 /tmp/wa_tok.json; echo
-if [[ "$CODE" != "200" ]]; then
-  echo "Token invalide"
-  exit 1
-fi
 
 # PM2 garde parfois un ancien WHATSAPP_TOKEN en process.env (dotenv ne l'écrase pas).
 # Delete + start force le rechargement depuis backend/.env uniquement.
