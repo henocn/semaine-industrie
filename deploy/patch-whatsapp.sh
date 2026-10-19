@@ -16,8 +16,9 @@ ENV_FILE="$APP_ROOT/backend/.env"
 PHONE_ID="${WHATSAPP_PHONE_NUMBER_ID:-1454431384412339}"
 VERIFY="${WHATSAPP_VERIFY_TOKEN:-si2026-wa-verify}"
 
-if [[ -z "${WHATSAPP_TOKEN:-}" ]]; then
-  echo "Définis WHATSAPP_TOKEN avant (jeton Meta WhatsApp)."
+if [[ -z "${WHATSAPP_TOKEN:-}" || "$WHATSAPP_TOKEN" == "EAA..." || "$WHATSAPP_TOKEN" == *'…'* ]]; then
+  echo "Définis un vrai WHATSAPP_TOKEN Meta (pas le placeholder EAA...)."
+  echo "Exemple : export WHATSAPP_TOKEN='EAAxxxxxxxx'"
   exit 1
 fi
 
@@ -46,11 +47,28 @@ upsert_env WHATSAPP_TOKEN "$WHATSAPP_TOKEN"
 upsert_env WHATSAPP_PHONE_NUMBER_ID "$PHONE_ID"
 upsert_env WHATSAPP_VERIFY_TOKEN "$VERIFY"
 
-echo "==> npm ci + restart API"
+echo "==> npm ci (bcrypt scripts autorisés) + restart API"
 cd "$APP_ROOT/backend"
-npm ci --omit=dev
+npm approve-scripts bcrypt 2>/dev/null || true
+npm ci --omit=dev --allow-scripts=bcrypt
+npm rebuild bcrypt 2>/dev/null || true
 cd "$APP_ROOT"
-pm2 restart industrie-api
+pm2 restart industrie-api --update-env
+
+echo "==> attente démarrage API"
+ok=0
+for i in $(seq 1 20); do
+  if curl -fsS "http://127.0.0.1:3005/api/v1/health" >/dev/null 2>&1; then
+    ok=1
+    break
+  fi
+  sleep 1
+done
+if [[ "$ok" != "1" ]]; then
+  echo "API non joignable sur :3005 — logs PM2 :"
+  pm2 logs industrie-api --lines 40 --nostream || true
+  exit 1
+fi
 
 echo "==> test health + webhook challenge"
 curl -fsS "http://127.0.0.1:3005/api/v1/health" | head -c 200
