@@ -26,13 +26,16 @@ body {
   overflow-x: clip;
 }
 
-/* Titres : Bricolage Grotesque (charte logo / affiches) */
-.display {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 0.98;
-  color: var(--color-forest);
+/* Titres : Bricolage Grotesque (charte logo / affiches).
+   color en @layer components pour que text-white / text-sun l'emportent. */
+@layer components {
+  .display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+    color: var(--color-forest);
+  }
 }
 
 /* Forme feuille de la charte, réservée aux photographies */
