@@ -23,6 +23,11 @@ const env = cleanEnv(process.env, {
   ALLOWED_ORIGINS: str({ default: 'http://localhost:5173' }),
   PUBLIC_APP_URL: str({ default: 'http://localhost:5173' }),
   N8N_WEBHOOK_URL: str({ default: '' }),
+
+  /* WhatsApp Cloud API (bot Semaine de l'industrie) */
+  WHATSAPP_TOKEN: str({ default: '' }),
+  WHATSAPP_PHONE_NUMBER_ID: str({ default: '' }),
+  WHATSAPP_VERIFY_TOKEN: str({ default: 'si2026-wa-verify' }),
 });
 
 module.exports = env;
