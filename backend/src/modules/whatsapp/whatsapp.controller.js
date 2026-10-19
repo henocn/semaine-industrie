@@ -1,7 +1,16 @@
 'use strict';
 
+const env = require('../../config/env');
 const whatsappService = require('./whatsapp.service');
 const logger = require('../../utils/logger');
+const ApiResponse = require('../../utils/ApiResponse');
+
+/* Vérifie le secret interne partagé avec n8n. */
+function isInternalAuthorized(req) {
+  const header = String(req.headers['x-wa-secret'] || '');
+  const expected = env.WHATSAPP_VERIFY_TOKEN;
+  return Boolean(expected && header && header === expected);
+}
 
 /* Répond au challenge de vérification du webhook Meta. */
 function verify(req, res) {
@@ -31,7 +40,30 @@ async function webhook(req, res) {
   }
 }
 
+/* Envoie un message texte (appelé par n8n). */
+async function send(req, res, next) {
+  try {
+    if (!isInternalAuthorized(req)) {
+      return res.status(403).json({ success: false, error: 'Forbidden' });
+    }
+    const to = String(req.body?.to || '').trim();
+    const body = String(req.body?.body || '').trim();
+    const phoneNumberId = String(req.body?.phoneNumberId || '').trim();
+    if (!to || !body) {
+      return res.status(400).json({ success: false, error: 'to et body requis' });
+    }
+    const sent = await whatsappService.sendText({ to, body, phoneNumberId });
+    if (!sent.ok) {
+      return res.status(502).json({ success: false, error: 'send_failed', data: sent });
+    }
+    return ApiResponse.success(res, sent.data, 'Message envoyé');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   verify,
   webhook,
+  send,
 };
