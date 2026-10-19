@@ -4,7 +4,8 @@
 const { cleanEnv, str, port } = require('envalid');
 const dotenv = require('dotenv');
 
-dotenv.config();
+/* override: true pour que .env gagne sur un ancien WHATSAPP_TOKEN injecté par PM2 */
+dotenv.config({ override: true });
 
 const env = cleanEnv(process.env, {
   NODE_ENV: str({ choices: ['development', 'test', 'production'], default: 'development' }),

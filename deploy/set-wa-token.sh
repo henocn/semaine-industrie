@@ -36,11 +36,22 @@ if [[ "$CODE" != "200" ]]; then
   exit 1
 fi
 
-pm2 restart industrie-api --update-env
-sleep 3
+# PM2 garde parfois un ancien WHATSAPP_TOKEN en process.env (dotenv ne l'écrase pas).
+# Delete + start force le rechargement depuis backend/.env uniquement.
+pm2 delete industrie-api || true
+pm2 start /var/www/semaine-industrie/backend/server.js \
+  --name industrie-api \
+  --cwd /var/www/semaine-industrie/backend
+pm2 save
+sleep 4
 curl -fsS -X POST http://127.0.0.1:3005/api/v1/whatsapp/send \
   -H 'Content-Type: application/json' \
   -H 'x-wa-secret: si2026-wa-verify' \
   -d '{"to":"22870815285","body":"API send OK avec nouveau jeton","phoneNumberId":"1454431384412339"}'
 echo
+
+# Recharge n8n pour prendre WHATSAPP_TOKEN (si le workflow Graph l'utilise encore)
+if [ -d /root/n8n/n8n ]; then
+  (cd /root/n8n/n8n && docker compose up -d n8n) || true
+fi
 echo OK
