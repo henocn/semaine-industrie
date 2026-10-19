@@ -1,0 +1,100 @@
+{
+  "name": "SI2026 WhatsApp bot basique",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-si2026",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-in",
+      "name": "Webhook messages (POST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "whatsapp-si2026"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst entry = body.entry?.[0];\nconst change = entry?.changes?.[0];\nconst value = change?.value || {};\nconst msg = value.messages?.[0];\nif (!msg) {\n  return [{ json: { skip: true } }];\n}\nconst from = String(msg.from || '');\nconst text = String(msg.text?.body || '').trim();\nconst lower = text.toLowerCase();\nlet reply =\n  \"Semaine de l'industrie 2026\\n\" +\n  \"16-22 novembre · Togo\\n\\n\" +\n  \"Répondez :\\n\" +\n  \"1 Programme\\n\" +\n  \"2 Label\\n\" +\n  \"3 Carte\\n\" +\n  \"4 Contact\";\nif (lower === '1' || lower.includes('programme')) {\n  reply = \"Programme : https://semaineindustrie.tg/programme\\nJournée phare : vendredi 20 novembre.\";\n} else if (lower === '2' || lower.includes('label')) {\n  reply = \"Demander le label : https://semaineindustrie.tg/label\";\n} else if (lower === '3' || lower.includes('carte')) {\n  reply = \"Carte des visites : https://semaineindustrie.tg/carte\";\n} else if (lower === '4' || lower.includes('contact')) {\n  reply = \"Contact organisation : https://semaineindustrie.tg/#contact\";\n}\nreturn [{ json: { skip: false, from, text, reply } }];"
+      },
+      "id": "parse-menu",
+      "name": "Parser + menu",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notTrue",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-msg",
+      "name": "Message texte ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [540, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.from }}\",\n  \"type\": \"text\",\n  \"text\": { \"body\": {{ JSON.stringify($json.reply) }} }\n}",
+        "options": {}
+      },
+      "id": "send-wa",
+      "name": "Envoyer WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, -40]
+    }
+  ],
+  "connections": {
+    "Webhook messages (POST)": {
+      "main": [[{ "node": "Parser + menu", "type": "main", "index": 0 }]]
+    },
+    "Parser + menu": {
+      "main": [[{ "node": "Message texte ?", "type": "main", "index": 0 }]]
+    },
+    "Message texte ?": {
+      "main": [
+        [{ "node": "Envoyer WhatsApp", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
