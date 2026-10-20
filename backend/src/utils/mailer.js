@@ -50,7 +50,7 @@ async function sendNotifyMail({ to, subject, text, html }) {
   }
 }
 
-/* Envoie un message de contact vers info@ (formulaire public). */
+/* Envoie un message de contact vers infos@ (formulaire public). */
 async function sendContactMail({ fromName, fromEmail, subject, message }) {
   const tx = getTransporter();
   if (!tx) {

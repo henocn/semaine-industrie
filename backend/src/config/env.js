@@ -42,8 +42,8 @@ const env = cleanEnv(process.env, {
   SMTP_USER: str({ default: 'no-reply@semaineindustrie.tg' }),
   SMTP_PASS: str({ default: '' }),
   MAIL_FROM_NOTIFY: str({ default: 'Semaine industrie <no-reply@semaineindustrie.tg>' }),
-  MAIL_FROM_CONTACT: str({ default: 'Semaine industrie <info@semaineindustrie.tg>' }),
-  MAIL_TO_CONTACT: str({ default: 'info@semaineindustrie.tg' }),
+  MAIL_FROM_CONTACT: str({ default: 'Semaine industrie <infos@semaineindustrie.tg>' }),
+  MAIL_TO_CONTACT: str({ default: 'infos@semaineindustrie.tg' }),
 });
 
 module.exports = env;

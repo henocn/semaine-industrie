@@ -1,6 +1,6 @@
 import { apiFetch } from './client'
 
-/* Envoie le formulaire contact public vers info@. */
+/* Envoie le formulaire contact public vers infos@. */
 export function sendContactMessage(payload: {
   name: string
   organization?: string

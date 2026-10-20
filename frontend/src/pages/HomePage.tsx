@@ -140,7 +140,7 @@ function Contact() {
   const [loading, setLoading] = useState(false)
   const field = 'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
 
-  /* Envoie le message vers info@. */
+  /* Envoie le message vers infos@. */
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
@@ -168,8 +168,8 @@ function Contact() {
           <h2 className="display text-4xl sm:text-5xl">Une question ?</h2>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/70">
             Presse, entreprise, établissement scolaire ou partenaire : écrivez à{' '}
-            <a href="mailto:info@semaineindustrie.tg" className="font-semibold text-forest underline underline-offset-2">
-              info@semaineindustrie.tg
+            <a href="mailto:infos@semaineindustrie.tg" className="font-semibold text-forest underline underline-offset-2">
+              infos@semaineindustrie.tg
             </a>
             .
           </p>

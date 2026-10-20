@@ -4,7 +4,7 @@ const { sendContactMail } = require('../../utils/mailer');
 const ApiResponse = require('../../utils/ApiResponse');
 const ApiError = require('../../utils/ApiError');
 
-/* Reçoit le formulaire contact public → info@. */
+/* Reçoit le formulaire contact public → infos@. */
 async function submit(req, res, next) {
   try {
     const { name, organization, email, message } = req.body;
@@ -18,7 +18,7 @@ async function submit(req, res, next) {
     });
     if (!result.ok && result.reason === 'smtp_not_configured') {
       throw ApiError.badRequest(
-        'Messagerie temporairement indisponible. Écrivez à info@semaineindustrie.tg',
+        'Messagerie temporairement indisponible. Écrivez à infos@semaineindustrie.tg',
       );
     }
     if (!result.ok) {

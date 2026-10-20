@@ -668,7 +668,7 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         phoneNumberId,
         body:
           'Informations\n\n' +
-          'Email : info@semaineindustrie.tg\n' +
+          'Email : infos@semaineindustrie.tg\n' +
           `Site : ${SITE()}\n` +
           'Contact : 70 00 00 00',
       });

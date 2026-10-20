@@ -26,8 +26,8 @@ export default function PrivacyPage() {
         </p>
         <p>
           Contact :{' '}
-          <a href="mailto:info@semaineindustrie.tg" className="font-semibold text-forest underline underline-offset-2">
-            info@semaineindustrie.tg
+          <a href="mailto:infos@semaineindustrie.tg" className="font-semibold text-forest underline underline-offset-2">
+            infos@semaineindustrie.tg
           </a>
         </p>
       </div>
