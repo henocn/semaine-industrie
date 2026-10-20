@@ -86,7 +86,7 @@ function Hero() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-forest/70 via-transparent to-forest/30" aria-hidden="true" />
         <div className={`${WRAP} relative flex min-h-[480px] flex-col justify-end py-14 sm:min-h-[560px] sm:py-16`}>
-          <h1 className="display h1 max-w-xl !text-white text-balance">
+          <h1 className="display max-w-2xl !text-white text-balance text-[clamp(2.5rem,1.6rem+3.5vw,4.75rem)] font-extrabold leading-[1.05]">
             {CAMPAIGN_TAGLINE.replace(/\.$/, '')}
             <span className="text-leaf">.</span>
           </h1>
