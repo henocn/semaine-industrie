@@ -69,6 +69,24 @@ body {
   border-radius: 0;
 }
 
+/* Fond photo discret derrière une section */
+.section-soft-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.12;
+  filter: grayscale(25%);
+  pointer-events: none;
+}
+.section-soft-bg + * { position: relative; z-index: 1; }
+/* Sur fond forest (footer) : un peu plus présent, teinté clair */
+.section-soft-bg--on-dark {
+  opacity: 0.18;
+  filter: grayscale(40%) brightness(1.15);
+}
+
 /* Filet or : visible par défaut ; animé seulement dans un .reveal */
 .rule-gold {
   width: 2.5rem;

@@ -13,7 +13,12 @@ const LINK = 'text-white/75 transition-colors hover:text-white'
 /* Pied de page commun des pages publiques : ministère, liens utiles, réseaux, mentions. */
 export function SiteFooter() {
   return (
-    <footer className="border-t-4 border-sun bg-forest text-white">
+    <footer className="relative overflow-hidden border-t-4 border-sun bg-forest text-white">
+      <div
+        className="section-soft-bg section-soft-bg--on-dark"
+        style={{ backgroundImage: 'url(/images/bg-industrie.png)' }}
+        aria-hidden="true"
+      />
       <div className={`${WRAP} grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]`}>
         <div>
           <div className="inline-block bg-white p-3">

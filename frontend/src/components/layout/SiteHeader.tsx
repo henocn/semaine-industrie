@@ -5,7 +5,7 @@ import {
   Compass,
   Handshake,
   Info,
-  Sparkles,
+  Medal,
 } from 'lucide-react'
 import { WRAP, BrandLogo } from './Mark'
 
@@ -35,7 +35,7 @@ const GROUPS: NavGroup[] = [
   },
   {
     label: 'Défis',
-    icon: <Sparkles {...ICON} />,
+    icon: <Medal {...ICON} />,
     items: [
       { label: 'Vote coup de cœur', to: '/vote' },
       { label: 'Questionnaire', to: '/questionnaire' },

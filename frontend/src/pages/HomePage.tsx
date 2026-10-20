@@ -121,7 +121,8 @@ function Hero() {
 /* Parcours Rêver / Comprendre / Commencer. */
 function Tools() {
   return (
-    <section className="py-12 sm:py-16">
+    <section className="relative overflow-hidden py-12 sm:py-16">
+      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-robots.png)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal`}>
         <SectionHeader
           title={YOUTH_PILLAR.title}
@@ -178,7 +179,8 @@ function ProgrammeStrip() {
   if (!dayJ) return null
 
   return (
-    <section className="py-12 sm:py-16">
+    <section className="relative overflow-hidden py-12 sm:py-16">
+      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-usine.png)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal max-w-3xl`}>
         <SectionHeader
           title="Journée phare"
@@ -232,7 +234,8 @@ function Women() {
 /* Sites et partenaires. */
 function Places() {
   return (
-    <section id="lieux" className="bg-sage py-12 sm:py-16">
+    <section id="lieux" className="relative overflow-hidden bg-sage py-12 sm:py-16">
+      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-industrie.png)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal`}>
         <SectionHeader title="Les sites ouverts, du port aux régions" />
         <Photo
