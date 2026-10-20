@@ -19,7 +19,7 @@ const env = cleanEnv(process.env, {
   DB_PASSWORD: str({ default: 'postgres' }),
 
   JWT_ACCESS_SECRET: str({ default: 'dev-access-secret-change-me' }),
-  JWT_ACCESS_EXPIRES_IN: str({ default: '1d' }),
+  JWT_ACCESS_EXPIRES_IN: str({ default: '7d' }),
 
   ALLOWED_ORIGINS: str({ default: 'http://localhost:5173' }),
   PUBLIC_APP_URL: str({ default: 'http://localhost:5173' }),

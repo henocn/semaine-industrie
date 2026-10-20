@@ -21,7 +21,8 @@ async function issueTokens(user) {
   );
 
   const refresh_token = crypto.randomBytes(48).toString('hex');
-  const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  /* Refresh valable 30 jours. */
+  const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
   await RefreshToken.create({
     user_id: user.id,

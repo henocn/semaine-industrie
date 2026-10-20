@@ -250,11 +250,6 @@ function suiviMenuPayload(to, org) {
           { id: 'suivi_recap', title: 'Récap label' },
           { id: 'suivi_label_pdf', title: 'PDF du label' },
           { id: 'suivi_visites', title: 'Mes visites' },
-        ],
-      },
-      {
-        title: '────────',
-        rows: [
           { id: 'suivi_autre', title: 'Autre code' },
           { id: 'menu_home', title: 'Menu' },
         ],
@@ -293,11 +288,6 @@ function b2bMenuPayload(to, participant) {
         rows: [
           { id: 'b2b_recap', title: 'Récapitulatif' },
           { id: 'b2b_rdv', title: 'Rendez-vous' },
-        ],
-      },
-      {
-        title: '────────',
-        rows: [
           { id: 'b2b_autre', title: 'Autre e-mail' },
           { id: 'menu_home', title: 'Menu' },
         ],
@@ -344,16 +334,13 @@ function formatB2bRecap(p) {
 async function formatB2bMeetings(participant) {
   const rows = await BusinessMeeting.findAll({
     where: {
+      status: { [Op.in]: ['scheduled', 'done'] },
       [Op.or]: [
         { participant_a_id: participant.id },
         { participant_b_id: participant.id },
+        { attendee_ids: { [Op.contains]: [participant.id] } },
       ],
-      status: { [Op.in]: ['scheduled', 'done'] },
     },
-    include: [
-      { model: BusinessParticipant, as: 'participantA' },
-      { model: BusinessParticipant, as: 'participantB' },
-    ],
     order: [['slot_start', 'ASC']],
   });
 
@@ -363,24 +350,14 @@ async function formatB2bMeetings(participant) {
 
   const lines = ['Vos rendez-vous', ''];
   for (const m of rows) {
-    const other =
-      m.participant_a_id === participant.id ? m.participantB : m.participantA;
-    const start = new Date(m.slot_start);
-    const end = new Date(m.slot_end);
-    const day = start.toLocaleDateString('fr-FR');
-    const slot = `${start.toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })}-${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
     lines.push(
-      `• ${day} ${slot}`,
-      `  Avec : ${other?.organization_name || 'partenaire'}`,
-      m.table_label ? `  Table : ${m.table_label}` : null,
-      `  Statut : ${m.status === 'done' ? 'Terminé' : 'Confirmé'}`,
+      `Date : ${formatDayFr(m.slot_start)}`,
+      `Horaire : ${formatSlotFr(m.slot_start, m.slot_end)}`,
+      `Lieu : ${m.location || 'À confirmer'}`,
       '',
     );
   }
-  return lines.filter((l) => l !== null).join('\n').trim();
+  return lines.join('\n').trim();
 }
 
 /* Envoie le menu B2B et mémorise la session. */
@@ -1019,13 +996,13 @@ function formatDayFr(value) {
   return d.toLocaleDateString('fr-FR');
 }
 
-/* Formate une plage horaire. */
+/* Formate une plage horaire (hh:mm à hh:mm). */
 function formatSlotFr(start, end) {
   const a = start instanceof Date ? start : new Date(start);
   const b = end instanceof Date ? end : new Date(end);
   const opts = { hour: '2-digit', minute: '2-digit' };
   if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return '-';
-  return `${a.toLocaleTimeString('fr-FR', opts)}-${b.toLocaleTimeString('fr-FR', opts)}`;
+  return `${a.toLocaleTimeString('fr-FR', opts)} à ${b.toLocaleTimeString('fr-FR', opts)}`;
 }
 
 /* Notifie école + site quand une visite est programmée (label accepté). */
@@ -1105,9 +1082,7 @@ async function notifyBusinessMeeting({
 
   const day = formatDayFr(meeting.slot_start);
   const slot = formatSlotFr(meeting.slot_start, meeting.slot_end);
-  const lieu =
-    meeting.location ||
-    (meeting.table_label ? `Table ${meeting.table_label}` : 'Lieu à confirmer');
+  const lieu = meeting.location || 'À confirmer';
   const templateName = rescheduled ? 'si26_rdv_reporte' : 'si26_rdv_affaires';
 
   const results = [];
@@ -1118,7 +1093,7 @@ async function notifyBusinessMeeting({
     }
     const others = list
       .filter((p) => p.id !== self.id)
-      .map((p) => p.organization_name)
+      .map((p) => p.contact_name || p.organization_name)
       .join(', ') || 'partenaire';
     const to = toWaRecipient(self.phone);
     if (!to) {
@@ -1134,16 +1109,17 @@ async function notifyBusinessMeeting({
     ];
     let sent = await sendTemplate({ to, name: templateName, bodyParams });
     if (!sent.ok) {
-      const verb = rescheduled ? 'est reporté au' : 'confirmé le';
+      const title = rescheduled ? 'Rendez-vous reporté' : 'Rendez-vous confirmé';
       sent = await sendText({
         to,
         body: [
           `Bonjour ${self.contact_name || ''},`.trim(),
           '',
-          `Rendez-vous affaires ${verb} ${day} (${slot}) avec ${others}.`,
-          lieu,
-          '',
-          "Sur WhatsApp : menu Rencontres d'affaires + votre e-mail.",
+          title,
+          `Date : ${day}`,
+          `Horaire : ${slot}`,
+          `Lieu : ${lieu}`,
+          `Avec : ${others}`,
         ].join('\n'),
       });
     }

@@ -88,16 +88,22 @@ async function loadApprovedAttendees(ids) {
   return unique.map((id) => byId.get(id)).filter(Boolean);
 }
 
+/* Formate une heure hh:mm. */
+function formatTimeFr(value) {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '--:--';
+  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
 /* Notifie e-mail + WhatsApp pour un RDV. */
 async function notifyAttendees(meeting, attendees, { rescheduled = false } = {}) {
   const day = new Date(meeting.slot_start).toLocaleDateString('fr-FR');
-  const opts = { hour: '2-digit', minute: '2-digit' };
-  const slot = `${new Date(meeting.slot_start).toLocaleTimeString('fr-FR', opts)}-${new Date(meeting.slot_end).toLocaleTimeString('fr-FR', opts)}`;
-  const lieu = meeting.location || (meeting.table_label ? `Table ${meeting.table_label}` : 'Lieu à confirmer');
+  const slot = `${formatTimeFr(meeting.slot_start)} à ${formatTimeFr(meeting.slot_end)}`;
+  const lieu = meeting.location || 'À confirmer';
   const others = (self) =>
     attendees
       .filter((p) => p.id !== self.id)
-      .map((p) => p.organization_name)
+      .map((p) => p.contact_name || p.organization_name)
       .join(', ') || 'l\'équipe';
 
   for (const p of attendees) {
@@ -109,13 +115,11 @@ async function notifyAttendees(meeting, attendees, { rescheduled = false } = {})
     const text = [
       `Bonjour ${p.contact_name},`,
       '',
-      rescheduled
-        ? `Votre rendez-vous affaires est reporté au ${day} (${slot}).`
-        : `Votre rendez-vous affaires est confirmé le ${day} (${slot}).`,
-      `Avec : ${withLabel}`,
+      rescheduled ? 'Rendez-vous reporté' : 'Rendez-vous confirmé',
+      `Date : ${day}`,
+      `Horaire : ${slot}`,
       `Lieu : ${lieu}`,
-      '',
-      "Sur WhatsApp : menu Rencontres d'affaires + votre e-mail.",
+      `Avec : ${withLabel}`,
     ].join('\n');
     await sendNotifyMail({ to: p.email, subject, text });
   }

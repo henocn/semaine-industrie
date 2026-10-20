@@ -651,14 +651,14 @@ export default function OrgaBusinessPage() {
               </h2>
               <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
             </div>
-            <table className="orga-table min-w-[560px]">
+            <table className="orga-table min-w-[640px]">
               <thead>
                 <tr>
                   <th className="w-12">#</th>
                   <th>Date</th>
-                  <th>Participants</th>
+                  <th>Horaire</th>
                   <th>Lieu</th>
-                  <th className="w-28">Statut</th>
+                  <th>Participants</th>
                 </tr>
               </thead>
               <tbody>
@@ -679,19 +679,21 @@ export default function OrgaBusinessPage() {
                     >
                       <td className="text-ink/45">{i + 1}</td>
                       <td className="whitespace-nowrap font-medium text-forest">
-                        {new Date(m.slot_start).toLocaleDateString('fr-FR', {
-                          day: '2-digit',
-                          month: 'short',
-                        })}
-                        {' · '}
+                        {new Date(m.slot_start).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="whitespace-nowrap">
                         {new Date(m.slot_start).toLocaleTimeString('fr-FR', {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
+                        {' à '}
+                        {new Date(m.slot_end).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </td>
-                      <td className="font-medium text-ink">{names}</td>
                       <td>{m.location || '—'}</td>
-                      <td className="text-[12px] uppercase tracking-wide text-ink/45">{m.status}</td>
+                      <td className="font-medium text-ink">{names}</td>
                     </tr>
                   )
                 })}
@@ -707,13 +709,7 @@ export default function OrgaBusinessPage() {
                     {meetingNames(selectedMeeting, approvedPool, participants)}
                   </h2>
                   <p className="mt-1 text-[13px] text-ink/50">
-                    {new Date(selectedMeeting.slot_start).toLocaleString('fr-FR')} →{' '}
-                    {new Date(selectedMeeting.slot_end).toLocaleTimeString('fr-FR', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                    {' · '}
-                    {selectedMeeting.status}
+                    {selectedMeeting.status === 'done' ? 'Terminé' : 'Confirmé'}
                   </p>
                 </div>
                 <button
@@ -727,6 +723,22 @@ export default function OrgaBusinessPage() {
 
               <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
                 <p>
+                  <span className="text-ink/45">Date · </span>
+                  {new Date(selectedMeeting.slot_start).toLocaleDateString('fr-FR')}
+                </p>
+                <p>
+                  <span className="text-ink/45">Horaire · </span>
+                  {new Date(selectedMeeting.slot_start).toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                  {' à '}
+                  {new Date(selectedMeeting.slot_end).toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+                <p className="sm:col-span-2">
                   <span className="text-ink/45">Lieu · </span>
                   {selectedMeeting.location || '—'}
                 </p>
