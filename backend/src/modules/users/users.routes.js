@@ -12,5 +12,6 @@ router.use(authenticate, authorize('admin'));
 router.get('/', controller.list);
 router.post('/', validate(createUserSchema), controller.create);
 router.patch('/:id', validate(updateUserSchema), controller.update);
+router.delete('/:id', controller.remove);
 
 module.exports = router;

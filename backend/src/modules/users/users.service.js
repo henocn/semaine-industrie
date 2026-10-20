@@ -76,4 +76,18 @@ async function updateUser(id, payload) {
   return toUser(row);
 }
 
-module.exports = { listUsers, createUser, updateUser };
+/* Supprime un compte (interdit de se supprimer soi-même). */
+async function deleteUser(id, actorId) {
+  if (String(id) === String(actorId)) {
+    throw ApiError.badRequest('Vous ne pouvez pas supprimer votre propre compte');
+  }
+  const row = await User.findByPk(id);
+  if (!row) throw ApiError.notFound('Utilisateur introuvable');
+  if (!['admin', 'simple', 'orga'].includes(row.role)) {
+    throw ApiError.badRequest('Ce compte ne peut pas être supprimé ici');
+  }
+  await row.destroy();
+  return { id };
+}
+
+module.exports = { listUsers, createUser, updateUser, deleteUser };

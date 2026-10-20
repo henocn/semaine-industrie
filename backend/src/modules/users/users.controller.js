@@ -47,4 +47,20 @@ async function update(req, res, next) {
   }
 }
 
-module.exports = { list, create, update };
+/* Supprime un utilisateur. */
+async function remove(req, res, next) {
+  try {
+    const data = await usersService.deleteUser(req.params.id, req.user.id);
+    await audit(req, {
+      action: 'delete',
+      entityType: 'user',
+      entityId: data.id,
+      summary: `Suppression utilisateur ${data.id}`,
+    });
+    return ApiResponse.success(res, data, 'Utilisateur supprimé');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { list, create, update, remove };

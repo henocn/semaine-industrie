@@ -1,5 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { createUser, listUsers, updateUser, type OrgaUser, type StaffRole } from '../api/users'
+import { getStoredUser } from '../api/auth'
+import {
+  createUser,
+  deleteUser,
+  listUsers,
+  updateUser,
+  type OrgaUser,
+  type StaffRole,
+} from '../api/users'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { formatPresence } from '../lib/presence'
 import { joinRoom, onRealtime } from '../lib/socket'
@@ -7,11 +15,33 @@ import { joinRoom, onRealtime } from '../lib/socket'
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
+const iconBtn =
+  'grid h-9 w-9 place-items-center border border-black bg-white text-forest hover:bg-forest hover:text-white disabled:opacity-40'
+
 /* Libellé du rôle. */
 function roleLabel(role: string) {
   if (role === 'admin') return 'Admin'
   if (role === 'simple' || role === 'orga') return 'Simple'
   return role
+}
+
+/* Icône crayon. */
+function IconEdit() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+      <path d="m13 7 4 4" />
+    </svg>
+  )
+}
+
+/* Icône poubelle. */
+function IconTrash() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M5 7h14M10 11v6M14 11v6M9 7V5h6v2M7 7l1 12h8l1-12" />
+    </svg>
+  )
 }
 
 /* Gestion des comptes backoffice (admin uniquement). */
@@ -22,6 +52,7 @@ export default function OrgaUsersPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [editing, setEditing] = useState<OrgaUser | null>(null)
   const [, setTick] = useState(0)
+  const me = getStoredUser()
 
   /* Charge la liste. */
   async function load() {
@@ -101,6 +132,24 @@ export default function OrgaUsersPage() {
     }
   }
 
+  /* Supprime un compte. */
+  async function onDelete(user: OrgaUser) {
+    if (me?.id === user.id) {
+      setError('Vous ne pouvez pas supprimer votre propre compte')
+      return
+    }
+    if (!window.confirm(`Supprimer ${user.first_name} ${user.last_name} ?`)) return
+    setBusy(true)
+    try {
+      await deleteUser(user.id)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Suppression impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <OrgaShell
       title="Utilisateurs"
@@ -152,6 +201,7 @@ export default function OrgaUsersPage() {
         <table className="orga-table min-w-[720px]">
           <thead>
             <tr>
+              <th className="w-12">#</th>
               <th>Nom</th>
               <th>E-mail</th>
               <th>Rôle</th>
@@ -163,15 +213,16 @@ export default function OrgaUsersPage() {
           <tbody>
             {users.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-10 text-ink/40">
+                <td colSpan={7} className="py-10 text-ink/40">
                   Aucun utilisateur
                 </td>
               </tr>
             )}
-            {users.map((u) => {
+            {users.map((u, index) => {
               const presence = formatPresence(u.online, u.last_seen_at || u.last_login_at)
               return (
                 <tr key={u.id} className={u.is_active ? 'orga-row-approved' : 'orga-row-rejected'}>
+                  <td className="text-ink/45">{index + 1}</td>
                   <td className="font-semibold text-forest">
                     {u.first_name} {u.last_name}
                   </td>
@@ -200,14 +251,28 @@ export default function OrgaUsersPage() {
                   </td>
                   <td>{u.is_active ? 'Actif' : 'Inactif'}</td>
                   <td>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      className="orga-btn-ghost px-3 py-1.5 text-[12px] disabled:opacity-50"
-                      onClick={() => setEditing(u)}
-                    >
-                      Modifier
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        className={iconBtn}
+                        title="Modifier"
+                        aria-label="Modifier"
+                        disabled={busy}
+                        onClick={() => setEditing(u)}
+                      >
+                        <IconEdit />
+                      </button>
+                      <button
+                        type="button"
+                        className={`${iconBtn} text-red-700 hover:bg-red-700 hover:text-white`}
+                        title="Supprimer"
+                        aria-label="Supprimer"
+                        disabled={busy || me?.id === u.id}
+                        onClick={() => void onDelete(u)}
+                      >
+                        <IconTrash />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )

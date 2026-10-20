@@ -50,3 +50,8 @@ export function updateUser(
     body: JSON.stringify(payload),
   })
 }
+
+/* Supprime un utilisateur. */
+export function deleteUser(id: string) {
+  return apiFetch<{ id: string }>(`/users/${id}`, { method: 'DELETE' })
+}
