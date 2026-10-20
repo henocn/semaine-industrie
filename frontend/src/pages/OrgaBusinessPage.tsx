@@ -20,7 +20,7 @@ export default function OrgaBusinessPage() {
   const [approvedPool, setApprovedPool] = useState<BusinessParticipant[]>([])
   const [meetings, setMeetings] = useState<BusinessMeeting[]>([])
   const [tab, setTab] = useState<'participants' | 'meetings'>('participants')
-  const [filter, setFilter] = useState<'pending' | 'approved' | ''>('pending')
+  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | ''>('')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -177,23 +177,18 @@ export default function OrgaBusinessPage() {
               {showAdd ? 'Fermer' : 'Ajouter'}
             </button>
           )}
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as typeof filter)}
-            className="orga-input w-auto"
-          >
-            <option value="pending">En attente</option>
-            <option value="approved">Approuvés</option>
-            <option value="">Tous</option>
-          </select>
-          <a
-            href="https://semaineindustrie.tg/affaires"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="orga-btn-ghost px-3 py-2 text-[13px]"
-          >
-            Formulaire public
-          </a>
+          {tab === 'participants' && (
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as typeof filter)}
+              className="orga-input w-auto"
+            >
+              <option value="">Tous</option>
+              <option value="pending">En attente</option>
+              <option value="approved">Approuvés</option>
+              <option value="rejected">Refusés</option>
+            </select>
+          )}
         </div>
       }
     >
@@ -232,7 +227,7 @@ export default function OrgaBusinessPage() {
                   <tr><td colSpan={5} className="py-10 text-ink/40">Aucun participant</td></tr>
                 )}
                 {filteredParticipants.map((p) => (
-                  <tr key={p.id}>
+                  <tr key={p.id} className={participantRowClass(p.status)}>
                     <td>
                       <p className="font-semibold text-forest">{p.organization_name}</p>
                       <p className="mt-1 text-ink/50">{p.contact_name} · {p.email}</p>
@@ -245,7 +240,7 @@ export default function OrgaBusinessPage() {
                       <p><span className="text-ink/35">Offre :</span> {p.offers || '—'}</p>
                       <p className="mt-1"><span className="text-ink/35">Cherche :</span> {p.seeks || '—'}</p>
                     </td>
-                    <td>{p.status}</td>
+                    <td>{statusLabel(p.status)}</td>
                     <td>
                       {p.status === 'pending' ? (
                         <div className="flex flex-wrap gap-2">
@@ -488,3 +483,18 @@ export default function OrgaBusinessPage() {
     </OrgaShell>
   )
 }
+
+/* Fond de ligne selon le statut (comme Labels). */
+function participantRowClass(status: BusinessParticipant['status']) {
+  if (status === 'approved') return 'orga-row-approved'
+  if (status === 'rejected') return 'orga-row-rejected'
+  return 'orga-row-pending'
+}
+
+/* Libellé FR du statut. */
+function statusLabel(status: BusinessParticipant['status']) {
+  if (status === 'approved') return 'Approuvé'
+  if (status === 'rejected') return 'Refusé'
+  return 'En attente'
+}
+

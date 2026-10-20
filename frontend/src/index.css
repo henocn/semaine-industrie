@@ -70,16 +70,14 @@ body {
   pointer-events: none;
   transition: opacity 0.18s ease, visibility 0.18s ease;
 }
-.nav-group:hover .nav-group-bg,
-.nav-group:focus-within .nav-group-bg {
+/* Un seul groupe ouvert (état data-open géré en React, évite les superpositions). */
+.nav-group[data-open="true"] .nav-group-bg {
   transform: scaleY(1);
 }
-.nav-group:hover .nav-group-label,
-.nav-group:focus-within .nav-group-label {
+.nav-group[data-open="true"] .nav-group-label {
   color: #fff;
 }
-.nav-group:hover .nav-group-panel,
-.nav-group:focus-within .nav-group-panel {
+.nav-group[data-open="true"] .nav-group-panel {
   visibility: visible;
   opacity: 1;
   pointer-events: auto;

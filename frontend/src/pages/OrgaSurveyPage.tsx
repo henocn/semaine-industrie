@@ -73,19 +73,7 @@ export default function OrgaSurveyPage() {
   }
 
   return (
-    <OrgaShell
-      title="Enquête"
-      actions={
-        <a
-          href="https://semaineindustrie.tg/questionnaire"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="orga-btn"
-        >
-          Voir le formulaire public
-        </a>
-      }
-    >
+    <OrgaShell title="Enquête">
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <section className="orga-panel mb-6">

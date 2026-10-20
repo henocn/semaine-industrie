@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { getStoredUser } from '../api/auth'
 import { listQuestions, reviewQuestion, type LiveQuestion } from '../api/engagement'
 import { getSurveyStats } from '../api/surveys'
@@ -52,14 +52,7 @@ export default function OrgaLivePage() {
   }
 
   return (
-    <OrgaShell
-      title="Live & mesures"
-      actions={
-        <Link to="/questions" className="orga-btn">
-          Formulaire public
-        </Link>
-      }
-    >
+    <OrgaShell title="Live & mesures">
       {error && <p className="mb-4 text-red-700">{error}</p>}
 
       <div className="grid gap-4 xl:grid-cols-2">

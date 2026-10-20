@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { BrandLogo, WRAP } from './Mark'
 
@@ -121,21 +121,44 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
   )
 }
 
-/* Groupe desktop : fond vert descendant + dropdown collé. */
-function DesktopGroup({ group, align = 'left' }: { group: NavGroup; align?: 'left' | 'right' }) {
+/* Groupe desktop : un seul dropdown ouvert à la fois. */
+function DesktopGroup({
+  group,
+  align = 'left',
+  open,
+  onOpen,
+  onClose,
+}: {
+  group: NavGroup
+  align?: 'left' | 'right'
+  open: boolean
+  onOpen: () => void
+  onClose: () => void
+}) {
   const panelPos = align === 'right' ? 'right-0 left-auto' : 'left-0'
   return (
-    <div className="nav-group relative flex h-full">
+    <div
+      className="nav-group relative flex h-full"
+      data-open={open ? 'true' : 'false'}
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
+    >
       <button
         type="button"
         className="nav-group-label relative z-10 flex h-full items-center px-5 text-[15px] font-medium text-ink/70"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => (open ? onClose() : onOpen())}
+        onFocus={onOpen}
       >
         <span className="nav-group-bg" aria-hidden="true" />
         <span className="relative z-10">{group.label}</span>
       </button>
-      <div className={`nav-group-panel absolute top-full z-20 w-60 min-w-full bg-white shadow-lg shadow-forest/10 ${panelPos}`}>
+      <div
+        className={`nav-group-panel absolute top-full z-30 w-60 min-w-full bg-white shadow-lg shadow-forest/10 ${panelPos}`}
+      >
         {group.items.map((item) => (
-          <NavLink key={item.label} item={item} />
+          <NavLink key={item.label} item={item} onNavigate={onClose} />
         ))}
       </div>
     </div>
@@ -145,6 +168,19 @@ function DesktopGroup({ group, align = 'left' }: { group: NavGroup; align?: 'lef
 /* Header public unique pour tout le site. */
 export function SiteHeader() {
   const [open, setOpen] = useState(false)
+  const [openGroup, setOpenGroup] = useState<string | null>(null)
+
+  useEffect(() => {
+    /* Ferme le sous-menu au clic hors nav. */
+    function onDocClick(e: MouseEvent) {
+      const t = e.target as HTMLElement | null
+      if (!t?.closest?.('nav[aria-label="Navigation principale"]')) {
+        setOpenGroup(null)
+      }
+    }
+    document.addEventListener('click', onDocClick)
+    return () => document.removeEventListener('click', onDocClick)
+  }, [])
 
   return (
     <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
@@ -159,6 +195,9 @@ export function SiteHeader() {
               key={group.label}
               group={group}
               align={i === GROUPS.length - 1 ? 'right' : 'left'}
+              open={openGroup === group.label}
+              onOpen={() => setOpenGroup(group.label)}
+              onClose={() => setOpenGroup(null)}
             />
           ))}
         </nav>
