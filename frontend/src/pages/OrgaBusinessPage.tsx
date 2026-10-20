@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import {
   createMeeting,
   createParticipantOrga,
@@ -14,19 +14,6 @@ import { OrgaShell } from '../components/layout/OrgaShell'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
-
-const iconBtn =
-  'grid h-9 w-9 place-items-center border border-black bg-white text-forest hover:bg-forest hover:text-white disabled:opacity-40'
-
-/* Icône crayon. */
-function IconEdit() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M4 20h4L19 9l-4-4L4 16v4z" />
-      <path d="m13 7 4 4" />
-    </svg>
-  )
-}
 
 /* Résout les participants d'un RDV. */
 function meetingAttendees(
@@ -77,7 +64,6 @@ export default function OrgaBusinessPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null)
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null)
-  const [editingMeetingId, setEditingMeetingId] = useState<string | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
 
   /* Recharge listes. */
@@ -120,7 +106,6 @@ export default function OrgaBusinessPage() {
       return (
         names.includes(q) ||
         (m.location || '').toLowerCase().includes(q) ||
-        (m.table_label || '').toLowerCase().includes(q) ||
         m.status.toLowerCase().includes(q)
       )
     })
@@ -192,8 +177,9 @@ export default function OrgaBusinessPage() {
         contact_opt_in: true,
         status: 'approved',
       })
+      const form = e.currentTarget
+      form.reset()
       setShowAddPerson(false)
-      e.currentTarget.reset()
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ajout impossible')
@@ -209,7 +195,8 @@ export default function OrgaBusinessPage() {
       setError('Sélectionnez au moins une personne')
       return
     }
-    const fd = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const fd = new FormData(form)
     const day = String(fd.get('day') || '')
     const start = String(fd.get('start') || '')
     const end = String(fd.get('end') || '')
@@ -221,13 +208,11 @@ export default function OrgaBusinessPage() {
         slot_start: new Date(`${day}T${start}:00`).toISOString(),
         slot_end: new Date(`${day}T${end}:00`).toISOString(),
         location: String(fd.get('location') || '') || undefined,
-        table_label: String(fd.get('table_label') || '') || undefined,
       })
-      setShowAddMeeting(false)
+      form.reset()
       setSelectedIds([])
       setPickQuery('')
-      e.currentTarget.reset()
-      setTab('meetings')
+      setShowAddMeeting(false)
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Création impossible')
@@ -241,7 +226,6 @@ export default function OrgaBusinessPage() {
     setBusyId(id)
     try {
       await saveContactNote(id, note)
-      setEditingMeetingId(null)
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Enregistrement impossible')
@@ -259,10 +243,8 @@ export default function OrgaBusinessPage() {
       await rescheduleMeeting(id, {
         slot_start: new Date(String(fd.get('slot_start') || '')).toISOString(),
         slot_end: new Date(String(fd.get('slot_end') || '')).toISOString(),
-        table_label: String(fd.get('table_label') || '') || undefined,
         location: String(fd.get('location') || '') || undefined,
       })
-      setEditingMeetingId(null)
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Report impossible')
@@ -293,14 +275,6 @@ export default function OrgaBusinessPage() {
   /* Sélectionne un RDV (détail). */
   function selectMeeting(id: string) {
     setSelectedMeetingId((prev) => (prev === id ? null : id))
-    setEditingMeetingId(null)
-  }
-
-  /* Ouvre le panneau RDV en mode édition. */
-  function openMeetingEdit(id: string, e?: MouseEvent) {
-    e?.stopPropagation()
-    setSelectedMeetingId(id)
-    setEditingMeetingId(id)
   }
 
   /* Change d'onglet et ferme les détails. */
@@ -308,7 +282,6 @@ export default function OrgaBusinessPage() {
     setTab(next)
     setSelectedParticipantId(null)
     setSelectedMeetingId(null)
-    setEditingMeetingId(null)
     setShowAddPerson(false)
     setShowAddMeeting(false)
   }
@@ -599,7 +572,7 @@ export default function OrgaBusinessPage() {
                 </label>
                 <label className="text-[13px] font-medium text-forest">
                   Lieu
-                  <input required name="location" placeholder="Palais des congrès, table T12…" className={field} />
+                  <input required name="location" placeholder="Palais des congrès…" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest">
                   Début
@@ -608,10 +581,6 @@ export default function OrgaBusinessPage() {
                 <label className="text-[13px] font-medium text-forest">
                   Fin
                   <input required type="time" name="end" className={field} />
-                </label>
-                <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                  Table (optionnel)
-                  <input name="table_label" placeholder="T12" className={field} />
                 </label>
 
                 <div className="sm:col-span-2">
@@ -682,7 +651,7 @@ export default function OrgaBusinessPage() {
               </h2>
               <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
             </div>
-            <table className="orga-table min-w-[640px]">
+            <table className="orga-table min-w-[560px]">
               <thead>
                 <tr>
                   <th className="w-12">#</th>
@@ -690,13 +659,12 @@ export default function OrgaBusinessPage() {
                   <th>Participants</th>
                   <th>Lieu</th>
                   <th className="w-28">Statut</th>
-                  <th className="w-20">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredMeetings.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-10 text-ink/40">
+                    <td colSpan={5} className="py-10 text-ink/40">
                       Aucun rendez-vous
                     </td>
                   </tr>
@@ -722,26 +690,8 @@ export default function OrgaBusinessPage() {
                         })}
                       </td>
                       <td className="font-medium text-ink">{names}</td>
-                      <td>
-                        {m.location || '—'}
-                        {m.table_label ? ` · ${m.table_label}` : ''}
-                      </td>
+                      <td>{m.location || '—'}</td>
                       <td className="text-[12px] uppercase tracking-wide text-ink/45">{m.status}</td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        {m.status !== 'done' ? (
-                          <button
-                            type="button"
-                            title="Modifier / reporter"
-                            aria-label="Modifier"
-                            className={iconBtn}
-                            onClick={(e) => openMeetingEdit(m.id, e)}
-                          >
-                            <IconEdit />
-                          </button>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
                     </tr>
                   )
                 })}
@@ -769,10 +719,7 @@ export default function OrgaBusinessPage() {
                 <button
                   type="button"
                   className="orga-btn-ghost px-3 py-1.5 text-[13px]"
-                  onClick={() => {
-                    setSelectedMeetingId(null)
-                    setEditingMeetingId(null)
-                  }}
+                  onClick={() => setSelectedMeetingId(null)}
                 >
                   Fermer
                 </button>
@@ -782,10 +729,6 @@ export default function OrgaBusinessPage() {
                 <p>
                   <span className="text-ink/45">Lieu · </span>
                   {selectedMeeting.location || '—'}
-                </p>
-                <p>
-                  <span className="text-ink/45">Table · </span>
-                  {selectedMeeting.table_label || '—'}
                 </p>
                 {selectedMeeting.follow_up_at && (
                   <p>
@@ -841,7 +784,7 @@ export default function OrgaBusinessPage() {
               {selectedMeeting.status !== 'done' && (
                 <div className="mt-4 space-y-4 border-t border-black/10 pt-4">
                   <form
-                    key={`reschedule-${selectedMeeting.id}-${editingMeetingId || 'view'}`}
+                    key={`reschedule-${selectedMeeting.id}`}
                     className="grid gap-2 md:grid-cols-4"
                     onSubmit={(e) => void onReschedule(e, selectedMeeting.id)}
                   >
