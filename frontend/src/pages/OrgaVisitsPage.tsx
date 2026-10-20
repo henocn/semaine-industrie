@@ -7,9 +7,13 @@ import {
   type VisitBooking,
 } from '../api/bookings'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { googleMapsUrl } from '../api/labels'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
+
+const iconBtn =
+  'grid h-9 w-9 place-items-center border border-black bg-white text-forest hover:bg-forest hover:text-white disabled:opacity-40'
 
 /* Semaine officielle SI 2026 (lundi 16 → dimanche 22 novembre). */
 const EVENT_WEEK = [
@@ -34,6 +38,42 @@ function isEventWeekDay(iso: string) {
   return EVENT_WEEK_SET.has(iso)
 }
 
+/* Libellé court d'un jour SI. */
+function formatVisitDay(iso: string) {
+  const meta = EVENT_WEEK.find((d) => d.iso === iso)
+  if (!meta) return iso
+  return `${meta.short} ${dayNumber(iso)}`
+}
+
+/* Site positionné sur la carte. */
+function isOnMap(b: VisitBooking) {
+  return (
+    b.organization?.lat != null &&
+    b.organization?.lng != null &&
+    Number.isFinite(Number(b.organization.lat)) &&
+    Number.isFinite(Number(b.organization.lng))
+  )
+}
+
+/* Icône liste. */
+function IconTable() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  )
+}
+
+/* Icône calendrier. */
+function IconCalendar() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="16" rx="1" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </svg>
+  )
+}
+
 /* Arrangements de visites : site + établissement + créneau (orga). */
 export default function OrgaVisitsPage() {
   const [items, setItems] = useState<VisitBooking[]>([])
@@ -52,6 +92,7 @@ export default function OrgaVisitsPage() {
   const [showForm, setShowForm] = useState(false)
   const [view, setView] = useState<'table' | 'calendar'>('table')
   const [selectedDay, setSelectedDay] = useState<string>(EVENT_WEEK[0].iso)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const selectedSite = useMemo(() => sites.find((s) => s.id === siteId) || null, [sites, siteId])
   const selectedSchool = useMemo(() => schools.find((s) => s.id === schoolId) || null, [schools, schoolId])
@@ -96,6 +137,11 @@ export default function OrgaVisitsPage() {
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [items, query])
+
+  const selected = useMemo(
+    () => filtered.find((b) => b.id === selectedId) || items.find((b) => b.id === selectedId) || null,
+    [filtered, items, selectedId],
+  )
 
   const byDay = useMemo(() => {
     const map = new Map<string, VisitBooking[]>()
@@ -160,15 +206,46 @@ export default function OrgaVisitsPage() {
     }
   }
 
+  /* Sélectionne une visite (détail). */
+  function selectVisit(id: string) {
+    setSelectedId((prev) => (prev === id ? null : id))
+  }
+
   return (
     <OrgaShell
       title="Planning visites"
       searchPlaceholder="Rechercher une visite…"
       onSearch={setQuery}
       actions={
-        <button type="button" className="orga-btn" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? 'Fermer' : 'Ajouter'}
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex border border-black">
+            <button
+              type="button"
+              title="Tableau"
+              aria-label="Vue tableau"
+              aria-pressed={view === 'table'}
+              onClick={() => setView('table')}
+              className={`${iconBtn} border-0 ${view === 'table' ? 'bg-forest text-white' : ''}`}
+            >
+              <IconTable />
+            </button>
+            <button
+              type="button"
+              title="Calendrier"
+              aria-label="Vue calendrier"
+              aria-pressed={view === 'calendar'}
+              onClick={() => setView('calendar')}
+              className={`${iconBtn} border-0 border-l border-black ${
+                view === 'calendar' ? 'bg-forest text-white' : ''
+              }`}
+            >
+              <IconCalendar />
+            </button>
+          </div>
+          <button type="button" className="orga-btn" onClick={() => setShowForm((v) => !v)}>
+            {showForm ? 'Fermer' : 'Ajouter'}
+          </button>
+        </div>
       }
     >
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
@@ -177,7 +254,7 @@ export default function OrgaVisitsPage() {
         <section className="orga-panel mb-6">
           <h2 className="text-[15px] font-semibold text-forest">Nouvelle visite</h2>
           <p className="mt-1 text-[13px] text-ink/50">
-            Site → établissement → créneau (16 au 22 novembre 2026). Seuls les sites avec position carte sont proposés.
+            Site → établissement → créneau (16 au 22 novembre 2026).
           </p>
           {sites.length === 0 && (
             <p className="mt-3 text-[13px] text-red-700">
@@ -294,77 +371,49 @@ export default function OrgaVisitsPage() {
         </section>
       )}
 
-      <div className="mb-4 flex gap-0 border border-black">
-        <button
-          type="button"
-          onClick={() => setView('table')}
-          className={`flex-1 px-4 py-2.5 text-[14px] font-semibold transition-colors ${
-            view === 'table' ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
-          }`}
-        >
-          Tableau
-        </button>
-        <button
-          type="button"
-          onClick={() => setView('calendar')}
-          className={`flex-1 border-l border-black px-4 py-2.5 text-[14px] font-semibold transition-colors ${
-            view === 'calendar' ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
-          }`}
-        >
-          Calendrier
-        </button>
-      </div>
-
       {view === 'table' ? (
         <section className="orga-panel !p-0 overflow-x-auto">
-          <div className="border-b border-black px-4 py-3">
+          <div className="flex items-center justify-between border-b border-black px-4 py-3">
             <h2 className="text-[15px] font-semibold text-forest">
               {filtered.length} visite{filtered.length > 1 ? 's' : ''}
             </h2>
+            <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
           </div>
-          <table className="orga-table min-w-[780px]">
+          <table className="orga-table min-w-[560px]">
             <thead>
               <tr>
-                <th>#</th>
+                <th className="w-12">#</th>
                 <th>Établissement</th>
                 <th>Site</th>
-                <th>Créneau</th>
-                <th>Effectif</th>
-                <th>Contact</th>
+                <th>Jour</th>
+                <th className="w-20">Effectif</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={6}>Aucune visite</td></tr>
+                <tr>
+                  <td colSpan={5} className="py-10 text-ink/40">
+                    Aucune visite
+                  </td>
+                </tr>
               )}
               {filtered.map((b, i) => {
-                const onMap =
-                  b.organization?.lat != null &&
-                  b.organization?.lng != null &&
-                  Number.isFinite(Number(b.organization.lat)) &&
-                  Number.isFinite(Number(b.organization.lng))
+                const onMap = isOnMap(b)
                 return (
-                  <tr key={b.id} className={onMap ? undefined : 'orga-row-pending'}>
-                    <td className="font-semibold text-forest">{i + 1}</td>
+                  <tr
+                    key={b.id}
+                    className={`${onMap ? '' : 'orga-row-pending'} cursor-pointer ${
+                      selectedId === b.id ? 'bg-forest/10' : ''
+                    }`}
+                    onClick={() => selectVisit(b.id)}
+                  >
+                    <td className="text-ink/45">{i + 1}</td>
                     <td className="font-medium text-forest">{b.school_name}</td>
+                    <td>{b.organization?.name || '—'}</td>
                     <td>
-                      <p>{b.organization?.name || '—'}</p>
-                      {!onMap && (
-                        <p className="mt-1 text-[12px] font-medium text-red-700">
-                          Hors carte : ajoutez une position au site
-                        </p>
-                      )}
+                      {formatVisitDay(b.visit_day)} · {b.visit_start}-{b.visit_end}
                     </td>
-                    <td>{b.visit_day} {b.visit_start}-{b.visit_end}</td>
                     <td className="font-semibold text-forest">{b.headcount}</td>
-                    <td>
-                      <a href={`tel:${b.teacher_phone || ''}`} className="block font-semibold text-forest underline underline-offset-2">
-                        {b.teacher_phone || '—'}
-                      </a>
-                      <a href={`mailto:${b.teacher_email}`} className="mt-0.5 block text-ink/55 underline underline-offset-2">
-                        {b.teacher_email}
-                      </a>
-                    </td>
                   </tr>
                 )
               })}
@@ -376,7 +425,7 @@ export default function OrgaVisitsPage() {
           <div className="mb-4">
             <h2 className="text-[18px] font-semibold text-forest">Semaine du 16 au 22 novembre 2026</h2>
             <p className="mt-1 text-[13px] text-ink/50">
-              Cliquez sur un jour pour voir le détail des visites.
+              Cliquez sur un jour, puis une visite pour le détail.
             </p>
           </div>
 
@@ -417,57 +466,117 @@ export default function OrgaVisitsPage() {
             <p className="mt-1 text-[13px] text-ink/50">
               {dayVisits.length === 0
                 ? 'Aucune visite prévue ce jour.'
-                : `${dayVisits.length} visite${dayVisits.length > 1 ? 's' : ''} · cliquez un contact pour appeler ou écrire`}
+                : `${dayVisits.length} visite${dayVisits.length > 1 ? 's' : ''}`}
             </p>
 
             {dayVisits.length > 0 && (
-              <ul className="mt-4 space-y-3">
-                {dayVisits.map((b) => {
-                  const onMap =
-                    b.organization?.lat != null &&
-                    b.organization?.lng != null &&
-                    Number.isFinite(Number(b.organization.lat)) &&
-                    Number.isFinite(Number(b.organization.lng))
-                  return (
-                    <li key={b.id} className="border border-black bg-white px-4 py-3">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className="text-[15px] font-bold text-forest">
-                            {b.visit_start}-{b.visit_end}
-                          </p>
-                          <p className="mt-1 text-[14px] font-semibold text-ink">{b.school_name}</p>
-                          <p className="mt-0.5 text-[13px] text-ink/60">
-                            chez {b.organization?.name || 'site non renseigné'}
-                            {b.organization?.city ? ` · ${b.organization.city}` : ''}
-                          </p>
-                          {!onMap && (
-                            <p className="mt-1 text-[12px] font-medium text-red-700">
-                              Hors carte : ajoutez une position au site
-                            </p>
-                          )}
-                        </div>
-                        <p className="text-[14px] font-bold text-forest">{b.headcount} pers.</p>
+              <ul className="mt-4 space-y-2">
+                {dayVisits.map((b) => (
+                  <li key={b.id}>
+                    <button
+                      type="button"
+                      onClick={() => selectVisit(b.id)}
+                      className={`w-full border border-black px-4 py-3 text-left transition-colors ${
+                        selectedId === b.id ? 'bg-forest/10' : 'bg-white hover:bg-forest/5'
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-[14px] font-semibold text-forest">
+                          {b.visit_start}-{b.visit_end} · {b.school_name}
+                        </p>
+                        <p className="text-[13px] font-bold text-forest">{b.headcount} pers.</p>
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-black/10 pt-3 text-[13px]">
-                        {b.teacher_name && (
-                          <span className="text-ink/70">{b.teacher_name}</span>
-                        )}
-                        {b.teacher_phone && (
-                          <a href={`tel:${b.teacher_phone}`} className="font-semibold text-forest underline underline-offset-2">
-                            {b.teacher_phone}
-                          </a>
-                        )}
-                        {b.teacher_email && (
-                          <a href={`mailto:${b.teacher_email}`} className="text-ink/55 underline underline-offset-2">
-                            {b.teacher_email}
-                          </a>
-                        )}
-                      </div>
-                    </li>
-                  )
-                })}
+                      <p className="mt-1 text-[13px] text-ink/55">
+                        chez {b.organization?.name || 'site non renseigné'}
+                      </p>
+                    </button>
+                  </li>
+                ))}
               </ul>
             )}
+          </div>
+        </section>
+      )}
+
+      {selected && (
+        <section className="orga-panel mt-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-[16px] font-semibold text-forest">{selected.school_name}</h2>
+              <p className="mt-1 text-[13px] text-ink/50">
+                {formatVisitDay(selected.visit_day)} · {selected.visit_start}-{selected.visit_end}
+                {' · '}
+                {selected.headcount} pers.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="orga-btn-ghost px-3 py-1.5 text-[13px]"
+              onClick={() => setSelectedId(null)}
+            >
+              Fermer
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
+            <p>
+              <span className="text-ink/45">Site · </span>
+              <span className="font-medium text-forest">{selected.organization?.name || '—'}</span>
+              {selected.organization?.city ? ` · ${selected.organization.city}` : ''}
+            </p>
+            <p>
+              <span className="text-ink/45">Statut · </span>
+              {selected.status || '—'}
+            </p>
+            <p>
+              <span className="text-ink/45">Contact · </span>
+              {selected.teacher_name || '—'}
+            </p>
+            <p>
+              <span className="text-ink/45">Téléphone · </span>
+              {selected.teacher_phone ? (
+                <a
+                  href={`tel:${selected.teacher_phone}`}
+                  className="font-medium text-forest underline underline-offset-2"
+                >
+                  {selected.teacher_phone}
+                </a>
+              ) : (
+                '—'
+              )}
+            </p>
+            <p className="sm:col-span-2">
+              <span className="text-ink/45">E-mail · </span>
+              {selected.teacher_email ? (
+                <a
+                  href={`mailto:${selected.teacher_email}`}
+                  className="font-medium text-forest underline underline-offset-2"
+                >
+                  {selected.teacher_email}
+                </a>
+              ) : (
+                '—'
+              )}
+            </p>
+            <p className="sm:col-span-2">
+              <span className="text-ink/45">Carte · </span>
+              {isOnMap(selected) ? (
+                <a
+                  href={
+                    googleMapsUrl(selected.organization?.lat, selected.organization?.lng) || undefined
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-forest underline underline-offset-2"
+                >
+                  Voir l&apos;emplacement
+                </a>
+              ) : (
+                <span className="font-medium text-red-700">
+                  Hors carte : ajoutez une position au site
+                </span>
+              )}
+            </p>
           </div>
         </section>
       )}
