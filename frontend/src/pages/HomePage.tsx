@@ -147,67 +147,57 @@ function Tools() {
   )
 }
 
-/* Présentation courte. */
+/* Présentation courte : titre puis photo + texte côte à côte. */
 function About() {
   return (
     <section className="bg-sage py-12 sm:py-16">
-      <div className={`${WRAP} grid gap-10 md:grid-cols-2 md:items-start`}>
-        <div className="reveal">
-          <SectionHeader title="Voir ce que le Togo fabrique, où, et par qui." />
-          <Photo name="eleves" alt="Lycéennes et lycéens dans un établissement togolais" className="mt-8 aspect-[4/3]" />
-        </div>
-        <div className="reveal space-y-4 text-[15px] leading-relaxed text-ink/80" style={{ transitionDelay: '60ms' }}>
-          <p>
-            La Semaine de l’industrie fait découvrir les usines et leurs métiers aux jeunes et au grand public. Elle réunit aussi investisseurs, industriels et PME locales.
-          </p>
-          <p>
-            Date repère : le <strong className="font-semibold text-forest">20 novembre</strong>, Journée de l’industrialisation de l’Afrique.
-          </p>
-          <p>
-            Fil rouge : souveraineté économique par la transformation locale, avec une attention à la place des femmes dans l’industrie.
-          </p>
+      <div className={`${WRAP} reveal`}>
+        <SectionHeader title="Voir ce que le Togo fabrique, où, et par qui." />
+        <div className="mt-8 grid gap-8 md:grid-cols-2 md:items-start md:gap-10">
+          <Photo name="eleves" alt="Lycéennes et lycéens dans un établissement togolais" className="aspect-[4/3]" />
+          <div className="space-y-4 text-[15px] leading-relaxed text-ink/80">
+            <p>
+              La Semaine de l’industrie fait découvrir les usines et leurs métiers aux jeunes et au grand public. Elle réunit aussi investisseurs, industriels et PME locales.
+            </p>
+            <p>
+              Date repère : le <strong className="font-semibold text-forest">20 novembre</strong>, Journée de l’industrialisation de l’Afrique.
+            </p>
+            <p>
+              Fil rouge : souveraineté économique par la transformation locale, avec une attention à la place des femmes dans l’industrie.
+            </p>
+          </div>
         </div>
       </div>
     </section>
   )
 }
 
-/* Sur l'accueil : uniquement le jour J (vendredi 20), le détail est sur /programme. */
+/* Accueil : aperçu du jour J uniquement, un seul lien vers /programme. */
 function ProgrammeStrip() {
   const dayJ = DAYS.find((d) => d.phare) ?? DAYS.find((d) => d.n === 20)
   if (!dayJ) return null
 
   return (
     <section className="py-12 sm:py-16">
-      <div className={`${WRAP} reveal`}>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <SectionHeader
-            title="Journée phare"
-            lead="Vendredi 20 novembre, Journée de l’industrialisation de l’Afrique."
-          />
+      <div className={`${WRAP} reveal max-w-3xl`}>
+        <SectionHeader
+          title="Journée phare"
+          lead="Vendredi 20 novembre, Journée de l’industrialisation de l’Afrique."
+        />
+        <p className="mt-6 text-[15px] leading-relaxed text-ink/75">{dayJ.goal}</p>
+        <p className="mt-2 text-[13px] text-ink/55">{dayJ.where}</p>
+        <ul className="mt-6 space-y-2.5 border-t border-forest/15 pt-6">
+          {dayJ.slots.map(([h, t]) => (
+            <li key={h + t} className="grid grid-cols-[3.5rem_1fr] gap-3 text-[14px]">
+              <span className="font-medium tabular-nums text-forest">{h}</span>
+              <span className="text-ink/75">{t}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-8">
           <Button to="/programme" variant="outline">
             Tout le programme
           </Button>
-        </div>
-        <div className="mt-8 border-t border-forest/15 pt-6">
-          <p className="text-[13px] font-semibold text-forest">
-            {dayJ.n} {dayJ.name}
-          </p>
-          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink/75">{dayJ.goal}</p>
-          <p className="mt-2 text-[13px] text-ink/55">{dayJ.where}</p>
-          <ul className="mt-5 max-w-xl space-y-2.5">
-            {dayJ.slots.slice(0, 5).map(([h, t]) => (
-              <li key={h + t} className="grid grid-cols-[3.5rem_1fr] gap-3 text-[14px]">
-                <span className="font-medium tabular-nums text-forest">{h}</span>
-                <span className="text-ink/75">{t}</span>
-              </li>
-            ))}
-          </ul>
-          {dayJ.slots.length > 5 && (
-            <Link to="/programme#vendredi" className="mt-4 inline-block text-[14px] font-semibold text-forest underline decoration-forest/25 underline-offset-4">
-              Voir la journée complète
-            </Link>
-          )}
         </div>
       </div>
     </section>
