@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { CookieConsent } from '../CookieConsent'
+import { SiteFooter } from './SiteFooter'
 import { SiteHeader } from './SiteHeader'
 
 /* Layout commun des pages publiques (même en-tête partout). */
@@ -18,6 +19,7 @@ export function PublicLayout() {
     <div className="min-h-svh overflow-x-clip">
       <SiteHeader />
       <Outlet />
+      <SiteFooter />
       <CookieConsent />
     </div>
   )

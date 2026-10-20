@@ -1,5 +1,6 @@
 import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
+import { SectionHeader } from '../components/ui/SectionHeader'
 
 /* Page politique de confidentialité / cookies. */
 export default function PrivacyPage() {
@@ -10,8 +11,10 @@ export default function PrivacyPage() {
         description="Politique de confidentialité et cookies, Semaine de l'industrie 2026."
         path="/confidentialite"
       />
-      <div className={`${WRAP} max-w-2xl space-y-6 text-[15px] leading-relaxed text-ink/75`}>
-        <h1 className="display text-4xl text-forest">Confidentialité et cookies</h1>
+      <div className={`${WRAP} max-w-2xl space-y-6 text-[15px] leading-relaxed text-ink/80`}>
+        <div className="animate-rise">
+          <SectionHeader level={1} eyebrow="Vos données" title="Confidentialité et cookies" />
+        </div>
         <p>
           Les données collectées via les formulaires (label, rencontres d&apos;affaires, contact)
           servent uniquement à organiser la Semaine de l&apos;industrie 2026.

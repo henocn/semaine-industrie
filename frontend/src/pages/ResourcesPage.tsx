@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Seo } from '../components/Seo'
 import { ResourcesModal } from '../components/ResourcesModal'
 import { WRAP } from '../components/layout/Mark'
+import { Button } from '../components/ui/Button'
+import { SectionHeader } from '../components/ui/SectionHeader'
 
 /* Page publique : accès aux PDF via code de suivi. */
 export default function ResourcesPage() {
@@ -14,19 +16,17 @@ export default function ResourcesPage() {
         description="Téléchargez votre label et le programme avec votre code de suivi."
         path="/ressources"
       />
-      <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sun">Privé</p>
-      <h1 className="display mt-3 text-4xl sm:text-5xl">Ressources labellisées</h1>
-      <p className="mt-4 max-w-xl text-lg text-ink/65">
-        Le code de suivi n&apos;est pas public. Saisissez-le pour télécharger votre label et le
-        programme officiel.
-      </p>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mt-8 bg-forest px-6 py-3 text-[14px] font-semibold text-white"
-      >
-        Entrer mon code de suivi
-      </button>
+      <div className="animate-rise">
+        <SectionHeader
+          level={1}
+          eyebrow="Espace privé"
+          title="Ressources labellisées"
+          lead="Le code de suivi n'est pas public. Saisissez-le pour télécharger votre label et le programme officiel."
+        />
+        <div className="mt-8">
+          <Button onClick={() => setOpen(true)}>Entrer mon code de suivi</Button>
+        </div>
+      </div>
       <ResourcesModal open={open} onClose={() => setOpen(false)} />
     </main>
   )

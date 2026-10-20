@@ -1,9 +1,42 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { sendContactMessage } from '../api/contact'
-import { SPEAKERS, PLACES, PARTNERS } from '../data'
+import { SPEAKERS, PLACES, PARTNERS, YOUTH_PILLAR } from '../data'
 import { Seo } from '../components/Seo'
-import { BrandLogo, CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
+import { CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
+import { Button } from '../components/ui/Button'
+import { Field } from '../components/ui/Field'
+import { SectionHeader } from '../components/ui/SectionHeader'
+import { useRevealInView } from '../hooks/useReveal'
+
+/* Étapes du parcours numérique : texte court et lien vers une page existante. */
+const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to: string; cta: string }> = {
+  Rêver: {
+    text: 'Découvrez les usines, les produits et les métiers du Togo, près de chez vous.',
+    to: '/industrie',
+    cta: 'Découvrir l’industrie',
+  },
+  Comprendre: {
+    text: 'Des ressources labellisées pour saisir comment on fabrique, et pourquoi ici.',
+    to: '/ressources',
+    cta: 'Voir les ressources',
+  },
+  Commencer: {
+    text: 'Entreprise ou établissement : demandez le label et rejoignez la semaine.',
+    to: '/label',
+    cta: 'Demander le label',
+  },
+}
+
+/* Chiffres repères de l'édition, sans indicateur inventé. */
+const KEY_FIGURES: [string, string][] = [
+  ['7 jours', 'Un thème par jour, du lundi au dimanche'],
+  ['16 au 22 nov.', 'Journée phare le vendredi 20'],
+  ['Lomé + régions', 'Du port aux sites industriels'],
+]
+
+/* Classe commune des champs du formulaire de contact. */
+const CONTACT_INPUT =
+  'w-full border-0 border-b border-forest/25 bg-transparent px-0 py-2 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
 
 /* Photo : déposez le fichier dans public/images. Sans fichier, un aplat discret. */
 function Photo({ name, alt, className = '', position = 'center', eager = false }: { name: string; alt: string; className?: string; position?: string; eager?: boolean }) {
@@ -17,43 +50,94 @@ function Photo({ name, alt, className = '', position = 'center', eager = false }
   )
 }
 
+/* Hero : slogan en display, phrase support, deux CTA, dates en secondaire. */
 function Hero() {
   return (
-    <section id="top" className="relative isolate flex min-h-[520px] items-end overflow-hidden rounded-br-[4rem] bg-forest text-white sm:h-[72svh] sm:max-h-[760px] sm:rounded-br-[8rem]">
+    <section id="top" className="relative isolate flex min-h-[560px] items-end overflow-hidden rounded-br-[4rem] bg-forest text-white sm:h-[80svh] sm:max-h-[820px] sm:rounded-br-[8rem]">
       <img
         src="/images/hall.jpg"
         alt=""
         aria-hidden="true"
         className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-45"
       />
-      {/* Voile forest — même traitement que le panneau login */}
+      {/* Voile forest, même traitement que le panneau login */}
       <div className="absolute inset-0 -z-10 bg-forest/55" />
       <div className={`${WRAP} pb-14 pt-24 sm:pb-20`}>
-        <h1 className="display max-w-4xl text-[clamp(2.75rem,7.5vw,6rem)] !text-white">
+        <h1 className="display animate-rise max-w-4xl text-[clamp(2.75rem,7.5vw,6.5rem)] !text-white">
           {CAMPAIGN_TAGLINE.replace(/\.$/, '')}<span className="text-leaf">.</span>
         </h1>
-        <div className="mt-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
-          <p className="max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl">
-            Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public, à Lomé et dans les régions.
-          </p>
-          <p className="text-lg font-semibold sm:text-right">
-            <span className="text-sun">Du 16 au 22 novembre 2026</span><br /><span className="font-normal text-white/70">Lomé et les régions</span>
-          </p>
+        <p className="animate-rise mt-7 max-w-xl text-lg leading-relaxed text-white/85 [animation-delay:120ms] sm:text-xl">
+          Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public.
+        </p>
+        <div className="animate-rise mt-9 flex flex-wrap gap-3 [animation-delay:220ms]">
+          <Button to="/programme" variant="onDark">Voir le programme</Button>
+          <Button to="/carte" variant="accent">Explorer la carte</Button>
         </div>
+        <p className="animate-rise mt-10 text-[15px] text-white/70 [animation-delay:320ms]">
+          Du 16 au 22 novembre 2026, à Lomé et dans les régions
+        </p>
       </div>
     </section>
   )
 }
 
+/* Section outils : le parcours Rêver, Comprendre, Commencer en liste simple. */
+function Tools() {
+  return (
+    <section className="py-20 sm:py-28">
+      <div className={WRAP}>
+        <SectionHeader
+          className="reveal"
+          eyebrow="Parcours numérique"
+          title={YOUTH_PILLAR.title}
+          lead="Trois étapes pour passer de la curiosité à l’action, sur téléphone ou ordinateur."
+        />
+        <ol className="mt-14 grid gap-x-10 gap-y-0 md:grid-cols-3">
+          {YOUTH_PILLAR.steps.map((step, i) => {
+            const item = TOOL_STEPS[step]
+            return (
+              <li key={step} className="reveal flex flex-col border-y border-forest/15 py-8" style={{ transitionDelay: `${i * 90}ms` }}>
+                <span className="text-sm font-semibold text-energy">0{i + 1}</span>
+                <h3 className="display mt-3 text-3xl sm:text-4xl">{step}</h3>
+                <p className="mt-4 max-w-[34ch] leading-relaxed text-muted">{item.text}</p>
+                <div className="mt-6">
+                  <Button to={item.to} variant="link">{item.cta}</Button>
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      </div>
+    </section>
+  )
+}
+
+/* Chiffres repères : trois valeurs en grand, sans statistiques inventées. */
+function KeyFigures() {
+  return (
+    <section className="bg-sage py-16 sm:py-20">
+      <dl className={`${WRAP} grid gap-10 md:grid-cols-3`}>
+        {KEY_FIGURES.map(([value, label], i) => (
+          <div key={value} className="reveal" style={{ transitionDelay: `${i * 90}ms` }}>
+            <dt className="display text-[clamp(2.25rem,5vw,3.75rem)]">{value}</dt>
+            <dd className="mt-3 max-w-[30ch] leading-relaxed text-muted">{label}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}
+
+/* Présentation de la semaine et de son fil rouge. */
 function About() {
   return (
     <section className="py-24 sm:py-32">
       <div className={`${WRAP} grid gap-12 md:grid-cols-[1fr_1.15fr]`}>
-        <div>
+        <div className="reveal">
           <h2 className="display text-4xl sm:text-5xl">Voir ce que le Togo fabrique, où, et par qui.</h2>
           <Photo name="eleves" alt="Lycéennes et lycéens dans la cour d’un établissement togolais" className="leaf-alt mt-12 aspect-[4/3]" />
         </div>
-        <div className="space-y-6 text-lg leading-relaxed text-ink/80">
+        <div className="reveal space-y-6 text-lg leading-relaxed text-ink/80" style={{ transitionDelay: '120ms' }}>
           <p>
             La Semaine de l’industrie fait découvrir les usines et leurs métiers aux jeunes et au grand public. Elle réunit aussi investisseurs, industriels et PME locales, et raconte l’industrie togolaise par des images et des portraits.
           </p>
@@ -71,34 +155,30 @@ function About() {
 function ProgrammeTeaser() {
   return (
     <section className="bg-sage py-16 sm:py-20">
-      <div className={`${WRAP} grid gap-8 md:grid-cols-[1fr_auto] md:items-end`}>
+      <div className={`${WRAP} reveal grid gap-8 md:grid-cols-[1fr_auto] md:items-end`}>
         <div>
           <h2 className="display text-4xl sm:text-5xl">Le programme</h2>
           <p className="mt-4 max-w-xl text-lg text-ink/70">
             Sept jours, un thème par jour, du 16 au 22 novembre. Journée phare le vendredi 20.
           </p>
         </div>
-        <Link
-          to="/programme"
-          className="inline-flex bg-forest px-8 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-ink"
-        >
-          Voir le programme
-        </Link>
+        <Button to="/programme" variant="primary">Voir le programme</Button>
       </div>
     </section>
   )
 }
 
+/* Table ronde des femmes dans l'industrie et liste des intervenantes. */
 function Women() {
   return (
     <section className="py-24 sm:py-32">
       <div className={`${WRAP} grid gap-14 md:grid-cols-[1fr_1.15fr]`}>
-        <div>
+        <div className="reveal">
           <h2 className="display text-4xl sm:text-5xl">Les métiers de l’industrie au féminin</h2>
           <p className="mt-6 text-lg leading-relaxed text-ink/70">Table ronde du jeudi 19 novembre, à 15 heures. Cinq industrielles sont pressenties.</p>
           <Photo name="atelier" alt="Ouvrières dans un atelier textile de la zone franche" className="leaf mt-10 aspect-[4/3]" />
         </div>
-        <ul className="self-start border-t border-forest/15">
+        <ul className="reveal self-start border-t border-forest/15" style={{ transitionDelay: '120ms' }}>
           {SPEAKERS.map(([name, org]) => (
             <li key={name} className="border-b border-forest/15 py-6">
               <p className="text-xl font-semibold text-forest [font-stretch:110%]">{name}</p>
@@ -111,13 +191,14 @@ function Women() {
   )
 }
 
+/* Sites ouverts et partenaires. */
 function Places() {
   return (
     <section id="lieux" className="bg-sage py-24 sm:py-32">
       <div className={WRAP}>
-        <h2 className="display max-w-3xl text-4xl sm:text-5xl">Les sites ouverts, du port aux régions</h2>
-        <Photo name="port" alt="Porte-conteneurs à quai au Lomé Container Terminal" position="center 45%" className="leaf-alt mt-14 aspect-[4/3] sm:aspect-[2/1]" />
-        <dl className="mt-14 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+        <h2 className="display reveal max-w-3xl text-4xl sm:text-5xl">Les sites ouverts, du port aux régions</h2>
+        <Photo name="port" alt="Porte-conteneurs à quai au Lomé Container Terminal" position="center 45%" className="leaf-alt reveal mt-14 aspect-[4/3] sm:aspect-[2/1]" />
+        <dl className="reveal mt-14 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {PLACES.map(([t, d]) => (
             <div key={t} className="border-t border-forest/20 pt-5">
               <dt className="text-lg font-semibold text-forest">{t}</dt>
@@ -125,7 +206,7 @@ function Places() {
             </div>
           ))}
         </dl>
-        <div className="mt-24 grid gap-10 md:grid-cols-[1fr_1.15fr]">
+        <div className="reveal mt-24 grid gap-10 md:grid-cols-[1fr_1.15fr]">
           <h3 className="text-2xl font-semibold text-forest [font-stretch:112%]">Avec</h3>
           <p className="text-lg leading-relaxed text-ink/75">{PARTNERS.join(', ')}.</p>
         </div>
@@ -134,11 +215,11 @@ function Places() {
   )
 }
 
+/* Formulaire de contact. */
 function Contact() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const field = 'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
 
   /* Envoie le message vers infos@. */
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -164,7 +245,7 @@ function Contact() {
   return (
     <section id="contact" className="py-24 sm:py-32">
       <div className={`${WRAP} grid gap-14 md:grid-cols-[1fr_1.15fr]`}>
-        <div>
+        <div className="reveal">
           <h2 className="display text-4xl sm:text-5xl">Une question ?</h2>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/70">
             Presse, entreprise, établissement scolaire ou partenaire : écrivez à{' '}
@@ -177,16 +258,16 @@ function Contact() {
         {sent ? (
           <p className="self-center text-xl text-forest">Merci, votre message a bien été pris en compte.</p>
         ) : (
-          <form onSubmit={submit} className="grid gap-8 sm:grid-cols-2">
-            <label className="block text-[15px] font-medium text-forest">Nom<input required name="nom" className={field} /></label>
-            <label className="block text-[15px] font-medium text-forest">Organisation<input name="organisation" className={field} /></label>
-            <label className="block text-[15px] font-medium text-forest sm:col-span-2">Adresse e-mail<input required type="email" name="email" className={field} /></label>
-            <label className="block text-[15px] font-medium text-forest sm:col-span-2">Message<textarea required name="message" rows={4} className={`${field} resize-none`} /></label>
-            {error && <p className="text-[15px] text-red-700 sm:col-span-2">{error}</p>}
+          <form onSubmit={submit} className="reveal grid gap-8 sm:grid-cols-2" style={{ transitionDelay: '120ms' }}>
+            <Field label="Nom"><input required name="nom" className={CONTACT_INPUT} /></Field>
+            <Field label="Organisation" optional><input name="organisation" className={CONTACT_INPUT} /></Field>
+            <Field label="Adresse e-mail" className="sm:col-span-2"><input required type="email" name="email" className={CONTACT_INPUT} /></Field>
+            <Field label="Message" className="sm:col-span-2"><textarea required name="message" rows={4} className={`${CONTACT_INPUT} resize-none`} /></Field>
+            {error && <p role="alert" className="text-[15px] text-red-700 sm:col-span-2">{error}</p>}
             <div className="sm:col-span-2">
-              <button type="submit" disabled={loading} className="bg-forest px-8 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-ink disabled:opacity-60">
+              <Button type="submit" variant="primary" disabled={loading}>
                 {loading ? 'Envoi…' : 'Envoyer'}
-              </button>
+              </Button>
             </div>
           </form>
         )}
@@ -195,79 +276,22 @@ function Contact() {
   )
 }
 
-/* Comptes officiels, relevés sur investissement.gouv.tg */
-const SOCIALS: [string, string, string][] = [
-  ['X', 'https://x.com/promo_investtg', 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z'],
-  ['Facebook', 'https://www.facebook.com/PromoInvestTogo/', 'M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.931-1.956 1.886v2.265h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z'],
-  ['LinkedIn', 'https://www.linkedin.com/company/minist%C3%A8re-de-la-promotion-de-l-investissement/', 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zM7.119 20.452H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z'],
-]
-
-function Footer() {
-  return (
-    <footer className="border-t border-forest/15 bg-white">
-      <div className={`${WRAP} grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]`}>
-        <div>
-          <img
-            src="/brand/bloc-ministere-mdpise.png"
-            alt="République togolaise, Ministère délégué chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique"
-            className="h-28 w-auto"
-          />
-          <BrandLogo className="mt-6 h-12 w-auto" />
-        </div>
-        <div>
-          <p className="font-semibold text-forest">La semaine</p>
-          <ul className="mt-4 space-y-2.5 text-ink/70">
-            <li><Link to="/programme" className="hover:text-forest">Programme</Link></li>
-            <li><Link to="/carte" className="hover:text-forest">Carte des usines</Link></li>
-            <li><Link to="/questions" className="hover:text-forest">Questions live</Link></li>
-            <li><Link to="/vote" className="hover:text-forest">Vote samedi</Link></li>
-            <li><Link to="/questionnaire" className="hover:text-forest">Questionnaire</Link></li>
-            <li><a href="#contact" className="hover:text-forest">Contact</a></li>
-          </ul>
-        </div>
-        <div>
-          <p className="font-semibold text-forest">Suivre le Ministère</p>
-          <ul className="mt-4 flex gap-3">
-            {SOCIALS.map(([label, href, path]) => (
-              <li key={label}>
-                <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="grid h-11 w-11 place-items-center rounded-full border border-forest/20 text-forest transition-colors hover:border-forest hover:bg-forest hover:text-white">
-                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true"><path d={path} /></svg>
-                </a>
-              </li>
-            ))}
-          </ul>
-          <a href="https://investissement.gouv.tg/" target="_blank" rel="noopener noreferrer" className="mt-5 inline-block text-ink/70 underline decoration-forest/30 underline-offset-4 hover:text-forest">
-            investissement.gouv.tg
-          </a>
-        </div>
-      </div>
-      <div className="border-t border-forest/10">
-        <div className={`${WRAP} flex flex-col gap-3 py-6 text-sm text-ink/55 sm:flex-row sm:items-center sm:justify-between`}>
-          <p>© 2026 Semaine de l’industrie · République togolaise</p>
-          <p className="text-[12px] font-normal tracking-wide text-ink/40">
-            Powered by DEKA Editions
-          </p>
-        </div>
-      </div>
-    </footer>
-  )
-}
-
 /* Page d'accueil du site public. */
 export default function HomePage() {
+  const mainRef = useRevealInView<HTMLElement>()
   return (
     <>
       <Seo path="/" />
-      <main>
+      <main ref={mainRef}>
         <Hero />
+        <Tools />
+        <KeyFigures />
         <About />
         <ProgrammeTeaser />
         <Women />
         <Places />
         <Contact />
       </main>
-      <Footer />
     </>
   )
 }

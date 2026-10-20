@@ -33,7 +33,8 @@ const createRequestSchema = Joi.object({
   lng: Joi.number().min(-180).max(180).allow(null),
   contact_name: Joi.string().trim().max(160).allow('', null),
   contact_email: Joi.string().trim().email().max(180).required(),
-  contact_phone: Joi.string().trim().min(6).max(40).required(),
+  /* Téléphone = plus, jamais une condition d'accès. */
+  contact_phone: Joi.string().trim().min(6).max(40).allow('', null),
   contact_opt_in: Joi.boolean().valid(true).required(),
   description: Joi.string().trim().allow('', null),
   photo_url: Joi.string().trim().max(500).allow('', null),

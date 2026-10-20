@@ -4,6 +4,8 @@ import { listMapPoints, type MapPoint } from '../api/labels'
 import { Seo } from '../components/Seo'
 import { SitesMap } from '../components/map/SitesMap'
 import { WRAP } from '../components/layout/Mark'
+import { SectionHeader } from '../components/ui/SectionHeader'
+import { Button } from '../components/ui/Button'
 
 /* Carte des sites qui ont des visites arrangées + panneau détail. */
 export default function MapPage() {
@@ -40,10 +42,15 @@ export default function MapPage() {
         path="/carte"
       />
       <div className={WRAP}>
-        <h1 className="display text-4xl sm:text-5xl">Carte des visites</h1>
-        <p className="mt-3 max-w-xl text-lg text-ink/65">
-          Sites qui accueillent déjà des établissements.
-        </p>
+        <div className="animate-rise flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
+            level={1}
+            eyebrow="Sur le terrain"
+            title="Carte des visites"
+            lead="Sites industriels qui accueillent déjà des établissements pendant la semaine."
+          />
+          <Button to="/industrie" variant="link">Voir toutes les industries</Button>
+        </div>
 
         {error && <p className="mt-6 text-red-700">{error}</p>}
 

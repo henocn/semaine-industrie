@@ -11,6 +11,18 @@
   --color-energy: #00a85a;   /* vert énergie — production */
   --color-sun: #f6c800;      /* or — accent journée phare */
   --color-flag: #c8102e;     /* rouge drapeau — réservé au vendredi 20 */
+  --color-line: color-mix(in oklab, var(--color-forest) 14%, white);   /* filets et bordures douces */
+  --color-muted: color-mix(in oklab, var(--color-ink) 62%, white);     /* texte secondaire */
+  --ease-leaf: cubic-bezier(.2, .8, .2, 1);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 html {
@@ -164,8 +176,69 @@ select.orga-input {
   padding-right: 2rem;
 }
 
+/* Entrée douce au chargement (hero, blocs d'intro) */
+.animate-rise { animation: rise .8s var(--ease-leaf) both; }
+
+/* Apparition au scroll : data-in="true" rend l'élément visible */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .7s var(--ease-leaf), transform .7s var(--ease-leaf);
+}
+.reveal[data-in="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Boutons du site public */
+.ui-btn-primary,
+.ui-btn-accent,
+.ui-btn-ondark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0;
+  padding: 0.9rem 1.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color .25s var(--ease-leaf), color .25s var(--ease-leaf), transform .25s var(--ease-leaf);
+}
+.ui-btn-primary:hover,
+.ui-btn-accent:hover,
+.ui-btn-ondark:hover { transform: translateY(-1px); }
+.ui-btn-primary { background: var(--color-forest); color: #fff; }
+.ui-btn-primary:hover { background: var(--color-energy); }
+.ui-btn-accent { background: var(--color-sun); color: var(--color-forest); }
+.ui-btn-accent:hover { background: var(--color-leaf); }
+.ui-btn-ondark { background: #fff; color: var(--color-forest); }
+.ui-btn-ondark:hover { background: var(--color-sage); }
+.ui-btn-primary:disabled,
+.ui-btn-accent:disabled,
+.ui-btn-ondark:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Surtitre de section */
+.ui-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-energy);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .reveal,
+  .reveal[data-in="true"] { opacity: 1; transform: none; transition: none; animation: none; }
+  .animate-rise { animation: none; opacity: 1; }
+  .ui-btn-primary,
+  .ui-btn-accent,
+  .ui-btn-ondark { transition: none; }
+  .ui-btn-primary:hover,
+  .ui-btn-accent:hover,
+  .ui-btn-ondark:hover { transform: none; }
   .fold { transition: none; }
   .nav-group-bg,
   .nav-group-panel { transition: none; }

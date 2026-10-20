@@ -3,12 +3,15 @@ import { createLabelRequest, uploadLabelGallery } from '../api/labels'
 import { Seo } from '../components/Seo'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { WRAP } from '../components/layout/Mark'
+import { Button } from '../components/ui/Button'
+import { Field } from '../components/ui/Field'
+import { SectionHeader } from '../components/ui/SectionHeader'
 import { assertGalleryFiles } from '../lib/imageQuality'
 
 const field =
-  'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
+  'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
 
-/* Page publique de demande de label. */
+/* Page publique de demande de label. Le téléphone est un plus, jamais une condition. */
 export default function LabelRequestPage() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +65,7 @@ export default function LabelRequestPage() {
         region: String(fd.get('region') || '') || undefined,
         city: String(fd.get('city') || '') || undefined,
         contact_email: String(fd.get('contact_email') || ''),
-        contact_phone: String(fd.get('contact_phone') || ''),
+        contact_phone: String(fd.get('contact_phone') || '').trim() || undefined,
         contact_opt_in: fd.get('contact_opt_in') === 'on',
         description: String(fd.get('description') || '') || undefined,
         products,
@@ -81,163 +84,162 @@ export default function LabelRequestPage() {
   }
 
   return (
-    <main className="py-16 sm:py-24">
-        <Seo
-          title="Demander le label"
-          description="Entreprises et établissements : demandez le label Semaine de l’industrie 2026 pour rejoindre le parcours officiel."
-          path="/label"
-        />
-        <div className={`${WRAP} grid gap-14 md:grid-cols-[1fr_1.15fr]`}>
-          <div>
-            <h1 className="display text-4xl sm:text-5xl">Demander le label</h1>
-            <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/70">
-              Entreprises et écoles : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent.
+    <main className="py-14 sm:py-20">
+      <Seo
+        title="Demander le label"
+        description="Entreprises et établissements : demandez le label Semaine de l’industrie 2026 pour rejoindre le parcours officiel."
+        path="/label"
+      />
+      <div className={`${WRAP} grid gap-12 md:grid-cols-[1fr_1.15fr]`}>
+        <div className="animate-rise md:sticky md:top-24 md:self-start">
+          <SectionHeader
+            level={1}
+            eyebrow="Label 2026"
+            title="Demander le label"
+            lead="Entreprises et écoles : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent."
+          />
+          {isEntreprise && (
+            <p className="mt-4 max-w-md text-[15px] text-ink/70">
+              Entreprises : 3 photos nettes (min. 1000×700, max 5 Mo) pour la fiche Industrie.
             </p>
-            {isEntreprise && (
-              <p className="mt-4 max-w-md text-[15px] text-ink/55">
-                Entreprises : 3 photos nettes (min. 1000×700, max 5 Mo) pour la fiche Industrie.
-              </p>
-            )}
-          </div>
+          )}
+          <p className="mt-4 max-w-md text-[15px] text-ink/70">
+            Le téléphone est facultatif : l’e-mail suffit pour être recontacté.
+          </p>
+        </div>
 
-          {sent ? (
-            <p className="self-center text-xl text-forest">
+        {sent ? (
+          <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
+            <p className="text-xl text-forest">
               Merci. Votre demande est enregistrée. Après acceptation, vous recevrez un code de
               suivi privé pour télécharger votre label et le programme.
             </p>
-          ) : (
-            <form onSubmit={onSubmit} className="grid gap-8 sm:grid-cols-2">
-              <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                Nom de la structure
-                <input required name="structure_name" className={field} />
-              </label>
-              <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                Type
-                <select
-                  name="structure_type"
-                  className={field}
-                  value={structureType}
-                  onChange={(e) => setStructureType(e.target.value as 'entreprise' | 'ecole')}
-                >
-                  <option value="entreprise">Entreprise</option>
-                  <option value="ecole">École</option>
-                </select>
-              </label>
-              {isEntreprise && (
-                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                  Secteur
-                  <input name="sector" className={field} />
-                </label>
-              )}
-              <label className="block text-[15px] font-medium text-forest">
-                Région
-                <input name="region" className={field} />
-              </label>
-              <label className="block text-[15px] font-medium text-forest">
-                Ville
-                <input name="city" className={field} />
-              </label>
+            <div className="mt-6">
+              <Button to="/programme" variant="link">
+                Voir le programme
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit} className="grid gap-6 sm:grid-cols-2">
+            <Field label="Nom de la structure" className="sm:col-span-2">
+              <input required name="structure_name" className={field} />
+            </Field>
+            <Field label="Type" className="sm:col-span-2">
+              <select
+                name="structure_type"
+                className={field}
+                value={structureType}
+                onChange={(e) => setStructureType(e.target.value as 'entreprise' | 'ecole')}
+              >
+                <option value="entreprise">Entreprise</option>
+                <option value="ecole">École</option>
+              </select>
+            </Field>
+            {isEntreprise && (
+              <Field label="Secteur" className="sm:col-span-2">
+                <input name="sector" className={field} />
+              </Field>
+            )}
+            <Field label="Région">
+              <input name="region" className={field} />
+            </Field>
+            <Field label="Ville">
+              <input name="city" className={field} />
+            </Field>
 
+            <div className="sm:col-span-2">
+              <p className="text-sm font-semibold text-forest">Emplacement sur la carte</p>
+              <LocationPickerMap
+                className="mt-2"
+                lat={lat}
+                lng={lng}
+                onPick={(a, b) => {
+                  setLat(a)
+                  setLng(b)
+                }}
+              />
+            </div>
+
+            {isEntreprise && (
               <div className="sm:col-span-2">
-                <p className="text-[15px] font-medium text-forest">Emplacement sur la carte</p>
-                <LocationPickerMap
-                  className="mt-3"
-                  lat={lat}
-                  lng={lng}
-                  onPick={(a, b) => {
-                    setLat(a)
-                    setLng(b)
-                  }}
-                />
-              </div>
-
-              {isEntreprise && (
-                <div className="sm:col-span-2">
-                  <label className="block text-[15px] font-medium text-forest">
-                    3 photos (usine, produits, équipe…)
-                    <input
-                      required
-                      name="gallery"
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      multiple
-                      className="mt-3 block w-full text-[14px] text-ink/70 file:mr-4 file:border file:border-forest file:bg-white file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-forest"
-                      onChange={(e) => onGalleryChange(e.target.files)}
-                    />
-                  </label>
-                  <p className="mt-2 text-[13px] text-ink/45">
-                    Exactement 3 fichiers · JPEG/PNG/WebP · min. 1000×700 px · max 5 Mo chacun
-                  </p>
-                  {previews.length > 0 && (
-                    <div className="mt-4 grid grid-cols-3 gap-2">
-                      {previews.map((src) => (
-                        <div key={src} className="aspect-[4/3] overflow-hidden bg-sage/40">
-                          <img src={src} alt="" className="h-full w-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <label className="block text-[15px] font-medium text-forest">
-                E-mail
-                <input required type="email" name="contact_email" className={field} />
-              </label>
-              <label className="block text-[15px] font-medium text-forest">
-                Téléphone
-                <input required name="contact_phone" type="tel" className={field} />
-              </label>
-              {isEntreprise ? (
-                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                  Capacité max. visiteurs
-                  <input type="number" min={1} name="max_visitors" className={field} />
-                </label>
-              ) : (
-                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                  Nombre d’élèves / étudiants visiteurs (approximatif)
-                  <input type="number" min={1} name="max_visitors" className={field} />
-                </label>
-              )}
-              {isEntreprise && (
-                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                  Produits phares (séparés par des virgules)
-                  <input name="products" placeholder="farine, huile…" className={field} />
-                </label>
-              )}
-              <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                Description
-                <textarea name="description" rows={3} className={`${field} resize-none`} />
-              </label>
-              {isEntreprise && (
-                <label className="block text-[15px] font-medium text-forest sm:col-span-2">
-                  Règles de sécurité
-                  <textarea name="safety_rules" rows={3} className={`${field} resize-none`} />
-                </label>
-              )}
-
-              <label className="flex items-start gap-3 text-[14px] text-ink/70 sm:col-span-2">
-                <input required type="checkbox" name="contact_opt_in" className="mt-1" />
-                <span>
-                  J&apos;accepte d&apos;être contacté pour la suite par e-mail et/ou WhatsApp
-                  (validation, kit, visites).
-                </span>
-              </label>
-
-              {error && <p className="text-[15px] text-red-700 sm:col-span-2">{error}</p>}
-
-              <div className="sm:col-span-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-forest px-8 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-ink disabled:opacity-60"
+                <Field
+                  label="3 photos (usine, produits, équipe…)"
+                  hint="Exactement 3 fichiers, JPEG/PNG/WebP, min. 1000×700 px, max 5 Mo chacun"
                 >
-                  {loading ? 'Envoi…' : 'Envoyer la demande'}
-                </button>
+                  <input
+                    required
+                    name="gallery"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    className="block w-full text-sm text-ink/80 file:mr-4 file:cursor-pointer file:rounded-full file:border-0 file:bg-forest file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-white hover:file:bg-energy"
+                    onChange={(e) => onGalleryChange(e.target.files)}
+                  />
+                </Field>
+                {previews.length > 0 && (
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    {previews.map((src) => (
+                      <div key={src} className="aspect-[4/3] overflow-hidden bg-sage">
+                        <img src={src} alt="" className="h-full w-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </form>
-          )}
-        </div>
-      </main>
+            )}
+
+            <Field label="E-mail">
+              <input required type="email" name="contact_email" className={field} />
+            </Field>
+            <Field label="Téléphone" optional hint="Un plus pour WhatsApp, jamais obligatoire">
+              <input name="contact_phone" type="tel" autoComplete="tel" className={field} />
+            </Field>
+            {isEntreprise ? (
+              <Field label="Capacité max. visiteurs" className="sm:col-span-2">
+                <input type="number" min={1} name="max_visitors" className={field} />
+              </Field>
+            ) : (
+              <Field label="Nombre d’élèves / étudiants visiteurs (approximatif)" className="sm:col-span-2">
+                <input type="number" min={1} name="max_visitors" className={field} />
+              </Field>
+            )}
+            {isEntreprise && (
+              <Field label="Produits phares" hint="Séparés par des virgules" className="sm:col-span-2">
+                <input name="products" placeholder="farine, huile…" className={field} />
+              </Field>
+            )}
+            <Field label="Description" className="sm:col-span-2">
+              <textarea name="description" rows={3} className={`${field} resize-none`} />
+            </Field>
+            {isEntreprise && (
+              <Field label="Règles de sécurité" className="sm:col-span-2">
+                <textarea name="safety_rules" rows={3} className={`${field} resize-none`} />
+              </Field>
+            )}
+
+            <label className="flex items-start gap-3 text-[14px] text-ink/80 sm:col-span-2">
+              <input required type="checkbox" name="contact_opt_in" className="mt-1 accent-forest" />
+              <span>
+                J&apos;accepte d&apos;être contacté pour la suite par e-mail et/ou WhatsApp
+                (validation, kit, visites).
+              </span>
+            </label>
+
+            {error && (
+              <p role="alert" className="text-[15px] font-medium text-flag sm:col-span-2">
+                {error}
+              </p>
+            )}
+
+            <div className="sm:col-span-2">
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Envoi…' : 'Envoyer la demande'}
+              </Button>
+            </div>
+          </form>
+        )}
+      </div>
+    </main>
   )
 }

@@ -9,7 +9,7 @@ export type LabelRequestPayload = {
   region?: string
   city?: string
   contact_email: string
-  contact_phone: string
+  contact_phone?: string
   contact_opt_in?: boolean
   description?: string
   products?: string[]

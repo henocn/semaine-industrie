@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { getOrganizationBySlug, type Organization } from '../api/labels'
 import { Seo } from '../components/Seo'
 import { SITE_URL } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
+import { Button } from '../components/ui/Button'
+import { SectionHeader } from '../components/ui/SectionHeader'
 
 /* Galerie utile (photo_url + gallery_urls). */
 function galleryOf(org: Organization) {
@@ -61,14 +63,16 @@ export default function OrganizationPage() {
       {error && (
         <div className={`${WRAP} py-16`}>
           <p className="text-lg text-forest">{error}</p>
-          <Link to="/industrie" className="mt-6 inline-block text-forest underline underline-offset-4">
-            Retour aux industries
-          </Link>
+          <div className="mt-6">
+            <Button to="/industrie" variant="link">
+              Retour aux industries
+            </Button>
+          </div>
         </div>
       )}
       {!error && !org && (
         <div className={`${WRAP} py-16`}>
-          <p className="text-lg text-ink/60">Chargement…</p>
+          <p className="text-lg text-ink/70">Chargement…</p>
         </div>
       )}
 
@@ -82,27 +86,26 @@ export default function OrganizationPage() {
                 className="absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-forest/90 via-forest/35 to-transparent" />
-              <div className={`absolute inset-x-0 bottom-0 ${WRAP} pb-10 pt-24`}>
-                <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-sun">
-                  Industrie labellisée
-                </p>
-                <h1 className="display mt-3 max-w-3xl text-4xl text-white sm:text-5xl md:text-6xl">
+              <div className={`absolute inset-x-0 bottom-0 ${WRAP} animate-rise pb-10 pt-24`}>
+                <p className="ui-eyebrow !text-sun">Industrie labellisée</p>
+                <h1 className="display mt-4 max-w-3xl text-4xl text-white sm:text-5xl md:text-6xl">
                   {org.name}
                 </h1>
-                <p className="mt-3 text-lg text-white/75">
+                <p className="mt-3 text-lg text-white/85">
                   {[org.sector, org.city, org.region].filter(Boolean).join(' · ')}
                 </p>
               </div>
             </div>
           ) : (
-            <div className={`${WRAP} pt-16 sm:pt-24`}>
-              <p className="text-[15px] font-semibold text-leaf">Structure labellisée</p>
-              <h1 className="display mt-3 text-4xl sm:text-5xl">{org.name}</h1>
-              <p className="mt-4 text-lg text-ink/65">
-                {[org.type === 'ecole' ? 'École' : 'Entreprise', org.sector, org.city, org.region]
+            <div className={`${WRAP} animate-rise pt-16 sm:pt-24`}>
+              <SectionHeader
+                level={1}
+                eyebrow="Structure labellisée"
+                title={org.name}
+                lead={[org.type === 'ecole' ? 'École' : 'Entreprise', org.sector, org.city, org.region]
                   .filter(Boolean)
                   .join(' · ')}
-              </p>
+              />
             </div>
           )}
 
@@ -124,7 +127,7 @@ export default function OrganizationPage() {
               )}
 
               {org.description && (
-                <p className="max-w-2xl text-lg leading-relaxed text-ink/80">{org.description}</p>
+                <p className="max-w-2xl text-lg leading-relaxed text-ink/85">{org.description}</p>
               )}
               {org.products?.length > 0 && (
                 <ul className="mt-8 flex flex-wrap gap-x-4 gap-y-2">
@@ -137,30 +140,29 @@ export default function OrganizationPage() {
               )}
 
               {isIndustry && (
-                <Link
-                  to="/industrie"
-                  className="mt-10 inline-block text-[15px] font-medium text-forest underline decoration-forest/30 underline-offset-4"
-                >
-                  Toutes les industries
-                </Link>
+                <div className="mt-10">
+                  <Button to="/industrie" variant="link">
+                    Toutes les industries
+                  </Button>
+                </div>
               )}
             </div>
 
             <aside className="border-t border-forest/15 pt-6 md:border-t-0 md:border-l md:border-forest/15 md:pl-10 md:pt-0">
               <h2 className="text-lg font-semibold text-forest">Visites</h2>
               {org.max_visitors && (
-                <p className="mt-3 text-ink/70">Jusqu’à {org.max_visitors} visiteurs par créneau</p>
+                <p className="mt-3 text-ink/75">Jusqu’à {org.max_visitors} visiteurs par créneau</p>
               )}
               {org.visit_slots?.length > 0 ? (
                 <ul className="mt-4 space-y-2 text-[15px] text-ink/80">
                   {org.visit_slots.map((s) => (
                     <li key={`${s.day}-${s.start}`}>
-                      <span className="font-semibold text-forest">{s.day}</span> {s.start} – {s.end}
+                      <span className="font-semibold text-forest">{s.day}</span> {s.start} à {s.end}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-3 text-ink/55">Créneaux arrangés par l’organisation.</p>
+                <p className="mt-3 text-ink/70">Créneaux arrangés par l’organisation.</p>
               )}
               {org.safety_rules && (
                 <>

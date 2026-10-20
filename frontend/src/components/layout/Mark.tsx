@@ -35,5 +35,5 @@ export function BrandLogoWhite({ className = 'h-9 w-auto' }: { className?: strin
 export const WRAP = 'mx-auto w-full max-w-6xl px-5 sm:px-8'
 
 /* Signature de campagne (dossier validation MDPISE). */
-export const CAMPAIGN_TAGLINE = 'L’industrie en mouvement.'
+export const CAMPAIGN_TAGLINE = 'L’industrie à portée de main.'
 export const CAMPAIGN_SUB = 'Construire aujourd’hui l’industrie de demain.'

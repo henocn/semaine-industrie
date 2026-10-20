@@ -8,6 +8,8 @@ import {
 } from '../api/surveys'
 import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
+import { Button } from '../components/ui/Button'
+import { SectionHeader } from '../components/ui/SectionHeader'
 
 /* Indique si une réponse est valide pour la question. */
 function isAnswered(q: SurveyQuestion, value: SurveyAnswerValue | undefined) {
@@ -102,34 +104,35 @@ export default function SurveyPage() {
         path="/questionnaire"
       />
       <div className={`${WRAP} max-w-lg`}>
-        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-forest/70">
-          Enquête
-        </p>
-        <h1 className="display mt-2 text-3xl tracking-tight text-forest sm:text-4xl">
-          {phase === 'before' ? 'Avant la visite' : 'Après la visite'}
-        </h1>
+        <div className="animate-rise">
+          <SectionHeader
+            level={1}
+            eyebrow="Enquête"
+            title={phase === 'before' ? 'Avant la visite' : 'Après la visite'}
+          />
+        </div>
 
         {sent ? (
-          <div className="mt-10 border border-forest bg-forest/5 px-5 py-8 text-center">
+          <div className="mt-10 border-2 border-sun bg-sage px-5 py-8 text-center">
             <p className="text-lg font-semibold text-forest">Merci</p>
-            <p className="mt-2 text-[15px] text-ink/65">Vos réponses sont enregistrées.</p>
+            <p className="mt-2 text-[15px] text-ink/75">Vos réponses sont enregistrées.</p>
           </div>
         ) : loading ? (
-          <p className="mt-10 text-[15px] text-ink/55">Chargement…</p>
+          <p className="mt-10 text-[15px] text-ink/70">Chargement…</p>
         ) : total === 0 ? (
-          <p className="mt-10 text-[15px] text-ink/55">Le questionnaire n&apos;est pas encore disponible.</p>
+          <p className="mt-10 text-[15px] text-ink/70">Le questionnaire n&apos;est pas encore disponible.</p>
         ) : current ? (
           <div className="mt-8">
             <div className="mb-6">
-              <div className="flex items-center justify-between text-[12px] font-medium text-ink/45">
+              <div className="flex items-center justify-between text-[12px] font-medium text-ink/70">
                 <span>
                   Question {step + 1} / {total}
                 </span>
                 <span>{Math.round(((step + 1) / total) * 100)}%</span>
               </div>
-              <div className="mt-2 h-1.5 w-full bg-black/10">
+              <div className="mt-2 h-1.5 w-full bg-sage">
                 <div
-                  className="h-full bg-forest transition-[width] duration-300"
+                  className="h-full bg-energy transition-[width] duration-300"
                   style={{ width: `${Math.min(((step + 1) / total) * 100, 100)}%` }}
                 />
               </div>
@@ -151,10 +154,10 @@ export default function SurveyPage() {
                           role="radio"
                           aria-checked={active}
                           onClick={() => setAnswer(opt)}
-                          className={`w-full border border-black px-4 py-3.5 text-left text-[15px] font-medium transition-colors ${
+                          className={`w-full border border-forest/40 px-4 py-3.5 text-left text-[15px] font-medium transition-colors ${
                             active
                               ? 'bg-forest text-white'
-                              : 'bg-white text-ink/80 hover:bg-forest/5'
+                              : 'bg-white text-ink/85 hover:bg-sage'
                           }`}
                         >
                           {opt}
@@ -165,12 +168,12 @@ export default function SurveyPage() {
                 </ul>
               ) : (
                 <>
-                  <div className="mt-3 flex items-center justify-between text-[11px] font-medium uppercase tracking-wide text-ink/40">
+                  <div className="mt-3 flex items-center justify-between text-[11px] font-medium uppercase tracking-wide text-ink/70">
                     <span>Pas d&apos;accord</span>
                     <span>Tout à fait</span>
                   </div>
                   <div
-                    className="mt-2 grid grid-cols-5 border border-black"
+                    className="mt-2 grid grid-cols-5 border border-forest/40"
                     role="radiogroup"
                     aria-label={current.label}
                   >
@@ -184,11 +187,11 @@ export default function SurveyPage() {
                           aria-checked={active}
                           onClick={() => setAnswer(n)}
                           className={`h-14 text-[16px] font-semibold transition-colors ${
-                            n > 1 ? 'border-l border-black' : ''
+                            n > 1 ? 'border-l border-forest/40' : ''
                           } ${
                             active
                               ? 'bg-forest text-white'
-                              : 'bg-white text-ink/70 hover:bg-forest/5'
+                              : 'bg-white text-ink/75 hover:bg-sage'
                           }`}
                         >
                           {n}
@@ -200,37 +203,25 @@ export default function SurveyPage() {
               )}
             </div>
 
-            {error && <p className="mt-4 text-[14px] text-red-700">{error}</p>}
+            {error && <p role="alert" className="mt-4 text-[14px] font-medium text-flag">{error}</p>}
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               {step > 0 && (
-                <button
-                  type="button"
-                  onClick={onPrev}
-                  className="border border-black bg-white px-5 py-3 text-[14px] font-semibold text-forest hover:bg-black/[0.03]"
-                >
+                <Button variant="link" onClick={onPrev}>
                   Précédent
-                </button>
+                </Button>
               )}
-              {!isLast ? (
-                <button
-                  type="button"
-                  onClick={onNext}
-                  disabled={!currentAnswered}
-                  className="ml-auto bg-forest px-6 py-3 text-[15px] font-semibold text-white hover:bg-ink disabled:opacity-45"
-                >
-                  Suivant
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void onSubmit()}
-                  disabled={busy || !allComplete}
-                  className="ml-auto bg-forest px-6 py-3 text-[15px] font-semibold text-white hover:bg-ink disabled:opacity-45"
-                >
-                  {busy ? 'Envoi…' : 'Envoyer'}
-                </button>
-              )}
+              <div className="ml-auto">
+                {!isLast ? (
+                  <Button onClick={onNext} disabled={!currentAnswered}>
+                    Suivant
+                  </Button>
+                ) : (
+                  <Button onClick={() => void onSubmit()} disabled={busy || !allComplete}>
+                    {busy ? 'Envoi…' : 'Envoyer'}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         ) : null}
