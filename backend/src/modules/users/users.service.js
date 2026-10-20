@@ -4,9 +4,13 @@ const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const { User } = require('../../models');
 const ApiError = require('../../utils/ApiError');
+const { getPresenceMap, isOnline } = require('../../realtime/presence');
 
-/* Sérialise un utilisateur (sans secret). */
-function toUser(u) {
+/* Sérialise un utilisateur (sans secret) + présence. */
+function toUser(u, onlineMap) {
+  const online = onlineMap
+    ? Boolean(onlineMap[u.id])
+    : isOnline(u.id);
   return {
     id: u.id,
     email: u.email,
@@ -15,6 +19,8 @@ function toUser(u) {
     role: u.role,
     is_active: u.is_active,
     last_login_at: u.last_login_at,
+    last_seen_at: u.last_seen_at,
+    online,
     created_at: u.created_at || u.createdAt,
   };
 }
@@ -29,7 +35,8 @@ async function listUsers() {
       ['first_name', 'ASC'],
     ],
   });
-  return rows.map(toUser);
+  const onlineMap = getPresenceMap();
+  return rows.map((u) => toUser(u, onlineMap));
 }
 
 /* Crée un compte staff. */

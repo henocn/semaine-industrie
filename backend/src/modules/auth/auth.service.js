@@ -55,6 +55,7 @@ async function login(email, password) {
   }
 
   user.last_login_at = new Date();
+  user.last_seen_at = new Date();
   await user.save();
 
   return issueTokens(user);

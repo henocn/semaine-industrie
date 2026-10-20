@@ -3,6 +3,7 @@
 const { Server } = require('socket.io');
 const env = require('../config/env');
 const logger = require('../utils/logger');
+const { attachPresenceHandlers } = require('./presence');
 
 /** @type {import('socket.io').Server | null} */
 let io = null;
@@ -24,9 +25,7 @@ function initRealtime(httpServer) {
         socket.join(room);
       }
     });
-    socket.on('disconnect', () => {
-      logger.debug(`socket disconnected ${socket.id}`);
-    });
+    attachPresenceHandlers(io, socket);
   });
 
   logger.info('Socket.IO ready');

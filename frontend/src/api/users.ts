@@ -10,6 +10,8 @@ export type OrgaUser = {
   role: StaffRole | 'orga' | string
   is_active: boolean
   last_login_at: string | null
+  last_seen_at?: string | null
+  online?: boolean
   created_at?: string
 }
 

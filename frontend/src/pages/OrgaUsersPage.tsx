@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { createUser, listUsers, updateUser, type OrgaUser, type StaffRole } from '../api/users'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { formatPresence } from '../lib/presence'
+import { joinRoom, onRealtime } from '../lib/socket'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -19,6 +21,7 @@ export default function OrgaUsersPage() {
   const [busy, setBusy] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const [editing, setEditing] = useState<OrgaUser | null>(null)
+  const [, setTick] = useState(0)
 
   /* Charge la liste. */
   async function load() {
@@ -32,6 +35,23 @@ export default function OrgaUsersPage() {
 
   useEffect(() => {
     void load()
+    joinRoom('orga')
+    const off = onRealtime<{ online: Record<string, boolean> }>('presence:update', (payload) => {
+      const online = payload?.online || {}
+      setUsers((prev) =>
+        prev.map((u) => ({
+          ...u,
+          online: Boolean(online[u.id]),
+          last_seen_at: online[u.id] ? new Date().toISOString() : u.last_seen_at,
+        })),
+      )
+    })
+    /* Rafraîchit les libellés relatifs (min / heures). */
+    const timer = window.setInterval(() => setTick((n) => n + 1), 60000)
+    return () => {
+      off()
+      window.clearInterval(timer)
+    }
   }, [])
 
   /* Crée un compte. */
@@ -135,7 +155,7 @@ export default function OrgaUsersPage() {
               <th>Nom</th>
               <th>E-mail</th>
               <th>Rôle</th>
-              <th>Dernière connexion</th>
+              <th>Présence</th>
               <th>Statut</th>
               <th>Actions</th>
             </tr>
@@ -148,31 +168,50 @@ export default function OrgaUsersPage() {
                 </td>
               </tr>
             )}
-            {users.map((u) => (
-              <tr key={u.id} className={u.is_active ? 'orga-row-approved' : 'orga-row-rejected'}>
-                <td className="font-semibold text-forest">
-                  {u.first_name} {u.last_name}
-                </td>
-                <td>{u.email}</td>
-                <td>{roleLabel(u.role)}</td>
-                <td>
-                  {u.last_login_at
-                    ? new Date(u.last_login_at).toLocaleString('fr-FR')
-                    : '—'}
-                </td>
-                <td>{u.is_active ? 'Actif' : 'Inactif'}</td>
-                <td>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className="orga-btn-ghost px-3 py-1.5 text-[12px] disabled:opacity-50"
-                    onClick={() => setEditing(u)}
-                  >
-                    Modifier
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {users.map((u) => {
+              const presence = formatPresence(u.online, u.last_seen_at || u.last_login_at)
+              return (
+                <tr key={u.id} className={u.is_active ? 'orga-row-approved' : 'orga-row-rejected'}>
+                  <td className="font-semibold text-forest">
+                    {u.first_name} {u.last_name}
+                  </td>
+                  <td>{u.email}</td>
+                  <td>{roleLabel(u.role)}</td>
+                  <td>
+                    <span className="inline-flex items-center gap-2 text-[13px]">
+                      <span
+                        className={`h-2 w-2 shrink-0 rounded-full ${
+                          presence.tone === 'online'
+                            ? 'bg-[#00A85A]'
+                            : presence.tone === 'recent'
+                              ? 'bg-[#F6C800]'
+                              : 'bg-ink/25'
+                        }`}
+                        aria-hidden="true"
+                      />
+                      <span
+                        className={
+                          presence.tone === 'online' ? 'font-medium text-forest' : 'text-ink/60'
+                        }
+                      >
+                        {presence.label}
+                      </span>
+                    </span>
+                  </td>
+                  <td>{u.is_active ? 'Actif' : 'Inactif'}</td>
+                  <td>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      className="orga-btn-ghost px-3 py-1.5 text-[12px] disabled:opacity-50"
+                      onClick={() => setEditing(u)}
+                    >
+                      Modifier
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </section>
