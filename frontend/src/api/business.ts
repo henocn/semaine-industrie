@@ -12,6 +12,7 @@ export type BusinessParticipant = {
   seeks: string | null
   country: string | null
   status: 'pending' | 'approved' | 'rejected'
+  contact_opt_in?: boolean
 }
 
 export type BusinessMeeting = {
@@ -19,6 +20,8 @@ export type BusinessMeeting = {
   slot_start: string
   slot_end: string
   table_label: string | null
+  location?: string | null
+  attendee_ids?: string[]
   status: string
   contact_note: string | null
   follow_up_at: string | null
@@ -37,6 +40,7 @@ export function registerParticipant(payload: {
   offers?: string
   seeks?: string
   country?: string
+  contact_opt_in: boolean
 }) {
   return apiFetch<BusinessParticipant>('/business/participants', {
     method: 'POST',
@@ -67,12 +71,12 @@ export function listMeetings(status?: string) {
   return apiFetch<BusinessMeeting[]>(`/business/meetings${q}`)
 }
 
-/* Crée un rendez-vous. */
+/* Crée un rendez-vous (1+ participants). */
 export function createMeeting(payload: {
-  participant_a_id: string
-  participant_b_id: string
+  participant_ids: string[]
   slot_start: string
   slot_end: string
+  location?: string
   table_label?: string
 }) {
   return apiFetch<BusinessMeeting>('/business/meetings', {
@@ -86,5 +90,16 @@ export function saveContactNote(id: string, contact_note: string) {
   return apiFetch<BusinessMeeting>(`/business/meetings/${id}/contact`, {
     method: 'PATCH',
     body: JSON.stringify({ contact_note, status: 'done', follow_up_months: 3 }),
+  })
+}
+
+/* Reporte un rendez-vous (notifie WhatsApp). */
+export function rescheduleMeeting(
+  id: string,
+  payload: { slot_start: string; slot_end: string; table_label?: string; location?: string },
+) {
+  return apiFetch<BusinessMeeting>(`/business/meetings/${id}/reschedule`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
   })
 }

@@ -77,6 +77,14 @@ ln -sfn "$NGINX_SITE" "$NGINX_ENABLED"
 # Anciens noms éventuels
 rm -f /etc/nginx/sites-enabled/semaine-industrie 2>/dev/null || true
 
+BO_SITE="/etc/nginx/sites-available/backoffice.semaineindustrie.tg"
+BO_SRC="$APP_ROOT/deploy/nginx/backoffice.semaineindustrie.tg"
+if [[ -f "$BO_SRC" ]]; then
+  echo "==> Nginx backoffice → $BO_SITE"
+  cp "$BO_SRC" "$BO_SITE"
+  ln -sfn "$BO_SITE" /etc/nginx/sites-enabled/backoffice.semaineindustrie.tg
+fi
+
 nginx -t
 systemctl reload nginx
 

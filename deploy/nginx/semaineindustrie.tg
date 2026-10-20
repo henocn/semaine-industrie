@@ -40,6 +40,15 @@ server {
         add_header Cache-Control "no-cache";
     }
 
+    # Espace orga / login → sous-domaine backoffice
+    location = /login {
+        return 302 https://backoffice.semaineindustrie.tg/login;
+    }
+
+    location ^~ /orga {
+        return 302 https://backoffice.semaineindustrie.tg$request_uri;
+    }
+
     location /uploads/ {
         proxy_pass http://industrie_api;
         proxy_http_version 1.1;

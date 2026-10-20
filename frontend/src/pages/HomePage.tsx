@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { sendContactMessage } from '../api/contact'
 import { SPEAKERS, PLACES, PARTNERS } from '../data'
 import { Seo } from '../components/Seo'
 import { BrandLogo, CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
@@ -135,14 +136,43 @@ function Places() {
 
 function Contact() {
   const [sent, setSent] = useState(false)
-  const submit = (e: FormEvent) => { e.preventDefault(); setSent(true) }
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const field = 'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
+
+  /* Envoie le message vers info@. */
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    const fd = new FormData(e.currentTarget)
+    try {
+      await sendContactMessage({
+        name: String(fd.get('nom') || ''),
+        organization: String(fd.get('organisation') || '') || undefined,
+        email: String(fd.get('email') || ''),
+        message: String(fd.get('message') || ''),
+      })
+      setSent(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Envoi impossible')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <section id="contact" className="py-24 sm:py-32">
       <div className={`${WRAP} grid gap-14 md:grid-cols-[1fr_1.15fr]`}>
         <div>
           <h2 className="display text-4xl sm:text-5xl">Une question ?</h2>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/70">Presse, entreprise, établissement scolaire ou partenaire : écrivez à l’équipe d’organisation.</p>
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/70">
+            Presse, entreprise, établissement scolaire ou partenaire : écrivez à{' '}
+            <a href="mailto:info@semaineindustrie.tg" className="font-semibold text-forest underline underline-offset-2">
+              info@semaineindustrie.tg
+            </a>
+            .
+          </p>
         </div>
         {sent ? (
           <p className="self-center text-xl text-forest">Merci, votre message a bien été pris en compte.</p>
@@ -152,8 +182,11 @@ function Contact() {
             <label className="block text-[15px] font-medium text-forest">Organisation<input name="organisation" className={field} /></label>
             <label className="block text-[15px] font-medium text-forest sm:col-span-2">Adresse e-mail<input required type="email" name="email" className={field} /></label>
             <label className="block text-[15px] font-medium text-forest sm:col-span-2">Message<textarea required name="message" rows={4} className={`${field} resize-none`} /></label>
+            {error && <p className="text-[15px] text-red-700 sm:col-span-2">{error}</p>}
             <div className="sm:col-span-2">
-              <button type="submit" className="bg-forest px-8 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-ink">Envoyer</button>
+              <button type="submit" disabled={loading} className="bg-forest px-8 py-4 text-[15px] font-semibold text-white transition-colors hover:bg-ink disabled:opacity-60">
+                {loading ? 'Envoi…' : 'Envoyer'}
+              </button>
             </div>
           </form>
         )}

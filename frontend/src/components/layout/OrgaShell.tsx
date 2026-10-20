@@ -1,6 +1,12 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { getStoredUser, logout } from '../../api/auth'
+import {
+  changePassword,
+  getStoredUser,
+  logout,
+  updateProfile,
+  type AuthUser,
+} from '../../api/auth'
 import { listLabelRequests, type LabelRequest } from '../../api/labels'
 import { LABEL_PENDING_EVENT } from '../../lib/labelPending'
 import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
@@ -22,13 +28,21 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
       : 'border-transparent text-ink/65 hover:bg-black/[0.03] hover:text-forest'
   }`
 
+const field =
+  'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
+
 /* Shell backoffice : sidebar nette + contenu sans coins IA. */
 export function OrgaShell({ title, children, actions, searchPlaceholder, onSearch }: OrgaShellProps) {
-  const user = getStoredUser()
   const location = useLocation()
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
   const [open, setOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
   const [banner, setBanner] = useState<string | null>(null)
+  const [accountError, setAccountError] = useState<string | null>(null)
+  const [accountInfo, setAccountInfo] = useState<string | null>(null)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
 
   /* Déconnecte et renvoie au login. */
   async function onLogout() {
@@ -54,7 +68,6 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     const onLocal = () => {
       void refreshPending()
     }
-    /* Au retour sur l'onglet admin après une demande publique. */
     const onVisible = () => {
       if (document.visibilityState === 'visible') void refreshPending()
     }
@@ -65,7 +78,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     void ensureNotifyPermission()
     joinRoom('orga')
     const offCreated = onRealtime<LabelRequest>('label:created', (row) => {
-      const kind = row.structure_type === 'ecole' ? 'École' : 'Entreprise'
+      const kind = row.structure_type === 'ecole' ? 'École' : 'Industrie'
       const msg = `${row.structure_name} · ${row.contact_phone || 'sans tél.'}`
       setBanner(`Nouvelle demande (${kind}) : ${msg}`)
       void refreshPending()
@@ -87,45 +100,99 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     }
   }, [user?.id, user?.role, location.pathname])
 
+  /* Enregistre le profil. */
+  async function onSaveProfile(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setAccountError(null)
+    setAccountInfo(null)
+    setSavingProfile(true)
+    const fd = new FormData(e.currentTarget)
+    try {
+      const next = await updateProfile(
+        String(fd.get('first_name') || ''),
+        String(fd.get('last_name') || ''),
+      )
+      setUser(next)
+      setAccountInfo('Profil mis à jour')
+    } catch (err) {
+      setAccountError(err instanceof Error ? err.message : 'Mise à jour impossible')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  /* Change le mot de passe. */
+  async function onSavePassword(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setAccountError(null)
+    setAccountInfo(null)
+    const fd = new FormData(e.currentTarget)
+    const current_password = String(fd.get('current_password') || '')
+    const new_password = String(fd.get('new_password') || '')
+    const confirm = String(fd.get('confirm_password') || '')
+    if (new_password !== confirm) {
+      setAccountError('Les mots de passe ne correspondent pas')
+      return
+    }
+    setSavingPassword(true)
+    try {
+      await changePassword(current_password, new_password)
+      setAccountInfo('Mot de passe modifié')
+      e.currentTarget.reset()
+    } catch (err) {
+      setAccountError(err instanceof Error ? err.message : 'Changement impossible')
+    } finally {
+      setSavingPassword(false)
+    }
+  }
+
   const sidebar = (
-    <aside className="flex h-full w-60 flex-col border-r border-black bg-white px-3 py-5">
-      <Link to="/orga" className="mb-8 flex items-center px-2">
+    <aside className="flex h-svh w-60 shrink-0 flex-col overflow-hidden border-r border-black bg-white px-3 py-5">
+      <a
+        href="https://semaineindustrie.tg/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mb-6 flex shrink-0 items-center px-2"
+        title="Ouvrir le site public"
+      >
         <BrandLogo className="h-9 w-auto" />
-      </Link>
+      </a>
 
-      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">Pilotage</p>
-      <nav className="flex flex-col gap-0.5">
-        <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
-        <NavLink to="/orga/labels" className={linkClass}>
-          <span className="flex w-full items-center justify-between gap-2">
-            Demandes label
-            {pendingCount > 0 && (
-              <span
-                className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
-                title={`${pendingCount} en attente`}
-              >
-                {pendingCount > 99 ? '99+' : pendingCount}
-              </span>
-            )}
-          </span>
-        </NavLink>
-        <NavLink to="/orga/visites" className={linkClass}>Visites</NavLink>
-        <NavLink to="/orga/affaires" className={linkClass}>Affaires</NavLink>
-        <NavLink to="/orga/passeports" className={linkClass}>Passeports</NavLink>
-        <NavLink to="/orga/live" className={linkClass}>Live & mesures</NavLink>
-        <NavLink to="/orga/qr" className={linkClass}>QR / impression</NavLink>
-        <NavLink to="/bilan" className={linkClass}>Bilan</NavLink>
+      <nav className="min-h-0 flex-1 overflow-y-auto">
+        <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">Pilotage</p>
+        <div className="flex flex-col gap-0.5 pb-2">
+          <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
+          <NavLink to="/orga/labels" className={linkClass}>
+            <span className="flex w-full items-center justify-between gap-2">
+              Labels
+              {pendingCount > 0 && (
+                <span
+                  className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
+                  title={`${pendingCount} en attente`}
+                >
+                  {pendingCount > 99 ? '99+' : pendingCount}
+                </span>
+              )}
+            </span>
+          </NavLink>
+          <NavLink to="/orga/visites" className={linkClass}>Visites</NavLink>
+          <NavLink to="/orga/affaires" className={linkClass}>Rencontres d&apos;affaires</NavLink>
+          <NavLink to="/orga/enquete" className={linkClass}>Enquête</NavLink>
+          <NavLink to="/orga/qr" className={linkClass}>QR code</NavLink>
+        </div>
       </nav>
 
-      <p className="mb-2 mt-8 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">Public</p>
-      <nav className="flex flex-col gap-0.5">
-        <NavLink to="/carte" className={linkClass}>Carte des sites</NavLink>
-        <NavLink to="/" className={linkClass}>Site public</NavLink>
-      </nav>
-
-      <div className="mt-auto border-t border-black pt-4">
-        <div className="flex items-center gap-3 px-2">
-          <div className="grid h-9 w-9 place-items-center border border-black bg-forest text-[12px] font-semibold text-white">
+      <div className="shrink-0 border-t border-black pt-3">
+        <button
+          type="button"
+          onClick={() => {
+            setAccountError(null)
+            setAccountInfo(null)
+            setAccountOpen(true)
+          }}
+          className="flex w-full items-center gap-3 px-2 py-2 text-left transition-colors hover:bg-black/[0.03]"
+        >
+          <div className="grid h-9 w-9 shrink-0 place-items-center border border-black bg-forest text-[12px] font-semibold text-white">
             {(user?.first_name?.[0] || 'O').toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
@@ -134,23 +201,15 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
             </p>
             <p className="truncate text-[12px] text-ink/45">{user?.email}</p>
           </div>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="px-2 py-1 text-[12px] font-medium text-ink/50 hover:text-forest"
-            title="Déconnexion"
-          >
-            Exit
-          </button>
-        </div>
+        </button>
       </div>
     </aside>
   )
 
   return (
-    <div className="min-h-svh bg-white text-ink">
-      <div className="flex min-h-svh">
-        <div className="hidden md:block">{sidebar}</div>
+    <div className="h-svh overflow-hidden bg-white text-ink">
+      <div className="flex h-full">
+        <div className="sticky top-0 hidden h-svh shrink-0 md:block">{sidebar}</div>
 
         {open && (
           <div className="fixed inset-0 z-50 md:hidden">
@@ -159,8 +218,8 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
           </div>
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex items-center gap-4 border-b border-black px-4 py-3 sm:px-8">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <header className="flex shrink-0 items-center gap-4 border-b border-black px-4 py-3 sm:px-8">
             <button
               type="button"
               className="border border-black px-3 py-2 text-[13px] font-medium text-forest md:hidden"
@@ -182,12 +241,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
               </label>
             )}
 
-            <div className="ml-auto flex items-center gap-3">
-              {actions}
-              <div className="hidden h-9 w-9 place-items-center border border-black text-[12px] font-semibold text-forest sm:grid">
-                {(user?.first_name?.[0] || 'O').toUpperCase()}
-              </div>
-            </div>
+            <div className="ml-auto flex items-center gap-3">{actions}</div>
           </header>
 
           {banner && (
@@ -207,9 +261,76 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
             </div>
           )}
 
-          <main className="flex-1 px-4 py-6 sm:px-8">{children}</main>
+          <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">{children}</main>
         </div>
       </div>
+
+      {accountOpen && user && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto border border-black bg-white p-5">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-[16px] font-semibold text-forest">Mon compte</h3>
+              <button
+                type="button"
+                className="orga-icon-btn"
+                aria-label="Fermer"
+                onClick={() => setAccountOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            {accountError && <p className="mt-3 text-[13px] text-red-700">{accountError}</p>}
+            {accountInfo && <p className="mt-3 text-[13px] text-forest">{accountInfo}</p>}
+
+            <form onSubmit={onSaveProfile} className="mt-4 grid gap-3">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-ink/40">Identité</p>
+              <label className="text-[13px] font-medium text-forest">
+                E-mail
+                <input disabled value={user.email} className={`${field} opacity-60`} />
+              </label>
+              <label className="text-[13px] font-medium text-forest">
+                Prénom
+                <input required name="first_name" defaultValue={user.first_name} className={field} />
+              </label>
+              <label className="text-[13px] font-medium text-forest">
+                Nom
+                <input required name="last_name" defaultValue={user.last_name} className={field} />
+              </label>
+              <button type="submit" className="orga-btn" disabled={savingProfile}>
+                {savingProfile ? 'Enregistrement…' : 'Enregistrer le profil'}
+              </button>
+            </form>
+
+            <form onSubmit={onSavePassword} className="mt-8 grid gap-3 border-t border-black pt-5">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-ink/40">Mot de passe</p>
+              <label className="text-[13px] font-medium text-forest">
+                Mot de passe actuel
+                <input required type="password" name="current_password" className={field} autoComplete="current-password" />
+              </label>
+              <label className="text-[13px] font-medium text-forest">
+                Nouveau mot de passe
+                <input required type="password" name="new_password" minLength={6} className={field} autoComplete="new-password" />
+              </label>
+              <label className="text-[13px] font-medium text-forest">
+                Confirmer
+                <input required type="password" name="confirm_password" minLength={6} className={field} autoComplete="new-password" />
+              </label>
+              <button type="submit" className="orga-btn" disabled={savingPassword}>
+                {savingPassword ? 'Modification…' : 'Changer le mot de passe'}
+              </button>
+            </form>
+
+            <button
+              type="button"
+              onClick={() => void onLogout()}
+              className="mt-6 w-full border border-black px-4 py-2.5 text-[13px] font-medium text-forest hover:bg-black/[0.03]"
+            >
+              Se déconnecter
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

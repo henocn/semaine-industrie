@@ -1,13 +1,19 @@
 'use strict';
 
+const { Op } = require('sequelize');
 const { BusinessParticipant, BusinessMeeting } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
+const { sendNotifyMail } = require('../../utils/mailer');
 
 /* Inscription publique d'un participant B2B. */
 async function register(payload) {
+  if (!payload.contact_opt_in) {
+    throw ApiError.badRequest('Vous devez accepter d\'être contacté par e-mail / WhatsApp');
+  }
   const row = await BusinessParticipant.create({
     ...payload,
+    contact_opt_in: true,
     status: 'pending',
   });
   await notifyN8n('business.participant_registered', {
@@ -43,41 +49,140 @@ async function reviewParticipant(id, status) {
   return row;
 }
 
-/* Crée un rendez-vous entre deux participants approuvés. */
+/* Charge des participants approuvés par ids. */
+async function loadApprovedAttendees(ids) {
+  const unique = [...new Set((ids || []).map(String))];
+  if (!unique.length) throw ApiError.badRequest('Sélectionnez au moins une personne');
+  const rows = await BusinessParticipant.findAll({
+    where: { id: { [Op.in]: unique }, status: 'approved' },
+  });
+  if (rows.length !== unique.length) {
+    throw ApiError.badRequest('Tous les participants doivent être approuvés');
+  }
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return unique.map((id) => byId.get(id)).filter(Boolean);
+}
+
+/* Notifie e-mail + WhatsApp pour un RDV. */
+async function notifyAttendees(meeting, attendees, { rescheduled = false } = {}) {
+  const day = new Date(meeting.slot_start).toLocaleDateString('fr-FR');
+  const opts = { hour: '2-digit', minute: '2-digit' };
+  const slot = `${new Date(meeting.slot_start).toLocaleTimeString('fr-FR', opts)}-${new Date(meeting.slot_end).toLocaleTimeString('fr-FR', opts)}`;
+  const lieu = meeting.location || (meeting.table_label ? `Table ${meeting.table_label}` : 'Lieu à confirmer');
+  const others = (self) =>
+    attendees
+      .filter((p) => p.id !== self.id)
+      .map((p) => p.organization_name)
+      .join(', ') || 'l\'équipe';
+
+  for (const p of attendees) {
+    if (!p.contact_opt_in) continue;
+    const withLabel = others(p);
+    const subject = rescheduled
+      ? `RDV reporté : ${day} (${slot})`
+      : `RDV confirmé : ${day} (${slot})`;
+    const text = [
+      `Bonjour ${p.contact_name},`,
+      '',
+      rescheduled
+        ? `Votre rendez-vous affaires est reporté au ${day} (${slot}).`
+        : `Votre rendez-vous affaires est confirmé le ${day} (${slot}).`,
+      `Avec : ${withLabel}`,
+      `Lieu : ${lieu}`,
+      '',
+      "Sur WhatsApp : menu Rencontres d'affaires + votre e-mail.",
+    ].join('\n');
+    await sendNotifyMail({ to: p.email, subject, text });
+  }
+
+  try {
+    const wa = require('../whatsapp/whatsapp.service');
+    await wa.notifyBusinessMeeting({
+      meeting,
+      attendees,
+      rescheduled,
+    });
+  } catch {
+    /* non bloquant */
+  }
+}
+
+/* Crée un rendez-vous (1+ participants) + notifications. */
 async function createMeeting(payload) {
-  if (payload.participant_a_id === payload.participant_b_id) {
-    throw ApiError.badRequest('Les deux participants doivent être distincts');
-  }
+  const ids = payload.participant_ids?.length
+    ? payload.participant_ids
+    : [payload.participant_a_id, payload.participant_b_id].filter(Boolean);
 
-  const [a, b] = await Promise.all([
-    BusinessParticipant.findByPk(payload.participant_a_id),
-    BusinessParticipant.findByPk(payload.participant_b_id),
-  ]);
-  if (!a || !b) throw ApiError.notFound('Participant introuvable');
-  if (a.status !== 'approved' || b.status !== 'approved') {
-    throw ApiError.badRequest('Les deux participants doivent être approuvés');
-  }
-
+  const attendees = await loadApprovedAttendees(ids);
   const meeting = await BusinessMeeting.create({
-    ...payload,
+    participant_a_id: attendees[0].id,
+    participant_b_id: attendees[1]?.id || null,
+    attendee_ids: attendees.map((a) => a.id),
+    slot_start: payload.slot_start,
+    slot_end: payload.slot_end,
+    table_label: payload.table_label || null,
+    location: payload.location || null,
     status: 'scheduled',
   });
 
   await notifyN8n('business.meeting_scheduled', {
     id: meeting.id,
+    location: meeting.location,
     table_label: meeting.table_label,
     slot_start: meeting.slot_start,
     slot_end: meeting.slot_end,
-    a: { name: a.organization_name, email: a.email },
-    b: { name: b.organization_name, email: b.email },
+    attendees: attendees.map((a) => ({ name: a.organization_name, email: a.email })),
   });
 
-  return BusinessMeeting.findByPk(meeting.id, {
+  const full = await BusinessMeeting.findByPk(meeting.id, {
     include: [
       { model: BusinessParticipant, as: 'participantA' },
       { model: BusinessParticipant, as: 'participantB' },
     ],
   });
+
+  await notifyAttendees(full, attendees, { rescheduled: false });
+  return full;
+}
+
+/* Reporte un rendez-vous et notifie. */
+async function rescheduleMeeting(id, { slot_start, slot_end, table_label, location }) {
+  const meeting = await BusinessMeeting.findByPk(id, {
+    include: [
+      { model: BusinessParticipant, as: 'participantA' },
+      { model: BusinessParticipant, as: 'participantB' },
+    ],
+  });
+  if (!meeting) throw ApiError.notFound('Rendez-vous introuvable');
+  if (meeting.status === 'done' || meeting.status === 'cancelled') {
+    throw ApiError.badRequest('Ce rendez-vous ne peut plus être reporté');
+  }
+
+  meeting.slot_start = slot_start;
+  meeting.slot_end = slot_end;
+  if (table_label !== undefined) meeting.table_label = table_label || null;
+  if (location !== undefined) meeting.location = location || null;
+  meeting.status = 'scheduled';
+  await meeting.save();
+
+  const attendeeIds =
+    Array.isArray(meeting.attendee_ids) && meeting.attendee_ids.length
+      ? meeting.attendee_ids
+      : [meeting.participant_a_id, meeting.participant_b_id].filter(Boolean);
+  const attendees = await BusinessParticipant.findAll({
+    where: { id: { [Op.in]: attendeeIds } },
+  });
+
+  await notifyN8n('business.meeting_rescheduled', {
+    id: meeting.id,
+    location: meeting.location,
+    table_label: meeting.table_label,
+    slot_start: meeting.slot_start,
+    slot_end: meeting.slot_end,
+  });
+
+  await notifyAttendees(meeting, attendees, { rescheduled: true });
+  return meeting;
 }
 
 /* Liste les rendez-vous. */
@@ -130,6 +235,7 @@ module.exports = {
   listParticipants,
   reviewParticipant,
   createMeeting,
+  rescheduleMeeting,
   listMeetings,
   saveContactNote,
 };

@@ -10,7 +10,11 @@ const {
   uploadLabelPdf,
   uploadProgrammePdf,
 } = require('../../middlewares/upload.middleware');
-const { createRequestSchema, updateRequestSchema } = require('./label.validation');
+const {
+  createRequestSchema,
+  createOrgaRequestSchema,
+  updateRequestSchema,
+} = require('./label.validation');
 const ApiError = require('../../utils/ApiError');
 
 const router = Router();
@@ -36,6 +40,13 @@ router.get('/organizations/:slug', controller.getPublicFiche);
 // Orga authentifié
 router.get('/qr-batch', authenticate, authorize('orga'), controller.listQrBatch);
 router.get('/requests', authenticate, authorize('orga'), controller.listRequests);
+router.post(
+  '/requests/orga',
+  authenticate,
+  authorize('orga'),
+  validate(createOrgaRequestSchema),
+  controller.createRequestOrga,
+);
 router.get('/requests/:id', authenticate, authorize('orga'), controller.getRequest);
 router.patch(
   '/requests/:id',
@@ -43,6 +54,18 @@ router.patch(
   authorize('orga'),
   validate(updateRequestSchema),
   controller.updateRequest,
+);
+router.patch(
+  '/requests/:id/label-pdf',
+  authenticate,
+  authorize('orga'),
+  withUpload(uploadLabelPdf, controller.updateLabelPdf),
+);
+router.delete(
+  '/requests/:id',
+  authenticate,
+  authorize('orga'),
+  controller.deleteRequest,
 );
 router.patch(
   '/requests/:id/review',

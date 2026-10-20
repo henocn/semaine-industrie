@@ -43,4 +43,28 @@ async function me(req, res, next) {
   }
 }
 
-module.exports = { login, refresh, logout, me };
+/* PATCH /auth/me */
+async function updateProfile(req, res, next) {
+  try {
+    const data = await authService.updateProfile(req.user.id, req.body);
+    return ApiResponse.success(res, data, 'Profil mis à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* POST /auth/change-password */
+async function changePassword(req, res, next) {
+  try {
+    const data = await authService.changePassword(
+      req.user.id,
+      req.body.current_password,
+      req.body.new_password,
+    );
+    return ApiResponse.success(res, data, 'Mot de passe modifié');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { login, refresh, logout, me, updateProfile, changePassword };

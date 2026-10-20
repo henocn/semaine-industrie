@@ -1,8 +1,10 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { login } from '../api/auth'
+import { useEffect, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ensureOrgaSession, login, peekOrgaUser } from '../api/auth'
+import { getAccessToken, getRefreshToken } from '../api/session'
 import { Seo } from '../components/Seo'
 import { BrandLogo } from '../components/layout/Mark'
+import { SITE_URL, isBackofficeHost } from '../lib/seo'
 
 const field =
   'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
@@ -12,6 +14,28 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [checking, setChecking] = useState(
+    () => Boolean(peekOrgaUser() || getAccessToken() || getRefreshToken()),
+  )
+
+  useEffect(() => {
+    let alive = true
+    /* Si déjà connecté (orga), envoie vers le dashboard. */
+    async function redirectIfAuthed() {
+      if (!getAccessToken() && !getRefreshToken()) {
+        if (alive) setChecking(false)
+        return
+      }
+      const user = await ensureOrgaSession()
+      if (!alive) return
+      if (user) navigate('/orga', { replace: true })
+      else setChecking(false)
+    }
+    void redirectIfAuthed()
+    return () => {
+      alive = false
+    }
+  }, [navigate])
 
   /* Authentifie et redirige selon le rôle. */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -21,8 +45,8 @@ export default function LoginPage() {
     const fd = new FormData(e.currentTarget)
     try {
       const session = await login(String(fd.get('email')), String(fd.get('password')))
-      if (session.user.role === 'orga') navigate('/orga')
-      else navigate('/')
+      if (session.user.role === 'orga') navigate('/orga', { replace: true })
+      else navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connexion impossible')
     } finally {
@@ -30,13 +54,25 @@ export default function LoginPage() {
     }
   }
 
+  if (checking) {
+    return (
+      <div className="grid h-svh place-items-center bg-white text-[14px] text-ink/50">
+        <Seo title="Connexion" path="/login" noIndex />
+        Vérification de la session…
+      </div>
+    )
+  }
+
   return (
     <div className="grid h-svh overflow-hidden lg:grid-cols-2">
       <Seo title="Connexion" path="/login" noIndex />
       <div className="relative flex h-full items-center justify-center px-6 sm:px-12">
-        <Link to="/" className="absolute left-6 top-6 sm:left-10 sm:top-8">
+        <a
+          href={isBackofficeHost() ? SITE_URL : '/'}
+          className="absolute left-6 top-6 sm:left-10 sm:top-8"
+        >
           <BrandLogo className="h-10 w-auto" />
-        </Link>
+        </a>
 
         <div className="w-full max-w-sm">
           <h1 className="display text-4xl">Connexion</h1>
@@ -84,10 +120,10 @@ export default function LoginPage() {
         <div className="relative flex h-full items-center justify-center px-12 text-center">
           <div className="max-w-md">
             <h2 className="display text-[clamp(1.75rem,3vw,2.5rem)] !text-white">
-              Portail d’administration
+              Portail d&apos;administration
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-white/80">
-              Labels, passeports, visites et bilan : un seul espace pour piloter la semaine.
+              Labels, visites, enquête et rencontres d&apos;affaires : un seul espace pour piloter la semaine.
             </p>
           </div>
         </div>

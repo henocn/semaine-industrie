@@ -60,11 +60,22 @@ async function saveContactNote(req, res, next) {
   }
 }
 
+/* Reporte un rendez-vous. */
+async function rescheduleMeeting(req, res, next) {
+  try {
+    const data = await businessService.rescheduleMeeting(req.params.id, req.body);
+    return ApiResponse.success(res, data, 'Rendez-vous reporté');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   register,
   listParticipants,
   reviewParticipant,
   createMeeting,
+  rescheduleMeeting,
   listMeetings,
   saveContactNote,
 };

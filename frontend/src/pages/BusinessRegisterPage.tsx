@@ -29,6 +29,7 @@ export default function BusinessRegisterPage() {
         offers: String(fd.get('offers') || '') || undefined,
         seeks: String(fd.get('seeks') || '') || undefined,
         country: String(fd.get('country') || '') || undefined,
+        contact_opt_in: fd.get('contact_opt_in') === 'on',
       })
       setSent(true)
     } catch (err) {
@@ -98,6 +99,13 @@ export default function BusinessRegisterPage() {
               <label className="block text-[15px] font-medium text-forest sm:col-span-2">
                 Ce que je cherche
                 <textarea name="seeks" rows={3} className={`${field} resize-none`} />
+              </label>
+              <label className="flex items-start gap-3 text-[14px] text-ink/70 sm:col-span-2">
+                <input required type="checkbox" name="contact_opt_in" className="mt-1" />
+                <span>
+                  J&apos;accepte d&apos;être contacté pour la suite par e-mail et/ou WhatsApp
+                  (validation, rendez-vous).
+                </span>
               </label>
               {error && <p className="text-[15px] text-red-700 sm:col-span-2">{error}</p>}
               <div className="sm:col-span-2">

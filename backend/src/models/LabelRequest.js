@@ -56,6 +56,11 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(180),
         allowNull: false,
       },
+      contact_opt_in: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       contact_phone: {
         type: DataTypes.STRING(40),
         allowNull: true,

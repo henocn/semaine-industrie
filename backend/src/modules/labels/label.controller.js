@@ -22,6 +22,17 @@ async function createRequest(req, res, next) {
   }
 }
 
+/* Crée une demande depuis le backoffice. */
+async function createRequestOrga(req, res, next) {
+  try {
+    const data = await labelService.createRequestByOrga(req.body);
+    emitRealtime('label:created', asJson(data), 'orga');
+    return ApiResponse.created(res, data, 'Label ajouté');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Liste les demandes (orga). */
 async function listRequests(req, res, next) {
   try {
@@ -48,6 +59,30 @@ async function updateRequest(req, res, next) {
     const data = await labelService.updateRequest(req.params.id, req.body);
     emitRealtime('label:updated', asJson(data), 'orga');
     return ApiResponse.success(res, data, 'Demande mise à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Remplace le PDF label après acceptation. */
+async function updateLabelPdf(req, res, next) {
+  try {
+    if (!req.file) throw ApiError.badRequest('PDF du label requis');
+    const label_document_url = `/uploads/docs/${req.file.filename}`;
+    const data = await labelService.updateLabelDocument(req.params.id, label_document_url);
+    emitRealtime('label:updated', asJson(data), 'orga');
+    return ApiResponse.success(res, data, 'PDF du label mis à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Supprime une demande (et désactive la fiche liée). */
+async function deleteRequest(req, res, next) {
+  try {
+    const data = await labelService.deleteRequest(req.params.id);
+    emitRealtime('label:deleted', data, 'orga');
+    return ApiResponse.success(res, data, 'Dossier supprimé');
   } catch (err) {
     return next(err);
   }
@@ -162,9 +197,12 @@ async function listQrBatch(req, res, next) {
 
 module.exports = {
   createRequest,
+  createRequestOrga,
   listRequests,
   getRequest,
   updateRequest,
+  updateLabelPdf,
+  deleteRequest,
   reviewRequest,
   uploadGallery,
   uploadProgramme,

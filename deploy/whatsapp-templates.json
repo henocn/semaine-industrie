@@ -1,0 +1,190 @@
+{
+  "templates": [
+    {
+      "name": "si26_acc_ecole_qr",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": true,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, le label de votre école {{2}} est accepté.\n\nCode de suivi privé : {{3}}\n\nConservez ce code pour vos documents et visites.",
+          "example": {
+            "body_text": [["Afi Mensah", "Lycee Technique Lome", "SI26-1234"]]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            { "type": "QUICK_REPLY", "text": "Mon espace" },
+            { "type": "QUICK_REPLY", "text": "Menu" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_acc_industrie_qr",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": true,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, le label de votre entreprise {{2}} est accepté.\n\nCode de suivi privé : {{3}}\n\nConservez ce code pour vos documents et visites.",
+          "example": {
+            "body_text": [["Henoc Ngasama", "Industrie Demo", "SI26-5678"]]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            { "type": "QUICK_REPLY", "text": "Mon espace" },
+            { "type": "QUICK_REPLY", "text": "Menu" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_rappel_code_qr",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": true,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, rappel Semaine de l'industrie pour {{2}}.\n\nCode de suivi : {{3}}\n\nEnvoyez ce code sur WhatsApp pour ouvrir votre espace.",
+          "example": {
+            "body_text": [["Afi Mensah", "Lycee Technique Lome", "SI26-1234"]]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            { "type": "QUICK_REPLY", "text": "Mon espace" },
+            { "type": "QUICK_REPLY", "text": "Menu" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_rappel_visite_v3",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": true,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, rappel visite {{2}} le {{3}} ({{4}}).\nLieu : {{5}}.\nCode de suivi : {{6}}. Ouvrez Mon espace pour le détail.",
+          "example": {
+            "body_text": [
+              [
+                "Afi Mensah",
+                "Visite industrielle",
+                "18/11/2026",
+                "09:00-11:00",
+                "Usine Demo Lome",
+                "SI26-1234"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            { "type": "QUICK_REPLY", "text": "Mon espace" },
+            { "type": "QUICK_REPLY", "text": "Menu" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_visite_programmee",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": true,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, une visite est programmée pour {{2}} le {{3}} ({{4}}).\nLieu : {{5}}.\nCode de suivi : {{6}}. Ouvrez Mon espace pour le détail.",
+          "example": {
+            "body_text": [
+              [
+                "Afi Mensah",
+                "Lycee Technique Lome",
+                "18/11/2026",
+                "09:00-12:00",
+                "Usine Demo Lome",
+                "SI26-1234"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            { "type": "QUICK_REPLY", "text": "Mon espace" },
+            { "type": "QUICK_REPLY", "text": "Menu" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_rdv_affaires",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": true,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, rendez-vous affaires confirmé avec {{2}} le {{3}} ({{4}}).\n{{5}}\nSur WhatsApp : Rencontres d'affaires avec votre e-mail.",
+          "example": {
+            "body_text": [
+              [
+                "Jean Koffi",
+                "PME Demo",
+                "20/11/2026",
+                "14:00-14:20",
+                "Table T12"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            { "type": "QUICK_REPLY", "text": "Menu" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_rdv_reporte",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": true,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, votre rendez-vous avec {{2}} est reporté au {{3}} ({{4}}).\n{{5}}\nSur WhatsApp : Rencontres d'affaires avec votre e-mail.",
+          "example": {
+            "body_text": [
+              [
+                "Jean Koffi",
+                "PME Demo",
+                "20/11/2026",
+                "15:00-15:20",
+                "Table T12"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            { "type": "QUICK_REPLY", "text": "Menu" }
+          ]
+        }
+      ]
+    }
+  ]
+}

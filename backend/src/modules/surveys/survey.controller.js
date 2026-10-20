@@ -4,14 +4,65 @@ const surveyService = require('./survey.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const { emitRealtime } = require('../../realtime/io');
 
+/* Questions actives pour le formulaire public. */
 async function questions(req, res, next) {
   try {
-    return ApiResponse.success(res, surveyService.getQuestions());
+    return ApiResponse.success(res, await surveyService.getQuestions());
   } catch (err) {
     return next(err);
   }
 }
 
+/* Toutes les questions (orga). */
+async function listAdmin(req, res, next) {
+  try {
+    return ApiResponse.success(res, await surveyService.listQuestionsAdmin());
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Crée une question. */
+async function createQuestion(req, res, next) {
+  try {
+    const data = await surveyService.createQuestion(req.body);
+    return ApiResponse.created(res, data, 'Question créée');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Met à jour une question. */
+async function updateQuestion(req, res, next) {
+  try {
+    const data = await surveyService.updateQuestion(req.params.id, req.body);
+    return ApiResponse.success(res, data, 'Question mise à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Supprime une question. */
+async function deleteQuestion(req, res, next) {
+  try {
+    const data = await surveyService.deleteQuestion(req.params.id);
+    return ApiResponse.success(res, data, 'Question supprimée');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Monte ou descend une question. */
+async function moveQuestion(req, res, next) {
+  try {
+    const data = await surveyService.moveQuestion(req.params.id, req.body.direction);
+    return ApiResponse.success(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Enregistre une réponse publique. */
 async function submit(req, res, next) {
   try {
     const data = await surveyService.submit(req.body);
@@ -23,6 +74,7 @@ async function submit(req, res, next) {
   }
 }
 
+/* Stats orga. */
 async function stats(req, res, next) {
   try {
     const data = await surveyService.getStats();
@@ -32,4 +84,24 @@ async function stats(req, res, next) {
   }
 }
 
-module.exports = { questions, submit, stats };
+/* Dernières réponses. */
+async function recent(req, res, next) {
+  try {
+    const data = await surveyService.listRecentResponses(req.query.limit);
+    return ApiResponse.success(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = {
+  questions,
+  listAdmin,
+  createQuestion,
+  updateQuestion,
+  deleteQuestion,
+  moveQuestion,
+  submit,
+  stats,
+  recent,
+};

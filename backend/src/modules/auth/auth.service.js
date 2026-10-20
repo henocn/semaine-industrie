@@ -99,4 +99,35 @@ async function me(userId) {
   return user;
 }
 
-module.exports = { login, refresh, logout, me };
+/* Met à jour le nom du compte connecté. */
+async function updateProfile(userId, { first_name, last_name }) {
+  const user = await User.findByPk(userId);
+  if (!user) throw ApiError.notFound('Utilisateur introuvable');
+  user.first_name = first_name;
+  user.last_name = last_name;
+  await user.save();
+  return {
+    id: user.id,
+    email: user.email,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    role: user.role,
+  };
+}
+
+/* Change le mot de passe du compte connecté. */
+async function changePassword(userId, currentPassword, newPassword) {
+  const user = await User.scope('withSecret').findByPk(userId);
+  if (!user || !user.is_active) {
+    throw ApiError.notFound('Utilisateur introuvable');
+  }
+  const ok = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!ok) {
+    throw ApiError.badRequest('Mot de passe actuel incorrect');
+  }
+  user.password_hash = await bcrypt.hash(newPassword, 10);
+  await user.save();
+  return { ok: true };
+}
+
+module.exports = { login, refresh, logout, me, updateProfile, changePassword };

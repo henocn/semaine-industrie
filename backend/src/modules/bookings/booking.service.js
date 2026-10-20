@@ -85,6 +85,19 @@ async function createBooking(payload) {
     site: site.name,
   });
 
+  try {
+    const wa = require('../whatsapp/whatsapp.service');
+    await wa.notifyVisitScheduled({
+      school,
+      site,
+      visitDay: booking.visit_day,
+      visitStart: booking.visit_start,
+      visitEnd: booking.visit_end,
+    });
+  } catch {
+    /* notification non bloquante */
+  }
+
   /* Un seul passeport de groupe pour l'école : un tampon = tout le parcours commun. */
   try {
     await passportService.ensureGroupStampForBooking({

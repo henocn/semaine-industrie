@@ -13,10 +13,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Env
+# Env (jamais versionner secrets ni backups)
 .env
 .env.*
 !.env.example
+!.env.example.*
+*.env.save
+*.env.bak
+*.env.old
+.env.save
+.env.bak
 
 # Uploads runtime (garder les dossiers via .gitkeep)
 backend/uploads/**
@@ -27,6 +33,10 @@ backend/uploads/**
 # Local project folders (not versioned)
 .cursor/
 ressources/
+
+# Scripts de diag / test jetables (jamais committer)
+deploy/_tmp*
+**/_tmp-*
 
 # Editor
 .vscode/*

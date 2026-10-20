@@ -44,26 +44,33 @@ async function uniqueLabelCode(transaction) {
   throw ApiError.internal('Impossible de générer un code label');
 }
 
+/* Normalise les champs selon le type (école / industrie). */
+function normalizeByType(data) {
+  const next = { ...data };
+  if (next.structure_type === 'ecole') {
+    next.sector = null;
+    next.products = [];
+    next.safety_rules = null;
+    next.gallery_urls = [];
+    next.photo_url = null;
+  } else {
+    const gallery = Array.isArray(next.gallery_urls) ? next.gallery_urls : [];
+    next.gallery_urls = gallery;
+    next.photo_url = gallery[0] || next.photo_url || null;
+  }
+  next.contact_name = next.contact_name || next.structure_name;
+  return next;
+}
+
 /* Crée une demande de label (parcours public). */
 async function createRequest(payload) {
-  const data = { ...payload };
-  /* Écoles : pas de secteur, produits, galerie ni règles sécurité. */
-  if (data.structure_type === 'ecole') {
-    data.sector = null;
-    data.products = [];
-    data.safety_rules = null;
-    data.gallery_urls = [];
-    data.photo_url = null;
-  } else {
+  const data = normalizeByType({ ...payload });
+  if (data.structure_type === 'entreprise') {
     const gallery = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
     if (gallery.length !== 3) {
-      throw ApiError.badRequest('Trois images de bonne qualité sont obligatoires pour une entreprise');
+      throw ApiError.badRequest('Trois images de bonne qualité sont obligatoires pour une industrie');
     }
-    data.gallery_urls = gallery;
-    data.photo_url = gallery[0];
   }
-  /* Référent non demandé au public : repli sur le nom de structure. */
-  data.contact_name = data.contact_name || data.structure_name;
   const row = await LabelRequest.create({
     ...data,
     status: 'pending',
@@ -71,14 +78,44 @@ async function createRequest(payload) {
   return row;
 }
 
-/* Liste les demandes, filtrables par statut. */
+/* Crée une demande depuis le backoffice (sans galerie obligatoire). */
+async function createRequestByOrga(payload) {
+  const data = normalizeByType({ ...payload });
+  if (!Array.isArray(data.gallery_urls)) data.gallery_urls = [];
+  if (!Array.isArray(data.products)) data.products = [];
+  const row = await LabelRequest.create({
+    ...data,
+    status: 'pending',
+  });
+  return row;
+}
+
+/* Enrichit une demande avec code + URL du kit (PDF). */
+function withOrgExtras(row) {
+  const json = row.toJSON ? row.toJSON() : { ...row };
+  const org = json.organization || null;
+  json.label_code = org?.label_code || json.label_code || null;
+  json.label_document_url = org?.label_document_url || json.label_document_url || null;
+  return json;
+}
+
+/* Liste les demandes, filtrables par statut (+ code / kit si accepté). */
 async function listRequests({ status } = {}) {
   const where = {};
   if (status) where.status = status;
-  return LabelRequest.findAll({
+  const rows = await LabelRequest.findAll({
     where,
+    include: [
+      {
+        model: Organization,
+        as: 'organization',
+        attributes: ['id', 'label_code', 'label_document_url'],
+        required: false,
+      },
+    ],
     order: [['created_at', 'DESC']],
   });
+  return rows.map((row) => withOrgExtras(row));
 }
 
 /* Récupère une demande par id. */
@@ -88,12 +125,17 @@ async function getRequestById(id) {
   return row;
 }
 
-/* Met à jour une demande (orga) et synchronise la fiche si déjà labellisée. */
+/* Met à jour une demande (orga) avant acceptation uniquement. */
 async function updateRequest(id, payload) {
   const request = await getRequestById(id);
+  if (request.status === 'approved') {
+    throw ApiError.badRequest(
+      'Dossier accepté : seuls le kit (PDF) et le planning plus tard sont modifiables',
+    );
+  }
+
   const data = { ...payload };
   const nextType = data.structure_type || request.structure_type;
-
   if (nextType === 'ecole') {
     data.sector = null;
     data.products = [];
@@ -103,31 +145,54 @@ async function updateRequest(id, payload) {
   Object.assign(request, data);
   if (!request.contact_name) request.contact_name = request.structure_name;
   await request.save();
+  return request;
+}
 
-  if (request.organization_id) {
-    const org = await Organization.findByPk(request.organization_id);
+/* Remplace le PDF label d'une organisation déjà acceptée. */
+async function updateLabelDocument(id, label_document_url) {
+  const doc = String(label_document_url || '').trim();
+  if (!doc || !doc.startsWith('/uploads/docs/')) {
+    throw ApiError.badRequest('Fichier kit invalide (PDF attendu)');
+  }
+
+  const request = await getRequestById(id);
+  if (request.status !== 'approved' || !request.organization_id) {
+    throw ApiError.badRequest('Kit modifiable uniquement après acceptation');
+  }
+
+  const org = await Organization.findByPk(request.organization_id);
+  if (!org) throw ApiError.notFound('Organisation introuvable');
+  org.label_document_url = doc;
+  await org.save();
+  const fresh = await LabelRequest.findByPk(id, {
+    include: [
+      {
+        model: Organization,
+        as: 'organization',
+        attributes: ['id', 'label_code', 'label_document_url'],
+        required: false,
+      },
+    ],
+  });
+  return withOrgExtras(fresh || request);
+}
+
+/* Supprime une demande et désactive la fiche liée si elle existe. */
+async function deleteRequest(id) {
+  const request = await getRequestById(id);
+  const orgId = request.organization_id;
+  await request.destroy();
+
+  if (orgId) {
+    const org = await Organization.findByPk(orgId);
     if (org) {
-      org.name = request.structure_name;
-      org.type = request.structure_type;
-      org.sector = request.sector;
-      org.region = request.region;
-      org.city = request.city;
-      org.contact_email = request.contact_email;
-      org.contact_phone = request.contact_phone;
-      org.contact_name = request.contact_name;
-      org.description = request.description;
-      org.products = request.products || [];
-      org.max_visitors = request.max_visitors;
-      org.safety_rules = request.safety_rules;
-      org.lat = request.lat;
-      org.lng = request.lng;
-      org.gallery_urls = request.gallery_urls || [];
-      org.photo_url = (request.gallery_urls && request.gallery_urls[0]) || request.photo_url;
+      org.is_active = false;
+      org.label_status = 'rejected';
       await org.save();
     }
   }
 
-  return request;
+  return { id, deleted: true };
 }
 
 /* Retire les champs sensibles d'une fiche publique. */
@@ -423,9 +488,12 @@ async function listQrBatch() {
 
 module.exports = {
   createRequest,
+  createRequestByOrga,
   listRequests,
   getRequestById,
   updateRequest,
+  updateLabelDocument,
+  deleteRequest,
   reviewRequest,
   getPublicBySlug,
   listPublicIndustries,

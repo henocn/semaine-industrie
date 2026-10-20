@@ -81,9 +81,63 @@ async function send(req, res, next) {
   }
 }
 
+/* Envoie un rappel label (template) pour une organisation (interne / n8n). */
+async function remindLabel(req, res, next) {
+  try {
+    if (!isInternalAuthorized(req)) {
+      return res.status(403).json({ success: false, error: 'Forbidden' });
+    }
+    const organization = req.body?.organization;
+    if (!organization?.label_code || !organization?.contact_phone) {
+      return res.status(400).json({
+        success: false,
+        error: 'organization.label_code et contact_phone requis',
+      });
+    }
+    const sent = await whatsappService.notifyLabelReminder(organization);
+    if (!sent.ok) {
+      return res.status(502).json({ success: false, error: 'send_failed', data: sent });
+    }
+    return ApiResponse.success(res, sent.data || sent, 'Rappel envoyé');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Envoie un rappel visite (template) (interne / n8n). */
+async function remindVisit(req, res, next) {
+  try {
+    if (!isInternalAuthorized(req)) {
+      return res.status(403).json({ success: false, error: 'Forbidden' });
+    }
+    const organization = req.body?.organization;
+    if (!organization?.label_code || !organization?.contact_phone) {
+      return res.status(400).json({
+        success: false,
+        error: 'organization.label_code et contact_phone requis',
+      });
+    }
+    const sent = await whatsappService.notifyVisitReminder({
+      organization,
+      visitDay: req.body?.visitDay,
+      visitSlot: req.body?.visitSlot,
+      place: req.body?.place,
+      role: req.body?.role,
+    });
+    if (!sent.ok) {
+      return res.status(502).json({ success: false, error: 'send_failed', data: sent });
+    }
+    return ApiResponse.success(res, sent.data || sent, 'Rappel visite envoyé');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   verify,
   webhook,
   inbound,
   send,
+  remindLabel,
+  remindVisit,
 };

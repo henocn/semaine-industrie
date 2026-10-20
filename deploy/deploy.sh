@@ -30,11 +30,17 @@ if [[ "$BRANCH" == "HEAD" ]]; then
   exit 1
 fi
 
-echo "==> Git : écrasement local → origin/$BRANCH"
+echo "==> Git : arbre propre → origin/$BRANCH (jamais de patch scp / édition tracked)"
+# Préserve backend/.env (gitignored). Tout le reste tracké est écrasé.
 git fetch origin
 git reset --hard "origin/$BRANCH"
-# Fichiers non suivis (sauf ignorés : .env, uploads, logs, node_modules)
 git clean -fd
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "ATTENTION: working tree encore sale après reset (fichiers non ignorés) :"
+  git status --short | head -40
+  exit 1
+fi
+echo "    git status : propre (HEAD = origin/$BRANCH)"
 
 echo "==> Frontend : install + build"
 cd "$APP_ROOT/frontend"
@@ -62,10 +68,13 @@ if ! command -v pm2 >/dev/null 2>&1; then
   exit 1
 fi
 if pm2 describe industrie-api >/dev/null 2>&1; then
-  pm2 restart industrie-api --update-env
+  # Secrets uniquement via backend/.env (dotenv), pas via env PM2.
+  pm2 restart industrie-api
 else
   pm2 start deploy/ecosystem.config.cjs --only industrie-api
 fi
+# pm2 save = liste des process au reboot (pas une copie de .env).
+# L'ecosystem ne contient que NODE_ENV ; les secrets restent dans backend/.env.
 pm2 save
 
 echo "==> Healthcheck"

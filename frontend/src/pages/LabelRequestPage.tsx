@@ -63,6 +63,7 @@ export default function LabelRequestPage() {
         city: String(fd.get('city') || '') || undefined,
         contact_email: String(fd.get('contact_email') || ''),
         contact_phone: String(fd.get('contact_phone') || ''),
+        contact_opt_in: fd.get('contact_opt_in') === 'on',
         description: String(fd.get('description') || '') || undefined,
         products,
         max_visitors: fd.get('max_visitors') ? Number(fd.get('max_visitors')) : null,
@@ -214,6 +215,14 @@ export default function LabelRequestPage() {
                   <textarea name="safety_rules" rows={3} className={`${field} resize-none`} />
                 </label>
               )}
+
+              <label className="flex items-start gap-3 text-[14px] text-ink/70 sm:col-span-2">
+                <input required type="checkbox" name="contact_opt_in" className="mt-1" />
+                <span>
+                  J&apos;accepte d&apos;être contacté pour la suite par e-mail et/ou WhatsApp
+                  (validation, kit, visites).
+                </span>
+              </label>
 
               {error && <p className="text-[15px] text-red-700 sm:col-span-2">{error}</p>}
 

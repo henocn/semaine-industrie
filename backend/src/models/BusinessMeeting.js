@@ -18,7 +18,7 @@ module.exports = (sequelize) => {
       },
       participant_b_id: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true,
       },
       slot_start: {
         type: DataTypes.DATE,
@@ -31,6 +31,15 @@ module.exports = (sequelize) => {
       table_label: {
         type: DataTypes.STRING(40),
         allowNull: true,
+      },
+      location: {
+        type: DataTypes.STRING(200),
+        allowNull: true,
+      },
+      attendee_ids: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+        defaultValue: [],
       },
       status: {
         type: DataTypes.ENUM('scheduled', 'done', 'cancelled'),

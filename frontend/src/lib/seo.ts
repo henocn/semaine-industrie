@@ -1,5 +1,12 @@
 export const SITE_URL = 'https://semaineindustrie.tg'
+export const BACKOFFICE_URL = 'https://backoffice.semaineindustrie.tg'
 export const SITE_NAME = 'Semaine de l’industrie 2026'
+
+/* Indique si on est sur le sous-domaine backoffice. */
+export function isBackofficeHost() {
+  if (typeof window === 'undefined') return false
+  return window.location.hostname === 'backoffice.semaineindustrie.tg'
+}
 export const DEFAULT_DESCRIPTION =
   'Du 16 au 22 novembre 2026 au Togo : usines ouvertes, métiers, journée phare du 20 novembre et rencontres d’affaires.'
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og.jpg`

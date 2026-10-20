@@ -53,6 +53,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 'pending',
       },
+      contact_opt_in: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     {
       tableName: 'business_participants',

@@ -10,6 +10,7 @@ const {
   reviewParticipantSchema,
   createMeetingSchema,
   contactNoteSchema,
+  rescheduleMeetingSchema,
 } = require('./business.validation');
 
 const router = Router();
@@ -39,6 +40,13 @@ router.patch(
   authorize('orga'),
   validate(contactNoteSchema),
   controller.saveContactNote,
+);
+router.patch(
+  '/meetings/:id/reschedule',
+  authenticate,
+  authorize('orga'),
+  validate(rescheduleMeetingSchema),
+  controller.rescheduleMeeting,
 );
 
 module.exports = router;

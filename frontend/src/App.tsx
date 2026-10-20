@@ -1,6 +1,9 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import type { ReactNode } from 'react'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { RequireOrga } from './components/auth/RequireOrga'
 import { PublicLayout } from './components/layout/PublicLayout'
-import BilanPage from './pages/BilanPage'
+import { isBackofficeHost } from './lib/seo'
+import { peekOrgaUser } from './api/auth'
 import BusinessRegisterPage from './pages/BusinessRegisterPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
@@ -11,47 +14,66 @@ import OrganizationPage from './pages/OrganizationPage'
 import OrgaBusinessPage from './pages/OrgaBusinessPage'
 import OrgaDashboardPage from './pages/OrgaDashboardPage'
 import OrgaLabelsPage from './pages/OrgaLabelsPage'
-import OrgaLivePage from './pages/OrgaLivePage'
-import OrgaPassportsPage from './pages/OrgaPassportsPage'
 import OrgaQrPage from './pages/OrgaQrPage'
+import OrgaSurveyPage from './pages/OrgaSurveyPage'
 import OrgaVisitsPage from './pages/OrgaVisitsPage'
 import PassportPage from './pages/PassportPage'
+import PrivacyPage from './pages/PrivacyPage'
 import ProgrammePage from './pages/ProgrammePage'
 import ResourcesPage from './pages/ResourcesPage'
 import QuestionsPage from './pages/QuestionsPage'
 import SurveyPage from './pages/SurveyPage'
 import VotePage from './pages/VotePage'
 
+/* Sur le sous-domaine backoffice, n'autorise que login + espace orga. */
+function BackofficeGate({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation()
+  if (!isBackofficeHost()) return children
+  if (pathname === '/' || pathname === '/bilan') {
+    return <Navigate to={peekOrgaUser() ? '/orga' : '/login'} replace />
+  }
+  const allowed = pathname === '/login' || pathname.startsWith('/orga')
+  if (!allowed) return <Navigate to="/login" replace />
+  return children
+}
+
 /* Routeur : layout public partagé + espace orga. */
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<PublicLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/programme" element={<ProgrammePage />} />
-          <Route path="/label" element={<LabelRequestPage />} />
-          <Route path="/ressources" element={<ResourcesPage />} />
-          <Route path="/affaires" element={<BusinessRegisterPage />} />
-          <Route path="/carte" element={<MapPage />} />
-          <Route path="/industrie" element={<IndustriesPage />} />
-          <Route path="/passeport/:code" element={<PassportPage />} />
-          <Route path="/questions" element={<QuestionsPage />} />
-          <Route path="/vote" element={<VotePage />} />
-          <Route path="/questionnaire" element={<SurveyPage />} />
-          <Route path="/o/:slug" element={<OrganizationPage />} />
-        </Route>
+      <BackofficeGate>
+        <Routes>
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/programme" element={<ProgrammePage />} />
+            <Route path="/label" element={<LabelRequestPage />} />
+            <Route path="/ressources" element={<ResourcesPage />} />
+            <Route path="/affaires" element={<BusinessRegisterPage />} />
+            <Route path="/carte" element={<MapPage />} />
+            <Route path="/industrie" element={<IndustriesPage />} />
+            <Route path="/passeport/:code" element={<PassportPage />} />
+            <Route path="/questions" element={<QuestionsPage />} />
+            <Route path="/vote" element={<VotePage />} />
+            <Route path="/questionnaire" element={<SurveyPage />} />
+            <Route path="/confidentialite" element={<PrivacyPage />} />
+            <Route path="/o/:slug" element={<OrganizationPage />} />
+          </Route>
 
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/bilan" element={<BilanPage />} />
-        <Route path="/orga" element={<OrgaDashboardPage />} />
-        <Route path="/orga/labels" element={<OrgaLabelsPage />} />
-        <Route path="/orga/visites" element={<OrgaVisitsPage />} />
-        <Route path="/orga/affaires" element={<OrgaBusinessPage />} />
-        <Route path="/orga/passeports" element={<OrgaPassportsPage />} />
-        <Route path="/orga/live" element={<OrgaLivePage />} />
-        <Route path="/orga/qr" element={<OrgaQrPage />} />
-      </Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/bilan" element={<Navigate to="/orga" replace />} />
+
+          <Route element={<RequireOrga />}>
+            <Route path="/orga" element={<OrgaDashboardPage />} />
+            <Route path="/orga/labels" element={<OrgaLabelsPage />} />
+            <Route path="/orga/visites" element={<OrgaVisitsPage />} />
+            <Route path="/orga/affaires" element={<OrgaBusinessPage />} />
+            <Route path="/orga/enquete" element={<OrgaSurveyPage />} />
+            <Route path="/orga/qr" element={<OrgaQrPage />} />
+            <Route path="/orga/live" element={<Navigate to="/orga/enquete" replace />} />
+            <Route path="/orga/passeports" element={<Navigate to="/orga" replace />} />
+          </Route>
+        </Routes>
+      </BackofficeGate>
     </BrowserRouter>
   )
 }

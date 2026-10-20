@@ -29,9 +29,21 @@ const env = cleanEnv(process.env, {
   WHATSAPP_TOKEN: str({ default: '' }),
   WHATSAPP_PHONE_NUMBER_ID: str({ default: '' }),
   WHATSAPP_VERIFY_TOKEN: str({ default: 'si2026-wa-verify' }),
+  WHATSAPP_WABA_ID: str({ default: '2387848361959787' }),
+  WHATSAPP_TEMPLATE_LANG: str({ default: 'fr' }),
 
   /* PDF programme officiel (chemin public ou URL absolue). */
   PROGRAMME_PDF_URL: str({ default: '/uploads/docs/programme-si2026.pdf' }),
+
+  /* SMTP SiteGround — mot de passe à renseigner en prod (laisser vide ici si besoin). */
+  SMTP_HOST: str({ default: 'mail.semaineindustrie.tg' }),
+  SMTP_PORT: str({ default: '465' }),
+  SMTP_SECURE: str({ default: 'true' }),
+  SMTP_USER: str({ default: 'no-reply@semaineindustrie.tg' }),
+  SMTP_PASS: str({ default: '' }),
+  MAIL_FROM_NOTIFY: str({ default: 'Semaine industrie <no-reply@semaineindustrie.tg>' }),
+  MAIL_FROM_CONTACT: str({ default: 'Semaine industrie <info@semaineindustrie.tg>' }),
+  MAIL_TO_CONTACT: str({ default: 'info@semaineindustrie.tg' }),
 });
 
 module.exports = env;

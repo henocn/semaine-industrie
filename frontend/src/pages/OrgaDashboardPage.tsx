@@ -1,48 +1,90 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { getStoredUser } from '../api/auth'
+import { Link } from 'react-router-dom'
 import { getDashboardStats, type DashboardStats } from '../api/dashboard'
+import { getSurveyStats, type SurveyStats } from '../api/surveys'
 import { OrgaShell } from '../components/layout/OrgaShell'
 
-/* Tableau de bord orga. */
+type Card = {
+  label: string
+  value: number | string
+  hint: string
+  to: string
+}
+
+/* Tableau de bord orga : indicateurs utiles de la semaine. */
 export default function OrgaDashboardPage() {
-  const navigate = useNavigate()
-  const user = getStoredUser()
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [survey, setSurvey] = useState<SurveyStats | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user || user.role !== 'orga') {
-      navigate('/login')
-      return
-    }
-    /* Charge les agrégats. */
+    /* Charge stats dashboard + enquête. */
     async function load() {
       try {
-        setStats(await getDashboardStats())
-      } catch {
-        setError('Impossible de charger le tableau')
-        navigate('/login')
+        setError(null)
+        const [dash, enquete] = await Promise.all([getDashboardStats(), getSurveyStats()])
+        setStats(dash)
+        setSurvey(enquete)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Impossible de charger le tableau')
       }
     }
-    load()
-  }, [navigate, user?.id, user?.role])
+    void load()
+  }, [])
 
   const ind = stats?.indicators
-  const total = Math.max(ind?.requests_total ?? 0, 1)
-  const approved = ind?.labels_approved ?? 0
-  const pending = ind?.labels_pending ?? 0
-  const rejected = ind?.labels_rejected ?? 0
-  const approvedPct = Math.round((approved / total) * 100)
-  const pendingPct = Math.round((pending / total) * 100)
-  const rejectedPct = Math.max(0, 100 - approvedPct - pendingPct)
+  const industries = stats?.by_type.find((t) => t.name === 'entreprise')?.count ?? 0
+  const schools = stats?.by_type.find((t) => t.name === 'ecole')?.count ?? 0
+
+  const cards: Card[] = ind
+    ? [
+        {
+          label: 'Labels validés',
+          value: ind.labels_approved,
+          hint: `${industries} industries · ${schools} écoles`,
+          to: '/orga/qr',
+        },
+        {
+          label: 'Demandes en attente',
+          value: ind.labels_pending ?? 0,
+          hint: `${ind.requests_total ?? 0} demandes au total`,
+          to: '/orga/labels',
+        },
+        {
+          label: 'Sites sur la carte',
+          value: ind.sites_on_map,
+          hint: 'Avec position GPS',
+          to: '/orga/labels',
+        },
+        {
+          label: 'Visites planifiées',
+          value: ind.visits_booked,
+          hint: `${ind.young_visitors} jeunes prévus`,
+          to: '/orga/visites',
+        },
+        {
+          label: 'RDV rencontres',
+          value: ind.business_meetings,
+          hint: 'Rencontres d\'affaires',
+          to: '/orga/affaires',
+        },
+        {
+          label: 'Réponses enquête',
+          value: survey?.total ?? 0,
+          hint: survey
+            ? `Avant ${survey.counts.before} · après ${survey.counts.after}`
+            : 'Questionnaire public',
+          to: '/orga/enquete',
+        },
+      ]
+    : []
 
   return (
     <OrgaShell
       title="Dashboard"
       actions={
         <Link to="/orga/labels" className="orga-btn">
-          Demandes +
+          Traiter les demandes
         </Link>
       }
     >
@@ -50,127 +92,56 @@ export default function OrgaDashboardPage() {
 
       {ind && (
         <div className="space-y-6">
-          <section className="orga-panel">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-[15px] font-semibold text-forest">Pipeline labels</h2>
-                <p className="mt-1 text-[13px] text-ink/50">Répartition des demandes reçues</p>
-              </div>
-              <p className="text-[13px] text-ink/60">
-                <span className="font-semibold text-forest">{approved}</span> validés sur {ind.requests_total} demandes
-              </p>
-            </div>
-            <div className="mt-5 flex h-2 overflow-hidden border border-black bg-white">
-              <div className="bg-leaf" style={{ width: `${approvedPct}%` }} />
-              <div className="bg-sun" style={{ width: `${pendingPct}%` }} />
-              <div className="bg-ink/25" style={{ width: `${rejectedPct}%` }} />
-            </div>
-            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-ink/65">
-              <li>Validés {approved}</li>
-              <li>En attente {pending}</li>
-              <li>Refusés {rejected}</li>
-            </ul>
+          <section>
+            <h2 className="text-[15px] font-semibold text-forest">Semaine en un coup d&apos;œil</h2>
+            <p className="mt-1 text-[13px] text-ink/50">
+              Labels, visites, rencontres d&apos;affaires et enquête · mis à jour{' '}
+              {stats?.updated_at
+                ? new Date(stats.updated_at).toLocaleString('fr-FR', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '—'}
+            </p>
           </section>
 
-          <section className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              { label: 'Labels validés', value: approved, to: '/orga/qr' },
-              { label: 'En attente', value: pending, to: '/orga/labels' },
-              { label: 'Sur la carte', value: ind.sites_on_map, to: '/carte' },
-              { label: 'Demandes', value: ind.requests_total ?? 0, to: '/orga/labels' },
-            ].map((card, i) => (
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {cards.map((card) => (
               <Link
                 key={card.label}
                 to={card.to}
-                className={`border border-black p-5 hover:bg-black/[0.02] ${i > 0 ? 'sm:-ml-px' : ''} ${i >= 2 ? 'xl:-ml-px' : ''}`}
+                className="border border-black bg-white p-5 transition-colors hover:bg-forest/[0.03]"
               >
-                <p className="text-[28px] font-semibold tracking-tight text-forest">{card.value}</p>
-                <p className="mt-2 text-[13px] font-medium text-ink/60">{card.label}</p>
+                <p className="text-[13px] font-medium text-ink/55">{card.label}</p>
+                <p className="mt-2 text-[32px] font-semibold tracking-tight text-forest">{card.value}</p>
+                <p className="mt-2 text-[12px] text-ink/45">{card.hint}</p>
               </Link>
             ))}
           </section>
 
-          <section className="orga-panel !p-0 overflow-x-auto">
-            <div className="flex items-center justify-between gap-3 border-b border-black px-4 py-3">
-              <h2 className="text-[15px] font-semibold text-forest">Derniers labels</h2>
-              <Link to="/orga/labels" className="text-[13px] font-medium text-forest underline underline-offset-2">Tout voir</Link>
-            </div>
-            <table className="orga-table min-w-[640px] border-0">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Type</th>
-                  <th>Lieu</th>
-                  <th>Code</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.recent_labels.length === 0 && (
-                  <tr><td colSpan={5}>Aucun label validé</td></tr>
-                )}
-                {stats.recent_labels.map((o) => (
-                  <tr key={o.slug}>
-                    <td className="font-medium text-forest">{o.name}</td>
-                    <td>{o.type === 'ecole' ? 'École' : 'Entreprise'}</td>
-                    <td>{[o.city, o.region].filter(Boolean).join(' · ') || '—'}</td>
-                    <td>{o.label_code || '—'}</td>
-                    <td>
-                      <Link to={`/o/${o.slug}`} className="font-medium text-forest underline underline-offset-2">Fiche</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          <section className="grid gap-0 lg:grid-cols-2">
-            <div className="orga-panel lg:border-r-0">
-              <h2 className="text-[15px] font-semibold text-forest">Par région</h2>
-              <table className="orga-table mt-4">
-                <thead>
-                  <tr>
-                    <th>Région</th>
-                    <th>Nombre</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.by_region.length === 0 && (
-                    <tr><td colSpan={2}>Aucune donnée</td></tr>
-                  )}
-                  {stats.by_region.map((r) => (
-                    <tr key={r.name}>
-                      <td>{r.name}</td>
-                      <td className="font-semibold text-forest">{r.count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="orga-panel">
-              <h2 className="text-[15px] font-semibold text-forest">Par secteur</h2>
-              <table className="orga-table mt-4">
-                <thead>
-                  <tr>
-                    <th>Secteur</th>
-                    <th>Nombre</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.by_sector.length === 0 && (
-                    <tr><td colSpan={2}>Aucune donnée</td></tr>
-                  )}
-                  {stats.by_sector.map((r) => (
-                    <tr key={r.name}>
-                      <td>{r.name}</td>
-                      <td className="font-semibold text-forest">{r.count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <section className="orga-panel">
+            <h2 className="text-[15px] font-semibold text-forest">Accès rapides</h2>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {[
+                { to: '/orga/labels', label: 'Demandes de label' },
+                { to: '/orga/visites', label: 'Calendrier des visites' },
+                { to: '/orga/qr', label: 'QR codes' },
+                { to: '/orga/enquete', label: 'Questions d\'enquête' },
+                { to: '/orga/affaires', label: 'Rencontres d\'affaires' },
+              ].map((item) => (
+                <Link key={item.to} to={item.to} className="orga-btn-ghost px-3 py-2 text-[13px]">
+                  {item.label}
+                </Link>
+              ))}
             </div>
           </section>
         </div>
+      )}
+
+      {!ind && !error && (
+        <p className="text-[14px] text-ink/45">Chargement des indicateurs…</p>
       )}
     </OrgaShell>
   )

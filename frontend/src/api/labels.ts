@@ -10,6 +10,7 @@ export type LabelRequestPayload = {
   city?: string
   contact_email: string
   contact_phone: string
+  contact_opt_in?: boolean
   description?: string
   products?: string[]
   max_visitors?: number | null
@@ -98,11 +99,14 @@ export function listIndustries() {
 
 export type LabelRequest = {
   id: string
+  organization_id?: string | null
+  label_code?: string | null
   structure_name: string
   structure_type: 'entreprise' | 'ecole'
   sector: string | null
   region: string | null
   city: string | null
+  address?: string | null
   contact_name: string
   contact_email: string
   contact_phone: string | null
@@ -113,8 +117,21 @@ export type LabelRequest = {
   lat?: string | number | null
   lng?: string | number | null
   status: 'pending' | 'approved' | 'rejected'
+  label_document_url?: string | null
   createdAt?: string
   created_at?: string
+}
+
+/* Libellé d'adresse (champ unique ou repli ville/région). */
+export function formatLabelAddress(item: Pick<LabelRequest, 'address' | 'city' | 'region'>) {
+  const direct = String(item.address || '').trim()
+  if (direct) return direct
+  return [item.city, item.region].filter(Boolean).join(', ') || ''
+}
+
+/* Libellé type structure. */
+export function formatStructureType(type: LabelRequest['structure_type']) {
+  return type === 'ecole' ? 'École' : 'Industrie'
 }
 
 /* Lien Google Maps pour un point (nouvel onglet). */
@@ -224,11 +241,53 @@ export async function uploadProgrammePdf(file: File) {
   return json.data
 }
 
-/* Modifie une demande (orga). */
-export function updateLabelRequest(id: string, payload: Partial<LabelRequestPayload> & { structure_type?: 'entreprise' | 'ecole' }) {
+/* Modifie une demande (orga, avant acceptation). */
+export function updateLabelRequest(id: string, payload: Partial<LabelRequestPayload> & { structure_type?: 'entreprise' | 'ecole'; address?: string }) {
   return apiFetch<LabelRequest>(`/labels/requests/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
+  })
+}
+
+/* Crée une demande depuis le backoffice. */
+export function createLabelRequestOrga(payload: Partial<LabelRequestPayload> & {
+  structure_name: string
+  structure_type: 'entreprise' | 'ecole'
+  contact_email: string
+  contact_phone: string
+  address?: string
+}) {
+  return apiFetch<LabelRequest>('/labels/requests/orga', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+/* Remplace le PDF label après acceptation. */
+export async function updateLabelPdf(id: string, file: File) {
+  const token = getAccessToken()
+  const body = new FormData()
+  body.append('label_pdf', file)
+  const res = await fetch(`${API_BASE}/labels/requests/${id}/label-pdf`, {
+    method: 'PATCH',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body,
+  })
+  const json = (await res.json()) as {
+    success: boolean
+    data?: LabelRequest
+    error?: { message: string }
+  }
+  if (!res.ok || !json.success || !json.data) {
+    throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
+  }
+  return json.data
+}
+
+/* Supprime un dossier label. */
+export function deleteLabelRequest(id: string) {
+  return apiFetch<{ id: string; deleted: boolean }>(`/labels/requests/${id}`, {
+    method: 'DELETE',
   })
 }
 
