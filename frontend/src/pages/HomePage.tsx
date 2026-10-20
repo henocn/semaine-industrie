@@ -97,8 +97,8 @@ function Hero() {
             <Button to="/programme" variant="onDark">
               Programme
             </Button>
-            <Button to="/carte" variant="accent">
-              Carte
+            <Button to="/label" variant="accent">
+              Demander un label
             </Button>
           </div>
           <p className="mt-8 text-[13px] text-white/75">16 au 22 novembre 2026 · Lomé et les régions</p>

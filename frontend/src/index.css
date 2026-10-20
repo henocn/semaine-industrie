@@ -244,9 +244,9 @@ select.orga-input {
   transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }
 .ui-btn-primary { background: var(--color-forest); color: #fff; }
-.ui-btn-primary:hover { background: var(--color-ink); }
+.ui-btn-primary:hover { opacity: 0.9; }
 .ui-btn-outline { border: 1px solid var(--color-forest); background: transparent; color: var(--color-forest); }
-.ui-btn-outline:hover { background: var(--color-forest); color: #fff; }
+.ui-btn-outline:hover { opacity: 0.85; }
 /* Lien texte avec flèche */
 .ui-btn-link-arrow {
   display: inline-flex;
@@ -259,9 +259,9 @@ select.orga-input {
 }
 .ui-btn-link-arrow:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ui-btn-accent { background: var(--color-sun); color: var(--color-forest); }
-.ui-btn-accent:hover { background: var(--color-forest); color: #fff; }
+.ui-btn-accent:hover { opacity: 0.9; }
 .ui-btn-ondark { background: #fff; color: var(--color-forest); }
-.ui-btn-ondark:hover { background: var(--color-sage); color: var(--color-forest); }
+.ui-btn-ondark:hover { opacity: 0.92; }
 .ui-btn-primary:disabled,
 .ui-btn-accent:disabled,
 .ui-btn-ondark:disabled,
