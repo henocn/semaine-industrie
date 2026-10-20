@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import {
   createMeeting,
   listMeetings,
@@ -27,16 +27,6 @@ function IconEdit() {
   )
 }
 
-/* Icône œil / détail. */
-function IconEye() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-      <circle cx="12" cy="12" r="2.5" />
-    </svg>
-  )
-}
-
 /* Icône check. */
 function IconCheck() {
   return (
@@ -55,29 +45,37 @@ function IconX() {
   )
 }
 
+/* Résout les participants d'un RDV. */
+function meetingAttendees(
+  m: BusinessMeeting,
+  approvedPool: BusinessParticipant[],
+  participants: BusinessParticipant[],
+): BusinessParticipant[] {
+  const ids =
+    Array.isArray(m.attendee_ids) && m.attendee_ids.length
+      ? m.attendee_ids
+      : ([m.participantA?.id, m.participantB?.id].filter(Boolean) as string[])
+  return ids
+    .map((id) => {
+      return (
+        approvedPool.find((x) => x.id === id) ||
+        participants.find((x) => x.id === id) ||
+        (m.participantA?.id === id ? m.participantA : null) ||
+        (m.participantB?.id === id ? m.participantB : null) ||
+        null
+      )
+    })
+    .filter((p): p is BusinessParticipant => Boolean(p))
+}
+
 /* Noms d'organisations d'un RDV. */
 function meetingNames(
   m: BusinessMeeting,
   approvedPool: BusinessParticipant[],
   participants: BusinessParticipant[],
 ) {
-  const ids =
-    Array.isArray(m.attendee_ids) && m.attendee_ids.length
-      ? m.attendee_ids
-      : ([m.participantA?.id, m.participantB?.id].filter(Boolean) as string[])
-  return (
-    ids
-      .map((id) => {
-        const p =
-          approvedPool.find((x) => x.id === id) ||
-          participants.find((x) => x.id === id) ||
-          (m.participantA?.id === id ? m.participantA : null) ||
-          (m.participantB?.id === id ? m.participantB : null)
-        return p?.organization_name
-      })
-      .filter(Boolean)
-      .join(' × ') || 'Participants'
-  )
+  const names = meetingAttendees(m, approvedPool, participants).map((p) => p.organization_name)
+  return names.join(' × ') || 'Participants'
 }
 
 /* Backoffice : participants B2B + rendez-vous. */
@@ -93,8 +91,10 @@ export default function OrgaBusinessPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [pickQuery, setPickQuery] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null)
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null)
   const [editingMeetingId, setEditingMeetingId] = useState<string | null>(null)
+  const detailRef = useRef<HTMLElement | null>(null)
 
   /* Recharge listes. */
   async function load() {
@@ -142,10 +142,27 @@ export default function OrgaBusinessPage() {
     })
   }, [meetings, query, approvedPool, participants])
 
-  const selectedMeeting = useMemo(
-    () => meetings.find((m) => m.id === selectedMeetingId) || null,
-    [meetings, selectedMeetingId],
+  const selectedParticipant = useMemo(
+    () =>
+      filteredParticipants.find((p) => p.id === selectedParticipantId) ||
+      participants.find((p) => p.id === selectedParticipantId) ||
+      null,
+    [filteredParticipants, participants, selectedParticipantId],
   )
+
+  const selectedMeeting = useMemo(
+    () =>
+      filteredMeetings.find((m) => m.id === selectedMeetingId) ||
+      meetings.find((m) => m.id === selectedMeetingId) ||
+      null,
+    [filteredMeetings, meetings, selectedMeetingId],
+  )
+
+  /* Scrolle jusqu'au panneau détail après sélection. */
+  useEffect(() => {
+    if (!selectedParticipantId && !selectedMeetingId) return
+    detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [selectedParticipantId, selectedMeetingId])
 
   const pickList = useMemo(() => {
     const q = pickQuery.trim().toLowerCase()
@@ -255,17 +272,30 @@ export default function OrgaBusinessPage() {
     setPickQuery('')
   }
 
+  /* Sélectionne un participant (détail). */
+  function selectParticipant(id: string) {
+    setSelectedParticipantId((prev) => (prev === id ? null : id))
+  }
+
   /* Sélectionne un RDV (détail). */
   function selectMeeting(id: string) {
     setSelectedMeetingId((prev) => (prev === id ? null : id))
     setEditingMeetingId(null)
   }
 
-  /* Ouvre le panneau en mode édition. */
+  /* Ouvre le panneau RDV en mode édition. */
   function openMeetingEdit(id: string, e?: MouseEvent) {
     e?.stopPropagation()
     setSelectedMeetingId(id)
     setEditingMeetingId(id)
+  }
+
+  /* Change d'onglet et ferme les détails. */
+  function switchTab(next: 'participants' | 'meetings') {
+    setTab(next)
+    setSelectedParticipantId(null)
+    setSelectedMeetingId(null)
+    setEditingMeetingId(null)
   }
 
   return (
@@ -302,7 +332,7 @@ export default function OrgaBusinessPage() {
           <button
             key={t}
             type="button"
-            onClick={() => setTab(t)}
+            onClick={() => switchTab(t)}
             className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
               tab === t ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
             } ${t === 'meetings' ? 'border-l border-black' : ''}`}
@@ -313,66 +343,168 @@ export default function OrgaBusinessPage() {
       </div>
 
       {tab === 'participants' && (
-        <section className="orga-panel !p-0 overflow-x-auto">
-          <div className="flex items-center justify-between border-b border-black px-4 py-3">
-            <h2 className="text-[15px] font-semibold text-forest">
-              {filteredParticipants.length} participant{filteredParticipants.length > 1 ? 's' : ''}
-            </h2>
-          </div>
-          <table className="orga-table min-w-[640px]">
-            <thead>
-              <tr>
-                <th>Organisation</th>
-                <th className="w-28">Profil</th>
-                <th className="w-28">Statut</th>
-                <th className="w-28">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredParticipants.length === 0 && (
-                <tr><td colSpan={4} className="py-10 text-ink/40">Aucun participant</td></tr>
-              )}
-              {filteredParticipants.map((p) => (
-                <tr key={p.id} className={participantRowClass(p.status)}>
-                  <td>
-                    <p className="font-semibold text-forest">{p.organization_name}</p>
-                    <p className="mt-1 text-[13px] text-ink/50">{p.contact_name}</p>
-                  </td>
-                  <td className="font-medium text-forest">{p.kind}</td>
-                  <td>{statusLabel(p.status)}</td>
-                  <td>
-                    {p.status === 'pending' ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        <button
-                          type="button"
-                          title="Approuver"
-                          aria-label="Approuver"
-                          disabled={busyId === p.id}
-                          onClick={(e) => void onReview(p.id, 'approved', e)}
-                          className={iconBtn}
-                        >
-                          <IconCheck />
-                        </button>
-                        <button
-                          type="button"
-                          title="Refuser"
-                          aria-label="Refuser"
-                          disabled={busyId === p.id}
-                          onClick={(e) => void onReview(p.id, 'rejected', e)}
-                          className={iconBtn}
-                        >
-                          <IconX />
-                        </button>
-                      </div>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
+        <>
+          <section className="orga-panel !p-0 overflow-x-auto">
+            <div className="flex items-center justify-between border-b border-black px-4 py-3">
+              <h2 className="text-[15px] font-semibold text-forest">
+                {filteredParticipants.length} participant{filteredParticipants.length > 1 ? 's' : ''}
+              </h2>
+              <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
+            </div>
+            <table className="orga-table min-w-[640px]">
+              <thead>
+                <tr>
+                  <th className="w-12">#</th>
+                  <th>Organisation</th>
+                  <th className="w-28">Profil</th>
+                  <th className="w-28">Statut</th>
+                  <th className="w-28">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+              </thead>
+              <tbody>
+                {filteredParticipants.length === 0 && (
+                  <tr><td colSpan={5} className="py-10 text-ink/40">Aucun participant</td></tr>
+                )}
+                {filteredParticipants.map((p, i) => (
+                  <tr
+                    key={p.id}
+                    className={`${participantRowClass(p.status)} cursor-pointer ${
+                      selectedParticipantId === p.id ? 'bg-forest/10' : ''
+                    }`}
+                    onClick={() => selectParticipant(p.id)}
+                  >
+                    <td className="text-ink/45">{i + 1}</td>
+                    <td className="font-semibold text-forest">{p.organization_name}</td>
+                    <td className="font-medium text-forest">{p.kind}</td>
+                    <td>{statusLabel(p.status)}</td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      {p.status === 'pending' ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          <button
+                            type="button"
+                            title="Approuver"
+                            aria-label="Approuver"
+                            disabled={busyId === p.id}
+                            onClick={(e) => void onReview(p.id, 'approved', e)}
+                            className={iconBtn}
+                          >
+                            <IconCheck />
+                          </button>
+                          <button
+                            type="button"
+                            title="Refuser"
+                            aria-label="Refuser"
+                            disabled={busyId === p.id}
+                            onClick={(e) => void onReview(p.id, 'rejected', e)}
+                            className={iconBtn}
+                          >
+                            <IconX />
+                          </button>
+                        </div>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          {selectedParticipant && (
+            <section ref={detailRef} className="orga-panel mt-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-[16px] font-semibold text-forest">
+                    {selectedParticipant.organization_name}
+                  </h2>
+                  <p className="mt-1 text-[13px] text-ink/50">
+                    {selectedParticipant.kind}
+                    {' · '}
+                    {statusLabel(selectedParticipant.status)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="orga-btn-ghost px-3 py-1.5 text-[13px]"
+                  onClick={() => setSelectedParticipantId(null)}
+                >
+                  Fermer
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
+                <p>
+                  <span className="text-ink/45">Contact · </span>
+                  {selectedParticipant.contact_name}
+                </p>
+                <p>
+                  <span className="text-ink/45">E-mail · </span>
+                  <a
+                    href={`mailto:${selectedParticipant.email}`}
+                    className="font-medium text-forest underline underline-offset-2"
+                  >
+                    {selectedParticipant.email}
+                  </a>
+                </p>
+                <p>
+                  <span className="text-ink/45">Téléphone · </span>
+                  {selectedParticipant.phone ? (
+                    <a
+                      href={`tel:${selectedParticipant.phone}`}
+                      className="font-medium text-forest underline underline-offset-2"
+                    >
+                      {selectedParticipant.phone}
+                    </a>
+                  ) : (
+                    '—'
+                  )}
+                </p>
+                <p>
+                  <span className="text-ink/45">Secteur · </span>
+                  {selectedParticipant.sector || '—'}
+                </p>
+                <p>
+                  <span className="text-ink/45">Pays · </span>
+                  {selectedParticipant.country || '—'}
+                </p>
+                <p>
+                  <span className="text-ink/45">Opt-in contact · </span>
+                  {selectedParticipant.contact_opt_in ? 'Oui' : 'Non'}
+                </p>
+                <p className="sm:col-span-2">
+                  <span className="text-ink/45">Offre · </span>
+                  {selectedParticipant.offers || '—'}
+                </p>
+                <p className="sm:col-span-2">
+                  <span className="text-ink/45">Cherche · </span>
+                  {selectedParticipant.seeks || '—'}
+                </p>
+              </div>
+
+              {selectedParticipant.status === 'pending' && (
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-black/10 pt-4">
+                  <button
+                    type="button"
+                    disabled={busyId === selectedParticipant.id}
+                    onClick={() => void onReview(selectedParticipant.id, 'approved')}
+                    className="orga-btn disabled:opacity-50"
+                  >
+                    Approuver
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busyId === selectedParticipant.id}
+                    onClick={() => void onReview(selectedParticipant.id, 'rejected')}
+                    className="orga-btn-ghost disabled:opacity-50"
+                  >
+                    Refuser
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+        </>
       )}
 
       {tab === 'meetings' && (
@@ -476,22 +608,23 @@ export default function OrgaBusinessPage() {
             <table className="orga-table min-w-[640px]">
               <thead>
                 <tr>
+                  <th className="w-12">#</th>
                   <th>Date</th>
                   <th>Participants</th>
                   <th>Lieu</th>
                   <th className="w-28">Statut</th>
-                  <th className="w-28">Actions</th>
+                  <th className="w-20">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredMeetings.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-10 text-ink/40">
+                    <td colSpan={6} className="py-10 text-ink/40">
                       Aucun rendez-vous
                     </td>
                   </tr>
                 )}
-                {filteredMeetings.map((m) => {
+                {filteredMeetings.map((m, i) => {
                   const names = meetingNames(m, approvedPool, participants)
                   return (
                     <tr
@@ -499,6 +632,7 @@ export default function OrgaBusinessPage() {
                       className={`cursor-pointer ${selectedMeetingId === m.id ? 'bg-forest/10' : ''}`}
                       onClick={() => selectMeeting(m.id)}
                     >
+                      <td className="text-ink/45">{i + 1}</td>
                       <td className="whitespace-nowrap font-medium text-forest">
                         {new Date(m.slot_start).toLocaleDateString('fr-FR', {
                           day: '2-digit',
@@ -516,32 +650,20 @@ export default function OrgaBusinessPage() {
                         {m.table_label ? ` · ${m.table_label}` : ''}
                       </td>
                       <td className="text-[12px] uppercase tracking-wide text-ink/45">{m.status}</td>
-                      <td>
-                        <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        {m.status !== 'done' ? (
                           <button
                             type="button"
-                            title="Voir le détail"
-                            aria-label="Voir le détail"
+                            title="Modifier / reporter"
+                            aria-label="Modifier"
                             className={iconBtn}
-                            onClick={() => {
-                              setSelectedMeetingId(m.id)
-                              setEditingMeetingId(null)
-                            }}
+                            onClick={(e) => openMeetingEdit(m.id, e)}
                           >
-                            <IconEye />
+                            <IconEdit />
                           </button>
-                          {m.status !== 'done' && (
-                            <button
-                              type="button"
-                              title="Modifier / reporter"
-                              aria-label="Modifier"
-                              className={iconBtn}
-                              onClick={(e) => openMeetingEdit(m.id, e)}
-                            >
-                              <IconEdit />
-                            </button>
-                          )}
-                        </div>
+                        ) : (
+                          '—'
+                        )}
                       </td>
                     </tr>
                   )
@@ -551,7 +673,7 @@ export default function OrgaBusinessPage() {
           </section>
 
           {selectedMeeting && (
-            <section className="orga-panel">
+            <section ref={detailRef} className="orga-panel mt-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-[16px] font-semibold text-forest">
@@ -563,6 +685,8 @@ export default function OrgaBusinessPage() {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
+                    {' · '}
+                    {selectedMeeting.status}
                   </p>
                 </div>
                 <button
@@ -577,7 +701,7 @@ export default function OrgaBusinessPage() {
                 </button>
               </div>
 
-              <div className="mt-4 grid gap-2 text-[13px] sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
                 <p>
                   <span className="text-ink/45">Lieu · </span>
                   {selectedMeeting.location || '—'}
@@ -586,16 +710,55 @@ export default function OrgaBusinessPage() {
                   <span className="text-ink/45">Table · </span>
                   {selectedMeeting.table_label || '—'}
                 </p>
-                <p>
-                  <span className="text-ink/45">Statut · </span>
-                  {selectedMeeting.status}
-                </p>
+                {selectedMeeting.follow_up_at && (
+                  <p>
+                    <span className="text-ink/45">Relance · </span>
+                    {new Date(selectedMeeting.follow_up_at).toLocaleDateString('fr-FR')}
+                  </p>
+                )}
                 {selectedMeeting.contact_note && (
                   <p className="sm:col-span-2">
                     <span className="text-ink/45">Note · </span>
                     {selectedMeeting.contact_note}
                   </p>
                 )}
+              </div>
+
+              <div className="mt-4 border-t border-black/10 pt-4">
+                <h3 className="text-[13px] font-semibold text-forest">Personnes</h3>
+                <ul className="mt-2 space-y-2">
+                  {meetingAttendees(selectedMeeting, approvedPool, participants).map((p) => (
+                    <li key={p.id} className="border border-black/10 px-3 py-2 text-[13px]">
+                      <p className="font-semibold text-forest">{p.organization_name}</p>
+                      <p className="mt-0.5 text-ink/55">
+                        {p.contact_name}
+                        {p.kind ? ` · ${p.kind}` : ''}
+                      </p>
+                      <p className="mt-0.5">
+                        <a
+                          href={`mailto:${p.email}`}
+                          className="text-forest underline underline-offset-2"
+                        >
+                          {p.email}
+                        </a>
+                        {p.phone ? (
+                          <>
+                            {' · '}
+                            <a
+                              href={`tel:${p.phone}`}
+                              className="text-forest underline underline-offset-2"
+                            >
+                              {p.phone}
+                            </a>
+                          </>
+                        ) : null}
+                      </p>
+                    </li>
+                  ))}
+                  {meetingAttendees(selectedMeeting, approvedPool, participants).length === 0 && (
+                    <li className="text-ink/40">Aucun participant résolu</li>
+                  )}
+                </ul>
               </div>
 
               {selectedMeeting.status !== 'done' && (
