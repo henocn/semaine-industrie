@@ -233,15 +233,15 @@ select.orga-input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   border-radius: 0;
-  min-height: 48px;
-  padding: 0.9rem 1.5rem;
-  font-size: 15px;
+  min-height: 2.5rem;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
-  transition: background-color .25s var(--ease-leaf), color .25s var(--ease-leaf), border-color .25s var(--ease-leaf);
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }
 .ui-btn-primary { background: var(--color-forest); color: #fff; }
 .ui-btn-primary:hover { background: var(--color-ink); }
@@ -269,10 +269,9 @@ select.orga-input {
 
 /* Surtitre de section */
 .ui-eyebrow {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--color-forest);
 }
 

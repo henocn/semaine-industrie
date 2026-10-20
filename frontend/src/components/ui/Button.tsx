@@ -30,7 +30,7 @@ export function Button({
   to,
   className = '',
   disabled = false,
-  withArrow = true,
+  withArrow = false,
   type = 'button',
   onClick,
   children,

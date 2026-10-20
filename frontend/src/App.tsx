@@ -23,7 +23,6 @@ import PassportPage from './pages/PassportPage'
 import PrivacyPage from './pages/PrivacyPage'
 import ProgrammePage from './pages/ProgrammePage'
 import ResourcesPage from './pages/ResourcesPage'
-import QuestionsPage from './pages/QuestionsPage'
 import SurveyPage from './pages/SurveyPage'
 import VotePage from './pages/VotePage'
 
@@ -54,7 +53,7 @@ export default function App() {
             <Route path="/carte" element={<MapPage />} />
             <Route path="/industrie" element={<IndustriesPage />} />
             <Route path="/passeport/:code" element={<PassportPage />} />
-            <Route path="/questions" element={<QuestionsPage />} />
+            <Route path="/questions" element={<Navigate to="/" replace />} />
             <Route path="/vote" element={<VotePage />} />
             <Route path="/questionnaire" element={<SurveyPage />} />
             <Route path="/confidentialite" element={<PrivacyPage />} />

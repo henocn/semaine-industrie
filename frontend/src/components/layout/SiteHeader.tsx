@@ -8,7 +8,6 @@ import {
   Handshake,
   Mail,
   MapPin,
-  MessagesSquare,
   Vote,
 } from 'lucide-react'
 import { Button } from '../ui/Button'
@@ -31,7 +30,6 @@ const Icon = {
   factory: <Factory {...ICON_PROPS} />,
   handshake: <Handshake {...ICON_PROPS} />,
   map: <MapPin {...ICON_PROPS} />,
-  chat: <MessagesSquare {...ICON_PROPS} />,
   vote: <Vote {...ICON_PROPS} />,
   clipboard: <ClipboardList {...ICON_PROPS} />,
 }
@@ -57,7 +55,6 @@ const GROUPS: NavGroup[] = [
   {
     label: 'Défis',
     items: [
-      { label: 'Questions live', to: '/questions', icon: Icon.chat },
       { label: 'Vote coup de cœur', to: '/vote', icon: Icon.vote },
       { label: 'Questionnaire', to: '/questionnaire', icon: Icon.clipboard },
     ],
@@ -183,8 +180,8 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <Button to="/label" variant="accent" className="hidden !min-h-10 !px-4 !py-2 !text-[14px] lg:inline-flex">
-          Demander le label
+        <Button to="/label" variant="accent" className="hidden lg:inline-flex">
+          Label
         </Button>
 
         <button
