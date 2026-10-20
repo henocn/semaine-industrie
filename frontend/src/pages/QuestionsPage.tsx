@@ -65,7 +65,7 @@ export default function QuestionsPage() {
               </p>
             )}
             <div>
-              <Button type="submit">Envoyer</Button>
+              <Button type="submit" withArrow={false}>Envoyer</Button>
             </div>
           </form>
         )}

@@ -71,7 +71,7 @@ export default function VotePage() {
                     <p className="mt-1 text-[15px] text-ink/70">{o.votes} voix</p>
                   </div>
                   {!done && (
-                    <Button onClick={() => onVote(o.id)}>Voter</Button>
+                    <Button onClick={() => onVote(o.id)} withArrow={false}>Voter</Button>
                   )}
                 </div>
                 <div className="mt-3 h-2 overflow-hidden bg-sage">

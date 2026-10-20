@@ -217,7 +217,7 @@ export default function SurveyPage() {
                     Suivant
                   </Button>
                 ) : (
-                  <Button onClick={() => void onSubmit()} disabled={busy || !allComplete}>
+                  <Button onClick={() => void onSubmit()} disabled={busy || !allComplete} withArrow={false}>
                     {busy ? 'Envoi…' : 'Envoyer'}
                   </Button>
                 )}

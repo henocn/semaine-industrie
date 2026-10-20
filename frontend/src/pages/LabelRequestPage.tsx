@@ -103,9 +103,6 @@ export default function LabelRequestPage() {
               Entreprises : 3 photos nettes (min. 1000×700, max 5 Mo) pour la fiche Industrie.
             </p>
           )}
-          <p className="mt-4 max-w-md text-[15px] text-ink/70">
-            Le téléphone est facultatif : l’e-mail suffit pour être recontacté.
-          </p>
         </div>
 
         {sent ? (
@@ -192,7 +189,7 @@ export default function LabelRequestPage() {
             <Field label="E-mail">
               <input required type="email" name="contact_email" className={field} />
             </Field>
-            <Field label="Téléphone" optional hint="Un plus pour WhatsApp, jamais obligatoire">
+            <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <input name="contact_phone" type="tel" autoComplete="tel" className={field} />
             </Field>
             {isEntreprise ? (

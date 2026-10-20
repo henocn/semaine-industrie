@@ -1,5 +1,17 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  BadgeCheck,
+  CalendarDays,
+  ClipboardList,
+  Factory,
+  Handshake,
+  Mail,
+  MapPin,
+  MessagesSquare,
+  Vote,
+} from 'lucide-react'
+import { Button } from '../ui/Button'
 import { BrandLogo, WRAP } from './Mark'
 
 type NavItem = { label: string; href?: string; to?: string; icon: ReactNode }
@@ -9,60 +21,23 @@ type NavGroup = {
   items: NavItem[]
 }
 
-/* Icônes SVG légères pour le menu. */
+/* Icônes lucide du menu (trait fin, taille unique). */
+const ICON_PROPS = { strokeWidth: 1.75, className: 'h-4 w-4', 'aria-hidden': true } as const
+
 const Icon = {
-  calendar: (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M3 10h18M8 3v4M16 3v4" />
-    </svg>
-  ),
-  mail: (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3 7 9 6 9-6" />
-    </svg>
-  ),
-  badge: (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M12 3 14.5 8.5 20.5 9.5 16 13.5 17.2 19.5 12 16.8 6.8 19.5 8 13.5 3.5 9.5 9.5 8.5 12 3z" />
-    </svg>
-  ),
-  factory: (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M3 21V9l6 3V9l6 3V5h6v16H3z" />
-    </svg>
-  ),
-  handshake: (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M8 13 4.5 9.5a2 2 0 0 1 0-3L7 4l4 4M16 13l3.5-3.5a2 2 0 0 0 0-3L17 4l-4 4" />
-      <path d="M8 13c1.5 1.5 3 2 4 2s2.5-.5 4-2M9 21l1.5-3.5M15 21l-1.5-3.5" />
-    </svg>
-  ),
-  map: (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10z" />
-      <circle cx="12" cy="11" r="2" />
-    </svg>
-  ),
-  chat: (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M5 18v-1.5A3.5 3.5 0 0 1 8.5 13H18a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v11l3-2.5H8" />
-    </svg>
-  ),
-  vote: (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="m9 12 2.2 2.2L16 9.5" />
-      <circle cx="12" cy="12" r="9" />
-    </svg>
-  ),
-  clipboard: (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <rect x="6" y="4" width="12" height="17" rx="2" />
-      <path d="M9 4.5h6V3a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v1.5zM9 10h6M9 14h4" />
-    </svg>
-  ),
+  calendar: <CalendarDays {...ICON_PROPS} />,
+  mail: <Mail {...ICON_PROPS} />,
+  badge: <BadgeCheck {...ICON_PROPS} />,
+  factory: <Factory {...ICON_PROPS} />,
+  handshake: <Handshake {...ICON_PROPS} />,
+  map: <MapPin {...ICON_PROPS} />,
+  chat: <MessagesSquare {...ICON_PROPS} />,
+  vote: <Vote {...ICON_PROPS} />,
+  clipboard: <ClipboardList {...ICON_PROPS} />,
 }
+
+/* Lien direct « Programme » (desktop : avant les groupes, mobile : en tête de menu). */
+const PROGRAMME_ITEM: NavItem = { label: 'Programme', to: '/programme', icon: Icon.calendar }
 
 const GROUPS: NavGroup[] = [
   {
@@ -90,7 +65,6 @@ const GROUPS: NavGroup[] = [
   {
     label: 'À propos',
     items: [
-      { label: 'Programme', to: '/programme', icon: Icon.calendar },
       { label: 'Ressources', to: '/ressources', icon: Icon.clipboard },
       { label: 'Contact', to: '/#contact', icon: Icon.mail },
     ],
@@ -184,12 +158,19 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur">
-      <div className={`${WRAP} flex h-16 items-center justify-between`}>
+      <div className={`${WRAP} flex h-16 items-center justify-between gap-4`}>
         <Link to="/" className="relative z-10 flex items-center">
           <BrandLogo className="h-10 w-auto" />
         </Link>
 
-        <nav className="hidden h-16 items-stretch md:flex" aria-label="Navigation principale">
+        <nav className="ml-auto hidden h-16 items-stretch md:flex" aria-label="Navigation principale">
+          <Link
+            to={PROGRAMME_ITEM.to ?? '/programme'}
+            className="relative z-10 flex h-full items-center px-5 text-[15px] font-medium text-ink/70 transition-colors hover:text-forest"
+            onClick={() => setOpenGroup(null)}
+          >
+            {PROGRAMME_ITEM.label}
+          </Link>
           {GROUPS.map((group, i) => (
             <DesktopGroup
               key={group.label}
@@ -201,6 +182,10 @@ export function SiteHeader() {
             />
           ))}
         </nav>
+
+        <Button to="/label" variant="accent" className="hidden !min-h-10 !px-4 !py-2 !text-[14px] lg:inline-flex">
+          Demander le label
+        </Button>
 
         <button
           type="button"
@@ -221,6 +206,7 @@ export function SiteHeader() {
       {open && (
         <div id="nav-mobile" className="border-t border-forest/10 bg-white md:hidden">
           <div className={`${WRAP} space-y-4 py-4`}>
+            <NavLink item={PROGRAMME_ITEM} onNavigate={() => setOpen(false)} />
             {GROUPS.map((group) => (
               <div key={group.label}>
                 <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-forest/50">

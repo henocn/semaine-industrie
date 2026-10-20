@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { CookieConsent } from '../CookieConsent'
+import { RepublicBanner } from './RepublicBanner'
 import { SiteFooter } from './SiteFooter'
 import { SiteHeader } from './SiteHeader'
 
@@ -17,6 +18,7 @@ export function PublicLayout() {
 
   return (
     <div className="min-h-svh overflow-x-clip">
+      <RepublicBanner />
       <SiteHeader />
       <Outlet />
       <SiteFooter />
