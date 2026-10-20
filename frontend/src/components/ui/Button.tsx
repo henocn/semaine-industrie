@@ -46,7 +46,7 @@ export function Button({
 
   if (to && !disabled) {
     return (
-      <Link to={to} className={classes}>
+      <Link to={to} className={classes} onClick={onClick}>
         {content}
       </Link>
     )

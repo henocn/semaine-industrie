@@ -172,35 +172,43 @@ function About() {
   )
 }
 
-/* Aperçu programme : liste des jours, pas une grille de cartes. */
+/* Sur l'accueil : uniquement le jour J (vendredi 20), le détail est sur /programme. */
 function ProgrammeStrip() {
+  const dayJ = DAYS.find((d) => d.phare) ?? DAYS.find((d) => d.n === 20)
+  if (!dayJ) return null
+
   return (
     <section className="py-12 sm:py-16">
       <div className={WRAP}>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <SectionHeader
-            title="Le programme"
-            lead="Sept jours, un thème par jour. Journée phare le vendredi 20."
+            title="Journée phare"
+            lead="Vendredi 20 novembre, Journée de l’industrialisation de l’Afrique."
           />
           <Button to="/programme" variant="outline">
-            Voir le détail
+            Tout le programme
           </Button>
         </div>
-        <ul className="mt-8 border-t border-forest/15">
-          {DAYS.map((d) => (
-            <li key={d.n}>
-              <Link
-                to={d.phare ? '/programme#vendredi' : '/programme'}
-                className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-forest/15 py-3.5 text-[15px] transition-colors hover:bg-sage/60"
-              >
-                <span className="w-8 font-semibold tabular-nums text-forest">{d.n}</span>
-                <span className="w-24 font-medium text-forest">{d.name}</span>
-                <span className="text-ink/70">{d.theme}</span>
-                {d.phare && <span className="text-[12px] font-semibold text-forest">Journée phare</span>}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-8 border-t border-forest/15 pt-6">
+          <p className="text-[13px] font-semibold text-forest">
+            {dayJ.n} {dayJ.name}
+          </p>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink/75">{dayJ.goal}</p>
+          <p className="mt-2 text-[13px] text-ink/55">{dayJ.where}</p>
+          <ul className="mt-5 max-w-xl space-y-2.5">
+            {dayJ.slots.slice(0, 5).map(([h, t]) => (
+              <li key={h + t} className="grid grid-cols-[3.5rem_1fr] gap-3 text-[14px]">
+                <span className="font-medium tabular-nums text-forest">{h}</span>
+                <span className="text-ink/75">{t}</span>
+              </li>
+            ))}
+          </ul>
+          {dayJ.slots.length > 5 && (
+            <Link to="/programme#vendredi" className="mt-4 inline-block text-[14px] font-semibold text-forest underline decoration-forest/25 underline-offset-4">
+              Voir la journée complète
+            </Link>
+          )}
+        </div>
       </div>
     </section>
   )

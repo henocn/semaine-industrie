@@ -1,8 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  BadgeCheck,
-  CalendarDays,
   ClipboardList,
   Factory,
   Handshake,
@@ -24,9 +22,7 @@ type NavGroup = {
 const ICON_PROPS = { strokeWidth: 1.75, className: 'h-4 w-4', 'aria-hidden': true } as const
 
 const Icon = {
-  calendar: <CalendarDays {...ICON_PROPS} />,
   mail: <Mail {...ICON_PROPS} />,
-  badge: <BadgeCheck {...ICON_PROPS} />,
   factory: <Factory {...ICON_PROPS} />,
   handshake: <Handshake {...ICON_PROPS} />,
   map: <MapPin {...ICON_PROPS} />,
@@ -34,22 +30,13 @@ const Icon = {
   clipboard: <ClipboardList {...ICON_PROPS} />,
 }
 
-/* Lien direct « Programme » (desktop : avant les groupes, mobile : en tête de menu). */
-const PROGRAMME_ITEM: NavItem = { label: 'Programme', to: '/programme', icon: Icon.calendar }
-
 const GROUPS: NavGroup[] = [
-  {
-    label: 'Participer',
-    items: [
-      { label: 'Demander le label', to: '/label', icon: Icon.badge },
-      { label: 'Rencontres d’affaires', to: '/affaires', icon: Icon.handshake },
-    ],
-  },
   {
     label: 'Explorer',
     items: [
       { label: 'Industrie', to: '/industrie', icon: Icon.factory },
       { label: 'Carte & visites', to: '/carte', icon: Icon.map },
+      { label: 'Rencontres d’affaires', to: '/affaires', icon: Icon.handshake },
     ],
   },
   {
@@ -136,7 +123,7 @@ function DesktopGroup({
   )
 }
 
-/* Header public unique pour tout le site. */
+/* Header public : CTA Participer à la place de Label, sans lien Programme ni menu Participer. */
 export function SiteHeader() {
   const [open, setOpen] = useState(false)
   const [openGroup, setOpenGroup] = useState<string | null>(null)
@@ -161,13 +148,6 @@ export function SiteHeader() {
         </Link>
 
         <nav className="ml-auto hidden h-16 items-stretch md:flex" aria-label="Navigation principale">
-          <Link
-            to={PROGRAMME_ITEM.to ?? '/programme'}
-            className="relative z-10 flex h-full items-center px-5 text-[15px] font-medium text-ink/70 transition-colors hover:text-forest"
-            onClick={() => setOpenGroup(null)}
-          >
-            {PROGRAMME_ITEM.label}
-          </Link>
           {GROUPS.map((group, i) => (
             <DesktopGroup
               key={group.label}
@@ -180,8 +160,8 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <Button to="/label" variant="accent" className="hidden lg:inline-flex">
-          Label
+        <Button to="/label" variant="accent" className="hidden md:inline-flex">
+          Participer
         </Button>
 
         <button
@@ -203,7 +183,6 @@ export function SiteHeader() {
       {open && (
         <div id="nav-mobile" className="border-t border-forest/10 bg-white md:hidden">
           <div className={`${WRAP} space-y-4 py-4`}>
-            <NavLink item={PROGRAMME_ITEM} onNavigate={() => setOpen(false)} />
             {GROUPS.map((group) => (
               <div key={group.label}>
                 <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-forest/50">
@@ -216,6 +195,9 @@ export function SiteHeader() {
                 </div>
               </div>
             ))}
+            <Button to="/label" variant="accent" onClick={() => setOpen(false)} className="w-full">
+              Participer
+            </Button>
           </div>
         </div>
       )}
