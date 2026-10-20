@@ -25,6 +25,31 @@ async function register(payload) {
   return row;
 }
 
+/* Ajout manuel d'un participant (backoffice). */
+async function createByOrga(payload) {
+  const row = await BusinessParticipant.create({
+    kind: payload.kind,
+    organization_name: payload.organization_name,
+    contact_name: payload.contact_name,
+    email: payload.email,
+    phone: payload.phone || null,
+    sector: payload.sector || null,
+    offers: payload.offers || null,
+    seeks: payload.seeks || null,
+    country: payload.country || null,
+    contact_opt_in: payload.contact_opt_in !== false,
+    status: payload.status === 'pending' ? 'pending' : 'approved',
+  });
+  await notifyN8n('business.participant_registered', {
+    id: row.id,
+    kind: row.kind,
+    organization_name: row.organization_name,
+    email: row.email,
+    source: 'orga',
+  });
+  return row;
+}
+
 /* Liste les participants, filtrables. */
 async function listParticipants({ status, kind } = {}) {
   const where = {};
@@ -232,6 +257,7 @@ async function saveContactNote(id, { contact_note, status, follow_up_months }) {
 
 module.exports = {
   register,
+  createByOrga,
   listParticipants,
   reviewParticipant,
   createMeeting,

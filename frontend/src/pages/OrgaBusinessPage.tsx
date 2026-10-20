@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import {
   createMeeting,
+  createParticipantOrga,
   listMeetings,
   listParticipants,
   rescheduleMeeting,
@@ -23,24 +24,6 @@ function IconEdit() {
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
       <path d="M4 20h4L19 9l-4-4L4 16v4z" />
       <path d="m13 7 4 4" />
-    </svg>
-  )
-}
-
-/* Icône check. */
-function IconCheck() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M5 12.5 10 17l9-10" />
-    </svg>
-  )
-}
-
-/* Icône croix. */
-function IconX() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M6 6l12 12M18 6 6 18" />
     </svg>
   )
 }
@@ -88,7 +71,8 @@ export default function OrgaBusinessPage() {
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [showAdd, setShowAdd] = useState(false)
+  const [showAddMeeting, setShowAddMeeting] = useState(false)
+  const [showAddPerson, setShowAddPerson] = useState(false)
   const [pickQuery, setPickQuery] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null)
@@ -122,7 +106,7 @@ export default function OrgaBusinessPage() {
     const q = query.trim().toLowerCase()
     if (!q) return participants
     return participants.filter((p) =>
-      [p.organization_name, p.contact_name, p.email, p.sector, p.kind]
+      [p.organization_name, p.contact_name, p.email, p.phone, p.sector, p.kind, p.country]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     )
@@ -176,14 +160,43 @@ export default function OrgaBusinessPage() {
   }, [approvedPool, pickQuery, selectedIds])
 
   /* Approuve / refuse. */
-  async function onReview(id: string, status: 'approved' | 'rejected', e?: MouseEvent) {
-    e?.stopPropagation()
+  async function onReview(id: string, status: 'approved' | 'rejected') {
     setBusyId(id)
     try {
       await reviewParticipant(id, status)
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Action impossible')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  /* Ajoute une personne manuellement. */
+  async function onCreatePerson(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    setBusyId('create-person')
+    setError(null)
+    try {
+      await createParticipantOrga({
+        kind: String(fd.get('kind') || 'pme'),
+        organization_name: String(fd.get('organization_name') || ''),
+        contact_name: String(fd.get('contact_name') || ''),
+        email: String(fd.get('email') || ''),
+        phone: String(fd.get('phone') || '') || undefined,
+        sector: String(fd.get('sector') || '') || undefined,
+        offers: String(fd.get('offers') || '') || undefined,
+        seeks: String(fd.get('seeks') || '') || undefined,
+        country: String(fd.get('country') || '') || undefined,
+        contact_opt_in: true,
+        status: 'approved',
+      })
+      setShowAddPerson(false)
+      e.currentTarget.reset()
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ajout impossible')
     } finally {
       setBusyId(null)
     }
@@ -210,7 +223,7 @@ export default function OrgaBusinessPage() {
         location: String(fd.get('location') || '') || undefined,
         table_label: String(fd.get('table_label') || '') || undefined,
       })
-      setShowAdd(false)
+      setShowAddMeeting(false)
       setSelectedIds([])
       setPickQuery('')
       e.currentTarget.reset()
@@ -296,6 +309,8 @@ export default function OrgaBusinessPage() {
     setSelectedParticipantId(null)
     setSelectedMeetingId(null)
     setEditingMeetingId(null)
+    setShowAddPerson(false)
+    setShowAddMeeting(false)
   }
 
   return (
@@ -305,22 +320,31 @@ export default function OrgaBusinessPage() {
       onSearch={setQuery}
       actions={
         <div className="flex items-center gap-2">
-          {tab === 'meetings' && (
-            <button type="button" className="orga-btn" onClick={() => setShowAdd((v) => !v)}>
-              {showAdd ? 'Fermer' : 'Ajouter'}
-            </button>
-          )}
           {tab === 'participants' && (
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as typeof filter)}
-              className="orga-input w-auto"
-            >
-              <option value="">Tous</option>
-              <option value="pending">En attente</option>
-              <option value="approved">Approuvés</option>
-              <option value="rejected">Refusés</option>
-            </select>
+            <>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as typeof filter)}
+                className="orga-input w-auto min-w-[9rem]"
+              >
+                <option value="">Tous</option>
+                <option value="pending">En attente</option>
+                <option value="approved">Approuvés</option>
+                <option value="rejected">Refusés</option>
+              </select>
+              <button
+                type="button"
+                className="orga-btn"
+                onClick={() => setShowAddPerson((v) => !v)}
+              >
+                {showAddPerson ? 'Fermer' : 'Ajouter'}
+              </button>
+            </>
+          )}
+          {tab === 'meetings' && (
+            <button type="button" className="orga-btn" onClick={() => setShowAddMeeting((v) => !v)}>
+              {showAddMeeting ? 'Fermer' : 'Ajouter'}
+            </button>
           )}
         </div>
       }
@@ -344,26 +368,87 @@ export default function OrgaBusinessPage() {
 
       {tab === 'participants' && (
         <>
+          {showAddPerson && (
+            <section className="orga-panel mb-4">
+              <h2 className="text-[15px] font-semibold text-forest">Nouvelle personne</h2>
+              <p className="mt-1 text-[13px] text-ink/50">
+                Ajout manuel, validé directement pour les rendez-vous.
+              </p>
+              <form onSubmit={onCreatePerson} className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="text-[13px] font-medium text-forest">
+                  Personne
+                  <input required name="contact_name" className={field} />
+                </label>
+                <label className="text-[13px] font-medium text-forest">
+                  Organisation
+                  <input required name="organization_name" className={field} />
+                </label>
+                <label className="text-[13px] font-medium text-forest">
+                  Profil
+                  <select name="kind" className={field} defaultValue="pme">
+                    <option value="pme">PME / industrie</option>
+                    <option value="investisseur">Investisseur</option>
+                    <option value="acheteur">Acheteur</option>
+                  </select>
+                </label>
+                <label className="text-[13px] font-medium text-forest">
+                  Pays
+                  <input name="country" defaultValue="Togo" className={field} />
+                </label>
+                <label className="text-[13px] font-medium text-forest">
+                  E-mail
+                  <input required type="email" name="email" className={field} />
+                </label>
+                <label className="text-[13px] font-medium text-forest">
+                  Téléphone
+                  <input name="phone" className={field} />
+                </label>
+                <label className="text-[13px] font-medium text-forest sm:col-span-2">
+                  Secteur
+                  <input name="sector" className={field} />
+                </label>
+                <label className="text-[13px] font-medium text-forest sm:col-span-2">
+                  Offre
+                  <textarea name="offers" rows={2} className={field} />
+                </label>
+                <label className="text-[13px] font-medium text-forest sm:col-span-2">
+                  Cherche
+                  <textarea name="seeks" rows={2} className={field} />
+                </label>
+                <div className="sm:col-span-2">
+                  <button
+                    type="submit"
+                    disabled={busyId === 'create-person'}
+                    className="orga-btn disabled:opacity-50"
+                  >
+                    {busyId === 'create-person' ? 'Ajout…' : 'Enregistrer'}
+                  </button>
+                </div>
+              </form>
+            </section>
+          )}
+
           <section className="orga-panel !p-0 overflow-x-auto">
             <div className="flex items-center justify-between border-b border-black px-4 py-3">
               <h2 className="text-[15px] font-semibold text-forest">
-                {filteredParticipants.length} participant{filteredParticipants.length > 1 ? 's' : ''}
+                {filteredParticipants.length} personne{filteredParticipants.length > 1 ? 's' : ''}
               </h2>
               <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
             </div>
-            <table className="orga-table min-w-[640px]">
+            <table className="orga-table min-w-[720px]">
               <thead>
                 <tr>
                   <th className="w-12">#</th>
-                  <th>Organisation</th>
+                  <th>Personne</th>
+                  <th>Contact</th>
+                  <th className="w-28">Pays</th>
                   <th className="w-28">Profil</th>
                   <th className="w-28">Statut</th>
-                  <th className="w-28">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredParticipants.length === 0 && (
-                  <tr><td colSpan={5} className="py-10 text-ink/40">Aucun participant</td></tr>
+                  <tr><td colSpan={6} className="py-10 text-ink/40">Aucune personne</td></tr>
                 )}
                 {filteredParticipants.map((p, i) => (
                   <tr
@@ -374,37 +459,29 @@ export default function OrgaBusinessPage() {
                     onClick={() => selectParticipant(p.id)}
                   >
                     <td className="text-ink/45">{i + 1}</td>
-                    <td className="font-semibold text-forest">{p.organization_name}</td>
-                    <td className="font-medium text-forest">{p.kind}</td>
-                    <td>{statusLabel(p.status)}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      {p.status === 'pending' ? (
-                        <div className="flex flex-wrap gap-1.5">
-                          <button
-                            type="button"
-                            title="Approuver"
-                            aria-label="Approuver"
-                            disabled={busyId === p.id}
-                            onClick={(e) => void onReview(p.id, 'approved', e)}
-                            className={iconBtn}
-                          >
-                            <IconCheck />
-                          </button>
-                          <button
-                            type="button"
-                            title="Refuser"
-                            aria-label="Refuser"
-                            disabled={busyId === p.id}
-                            onClick={(e) => void onReview(p.id, 'rejected', e)}
-                            className={iconBtn}
-                          >
-                            <IconX />
-                          </button>
-                        </div>
+                    <td className="font-semibold text-forest">{p.contact_name}</td>
+                    <td>
+                      {p.phone ? (
+                        <a
+                          href={`tel:${p.phone}`}
+                          className="font-medium text-forest underline underline-offset-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {p.phone}
+                        </a>
                       ) : (
-                        '—'
+                        <a
+                          href={`mailto:${p.email}`}
+                          className="text-ink/60 underline underline-offset-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {p.email}
+                        </a>
                       )}
                     </td>
+                    <td>{p.country || '—'}</td>
+                    <td className="font-medium text-forest">{p.kind}</td>
+                    <td>{statusLabel(p.status)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -416,7 +493,7 @@ export default function OrgaBusinessPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-[16px] font-semibold text-forest">
-                    {selectedParticipant.organization_name}
+                    {selectedParticipant.contact_name}
                   </h2>
                   <p className="mt-1 text-[13px] text-ink/50">
                     {selectedParticipant.kind}
@@ -435,8 +512,8 @@ export default function OrgaBusinessPage() {
 
               <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
                 <p>
-                  <span className="text-ink/45">Contact · </span>
-                  {selectedParticipant.contact_name}
+                  <span className="text-ink/45">Organisation · </span>
+                  {selectedParticipant.organization_name}
                 </p>
                 <p>
                   <span className="text-ink/45">E-mail · </span>
@@ -509,7 +586,7 @@ export default function OrgaBusinessPage() {
 
       {tab === 'meetings' && (
         <div className="space-y-4">
-          {showAdd && (
+          {showAddMeeting && (
             <section className="orga-panel">
               <h2 className="text-[15px] font-semibold text-forest">Nouveau rendez-vous</h2>
               <p className="mt-1 text-[13px] text-ink/50">

@@ -15,6 +15,21 @@ const registerSchema = Joi.object({
   contact_opt_in: Joi.boolean().valid(true).required(),
 });
 
+/* Ajout manuel orga (approuvé par défaut). */
+const createParticipantOrgaSchema = Joi.object({
+  kind: Joi.string().valid('investisseur', 'pme', 'acheteur').required(),
+  organization_name: Joi.string().trim().min(2).max(200).required(),
+  contact_name: Joi.string().trim().min(2).max(160).required(),
+  email: Joi.string().trim().email().max(180).required(),
+  phone: Joi.string().trim().max(40).allow('', null),
+  sector: Joi.string().trim().max(120).allow('', null),
+  offers: Joi.string().trim().allow('', null),
+  seeks: Joi.string().trim().allow('', null),
+  country: Joi.string().trim().max(80).allow('', null),
+  contact_opt_in: Joi.boolean().default(true),
+  status: Joi.string().valid('pending', 'approved').default('approved'),
+});
+
 const reviewParticipantSchema = Joi.object({
   status: Joi.string().valid('approved', 'rejected').required(),
 });
@@ -42,6 +57,7 @@ const rescheduleMeetingSchema = Joi.object({
 
 module.exports = {
   registerSchema,
+  createParticipantOrgaSchema,
   reviewParticipantSchema,
   createMeetingSchema,
   contactNoteSchema,

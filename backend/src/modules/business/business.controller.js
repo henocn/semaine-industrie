@@ -3,10 +3,21 @@
 const businessService = require('./business.service');
 const ApiResponse = require('../../utils/ApiResponse');
 
+/* Inscription publique. */
 async function register(req, res, next) {
   try {
     const data = await businessService.register(req.body);
     return ApiResponse.created(res, data, 'Inscription enregistrée');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Ajout manuel orga. */
+async function createParticipant(req, res, next) {
+  try {
+    const data = await businessService.createByOrga(req.body);
+    return ApiResponse.created(res, data, 'Participant ajouté');
   } catch (err) {
     return next(err);
   }
@@ -72,6 +83,7 @@ async function rescheduleMeeting(req, res, next) {
 
 module.exports = {
   register,
+  createParticipant,
   listParticipants,
   reviewParticipant,
   createMeeting,

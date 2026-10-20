@@ -48,6 +48,26 @@ export function registerParticipant(payload: {
   })
 }
 
+/* Ajout manuel orga (approuvé par défaut). */
+export function createParticipantOrga(payload: {
+  kind: string
+  organization_name: string
+  contact_name: string
+  email: string
+  phone?: string
+  sector?: string
+  offers?: string
+  seeks?: string
+  country?: string
+  contact_opt_in?: boolean
+  status?: 'pending' | 'approved'
+}) {
+  return apiFetch<BusinessParticipant>('/business/participants/orga', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
 /* Liste orga des participants. */
 export function listParticipants(params?: { status?: string; kind?: string }) {
   const sp = new URLSearchParams()

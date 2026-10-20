@@ -147,12 +147,22 @@ body {
 .orga-input {
   width: 100%;
   border: 1px solid #111;
+  border-radius: 4px;
   background: #fff;
   padding: 0.55rem 0.75rem;
   font-size: 13px;
   color: var(--color-ink);
+  box-sizing: border-box;
 }
 .orga-input:focus { outline: none; border-color: var(--color-forest); }
+select.orga-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23024D3E' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  padding-right: 2rem;
+}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

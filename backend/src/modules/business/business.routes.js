@@ -7,6 +7,7 @@ const validate = require('../../middlewares/validate.middleware');
 const { authenticate, authorize } = require('../../middlewares/auth.middleware');
 const {
   registerSchema,
+  createParticipantOrgaSchema,
   reviewParticipantSchema,
   createMeetingSchema,
   contactNoteSchema,
@@ -16,6 +17,13 @@ const {
 const router = Router();
 
 router.post('/participants', validate(registerSchema), controller.register);
+router.post(
+  '/participants/orga',
+  authenticate,
+  authorize('orga'),
+  validate(createParticipantOrgaSchema),
+  controller.createParticipant,
+);
 
 router.get('/participants', authenticate, authorize('orga'), controller.listParticipants);
 router.patch(
