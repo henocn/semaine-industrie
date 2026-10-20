@@ -13,6 +13,26 @@ async function create(req, res, next) {
   }
 }
 
+/* PATCH mise à jour d'une visite. */
+async function update(req, res, next) {
+  try {
+    const data = await bookingService.updateBooking(req.params.id, req.body);
+    return ApiResponse.success(res, data, 'Visite mise à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* DELETE suppression d'une visite. */
+async function remove(req, res, next) {
+  try {
+    const data = await bookingService.deleteBooking(req.params.id);
+    return ApiResponse.success(res, data, 'Visite supprimée');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* GET liste orga. */
 async function list(req, res, next) {
   try {
@@ -33,4 +53,4 @@ async function sites(req, res, next) {
   }
 }
 
-module.exports = { create, list, sites };
+module.exports = { create, update, remove, list, sites };

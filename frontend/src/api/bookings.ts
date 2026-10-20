@@ -72,3 +72,26 @@ export function listBookings(status?: string) {
   const q = status ? `?status=${encodeURIComponent(status)}` : ''
   return apiFetch<VisitBooking[]>(`/bookings${q}`)
 }
+
+export type BookingPayload = {
+  organization_id: string
+  school_organization_id: string
+  visit_day: string
+  visit_start: string
+  visit_end: string
+  headcount?: number | null
+  notes?: string
+}
+
+/* Met à jour une visite. */
+export function updateBooking(id: string, payload: BookingPayload) {
+  return apiFetch<VisitBooking>(`/bookings/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
+/* Supprime une visite. */
+export function deleteBooking(id: string) {
+  return apiFetch<{ id: string }>(`/bookings/${id}`, { method: 'DELETE' })
+}

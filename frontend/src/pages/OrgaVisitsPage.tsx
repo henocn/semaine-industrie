@@ -1,13 +1,15 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import {
   createBooking,
+  deleteBooking,
   listBookableSites,
   listBookings,
+  updateBooking,
   type BookableSite,
   type VisitBooking,
 } from '../api/bookings'
-import { OrgaShell } from '../components/layout/OrgaShell'
 import { googleMapsUrl } from '../api/labels'
+import { OrgaShell } from '../components/layout/OrgaShell'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -38,13 +40,6 @@ function isEventWeekDay(iso: string) {
   return EVENT_WEEK_SET.has(iso)
 }
 
-/* Libellé court d'un jour SI. */
-function formatVisitDay(iso: string) {
-  const meta = EVENT_WEEK.find((d) => d.iso === iso)
-  if (!meta) return iso
-  return `${meta.short} ${dayNumber(iso)}`
-}
-
 /* Site positionné sur la carte. */
 function isOnMap(b: VisitBooking) {
   return (
@@ -55,21 +50,31 @@ function isOnMap(b: VisitBooking) {
   )
 }
 
-/* Icône liste. */
-function IconTable() {
+/* Icône crayon. */
+function IconEdit() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M4 6h16M4 12h16M4 18h16" />
+      <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+      <path d="m13 7 4 4" />
     </svg>
   )
 }
 
-/* Icône calendrier. */
-function IconCalendar() {
+/* Icône poubelle. */
+function IconTrash() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="16" rx="1" />
-      <path d="M3 10h18M8 3v4M16 3v4" />
+      <path d="M5 7h14M10 11v6M14 11v6M9 7V5h6v2M7 7l1 12h8l1-12" />
+    </svg>
+  )
+}
+
+/* Icône carte / pin. */
+function IconMap() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M12 21s-6-5.4-6-10a6 6 0 1 1 12 0c0 4.6-6 10-6 10z" />
+      <circle cx="12" cy="11" r="2.2" />
     </svg>
   )
 }
@@ -90,9 +95,9 @@ export default function OrgaVisitsPage() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [view, setView] = useState<'table' | 'calendar'>('table')
   const [selectedDay, setSelectedDay] = useState<string>(EVENT_WEEK[0].iso)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const selectedSite = useMemo(() => sites.find((s) => s.id === siteId) || null, [sites, siteId])
   const selectedSchool = useMemo(() => schools.find((s) => s.id === schoolId) || null, [schools, schoolId])
@@ -122,11 +127,12 @@ export default function OrgaVisitsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /* Préremplit l'effectif depuis l'école. */
+  /* Préremplit l'effectif depuis l'école (création uniquement). */
   useEffect(() => {
+    if (editingId) return
     if (selectedSchool?.max_visitors) setHeadcount(String(selectedSchool.max_visitors))
-    else setHeadcount('')
-  }, [selectedSchool])
+    else if (!editingId) setHeadcount('')
+  }, [selectedSchool, editingId])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -137,11 +143,6 @@ export default function OrgaVisitsPage() {
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [items, query])
-
-  const selected = useMemo(
-    () => filtered.find((b) => b.id === selectedId) || items.find((b) => b.id === selectedId) || null,
-    [filtered, items, selectedId],
-  )
 
   const byDay = useMemo(() => {
     const map = new Map<string, VisitBooking[]>()
@@ -160,6 +161,39 @@ export default function OrgaVisitsPage() {
   const dayVisits = byDay.get(selectedDay) || []
   const selectedMeta = EVENT_WEEK.find((d) => d.iso === selectedDay) || EVENT_WEEK[0]
 
+  /* Remet le formulaire à vide. */
+  function resetForm() {
+    setEditingId(null)
+    setNotes('')
+    setVisitDay('')
+    setVisitStart('09:00')
+    setVisitEnd('12:00')
+    if (sites[0]) setSiteId(sites[0].id)
+    if (schools[0]) setSchoolId(schools[0].id)
+    setHeadcount(schools[0]?.max_visitors ? String(schools[0].max_visitors) : '')
+  }
+
+  /* Ouvre le formulaire en création. */
+  function openCreate() {
+    resetForm()
+    setShowForm(true)
+  }
+
+  /* Préremplit le formulaire pour modification. */
+  function openEdit(b: VisitBooking, e?: MouseEvent) {
+    e?.stopPropagation()
+    setEditingId(b.id)
+    setSiteId(b.organization?.id || '')
+    setSchoolId(b.school?.id || '')
+    setVisitDay(b.visit_day)
+    setVisitStart(b.visit_start.slice(0, 5))
+    setVisitEnd(b.visit_end.slice(0, 5))
+    setHeadcount(String(b.headcount))
+    setNotes('')
+    setShowForm(true)
+    setError(null)
+  }
+
   /* Applique un créneau suggéré du site (uniquement si jour dans la semaine SI). */
   function applySlot(day: string, start: string, end: string) {
     if (!isEventWeekDay(day)) {
@@ -172,7 +206,7 @@ export default function OrgaVisitsPage() {
     setVisitEnd(end)
   }
 
-  /* Enregistre la visite. */
+  /* Enregistre ou met à jour la visite. */
   async function onArrange(e: FormEvent) {
     e.preventDefault()
     if (!siteId || !schoolId) return
@@ -186,29 +220,46 @@ export default function OrgaVisitsPage() {
     }
     setBusy(true)
     setError(null)
+    const payload = {
+      organization_id: siteId,
+      school_organization_id: schoolId,
+      visit_day: visitDay,
+      visit_start: visitStart,
+      visit_end: visitEnd,
+      headcount: headcount ? Number(headcount) : undefined,
+      notes: notes || undefined,
+    }
     try {
-      await createBooking({
-        organization_id: siteId,
-        school_organization_id: schoolId,
-        visit_day: visitDay,
-        visit_start: visitStart,
-        visit_end: visitEnd,
-        headcount: headcount ? Number(headcount) : undefined,
-        notes: notes || undefined,
-      })
-      setNotes('')
+      if (editingId) await updateBooking(editingId, payload)
+      else await createBooking(payload)
+      resetForm()
       setShowForm(false)
       await load()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ajout impossible')
+      setError(err instanceof Error ? err.message : 'Enregistrement impossible')
     } finally {
       setBusy(false)
     }
   }
 
-  /* Sélectionne une visite (détail). */
-  function selectVisit(id: string) {
-    setSelectedId((prev) => (prev === id ? null : id))
+  /* Supprime une visite après confirmation. */
+  async function onDelete(id: string, e?: MouseEvent) {
+    e?.stopPropagation()
+    if (!window.confirm('Supprimer cette visite ?')) return
+    setBusy(true)
+    setError(null)
+    try {
+      await deleteBooking(id)
+      if (editingId === id) {
+        resetForm()
+        setShowForm(false)
+      }
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Suppression impossible')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -217,44 +268,31 @@ export default function OrgaVisitsPage() {
       searchPlaceholder="Rechercher une visite…"
       onSearch={setQuery}
       actions={
-        <div className="flex items-center gap-2">
-          <div className="flex border border-black">
-            <button
-              type="button"
-              title="Tableau"
-              aria-label="Vue tableau"
-              aria-pressed={view === 'table'}
-              onClick={() => setView('table')}
-              className={`${iconBtn} border-0 ${view === 'table' ? 'bg-forest text-white' : ''}`}
-            >
-              <IconTable />
-            </button>
-            <button
-              type="button"
-              title="Calendrier"
-              aria-label="Vue calendrier"
-              aria-pressed={view === 'calendar'}
-              onClick={() => setView('calendar')}
-              className={`${iconBtn} border-0 border-l border-black ${
-                view === 'calendar' ? 'bg-forest text-white' : ''
-              }`}
-            >
-              <IconCalendar />
-            </button>
-          </div>
-          <button type="button" className="orga-btn" onClick={() => setShowForm((v) => !v)}>
-            {showForm ? 'Fermer' : 'Ajouter'}
-          </button>
-        </div>
+        <button
+          type="button"
+          className="orga-btn"
+          onClick={() => {
+            if (showForm) {
+              setShowForm(false)
+              resetForm()
+            } else {
+              openCreate()
+            }
+          }}
+        >
+          {showForm ? 'Fermer' : 'Ajouter'}
+        </button>
       }
     >
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       {showForm && (
         <section className="orga-panel mb-6">
-          <h2 className="text-[15px] font-semibold text-forest">Nouvelle visite</h2>
+          <h2 className="text-[15px] font-semibold text-forest">
+            {editingId ? 'Modifier la visite' : 'Nouvelle visite'}
+          </h2>
           <p className="mt-1 text-[13px] text-ink/50">
-            Site → établissement → créneau (16 au 22 novembre 2026).
+            Site → établissement → créneau (16 au 22 novembre 2026). Seuls les sites avec position carte sont proposés.
           </p>
           {sites.length === 0 && (
             <p className="mt-3 text-[13px] text-red-700">
@@ -364,56 +402,123 @@ export default function OrgaVisitsPage() {
 
             <div className="sm:col-span-2">
               <button type="submit" disabled={busy || !siteId || !schoolId} className="orga-btn disabled:opacity-50">
-                {busy ? 'Enregistrement…' : 'Confirmer'}
+                {busy ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Confirmer'}
               </button>
             </div>
           </form>
         </section>
       )}
 
+      <div className="mb-4 flex gap-0 border border-black">
+        <button
+          type="button"
+          onClick={() => setView('table')}
+          className={`flex-1 px-4 py-2.5 text-[14px] font-semibold transition-colors ${
+            view === 'table' ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
+          }`}
+        >
+          Tableau
+        </button>
+        <button
+          type="button"
+          onClick={() => setView('calendar')}
+          className={`flex-1 border-l border-black px-4 py-2.5 text-[14px] font-semibold transition-colors ${
+            view === 'calendar' ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
+          }`}
+        >
+          Calendrier
+        </button>
+      </div>
+
       {view === 'table' ? (
         <section className="orga-panel !p-0 overflow-x-auto">
-          <div className="flex items-center justify-between border-b border-black px-4 py-3">
+          <div className="border-b border-black px-4 py-3">
             <h2 className="text-[15px] font-semibold text-forest">
               {filtered.length} visite{filtered.length > 1 ? 's' : ''}
             </h2>
-            <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
           </div>
-          <table className="orga-table min-w-[560px]">
+          <table className="orga-table min-w-[820px]">
             <thead>
               <tr>
-                <th className="w-12">#</th>
+                <th>#</th>
                 <th>Établissement</th>
                 <th>Site</th>
-                <th>Jour</th>
-                <th className="w-20">Effectif</th>
+                <th>Créneau</th>
+                <th>Effectif</th>
+                <th>Contact</th>
+                <th className="w-36">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-10 text-ink/40">
-                    Aucune visite
-                  </td>
-                </tr>
+                <tr><td colSpan={7}>Aucune visite</td></tr>
               )}
               {filtered.map((b, i) => {
                 const onMap = isOnMap(b)
+                const maps = googleMapsUrl(b.organization?.lat, b.organization?.lng)
                 return (
-                  <tr
-                    key={b.id}
-                    className={`${onMap ? '' : 'orga-row-pending'} cursor-pointer ${
-                      selectedId === b.id ? 'bg-forest/10' : ''
-                    }`}
-                    onClick={() => selectVisit(b.id)}
-                  >
-                    <td className="text-ink/45">{i + 1}</td>
+                  <tr key={b.id} className={onMap ? undefined : 'orga-row-pending'}>
+                    <td className="font-semibold text-forest">{i + 1}</td>
                     <td className="font-medium text-forest">{b.school_name}</td>
-                    <td>{b.organization?.name || '—'}</td>
                     <td>
-                      {formatVisitDay(b.visit_day)} · {b.visit_start}-{b.visit_end}
+                      <p>{b.organization?.name || '—'}</p>
+                      {!onMap && (
+                        <p className="mt-1 text-[12px] font-medium text-red-700">
+                          Hors carte : ajoutez une position au site
+                        </p>
+                      )}
                     </td>
+                    <td>{b.visit_day} {b.visit_start}-{b.visit_end}</td>
                     <td className="font-semibold text-forest">{b.headcount}</td>
+                    <td>
+                      <a href={`tel:${b.teacher_phone || ''}`} className="block font-semibold text-forest underline underline-offset-2">
+                        {b.teacher_phone || '—'}
+                      </a>
+                      <a href={`mailto:${b.teacher_email}`} className="mt-0.5 block text-ink/55 underline underline-offset-2">
+                        {b.teacher_email}
+                      </a>
+                    </td>
+                    <td>
+                      <div className="flex flex-wrap gap-1.5">
+                        {maps ? (
+                          <a
+                            href={maps}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Voir sur la carte"
+                            aria-label="Voir sur la carte"
+                            className={iconBtn}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <IconMap />
+                          </a>
+                        ) : (
+                          <button type="button" disabled title="Pas de position" className={iconBtn}>
+                            <IconMap />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          title="Modifier"
+                          aria-label="Modifier"
+                          className={iconBtn}
+                          disabled={busy}
+                          onClick={(e) => openEdit(b, e)}
+                        >
+                          <IconEdit />
+                        </button>
+                        <button
+                          type="button"
+                          title="Supprimer"
+                          aria-label="Supprimer"
+                          className={iconBtn}
+                          disabled={busy}
+                          onClick={(e) => void onDelete(b.id, e)}
+                        >
+                          <IconTrash />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 )
               })}
@@ -425,7 +530,7 @@ export default function OrgaVisitsPage() {
           <div className="mb-4">
             <h2 className="text-[18px] font-semibold text-forest">Semaine du 16 au 22 novembre 2026</h2>
             <p className="mt-1 text-[13px] text-ink/50">
-              Cliquez sur un jour, puis une visite pour le détail.
+              Cliquez sur un jour pour voir le détail des visites.
             </p>
           </div>
 
@@ -470,113 +575,69 @@ export default function OrgaVisitsPage() {
             </p>
 
             {dayVisits.length > 0 && (
-              <ul className="mt-4 space-y-2">
-                {dayVisits.map((b) => (
-                  <li key={b.id}>
-                    <button
-                      type="button"
-                      onClick={() => selectVisit(b.id)}
-                      className={`w-full border border-black px-4 py-3 text-left transition-colors ${
-                        selectedId === b.id ? 'bg-forest/10' : 'bg-white hover:bg-forest/5'
-                      }`}
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-[14px] font-semibold text-forest">
-                          {b.visit_start}-{b.visit_end} · {b.school_name}
-                        </p>
-                        <p className="text-[13px] font-bold text-forest">{b.headcount} pers.</p>
+              <ul className="mt-4 space-y-3">
+                {dayVisits.map((b) => {
+                  const onMap = isOnMap(b)
+                  const maps = googleMapsUrl(b.organization?.lat, b.organization?.lng)
+                  return (
+                    <li key={b.id} className="border border-black bg-white px-4 py-3">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[15px] font-bold text-forest">
+                            {b.visit_start}-{b.visit_end}
+                          </p>
+                          <p className="mt-1 text-[14px] font-semibold text-ink">{b.school_name}</p>
+                          <p className="mt-0.5 text-[13px] text-ink/60">
+                            chez {b.organization?.name || 'site non renseigné'}
+                            {b.organization?.city ? ` · ${b.organization.city}` : ''}
+                          </p>
+                          {!onMap && (
+                            <p className="mt-1 text-[12px] font-medium text-red-700">
+                              Hors carte : ajoutez une position au site
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <p className="mr-2 text-[14px] font-bold text-forest">{b.headcount} pers.</p>
+                          {maps && (
+                            <a
+                              href={maps}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Voir sur la carte"
+                              className={iconBtn}
+                            >
+                              <IconMap />
+                            </a>
+                          )}
+                          <button type="button" title="Modifier" className={iconBtn} onClick={() => openEdit(b)}>
+                            <IconEdit />
+                          </button>
+                          <button type="button" title="Supprimer" className={iconBtn} onClick={() => void onDelete(b.id)}>
+                            <IconTrash />
+                          </button>
+                        </div>
                       </div>
-                      <p className="mt-1 text-[13px] text-ink/55">
-                        chez {b.organization?.name || 'site non renseigné'}
-                      </p>
-                    </button>
-                  </li>
-                ))}
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-black/10 pt-3 text-[13px]">
+                        {b.teacher_name && (
+                          <span className="text-ink/70">{b.teacher_name}</span>
+                        )}
+                        {b.teacher_phone && (
+                          <a href={`tel:${b.teacher_phone}`} className="font-semibold text-forest underline underline-offset-2">
+                            {b.teacher_phone}
+                          </a>
+                        )}
+                        {b.teacher_email && (
+                          <a href={`mailto:${b.teacher_email}`} className="text-ink/55 underline underline-offset-2">
+                            {b.teacher_email}
+                          </a>
+                        )}
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             )}
-          </div>
-        </section>
-      )}
-
-      {selected && (
-        <section className="orga-panel mt-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-[16px] font-semibold text-forest">{selected.school_name}</h2>
-              <p className="mt-1 text-[13px] text-ink/50">
-                {formatVisitDay(selected.visit_day)} · {selected.visit_start}-{selected.visit_end}
-                {' · '}
-                {selected.headcount} pers.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="orga-btn-ghost px-3 py-1.5 text-[13px]"
-              onClick={() => setSelectedId(null)}
-            >
-              Fermer
-            </button>
-          </div>
-
-          <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
-            <p>
-              <span className="text-ink/45">Site · </span>
-              <span className="font-medium text-forest">{selected.organization?.name || '—'}</span>
-              {selected.organization?.city ? ` · ${selected.organization.city}` : ''}
-            </p>
-            <p>
-              <span className="text-ink/45">Statut · </span>
-              {selected.status || '—'}
-            </p>
-            <p>
-              <span className="text-ink/45">Contact · </span>
-              {selected.teacher_name || '—'}
-            </p>
-            <p>
-              <span className="text-ink/45">Téléphone · </span>
-              {selected.teacher_phone ? (
-                <a
-                  href={`tel:${selected.teacher_phone}`}
-                  className="font-medium text-forest underline underline-offset-2"
-                >
-                  {selected.teacher_phone}
-                </a>
-              ) : (
-                '—'
-              )}
-            </p>
-            <p className="sm:col-span-2">
-              <span className="text-ink/45">E-mail · </span>
-              {selected.teacher_email ? (
-                <a
-                  href={`mailto:${selected.teacher_email}`}
-                  className="font-medium text-forest underline underline-offset-2"
-                >
-                  {selected.teacher_email}
-                </a>
-              ) : (
-                '—'
-              )}
-            </p>
-            <p className="sm:col-span-2">
-              <span className="text-ink/45">Carte · </span>
-              {isOnMap(selected) ? (
-                <a
-                  href={
-                    googleMapsUrl(selected.organization?.lat, selected.organization?.lng) || undefined
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-forest underline underline-offset-2"
-                >
-                  Voir l&apos;emplacement
-                </a>
-              ) : (
-                <span className="font-medium text-red-700">
-                  Hors carte : ajoutez une position au site
-                </span>
-              )}
-            </p>
           </div>
         </section>
       )}

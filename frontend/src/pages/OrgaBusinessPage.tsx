@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import {
   createMeeting,
   listMeetings,
@@ -14,6 +14,72 @@ import { OrgaShell } from '../components/layout/OrgaShell'
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
+const iconBtn =
+  'grid h-9 w-9 place-items-center border border-black bg-white text-forest hover:bg-forest hover:text-white disabled:opacity-40'
+
+/* Icône crayon. */
+function IconEdit() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+      <path d="m13 7 4 4" />
+    </svg>
+  )
+}
+
+/* Icône œil / détail. */
+function IconEye() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  )
+}
+
+/* Icône check. */
+function IconCheck() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M5 12.5 10 17l9-10" />
+    </svg>
+  )
+}
+
+/* Icône croix. */
+function IconX() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  )
+}
+
+/* Noms d'organisations d'un RDV. */
+function meetingNames(
+  m: BusinessMeeting,
+  approvedPool: BusinessParticipant[],
+  participants: BusinessParticipant[],
+) {
+  const ids =
+    Array.isArray(m.attendee_ids) && m.attendee_ids.length
+      ? m.attendee_ids
+      : ([m.participantA?.id, m.participantB?.id].filter(Boolean) as string[])
+  return (
+    ids
+      .map((id) => {
+        const p =
+          approvedPool.find((x) => x.id === id) ||
+          participants.find((x) => x.id === id) ||
+          (m.participantA?.id === id ? m.participantA : null) ||
+          (m.participantB?.id === id ? m.participantB : null)
+        return p?.organization_name
+      })
+      .filter(Boolean)
+      .join(' × ') || 'Participants'
+  )
+}
+
 /* Backoffice : participants B2B + rendez-vous. */
 export default function OrgaBusinessPage() {
   const [participants, setParticipants] = useState<BusinessParticipant[]>([])
@@ -27,6 +93,8 @@ export default function OrgaBusinessPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [pickQuery, setPickQuery] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null)
+  const [editingMeetingId, setEditingMeetingId] = useState<string | null>(null)
 
   /* Recharge listes. */
   async function load() {
@@ -60,6 +128,25 @@ export default function OrgaBusinessPage() {
     )
   }, [participants, query])
 
+  const filteredMeetings = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return meetings
+    return meetings.filter((m) => {
+      const names = meetingNames(m, approvedPool, participants).toLowerCase()
+      return (
+        names.includes(q) ||
+        (m.location || '').toLowerCase().includes(q) ||
+        (m.table_label || '').toLowerCase().includes(q) ||
+        m.status.toLowerCase().includes(q)
+      )
+    })
+  }, [meetings, query, approvedPool, participants])
+
+  const selectedMeeting = useMemo(
+    () => meetings.find((m) => m.id === selectedMeetingId) || null,
+    [meetings, selectedMeetingId],
+  )
+
   const pickList = useMemo(() => {
     const q = pickQuery.trim().toLowerCase()
     return approvedPool.filter((p) => {
@@ -72,7 +159,8 @@ export default function OrgaBusinessPage() {
   }, [approvedPool, pickQuery, selectedIds])
 
   /* Approuve / refuse. */
-  async function onReview(id: string, status: 'approved' | 'rejected') {
+  async function onReview(id: string, status: 'approved' | 'rejected', e?: MouseEvent) {
+    e?.stopPropagation()
     setBusyId(id)
     try {
       await reviewParticipant(id, status)
@@ -123,6 +211,7 @@ export default function OrgaBusinessPage() {
     setBusyId(id)
     try {
       await saveContactNote(id, note)
+      setEditingMeetingId(null)
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Enregistrement impossible')
@@ -143,6 +232,7 @@ export default function OrgaBusinessPage() {
         table_label: String(fd.get('table_label') || '') || undefined,
         location: String(fd.get('location') || '') || undefined,
       })
+      setEditingMeetingId(null)
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Report impossible')
@@ -165,10 +255,23 @@ export default function OrgaBusinessPage() {
     setPickQuery('')
   }
 
+  /* Sélectionne un RDV (détail). */
+  function selectMeeting(id: string) {
+    setSelectedMeetingId((prev) => (prev === id ? null : id))
+    setEditingMeetingId(null)
+  }
+
+  /* Ouvre le panneau en mode édition. */
+  function openMeetingEdit(id: string, e?: MouseEvent) {
+    e?.stopPropagation()
+    setSelectedMeetingId(id)
+    setEditingMeetingId(id)
+  }
+
   return (
     <OrgaShell
       title="Rencontres d'affaires"
-      searchPlaceholder="Rechercher un profil…"
+      searchPlaceholder="Rechercher…"
       onSearch={setQuery}
       actions={
         <div className="flex items-center gap-2">
@@ -210,66 +313,65 @@ export default function OrgaBusinessPage() {
       </div>
 
       {tab === 'participants' && (
-        <section className="orga-panel">
-          <div className="overflow-x-auto">
-            <table className="orga-table min-w-[720px]">
-              <thead>
-                <tr>
-                  <th>Organisation</th>
-                  <th>Profil</th>
-                  <th>Offre / besoin</th>
-                  <th>Statut</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredParticipants.length === 0 && (
-                  <tr><td colSpan={5} className="py-10 text-ink/40">Aucun participant</td></tr>
-                )}
-                {filteredParticipants.map((p) => (
-                  <tr key={p.id} className={participantRowClass(p.status)}>
-                    <td>
-                      <p className="font-semibold text-forest">{p.organization_name}</p>
-                      <p className="mt-1 text-ink/50">{p.contact_name} · {p.email}</p>
-                    </td>
-                    <td>
-                      <span className="font-medium text-forest">{p.kind}</span>
-                      {p.sector && <p className="mt-2 text-ink/45">{p.sector}</p>}
-                    </td>
-                    <td>
-                      <p><span className="text-ink/35">Offre :</span> {p.offers || '—'}</p>
-                      <p className="mt-1"><span className="text-ink/35">Cherche :</span> {p.seeks || '—'}</p>
-                    </td>
-                    <td>{statusLabel(p.status)}</td>
-                    <td>
-                      {p.status === 'pending' ? (
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            disabled={busyId === p.id}
-                            onClick={() => void onReview(p.id, 'approved')}
-                            className="orga-btn disabled:opacity-50"
-                          >
-                            Approuver
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busyId === p.id}
-                            onClick={() => void onReview(p.id, 'rejected')}
-                            className="orga-btn-ghost disabled:opacity-50"
-                          >
-                            Refuser
-                          </button>
-                        </div>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <section className="orga-panel !p-0 overflow-x-auto">
+          <div className="flex items-center justify-between border-b border-black px-4 py-3">
+            <h2 className="text-[15px] font-semibold text-forest">
+              {filteredParticipants.length} participant{filteredParticipants.length > 1 ? 's' : ''}
+            </h2>
           </div>
+          <table className="orga-table min-w-[640px]">
+            <thead>
+              <tr>
+                <th>Organisation</th>
+                <th className="w-28">Profil</th>
+                <th className="w-28">Statut</th>
+                <th className="w-28">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredParticipants.length === 0 && (
+                <tr><td colSpan={4} className="py-10 text-ink/40">Aucun participant</td></tr>
+              )}
+              {filteredParticipants.map((p) => (
+                <tr key={p.id} className={participantRowClass(p.status)}>
+                  <td>
+                    <p className="font-semibold text-forest">{p.organization_name}</p>
+                    <p className="mt-1 text-[13px] text-ink/50">{p.contact_name}</p>
+                  </td>
+                  <td className="font-medium text-forest">{p.kind}</td>
+                  <td>{statusLabel(p.status)}</td>
+                  <td>
+                    {p.status === 'pending' ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          type="button"
+                          title="Approuver"
+                          aria-label="Approuver"
+                          disabled={busyId === p.id}
+                          onClick={(e) => void onReview(p.id, 'approved', e)}
+                          className={iconBtn}
+                        >
+                          <IconCheck />
+                        </button>
+                        <button
+                          type="button"
+                          title="Refuser"
+                          aria-label="Refuser"
+                          disabled={busyId === p.id}
+                          onClick={(e) => void onReview(p.id, 'rejected', e)}
+                          className={iconBtn}
+                        >
+                          <IconX />
+                        </button>
+                      </div>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </section>
       )}
 
@@ -364,120 +466,208 @@ export default function OrgaBusinessPage() {
             </section>
           )}
 
-          <section className="orga-panel">
-            <h2 className="mb-4 text-[15px] font-semibold text-forest">
-              {meetings.length} rendez-vous
-            </h2>
-            <ul className="space-y-3">
-              {meetings.length === 0 && <li className="text-[13px] text-ink/40">Aucun rendez-vous</li>}
-              {meetings.map((m) => {
-                const ids =
-                  Array.isArray(m.attendee_ids) && m.attendee_ids.length
-                    ? m.attendee_ids
-                    : [m.participantA?.id, m.participantB?.id].filter(Boolean) as string[]
-                const names =
-                  ids
-                    .map((id) => {
-                      const p =
-                        approvedPool.find((x) => x.id === id) ||
-                        participants.find((x) => x.id === id) ||
-                        (m.participantA?.id === id ? m.participantA : null) ||
-                        (m.participantB?.id === id ? m.participantB : null)
-                      return p?.organization_name
-                    })
-                    .filter(Boolean)
-                    .join(' × ') || 'Participants'
-                return (
-                  <li key={m.id} className="border border-black bg-white p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-forest">{names}</p>
-                        <p className="mt-1 text-[13px] text-ink/55">
-                          {new Date(m.slot_start).toLocaleString('fr-FR')} →{' '}
-                          {new Date(m.slot_end).toLocaleTimeString('fr-FR', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                          {m.location ? ` · ${m.location}` : ''}
-                          {m.table_label ? ` · Table ${m.table_label}` : ''}
-                        </p>
-                        <p className="mt-1 text-[12px] uppercase tracking-wide text-ink/35">{m.status}</p>
-                      </div>
-                    </div>
-                    {m.status !== 'done' ? (
-                      <div className="mt-3 space-y-3">
-                        <form
-                          className="grid gap-2 md:grid-cols-4"
-                          onSubmit={(e) => void onReschedule(e, m.id)}
-                        >
-                          <label className="text-[12px] font-medium text-ink/50">
-                            Nouveau début
-                            <input
-                              required
-                              type="datetime-local"
-                              name="slot_start"
-                              defaultValue={toLocalInput(m.slot_start)}
-                              className="mt-1 w-full orga-input"
-                            />
-                          </label>
-                          <label className="text-[12px] font-medium text-ink/50">
-                            Nouvelle fin
-                            <input
-                              required
-                              type="datetime-local"
-                              name="slot_end"
-                              defaultValue={toLocalInput(m.slot_end)}
-                              className="mt-1 w-full orga-input"
-                            />
-                          </label>
-                          <label className="text-[12px] font-medium text-ink/50">
-                            Lieu
-                            <input
-                              name="location"
-                              defaultValue={m.location || ''}
-                              className="mt-1 w-full orga-input"
-                            />
-                          </label>
-                          <div className="flex items-end">
-                            <button
-                              type="submit"
-                              disabled={busyId === m.id}
-                              className="orga-btn-ghost w-full px-3 py-2.5 text-[12px] disabled:opacity-50"
-                            >
-                              Reporter + notifier
-                            </button>
-                          </div>
-                        </form>
-                        <form
-                          className="flex flex-col gap-2 sm:flex-row"
-                          onSubmit={(e) => {
-                            e.preventDefault()
-                            const note = String(new FormData(e.currentTarget).get('note') || '')
-                            void onNote(m.id, note)
-                          }}
-                        >
-                          <input
-                            name="note"
-                            placeholder="Fiche contact (30 sec)…"
-                            className="flex-1 border border-black bg-white px-3 py-2.5 text-[13px]"
-                          />
+          <section className="orga-panel !p-0 overflow-x-auto">
+            <div className="flex items-center justify-between border-b border-black px-4 py-3">
+              <h2 className="text-[15px] font-semibold text-forest">
+                {filteredMeetings.length} rendez-vous
+              </h2>
+              <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
+            </div>
+            <table className="orga-table min-w-[640px]">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Participants</th>
+                  <th>Lieu</th>
+                  <th className="w-28">Statut</th>
+                  <th className="w-28">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMeetings.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-10 text-ink/40">
+                      Aucun rendez-vous
+                    </td>
+                  </tr>
+                )}
+                {filteredMeetings.map((m) => {
+                  const names = meetingNames(m, approvedPool, participants)
+                  return (
+                    <tr
+                      key={m.id}
+                      className={`cursor-pointer ${selectedMeetingId === m.id ? 'bg-forest/10' : ''}`}
+                      onClick={() => selectMeeting(m.id)}
+                    >
+                      <td className="whitespace-nowrap font-medium text-forest">
+                        {new Date(m.slot_start).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: 'short',
+                        })}
+                        {' · '}
+                        {new Date(m.slot_start).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="font-medium text-ink">{names}</td>
+                      <td>
+                        {m.location || '—'}
+                        {m.table_label ? ` · ${m.table_label}` : ''}
+                      </td>
+                      <td className="text-[12px] uppercase tracking-wide text-ink/45">{m.status}</td>
+                      <td>
+                        <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
-                            type="submit"
-                            disabled={busyId === m.id}
-                            className="border border-black bg-forest px-4 py-2.5 text-[12px] font-semibold text-white disabled:opacity-50"
+                            type="button"
+                            title="Voir le détail"
+                            aria-label="Voir le détail"
+                            className={iconBtn}
+                            onClick={() => {
+                              setSelectedMeetingId(m.id)
+                              setEditingMeetingId(null)
+                            }}
                           >
-                            Clôturer + relance 3 mois
+                            <IconEye />
                           </button>
-                        </form>
-                      </div>
-                    ) : (
-                      <p className="mt-3 text-[13px] text-ink/60">{m.contact_note || 'Échange clôturé'}</p>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
+                          {m.status !== 'done' && (
+                            <button
+                              type="button"
+                              title="Modifier / reporter"
+                              aria-label="Modifier"
+                              className={iconBtn}
+                              onClick={(e) => openMeetingEdit(m.id, e)}
+                            >
+                              <IconEdit />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </section>
+
+          {selectedMeeting && (
+            <section className="orga-panel">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-[16px] font-semibold text-forest">
+                    {meetingNames(selectedMeeting, approvedPool, participants)}
+                  </h2>
+                  <p className="mt-1 text-[13px] text-ink/50">
+                    {new Date(selectedMeeting.slot_start).toLocaleString('fr-FR')} →{' '}
+                    {new Date(selectedMeeting.slot_end).toLocaleTimeString('fr-FR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="orga-btn-ghost px-3 py-1.5 text-[13px]"
+                  onClick={() => {
+                    setSelectedMeetingId(null)
+                    setEditingMeetingId(null)
+                  }}
+                >
+                  Fermer
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-2 text-[13px] sm:grid-cols-2">
+                <p>
+                  <span className="text-ink/45">Lieu · </span>
+                  {selectedMeeting.location || '—'}
+                </p>
+                <p>
+                  <span className="text-ink/45">Table · </span>
+                  {selectedMeeting.table_label || '—'}
+                </p>
+                <p>
+                  <span className="text-ink/45">Statut · </span>
+                  {selectedMeeting.status}
+                </p>
+                {selectedMeeting.contact_note && (
+                  <p className="sm:col-span-2">
+                    <span className="text-ink/45">Note · </span>
+                    {selectedMeeting.contact_note}
+                  </p>
+                )}
+              </div>
+
+              {selectedMeeting.status !== 'done' && (
+                <div className="mt-4 space-y-4 border-t border-black/10 pt-4">
+                  <form
+                    key={`reschedule-${selectedMeeting.id}-${editingMeetingId || 'view'}`}
+                    className="grid gap-2 md:grid-cols-4"
+                    onSubmit={(e) => void onReschedule(e, selectedMeeting.id)}
+                  >
+                    <label className="text-[12px] font-medium text-ink/50">
+                      Nouveau début
+                      <input
+                        required
+                        type="datetime-local"
+                        name="slot_start"
+                        defaultValue={toLocalInput(selectedMeeting.slot_start)}
+                        className="mt-1 w-full orga-input"
+                      />
+                    </label>
+                    <label className="text-[12px] font-medium text-ink/50">
+                      Nouvelle fin
+                      <input
+                        required
+                        type="datetime-local"
+                        name="slot_end"
+                        defaultValue={toLocalInput(selectedMeeting.slot_end)}
+                        className="mt-1 w-full orga-input"
+                      />
+                    </label>
+                    <label className="text-[12px] font-medium text-ink/50">
+                      Lieu
+                      <input
+                        name="location"
+                        defaultValue={selectedMeeting.location || ''}
+                        className="mt-1 w-full orga-input"
+                      />
+                    </label>
+                    <div className="flex items-end">
+                      <button
+                        type="submit"
+                        disabled={busyId === selectedMeeting.id}
+                        className="orga-btn-ghost w-full px-3 py-2.5 text-[12px] disabled:opacity-50"
+                      >
+                        Reporter + notifier
+                      </button>
+                    </div>
+                  </form>
+                  <form
+                    className="flex flex-col gap-2 sm:flex-row"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      const note = String(new FormData(e.currentTarget).get('note') || '')
+                      void onNote(selectedMeeting.id, note)
+                    }}
+                  >
+                    <input
+                      name="note"
+                      placeholder="Fiche contact (30 sec)…"
+                      className="flex-1 border border-black bg-white px-3 py-2.5 text-[13px]"
+                    />
+                    <button
+                      type="submit"
+                      disabled={busyId === selectedMeeting.id}
+                      className="border border-black bg-forest px-4 py-2.5 text-[12px] font-semibold text-white disabled:opacity-50"
+                    >
+                      Clôturer + relance 3 mois
+                    </button>
+                  </form>
+                </div>
+              )}
+            </section>
+          )}
         </div>
       )}
     </OrgaShell>
@@ -497,4 +687,3 @@ function statusLabel(status: BusinessParticipant['status']) {
   if (status === 'rejected') return 'Refusé'
   return 'En attente'
 }
-

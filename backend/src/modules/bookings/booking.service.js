@@ -117,7 +117,11 @@ async function createBooking(payload) {
 async function getBookingById(id) {
   const row = await VisitBooking.findByPk(id, {
     include: [
-      { model: Organization, as: 'organization', attributes: ['id', 'name', 'slug', 'city', 'max_visitors'] },
+      {
+        model: Organization,
+        as: 'organization',
+        attributes: ['id', 'name', 'slug', 'city', 'max_visitors', 'lat', 'lng'],
+      },
       {
         model: Organization,
         as: 'school',
@@ -127,6 +131,86 @@ async function getBookingById(id) {
   });
   if (!row) throw ApiError.notFound('Réservation introuvable');
   return row;
+}
+
+/* Met à jour une visite arrangée (orga). */
+async function updateBooking(id, payload) {
+  const existing = await VisitBooking.findByPk(id);
+  if (!existing) throw ApiError.notFound('Réservation introuvable');
+
+  const site = await Organization.findOne({
+    where: {
+      id: payload.organization_id,
+      type: 'entreprise',
+      label_status: 'approved',
+      is_active: true,
+    },
+  });
+  if (!site) throw ApiError.notFound('Site industriel introuvable ou non labellisé');
+  if (site.lat == null || site.lng == null) {
+    throw ApiError.badRequest('Ce site n’a pas de position carte — ajoutez lat/lng via Demandes label → Modifier');
+  }
+
+  const school = await Organization.findOne({
+    where: {
+      id: payload.school_organization_id,
+      type: 'ecole',
+      label_status: 'approved',
+      is_active: true,
+    },
+  });
+  if (!school) throw ApiError.notFound('Établissement introuvable ou non labellisé');
+  if (!school.contact_email) {
+    throw ApiError.badRequest('Cet établissement n’a pas d’e-mail de contact');
+  }
+
+  const headcount = Number(payload.headcount || school.max_visitors || 0);
+  if (!Number.isFinite(headcount) || headcount < 1) {
+    throw ApiError.badRequest('Effectif invalide');
+  }
+
+  if (site.max_visitors) {
+    const used = await VisitBooking.sum('headcount', {
+      where: {
+        id: { [Op.ne]: id },
+        organization_id: site.id,
+        visit_day: payload.visit_day,
+        visit_start: payload.visit_start,
+        visit_end: payload.visit_end,
+        status: { [Op.in]: ['pending', 'confirmed'] },
+      },
+    });
+    const already = Number(used || 0);
+    if (already + headcount > site.max_visitors) {
+      throw ApiError.conflict(
+        `Capacité dépassée (${already}/${site.max_visitors} déjà prévus pour ce créneau)`,
+      );
+    }
+  }
+
+  await existing.update({
+    organization_id: site.id,
+    school_organization_id: school.id,
+    school_name: school.name,
+    teacher_name: school.contact_name || school.name,
+    teacher_email: school.contact_email,
+    teacher_phone: school.contact_phone || null,
+    visit_day: payload.visit_day,
+    visit_start: payload.visit_start,
+    visit_end: payload.visit_end,
+    headcount,
+    notes: payload.notes || null,
+  });
+
+  return getBookingById(id);
+}
+
+/* Supprime une visite. */
+async function deleteBooking(id) {
+  const existing = await VisitBooking.findByPk(id);
+  if (!existing) throw ApiError.notFound('Réservation introuvable');
+  await existing.destroy();
+  return { id };
 }
 
 /* Liste les réservations (orga). */
@@ -168,4 +252,11 @@ async function listBookableSites({ type } = {}) {
   });
 }
 
-module.exports = { createBooking, listBookings, listBookableSites, getBookingById };
+module.exports = {
+  createBooking,
+  updateBooking,
+  deleteBooking,
+  listBookings,
+  listBookableSites,
+  getBookingById,
+};
