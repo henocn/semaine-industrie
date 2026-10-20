@@ -78,18 +78,33 @@ function Photo({
   )
 }
 
-/* Hero coupé : aplat forest + photo pleine, cartouche des chiffres en bas. */
+/* Hero plein cadre : photo + dégradé forest doux, cartouche des chiffres en bas. */
 function Hero() {
   return (
-    <section id="top" className="relative bg-forest text-white">
-      <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className={`${WRAP} flex flex-col justify-end py-14 sm:py-20 lg:max-w-none lg:pr-10 lg:pl-[max(1.25rem,calc((100vw-72rem)/2+2rem))]`}>
+    <section id="top" className="relative isolate bg-forest text-white">
+      <div className="relative min-h-[520px] overflow-hidden sm:min-h-[600px] lg:min-h-[640px]">
+        <img
+          src="/images/hall.jpg"
+          alt=""
+          aria-hidden="true"
+          className="hero-photo absolute inset-0 h-full w-full object-cover object-center"
+        />
+        {/* Voile progressif : lisibilité du texte sans coupure nette */}
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-forest via-forest/85 to-forest/25 sm:via-forest/75 sm:to-transparent"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-forest/90 via-transparent to-forest/40"
+          aria-hidden="true"
+        />
+        <div className={`${WRAP} relative flex min-h-[520px] flex-col justify-end pb-28 pt-20 sm:min-h-[600px] sm:pb-32 lg:min-h-[640px]`}>
           <p className="ui-eyebrow text-sun">Semaine de l’industrie 2026</p>
           <h1 className="display h1 mt-4 max-w-xl !text-white text-balance">
             {CAMPAIGN_TAGLINE.replace(/\.$/, '')}
             <span className="text-leaf">.</span>
           </h1>
-          <p className="lead mt-5 max-w-md text-white/85">
+          <p className="lead mt-5 max-w-md text-white/90">
             Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -101,18 +116,9 @@ function Hero() {
             </Button>
           </div>
         </div>
-        <div className="relative min-h-[240px] overflow-hidden sm:min-h-[320px] lg:min-h-[520px]">
-          <img
-            src="/images/hall.jpg"
-            alt=""
-            aria-hidden="true"
-            className="hero-photo absolute inset-0 h-full w-full object-cover object-center"
-          />
-          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-16 bg-gradient-to-r from-forest to-transparent lg:block" />
-        </div>
       </div>
 
-      <div className={`${WRAP} relative z-10 -mt-6 pb-10 sm:-mt-8 sm:pb-12`}>
+      <div className={`${WRAP} relative z-10 -mt-16 pb-10 sm:-mt-14 sm:pb-12`}>
         <dl className="cartouche reveal grid gap-6 sm:grid-cols-3 sm:gap-0">
           {KEY_FIGURES.map(([value, label], i) => (
             <div
@@ -351,7 +357,6 @@ function Contact() {
     try {
       await sendContactMessage({
         name: String(fd.get('nom') || ''),
-        organization: String(fd.get('organisation') || '') || undefined,
         email: String(fd.get('email') || ''),
         message: String(fd.get('message') || ''),
       })
@@ -382,25 +387,22 @@ function Contact() {
         {sent ? (
           <p className="self-center text-lg text-forest">Merci, votre message a bien été pris en compte.</p>
         ) : (
-          <form onSubmit={submit} className="reveal grid gap-8 sm:grid-cols-2" style={{ transitionDelay: '80ms' }}>
+          <form onSubmit={submit} className="reveal grid gap-8" style={{ transitionDelay: '80ms' }}>
             <Field label="Nom">
               <input required name="nom" className={CONTACT_INPUT} />
             </Field>
-            <Field label="Organisation" optional>
-              <input name="organisation" className={CONTACT_INPUT} />
-            </Field>
-            <Field label="Adresse e-mail" className="sm:col-span-2">
+            <Field label="Adresse e-mail">
               <input required type="email" name="email" className={CONTACT_INPUT} />
             </Field>
-            <Field label="Message" className="sm:col-span-2">
+            <Field label="Message">
               <textarea required name="message" rows={4} className={`${CONTACT_INPUT} resize-none`} />
             </Field>
             {error && (
-              <p role="alert" className="text-[15px] text-flag sm:col-span-2">
+              <p role="alert" className="text-[15px] text-flag">
                 {error}
               </p>
             )}
-            <div className="sm:col-span-2">
+            <div>
               <Button type="submit" variant="primary" disabled={loading} withArrow={!loading}>
                 {loading ? 'Envoi…' : 'Envoyer'}
               </Button>
