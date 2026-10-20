@@ -77,14 +77,36 @@ async function updateRequest(req, res, next) {
   }
 }
 
-/* Remplace le PDF label après acceptation. */
+/* Ajoute un fichier au kit après acceptation (ancien endpoint). */
 async function updateLabelPdf(req, res, next) {
   try {
-    if (!req.file) throw ApiError.badRequest('PDF du label requis');
-    const label_document_url = `/uploads/docs/${req.file.filename}`;
-    const data = await labelService.updateLabelDocument(req.params.id, label_document_url);
+    if (!req.file) throw ApiError.badRequest('Fichier kit requis');
+    const data = await labelService.addKitFile(req.params.id, req.file);
     emitRealtime('label:updated', asJson(data), 'orga');
-    return ApiResponse.success(res, data, 'PDF du label mis à jour');
+    return ApiResponse.success(res, data, 'Fichier ajouté au kit');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Ajoute un fichier au kit. */
+async function addKitFile(req, res, next) {
+  try {
+    if (!req.file) throw ApiError.badRequest('Fichier kit requis');
+    const data = await labelService.addKitFile(req.params.id, req.file);
+    emitRealtime('label:updated', asJson(data), 'orga');
+    return ApiResponse.success(res, data, 'Fichier ajouté au kit');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Supprime un fichier du kit. */
+async function removeKitFile(req, res, next) {
+  try {
+    const data = await labelService.removeKitFile(req.params.id, req.params.fileId);
+    emitRealtime('label:updated', asJson(data), 'orga');
+    return ApiResponse.success(res, data, 'Fichier retiré du kit');
   } catch (err) {
     return next(err);
   }
@@ -126,6 +148,7 @@ async function reviewRequest(req, res, next) {
       status,
       review_note,
       label_document_url,
+      kit_file: req.file || null,
     });
     emitRealtime('label:updated', asJson(data.request), 'orga');
     const name = data.request?.structure_name || req.params.id;
@@ -238,6 +261,8 @@ module.exports = {
   getRequest,
   updateRequest,
   updateLabelPdf,
+  addKitFile,
+  removeKitFile,
   deleteRequest,
   reviewRequest,
   uploadGallery,

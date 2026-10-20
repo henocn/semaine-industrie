@@ -118,8 +118,17 @@ export type LabelRequest = {
   lng?: string | number | null
   status: 'pending' | 'approved' | 'rejected'
   label_document_url?: string | null
+  kit_files?: KitFile[]
   createdAt?: string
   created_at?: string
+}
+
+export type KitFile = {
+  id: string
+  name: string
+  url: string
+  mime?: string | null
+  size?: number | null
 }
 
 /* Libellé d'adresse (champ unique ou repli ville/région). */
@@ -263,13 +272,13 @@ export function createLabelRequestOrga(payload: Partial<LabelRequestPayload> & {
   })
 }
 
-/* Remplace le PDF label après acceptation. */
-export async function updateLabelPdf(id: string, file: File) {
+/* Ajoute un fichier au kit après acceptation. */
+export async function addKitFile(id: string, file: File) {
   const token = getAccessToken()
   const body = new FormData()
-  body.append('label_pdf', file)
-  const res = await fetch(`${API_BASE}/labels/requests/${id}/label-pdf`, {
-    method: 'PATCH',
+  body.append('kit_file', file)
+  const res = await fetch(`${API_BASE}/labels/requests/${id}/kit`, {
+    method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body,
   })
@@ -282,6 +291,18 @@ export async function updateLabelPdf(id: string, file: File) {
     throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
   }
   return json.data
+}
+
+/* Alias rétrocompat (ajoute au kit). */
+export async function updateLabelPdf(id: string, file: File) {
+  return addKitFile(id, file)
+}
+
+/* Supprime un fichier du kit. */
+export function deleteKitFile(requestId: string, fileId: string) {
+  return apiFetch<LabelRequest>(`/labels/requests/${requestId}/kit/${encodeURIComponent(fileId)}`, {
+    method: 'DELETE',
+  })
 }
 
 /* Supprime un dossier label. */

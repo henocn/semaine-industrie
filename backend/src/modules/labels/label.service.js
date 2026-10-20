@@ -1,6 +1,9 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const { Op } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
 const { LabelRequest, Organization, VisitBooking, sequelize } = require('../../models');
 const env = require('../../config/env');
@@ -8,6 +11,7 @@ const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const whatsappService = require('../whatsapp/whatsapp.service');
 const logger = require('../../utils/logger');
+const { DOCS_DIR } = require('../../middlewares/upload.middleware');
 
 /* Transforme un nom en slug URL. */
 function slugify(text) {
@@ -90,12 +94,67 @@ async function createRequestByOrga(payload) {
   return row;
 }
 
-/* Enrichit une demande avec code + URL du kit (PDF). */
+/* Normalise la liste kit (repli sur l'ancien PDF unique). */
+function normalizeKitFiles(orgLike) {
+  const raw = Array.isArray(orgLike?.kit_files) ? orgLike.kit_files : [];
+  if (raw.length) return raw;
+  const url = orgLike?.label_document_url;
+  if (!url) return [];
+  return [
+    {
+      id: 'legacy',
+      name: 'kit.pdf',
+      url,
+      mime: 'application/pdf',
+      size: null,
+    },
+  ];
+}
+
+/* Choisit l'URL principale (PDF prioritaire) pour WhatsApp / code suivi. */
+function primaryKitUrl(kitFiles) {
+  if (!Array.isArray(kitFiles) || !kitFiles.length) return null;
+  const pdf = kitFiles.find(
+    (f) =>
+      String(f.mime || '').includes('pdf') ||
+      String(f.url || '').toLowerCase().endsWith('.pdf') ||
+      String(f.name || '').toLowerCase().endsWith('.pdf'),
+  );
+  return (pdf || kitFiles[0])?.url || null;
+}
+
+/* Construit une entrée kit depuis un fichier multer. */
+function kitEntryFromFile(file) {
+  return {
+    id: uuidv4(),
+    name: String(file.originalname || file.filename || 'fichier').slice(0, 200),
+    url: `/uploads/docs/${file.filename}`,
+    mime: file.mimetype || null,
+    size: Number.isFinite(file.size) ? file.size : null,
+  };
+}
+
+/* Supprime le fichier disque d'une entrée kit si possible. */
+function unlinkKitFile(entry) {
+  const url = String(entry?.url || '');
+  if (!url.startsWith('/uploads/docs/')) return;
+  const filename = path.basename(url);
+  const full = path.join(DOCS_DIR, filename);
+  try {
+    if (fs.existsSync(full)) fs.unlinkSync(full);
+  } catch {
+    /* non bloquant */
+  }
+}
+
+/* Enrichit une demande avec code + fichiers kit. */
 function withOrgExtras(row) {
   const json = row.toJSON ? row.toJSON() : { ...row };
   const org = json.organization || null;
   json.label_code = org?.label_code || json.label_code || null;
-  json.label_document_url = org?.label_document_url || json.label_document_url || null;
+  const kit = normalizeKitFiles(org || json);
+  json.kit_files = kit;
+  json.label_document_url = primaryKitUrl(kit) || org?.label_document_url || json.label_document_url || null;
   return json;
 }
 
@@ -109,7 +168,7 @@ async function listRequests({ status } = {}) {
       {
         model: Organization,
         as: 'organization',
-        attributes: ['id', 'label_code', 'label_document_url'],
+        attributes: ['id', 'label_code', 'label_document_url', 'kit_files'],
         required: false,
       },
     ],
@@ -148,12 +207,25 @@ async function updateRequest(id, payload) {
   return request;
 }
 
-/* Remplace le PDF label d'une organisation déjà acceptée. */
-async function updateLabelDocument(id, label_document_url) {
-  const doc = String(label_document_url || '').trim();
-  if (!doc || !doc.startsWith('/uploads/docs/')) {
-    throw ApiError.badRequest('Fichier kit invalide (PDF attendu)');
-  }
+/* Recharge une demande enrichie (code + kit). */
+async function getEnrichedRequest(id) {
+  const fresh = await LabelRequest.findByPk(id, {
+    include: [
+      {
+        model: Organization,
+        as: 'organization',
+        attributes: ['id', 'label_code', 'label_document_url', 'kit_files'],
+        required: false,
+      },
+    ],
+  });
+  if (!fresh) throw ApiError.notFound('Demande introuvable');
+  return withOrgExtras(fresh);
+}
+
+/* Ajoute un fichier au kit d'une organisation acceptée. */
+async function addKitFile(id, file) {
+  if (!file?.filename) throw ApiError.badRequest('Fichier kit requis');
 
   const request = await getRequestById(id);
   if (request.status !== 'approved' || !request.organization_id) {
@@ -162,19 +234,49 @@ async function updateLabelDocument(id, label_document_url) {
 
   const org = await Organization.findByPk(request.organization_id);
   if (!org) throw ApiError.notFound('Organisation introuvable');
-  org.label_document_url = doc;
+
+  const entry = kitEntryFromFile(file);
+  const next = [...normalizeKitFiles(org), entry];
+  org.kit_files = next;
+  org.label_document_url = primaryKitUrl(next);
   await org.save();
-  const fresh = await LabelRequest.findByPk(id, {
-    include: [
-      {
-        model: Organization,
-        as: 'organization',
-        attributes: ['id', 'label_code', 'label_document_url'],
-        required: false,
-      },
-    ],
+  return getEnrichedRequest(id);
+}
+
+/* Remplace / ajoute via l'ancien endpoint PDF (rétrocompat). */
+async function updateLabelDocument(id, label_document_url, fileMeta = null) {
+  const doc = String(label_document_url || '').trim();
+  if (!doc || !doc.startsWith('/uploads/docs/')) {
+    throw ApiError.badRequest('Fichier kit invalide');
+  }
+  return addKitFile(id, {
+    filename: path.basename(doc),
+    originalname: fileMeta?.originalname || path.basename(doc),
+    mimetype: fileMeta?.mimetype || 'application/pdf',
+    size: fileMeta?.size ?? null,
   });
-  return withOrgExtras(fresh || request);
+}
+
+/* Supprime un fichier du kit. */
+async function removeKitFile(id, fileId) {
+  const request = await getRequestById(id);
+  if (request.status !== 'approved' || !request.organization_id) {
+    throw ApiError.badRequest('Kit modifiable uniquement après acceptation');
+  }
+
+  const org = await Organization.findByPk(request.organization_id);
+  if (!org) throw ApiError.notFound('Organisation introuvable');
+
+  const current = normalizeKitFiles(org);
+  const target = current.find((f) => f.id === fileId);
+  if (!target) throw ApiError.notFound('Fichier introuvable dans le kit');
+
+  const next = current.filter((f) => f.id !== fileId);
+  unlinkKitFile(target);
+  org.kit_files = next;
+  org.label_document_url = primaryKitUrl(next);
+  await org.save();
+  return getEnrichedRequest(id);
 }
 
 /* Supprime une demande et désactive la fiche liée si elle existe. */
@@ -214,11 +316,25 @@ function absolutePublicUrl(pathOrUrl) {
 }
 
 /* Approuve ou rejette une demande ; crée l'organisation si approuvée. */
-async function reviewRequest(id, { status, review_note, label_document_url }) {
+async function reviewRequest(id, { status, review_note, label_document_url, kit_file = null }) {
+  let initialKit = [];
   if (status === 'approved') {
-    const doc = String(label_document_url || '').trim();
-    if (!doc || !doc.startsWith('/uploads/docs/')) {
-      throw ApiError.badRequest('Le PDF du label est obligatoire pour approuver');
+    if (kit_file?.filename) {
+      initialKit = [kitEntryFromFile(kit_file)];
+    } else {
+      const doc = String(label_document_url || '').trim();
+      if (!doc || !doc.startsWith('/uploads/docs/')) {
+        throw ApiError.badRequest('Joignez au moins un fichier kit pour approuver');
+      }
+      initialKit = [
+        {
+          id: uuidv4(),
+          name: path.basename(doc),
+          url: doc,
+          mime: 'application/pdf',
+          size: null,
+        },
+      ];
     }
   }
 
@@ -263,7 +379,8 @@ async function reviewRequest(id, { status, review_note, label_document_url }) {
         visit_slots: request.visit_slots || [],
         safety_rules: request.safety_rules,
         label_code,
-        label_document_url: String(label_document_url).trim(),
+        kit_files: initialKit,
+        label_document_url: primaryKitUrl(initialKit),
         label_status: 'approved',
         labeled_at: new Date(),
         is_active: true,
@@ -344,14 +461,22 @@ async function verifyTrackingCode(rawCode) {
     },
   });
   if (!org) throw ApiError.notFound('Code de suivi introuvable');
-  if (!org.label_document_url) {
+  const kit = normalizeKitFiles(org);
+  const primary = primaryKitUrl(kit);
+  if (!primary) {
     throw ApiError.conflict('Document label pas encore disponible');
   }
 
   return {
     organization_name: org.name,
     type: org.type,
-    label_pdf_url: absolutePublicUrl(org.label_document_url),
+    label_pdf_url: absolutePublicUrl(primary),
+    kit_files: kit.map((f) => ({
+      id: f.id,
+      name: f.name,
+      url: absolutePublicUrl(f.url),
+      mime: f.mime || null,
+    })),
     programme_pdf_url: absolutePublicUrl(getProgrammePdfPath()),
   };
 }
@@ -527,6 +652,8 @@ module.exports = {
   getRequestById,
   updateRequest,
   updateLabelDocument,
+  addKitFile,
+  removeKitFile,
   deleteRequest,
   reviewRequest,
   getPublicBySlug,

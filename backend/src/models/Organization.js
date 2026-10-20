@@ -88,6 +88,11 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(500),
         allowNull: true,
       },
+      kit_files: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+        defaultValue: [],
+      },
       label_status: {
         type: DataTypes.ENUM('draft', 'pending', 'approved', 'rejected'),
         allowNull: false,

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import {
+  addKitFile,
   createLabelRequestOrga,
+  deleteKitFile,
   deleteLabelRequest,
   formatLabelAddress,
   formatStructureType,
@@ -8,26 +10,30 @@ import {
   googleMapsUrl,
   listLabelRequests,
   reviewLabelRequest,
-  updateLabelPdf,
   updateLabelRequest,
   type LabelRequest,
   type QrBatchItem,
 } from '../api/labels'
+
+const KIT_ACCEPT =
+  '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
-import { SITE_URL } from '../lib/seo'
 import { notifyLabelPendingChanged } from '../lib/labelPending'
 import { joinRoom, onRealtime } from '../lib/socket'
 
-/* URL publique d'un fichier uploadé. */
-function publicUploadUrl(path: string | null | undefined) {
-  if (!path) return null
-  if (path.startsWith('http')) return path
-  return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`
-}
-
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
+
+/* Extension courte pour la liste kit. */
+function kitExtLabel(name: string, mime?: string | null) {
+  const fromName = name.includes('.') ? name.split('.').pop() : ''
+  if (fromName) return fromName.toUpperCase().slice(0, 5)
+  if (mime?.includes('pdf')) return 'PDF'
+  if (mime?.includes('word') || mime?.includes('document')) return 'DOC'
+  if (mime?.startsWith('image/')) return 'IMG'
+  return 'FILE'
+}
 
 type FormMode = 'create' | 'edit'
 
@@ -174,11 +180,11 @@ export default function OrgaLabelsPage() {
     }
   }
 
-  /* Approuve avec PDF label obligatoire. */
+  /* Approuve avec au moins un fichier kit. */
   async function onConfirmApprove(e: FormEvent) {
     e.preventDefault()
     if (!approveTarget || !approvePdf) {
-      setError('Joignez le kit (PDF) pour accepter la demande')
+      setError('Joignez un fichier kit pour accepter la demande')
       return
     }
     setBusyId(approveTarget.id)
@@ -214,18 +220,35 @@ export default function OrgaLabelsPage() {
     }
   }
 
-  /* Remplace le PDF d'un label accepté. */
-  async function onReplacePdf(item: LabelRequest, file: File | null) {
+  /* Ajoute un fichier au kit. */
+  async function onAddKitFile(item: LabelRequest, file: File | null) {
     if (!file) return
     setBusyId(item.id)
     setError(null)
     try {
-      await updateLabelPdf(item.id, file)
-      setInfo(`Kit mis à jour pour ${item.structure_name}`)
+      await addKitFile(item.id, file)
+      setInfo(`Fichier ajouté au kit de ${item.structure_name}`)
       setSelectedId(item.id)
       await load()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Mise à jour du kit impossible')
+      setError(err instanceof Error ? err.message : 'Ajout au kit impossible')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  /* Supprime un fichier du kit. */
+  async function onDeleteKitFile(item: LabelRequest, fileId: string) {
+    if (!window.confirm('Supprimer ce fichier du kit ?')) return
+    setBusyId(item.id)
+    setError(null)
+    try {
+      await deleteKitFile(item.id, fileId)
+      setInfo('Fichier retiré du kit')
+      setSelectedId(item.id)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Suppression impossible')
     } finally {
       setBusyId(null)
     }
@@ -486,36 +509,58 @@ export default function OrgaLabelsPage() {
           </div>
 
           <div className="mt-5 border-t border-black pt-4">
-            <h3 className="text-[14px] font-semibold text-forest">Kit envoyé</h3>
+            <h3 className="text-[14px] font-semibold text-forest">Kit</h3>
             {selected.status !== 'approved' ? (
               <p className="mt-2 text-[13px] text-ink/50">
-                Le kit (PDF) est joint à l&apos;acceptation de la demande de label.
+                Les fichiers du kit (PDF, Word ou image) sont joints à l&apos;acceptation.
               </p>
             ) : (
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                {publicUploadUrl(selected.label_document_url) ? (
-                  <a
-                    href={publicUploadUrl(selected.label_document_url) || undefined}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="orga-btn-ghost px-3 py-2 text-[13px]"
-                  >
-                    Voir le kit PDF
-                  </a>
-                ) : (
-                  <p className="text-[13px] text-ink/50">Aucun fichier pour l&apos;instant.</p>
+              <div className="mt-3">
+                {(selected.kit_files?.length || 0) === 0 && (
+                  <p className="mb-3 text-[13px] text-ink/50">Aucun fichier pour l&apos;instant.</p>
                 )}
-                <label className={`orga-btn cursor-pointer px-3 py-2 text-[13px] ${busyId === selected.id ? 'opacity-50' : ''}`}>
-                  {selected.label_document_url ? 'Mettre à jour le kit' : 'Ajouter le kit'}
+                {(selected.kit_files?.length || 0) > 0 && (
+                  <ul className="border border-black">
+                    {selected.kit_files!.map((f, i) => (
+                      <li
+                        key={f.id}
+                        className={`flex items-center gap-3 px-3 py-2.5 ${
+                          i > 0 ? 'border-t border-black/15' : ''
+                        }`}
+                      >
+                        <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-forest">
+                          {f.name}
+                        </span>
+                        <span className="shrink-0 text-[12px] uppercase tracking-wide text-ink/40">
+                          {kitExtLabel(f.name, f.mime)}
+                        </span>
+                        <IconButton
+                          label="Supprimer"
+                          variant="danger"
+                          disabled={busyId === selected.id}
+                          onClick={() => void onDeleteKitFile(selected, f.id)}
+                        >
+                          <IconTrash />
+                        </IconButton>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <label
+                  className={`orga-btn mt-3 inline-flex cursor-pointer px-4 py-2.5 text-[13px] ${
+                    busyId === selected.id ? 'pointer-events-none opacity-50' : ''
+                  }`}
+                >
+                  Ajouter
                   <input
                     type="file"
-                    accept="application/pdf,.pdf"
+                    accept={KIT_ACCEPT}
                     className="hidden"
                     disabled={busyId === selected.id}
                     onChange={(e) => {
                       const file = e.target.files?.[0] || null
                       e.target.value = ''
-                      void onReplacePdf(selected, file)
+                      void onAddKitFile(selected, file)
                     }}
                   />
                 </label>
@@ -707,14 +752,14 @@ export default function OrgaLabelsPage() {
           >
             <h3 className="text-[16px] font-semibold text-forest">Accepter et envoyer le kit</h3>
             <p className="mt-2 text-[13px] text-ink/60">
-              {approveTarget.structure_name} : joignez le kit (PDF) remis à l&apos;acceptation.
+              {approveTarget.structure_name} : joignez au moins un fichier (PDF, Word ou image).
             </p>
             <label className="mt-4 block text-[13px] font-medium text-forest">
-              Kit (PDF)
+              Fichier kit
               <input
                 required
                 type="file"
-                accept="application/pdf,.pdf"
+                accept={KIT_ACCEPT}
                 className="mt-1 block w-full text-[13px]"
                 onChange={(e) => setApprovePdf(e.target.files?.[0] || null)}
               />

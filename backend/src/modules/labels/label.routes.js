@@ -8,6 +8,7 @@ const { authenticate, authorize } = require('../../middlewares/auth.middleware')
 const {
   uploadGallery,
   uploadLabelPdf,
+  uploadKitFile,
   uploadProgrammePdf,
 } = require('../../middlewares/upload.middleware');
 const {
@@ -66,6 +67,18 @@ router.patch(
   authenticate,
   authorize('orga'),
   withUpload(uploadLabelPdf, controller.updateLabelPdf),
+);
+router.post(
+  '/requests/:id/kit',
+  authenticate,
+  authorize('orga'),
+  withUpload(uploadKitFile, controller.addKitFile),
+);
+router.delete(
+  '/requests/:id/kit/:fileId',
+  authenticate,
+  authorize('orga'),
+  controller.removeKitFile,
 );
 router.delete(
   '/requests/:id',

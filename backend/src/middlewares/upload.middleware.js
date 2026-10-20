@@ -45,6 +45,25 @@ function pdfFilter(_req, file, cb) {
   return cb(null, true);
 }
 
+/* Accepte PDF, Word ou images (kit label). */
+function kitFilter(_req, file, cb) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const mime = String(file.mimetype || '').toLowerCase();
+  const okMime = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ].includes(mime);
+  const okExt = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.webp'].includes(ext);
+  if (!okMime && !okExt) {
+    return cb(new Error('Format kit invalide (PDF, Word ou image)'));
+  }
+  return cb(null, true);
+}
+
 const uploadImages = multer({
   storage: imageStorage,
   fileFilter: imageFilter,
@@ -57,11 +76,20 @@ const uploadPdf = multer({
   limits: { fileSize: 15 * 1024 * 1024, files: 1 },
 });
 
+const uploadKit = multer({
+  storage: pdfStorage,
+  fileFilter: kitFilter,
+  limits: { fileSize: 15 * 1024 * 1024, files: 1 },
+});
+
 /* Middleware : exactement 3 images (champ gallery). */
 const uploadGallery = uploadImages.array('gallery', 3);
 
-/* Middleware : PDF label à l'approbation (champ label_pdf). */
-const uploadLabelPdf = uploadPdf.single('label_pdf');
+/* Middleware : fichier kit à l'approbation (champ label_pdf, rétrocompat). */
+const uploadLabelPdf = uploadKit.single('label_pdf');
+
+/* Middleware : ajout d'un fichier au kit (champ kit_file). */
+const uploadKitFile = uploadKit.single('kit_file');
 
 /* Middleware : PDF programme officiel (champ programme_pdf). */
 const uploadProgrammePdf = uploadPdf.single('programme_pdf');
@@ -69,6 +97,7 @@ const uploadProgrammePdf = uploadPdf.single('programme_pdf');
 module.exports = {
   uploadGallery,
   uploadLabelPdf,
+  uploadKitFile,
   uploadProgrammePdf,
   UPLOAD_DIR,
   DOCS_DIR,
