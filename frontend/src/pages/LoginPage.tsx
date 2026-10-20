@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ensureOrgaSession, login, peekOrgaUser } from '../api/auth'
+import { isStaffRole } from '../lib/roles'
 import { getAccessToken, getRefreshToken } from '../api/session'
 import { Seo } from '../components/Seo'
 import { BrandLogo } from '../components/layout/Mark'
@@ -45,7 +46,7 @@ export default function LoginPage() {
     const fd = new FormData(e.currentTarget)
     try {
       const session = await login(String(fd.get('email')), String(fd.get('password')))
-      if (session.user.role === 'orga') navigate('/orga', { replace: true })
+      if (isStaffRole(session.user.role)) navigate('/orga', { replace: true })
       else navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connexion impossible')

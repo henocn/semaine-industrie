@@ -6,6 +6,7 @@ const { authenticate, authorize } = require('../../middlewares/auth.middleware')
 
 const router = Router();
 
-router.get('/', authenticate, authorize('orga'), controller.overview);
+/* Réservé aux admins. */
+router.get('/', authenticate, authorize('admin'), controller.list);
 
 module.exports = router;

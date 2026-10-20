@@ -1,22 +1,32 @@
 import { useEffect, useState } from 'react'
-import { getAuditOverview, type AuditOverview } from '../api/audit'
+import { listAuditEvents, type AuditEvent } from '../api/audit'
 import { OrgaShell } from '../components/layout/OrgaShell'
 
-/* Écran audit : consultation des logs applicatifs. */
+/* Action en libellé FR. */
+function actionLabel(action: string) {
+  const map: Record<string, string> = {
+    create: 'Création',
+    update: 'Modification',
+    delete: 'Suppression',
+    approve: 'Acceptation',
+    reject: 'Refus',
+    reorder: 'Réordonnancement',
+  }
+  return map[action] || action
+}
+
+/* Table d'audit : qui a modifié / supprimé quoi, et quand. */
 export default function OrgaAuditPage() {
-  const [data, setData] = useState<AuditOverview | null>(null)
-  const [day, setDay] = useState('')
+  const [rows, setRows] = useState<AuditEvent[]>([])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  /* Charge les logs. */
-  async function load(selectedDay?: string) {
+  /* Charge les événements. */
+  async function load() {
     setBusy(true)
     try {
       setError(null)
-      const overview = await getAuditOverview(selectedDay || undefined)
-      setData(overview)
-      setDay(overview.current.day)
+      setRows(await listAuditEvents(200))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur')
     } finally {
@@ -36,7 +46,7 @@ export default function OrgaAuditPage() {
           type="button"
           className="orga-btn-ghost px-3 py-2 text-[13px]"
           disabled={busy}
-          onClick={() => void load(day)}
+          onClick={() => void load()}
         >
           Actualiser
         </button>
@@ -44,48 +54,47 @@ export default function OrgaAuditPage() {
     >
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
-      <section className="orga-panel mb-4">
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="text-[13px] font-medium text-forest">
-            Jour
-            <select
-              value={day}
-              onChange={(e) => {
-                const next = e.target.value
-                setDay(next)
-                void load(next)
-              }}
-              className="mt-1 border border-black bg-white px-3 py-2 text-[14px]"
-            >
-              {(data?.files || []).map((f) => (
-                <option key={f.day} value={f.day}>
-                  {f.day} ({Math.round(f.size / 1024)} Ko)
-                </option>
-              ))}
-              {!data?.files?.length && day && <option value={day}>{day}</option>}
-            </select>
-          </label>
-          <p className="pb-2 text-[13px] text-ink/50">
-            {data
-              ? `${data.current.returned} / ${data.current.total_lines} lignes`
-              : busy
-                ? 'Chargement…'
-                : '—'}
-          </p>
-        </div>
-      </section>
-
-      <section className="orga-panel !p-0 overflow-hidden">
-        <div className="max-h-[65vh] overflow-auto bg-[#0f1a17] px-4 py-3 font-mono text-[12px] leading-relaxed text-[#d7ebe3]">
-          {!data?.current.lines.length && (
-            <p className="text-white/40">Aucun log pour cette date.</p>
-          )}
-          {data?.current.lines.map((line, i) => (
-            <div key={`${i}-${line.slice(0, 24)}`} className="whitespace-pre-wrap break-all">
-              {line}
-            </div>
-          ))}
-        </div>
+      <section className="orga-panel !p-0 overflow-x-auto">
+        <table className="orga-table min-w-[800px]">
+          <thead>
+            <tr>
+              <th>Date / heure</th>
+              <th>Qui</th>
+              <th>Action</th>
+              <th>Détail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={4} className="py-10 text-ink/40">
+                  Aucun événement pour l&apos;instant
+                </td>
+              </tr>
+            )}
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="whitespace-nowrap text-[13px]">
+                  {r.created_at
+                    ? new Date(r.created_at).toLocaleString('fr-FR')
+                    : '—'}
+                </td>
+                <td>
+                  <p className="font-medium text-forest">{r.actor_name || '—'}</p>
+                  <p className="text-[12px] text-ink/45">{r.actor_email || ''}</p>
+                </td>
+                <td>{actionLabel(r.action)}</td>
+                <td>
+                  <p className="text-[13px] text-ink/80">{r.summary}</p>
+                  <p className="mt-0.5 text-[11px] uppercase tracking-wide text-ink/35">
+                    {r.entity_type}
+                    {r.entity_id ? ` · ${r.entity_id.slice(0, 8)}` : ''}
+                  </p>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </OrgaShell>
   )

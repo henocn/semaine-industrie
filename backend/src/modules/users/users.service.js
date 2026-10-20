@@ -1,6 +1,7 @@
 'use strict';
 
 const bcrypt = require('bcrypt');
+const { Op } = require('sequelize');
 const { User } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 
@@ -18,9 +19,10 @@ function toUser(u) {
   };
 }
 
-/* Liste les comptes. */
+/* Liste les comptes staff (admin / simple / orga legacy). */
 async function listUsers() {
   const rows = await User.findAll({
+    where: { role: { [Op.in]: ['admin', 'simple', 'orga'] } },
     order: [
       ['role', 'ASC'],
       ['last_name', 'ASC'],
@@ -30,34 +32,38 @@ async function listUsers() {
   return rows.map(toUser);
 }
 
-/* Crée un compte. */
+/* Crée un compte staff. */
 async function createUser({ email, first_name, last_name, role, password }) {
   const normalized = String(email || '').trim().toLowerCase();
   const exists = await User.findOne({ where: { email: normalized } });
   if (exists) throw ApiError.conflict('Cet e-mail est déjà utilisé');
 
+  const staffRole = role === 'admin' ? 'admin' : 'simple';
   const row = await User.create({
     email: normalized,
     first_name: String(first_name || '').trim(),
     last_name: String(last_name || '').trim(),
-    role: role || 'orga',
+    role: staffRole,
     password_hash: await bcrypt.hash(password, 10),
     is_active: true,
   });
   return toUser(row);
 }
 
-/* Met à jour un compte. */
+/* Met à jour un compte (password vide = inchangé). */
 async function updateUser(id, payload) {
   const row = await User.scope('withSecret').findByPk(id);
   if (!row) throw ApiError.notFound('Utilisateur introuvable');
 
   if (payload.first_name != null) row.first_name = String(payload.first_name).trim();
   if (payload.last_name != null) row.last_name = String(payload.last_name).trim();
-  if (payload.role != null) row.role = payload.role;
+  if (payload.role != null) {
+    row.role = payload.role === 'admin' ? 'admin' : 'simple';
+  }
   if (payload.is_active != null) row.is_active = Boolean(payload.is_active);
-  if (payload.password) {
-    row.password_hash = await bcrypt.hash(payload.password, 10);
+  const pwd = payload.password != null ? String(payload.password) : '';
+  if (pwd.trim()) {
+    row.password_hash = await bcrypt.hash(pwd.trim(), 10);
   }
   await row.save();
   return toUser(row);

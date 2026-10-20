@@ -11,6 +11,7 @@ import { listLabelRequests, type LabelRequest } from '../../api/labels'
 import { LABEL_PENDING_EVENT } from '../../lib/labelPending'
 import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
 import { joinRoom, onRealtime } from '../../lib/socket'
+import { isAdminRole, isStaffRole } from '../../lib/roles'
 import { BrandLogo } from './Mark'
 
 type OrgaShellProps = {
@@ -62,7 +63,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
 
   /* Charge le badge (navigation + focus + événement local + sockets). */
   useEffect(() => {
-    if (!user || user.role !== 'orga') return
+    if (!user || !isStaffRole(user.role)) return
     void refreshPending()
 
     const onLocal = () => {
@@ -179,13 +180,17 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
           <NavLink to="/orga/affaires" className={linkClass}>Rencontres d&apos;affaires</NavLink>
           <NavLink to="/orga/enquete" className={linkClass}>Sondage</NavLink>
         </div>
-        <p className="mb-2 mt-4 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">
-          Administration
-        </p>
-        <div className="flex flex-col gap-0.5 pb-2">
-          <NavLink to="/orga/audit" className={linkClass}>Audit et logs</NavLink>
-          <NavLink to="/orga/utilisateurs" className={linkClass}>Utilisateurs</NavLink>
-        </div>
+        {isAdminRole(user?.role) && (
+          <>
+            <p className="mb-2 mt-4 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">
+              Administration
+            </p>
+            <div className="flex flex-col gap-0.5 pb-2">
+              <NavLink to="/orga/audit" className={linkClass}>Audit et logs</NavLink>
+              <NavLink to="/orga/utilisateurs" className={linkClass}>Utilisateurs</NavLink>
+            </div>
+          </>
+        )}
       </nav>
 
       <div className="shrink-0 border-t border-black pt-3">

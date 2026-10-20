@@ -32,6 +32,7 @@ const VoteOption = require('./VoteOption')(sequelize);
 const VoteBallot = require('./VoteBallot')(sequelize);
 const SurveyResponse = require('./SurveyResponse')(sequelize);
 const SurveyQuestion = require('./SurveyQuestion')(sequelize);
+const AuditEvent = require('./AuditEvent')(sequelize);
 
 LabelRequest.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 Organization.hasMany(LabelRequest, { foreignKey: 'organization_id', as: 'labelRequests' });
@@ -62,6 +63,9 @@ VoteBallot.belongsTo(VoteOption, { foreignKey: 'option_id', as: 'option' });
 VoteOption.hasMany(VoteBallot, { foreignKey: 'option_id', as: 'ballots' });
 VoteOption.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 
+AuditEvent.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(AuditEvent, { foreignKey: 'user_id', as: 'auditEvents' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -79,4 +83,5 @@ module.exports = {
   VoteBallot,
   SurveyResponse,
   SurveyQuestion,
+  AuditEvent,
 };

@@ -3,6 +3,7 @@
 const surveyService = require('./survey.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const { emitRealtime } = require('../../realtime/io');
+const { audit } = require('../../utils/audit');
 
 /* Questions actives pour le formulaire public. */
 async function questions(req, res, next) {
@@ -26,6 +27,12 @@ async function listAdmin(req, res, next) {
 async function createQuestion(req, res, next) {
   try {
     const data = await surveyService.createQuestion(req.body);
+    await audit(req, {
+      action: 'create',
+      entityType: 'survey_question',
+      entityId: data.id,
+      summary: `Création question sondage « ${data.label} »`,
+    });
     return ApiResponse.created(res, data, 'Question créée');
   } catch (err) {
     return next(err);
@@ -36,6 +43,12 @@ async function createQuestion(req, res, next) {
 async function updateQuestion(req, res, next) {
   try {
     const data = await surveyService.updateQuestion(req.params.id, req.body);
+    await audit(req, {
+      action: 'update',
+      entityType: 'survey_question',
+      entityId: data.id,
+      summary: `Modification question sondage « ${data.label} »`,
+    });
     return ApiResponse.success(res, data, 'Question mise à jour');
   } catch (err) {
     return next(err);
@@ -46,6 +59,12 @@ async function updateQuestion(req, res, next) {
 async function deleteQuestion(req, res, next) {
   try {
     const data = await surveyService.deleteQuestion(req.params.id);
+    await audit(req, {
+      action: 'delete',
+      entityType: 'survey_question',
+      entityId: req.params.id,
+      summary: `Suppression question sondage`,
+    });
     return ApiResponse.success(res, data, 'Question supprimée');
   } catch (err) {
     return next(err);
@@ -56,6 +75,12 @@ async function deleteQuestion(req, res, next) {
 async function reorderQuestions(req, res, next) {
   try {
     const data = await surveyService.reorderQuestions(req.body.ordered_ids);
+    await audit(req, {
+      action: 'reorder',
+      entityType: 'survey_question',
+      entityId: null,
+      summary: 'Réordonnancement des questions du sondage',
+    });
     return ApiResponse.success(res, data, 'Ordre mis à jour');
   } catch (err) {
     return next(err);

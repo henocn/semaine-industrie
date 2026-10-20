@@ -1,4 +1,5 @@
 import { apiFetch } from './client'
+import { isStaffRole } from '../lib/roles'
 import {
   clearSession,
   getAccessToken,
@@ -57,7 +58,7 @@ export async function ensureOrgaSession(): Promise<AuthUser | null> {
     const access = getAccessToken() || ''
     const refresh = getRefreshToken() || ''
     if (access && refresh) saveSession(access, refresh, me)
-    if (me.role !== 'orga') {
+    if (!isStaffRole(me.role)) {
       clearSession()
       return null
     }
@@ -68,10 +69,10 @@ export async function ensureOrgaSession(): Promise<AuthUser | null> {
   }
 }
 
-/* Session locale déjà orga (sans appel réseau). */
+/* Session locale déjà staff backoffice (sans appel réseau). */
 export function peekOrgaUser(): AuthUser | null {
   const user = getStoredUser()
-  if (!user || user.role !== 'orga') return null
+  if (!user || !isStaffRole(user.role)) return null
   if (!getAccessToken() && !getRefreshToken()) return null
   return user
 }

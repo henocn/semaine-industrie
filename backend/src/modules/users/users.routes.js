@@ -8,7 +8,7 @@ const { createUserSchema, updateUserSchema } = require('./users.validation');
 
 const router = Router();
 
-router.use(authenticate, authorize('orga'));
+router.use(authenticate, authorize('admin'));
 router.get('/', controller.list);
 router.post('/', validate(createUserSchema), controller.create);
 router.patch('/:id', validate(updateUserSchema), controller.update);

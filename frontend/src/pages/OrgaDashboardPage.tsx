@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getDashboardStats, type DashboardStats } from '../api/dashboard'
 import { getSurveyStats, type SurveyStats } from '../api/surveys'
+import { getStoredUser } from '../api/auth'
+import { isAdminRole } from '../lib/roles'
 import { OrgaShell } from '../components/layout/OrgaShell'
 
 type Card = {
@@ -129,8 +131,12 @@ export default function OrgaDashboardPage() {
                 { to: '/orga/visites', label: 'Planning visites' },
                 { to: '/orga/enquete', label: 'Sondage' },
                 { to: '/orga/affaires', label: 'Rencontres d\'affaires' },
-                { to: '/orga/audit', label: 'Audit et logs' },
-                { to: '/orga/utilisateurs', label: 'Utilisateurs' },
+                ...(isAdminRole(getStoredUser()?.role)
+                  ? [
+                      { to: '/orga/audit', label: 'Audit et logs' },
+                      { to: '/orga/utilisateurs', label: 'Utilisateurs' },
+                    ]
+                  : []),
               ].map((item) => (
                 <Link key={item.to} to={item.to} className="orga-btn-ghost px-3 py-2 text-[13px]">
                   {item.label}

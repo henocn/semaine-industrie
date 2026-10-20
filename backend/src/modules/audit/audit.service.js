@@ -1,66 +1,63 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const ApiError = require('../../utils/ApiError');
+const { AuditEvent, User } = require('../../models');
 
-const LOG_DIR = path.join(__dirname, '../../../logs');
-
-/* Liste les fichiers de logs disponibles. */
-function listLogFiles() {
-  if (!fs.existsSync(LOG_DIR)) return [];
-  return fs
-    .readdirSync(LOG_DIR)
-    .filter((name) => /^app-\d{4}-\d{2}-\d{2}\.log$/.test(name))
-    .sort()
-    .reverse()
-    .map((name) => {
-      const full = path.join(LOG_DIR, name);
-      const stat = fs.statSync(full);
-      return {
-        name,
-        day: name.replace(/^app-|\.log$/g, ''),
-        size: stat.size,
-        updated_at: stat.mtime.toISOString(),
-      };
-    });
-}
-
-/* Lit les dernières lignes d'un fichier de log. */
-function readLogTail(day, limit = 200) {
-  const safeDay = String(day || '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(safeDay)) {
-    throw ApiError.badRequest('Date invalide');
-  }
-  const file = path.join(LOG_DIR, `app-${safeDay}.log`);
-  if (!fs.existsSync(file)) {
-    throw ApiError.notFound('Aucun log pour cette date');
-  }
-
-  const n = Math.min(Math.max(Number(limit) || 200, 20), 1000);
-  const content = fs.readFileSync(file, 'utf8');
-  const lines = content.split(/\r?\n/).filter(Boolean);
-  const slice = lines.slice(-n);
-
-  return {
-    day: safeDay,
-    total_lines: lines.length,
-    returned: slice.length,
-    lines: slice,
-  };
-}
-
-/* Aperçu audit : fichiers + queue du jour (ou le plus récent). */
-async function getAuditOverview({ day, limit } = {}) {
-  const files = listLogFiles();
-  const target = day || files[0]?.day || new Date().toISOString().slice(0, 10);
-  let tail = null;
+/* Enregistre une action métier (qui / quoi / quand). */
+async function recordEvent({
+  user,
+  action,
+  entityType,
+  entityId,
+  summary,
+  meta,
+}) {
   try {
-    tail = readLogTail(target, limit);
+    const actor = user || {};
+    let actor_name = null;
+    if (actor.id) {
+      const row = await User.findByPk(actor.id, {
+        attributes: ['first_name', 'last_name', 'email'],
+      });
+      if (row) {
+        actor_name = `${row.first_name} ${row.last_name}`.trim();
+        actor.email = actor.email || row.email;
+      }
+    }
+
+    await AuditEvent.create({
+      user_id: actor.id || null,
+      actor_email: actor.email || null,
+      actor_name,
+      action: String(action || 'update').slice(0, 40),
+      entity_type: String(entityType || 'unknown').slice(0, 60),
+      entity_id: entityId != null ? String(entityId).slice(0, 80) : null,
+      summary: String(summary || action || 'Action').slice(0, 500),
+      meta: meta || null,
+    });
   } catch {
-    tail = { day: target, total_lines: 0, returned: 0, lines: [] };
+    /* l'audit ne doit jamais casser la requête métier */
   }
-  return { files, current: tail };
 }
 
-module.exports = { listLogFiles, readLogTail, getAuditOverview };
+/* Liste les événements d'audit (plus récents d'abord). */
+async function listEvents({ limit = 100 } = {}) {
+  const n = Math.min(Math.max(Number(limit) || 100, 1), 500);
+  const rows = await AuditEvent.findAll({
+    order: [['created_at', 'DESC']],
+    limit: n,
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    user_id: r.user_id,
+    actor_email: r.actor_email,
+    actor_name: r.actor_name,
+    action: r.action,
+    entity_type: r.entity_type,
+    entity_id: r.entity_id,
+    summary: r.summary,
+    meta: r.meta,
+    created_at: r.created_at || r.createdAt,
+  }));
+}
+
+module.exports = { recordEvent, listEvents };

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { RequireAdmin } from './components/auth/RequireAdmin'
 import { RequireOrga } from './components/auth/RequireOrga'
 import { PublicLayout } from './components/layout/PublicLayout'
 import { isBackofficeHost } from './lib/seo'
@@ -69,8 +70,10 @@ export default function App() {
             <Route path="/orga/visites" element={<OrgaVisitsPage />} />
             <Route path="/orga/affaires" element={<OrgaBusinessPage />} />
             <Route path="/orga/enquete" element={<OrgaSurveyPage />} />
-            <Route path="/orga/audit" element={<OrgaAuditPage />} />
-            <Route path="/orga/utilisateurs" element={<OrgaUsersPage />} />
+            <Route element={<RequireAdmin />}>
+              <Route path="/orga/audit" element={<OrgaAuditPage />} />
+              <Route path="/orga/utilisateurs" element={<OrgaUsersPage />} />
+            </Route>
             <Route path="/orga/qr" element={<Navigate to="/orga/labels" replace />} />
             <Route path="/orga/live" element={<Navigate to="/orga/enquete" replace />} />
             <Route path="/orga/passeports" element={<Navigate to="/orga" replace />} />

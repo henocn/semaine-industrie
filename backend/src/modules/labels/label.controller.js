@@ -4,6 +4,7 @@ const labelService = require('./label.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const ApiError = require('../../utils/ApiError');
 const { emitRealtime } = require('../../realtime/io');
+const { audit } = require('../../utils/audit');
 
 /* Sérialise un modèle Sequelize pour Socket.IO. */
 function asJson(row) {
@@ -27,6 +28,12 @@ async function createRequestOrga(req, res, next) {
   try {
     const data = await labelService.createRequestByOrga(req.body);
     emitRealtime('label:created', asJson(data), 'orga');
+    await audit(req, {
+      action: 'create',
+      entityType: 'label_request',
+      entityId: data.id,
+      summary: `Ajout label ${data.structure_name}`,
+    });
     return ApiResponse.created(res, data, 'Label ajouté');
   } catch (err) {
     return next(err);
@@ -58,6 +65,12 @@ async function updateRequest(req, res, next) {
   try {
     const data = await labelService.updateRequest(req.params.id, req.body);
     emitRealtime('label:updated', asJson(data), 'orga');
+    await audit(req, {
+      action: 'update',
+      entityType: 'label_request',
+      entityId: data.id,
+      summary: `Modification label ${data.structure_name}`,
+    });
     return ApiResponse.success(res, data, 'Demande mise à jour');
   } catch (err) {
     return next(err);
@@ -82,6 +95,12 @@ async function deleteRequest(req, res, next) {
   try {
     const data = await labelService.deleteRequest(req.params.id);
     emitRealtime('label:deleted', data, 'orga');
+    await audit(req, {
+      action: 'delete',
+      entityType: 'label_request',
+      entityId: req.params.id,
+      summary: `Suppression dossier label ${req.params.id}`,
+    });
     return ApiResponse.success(res, data, 'Dossier supprimé');
   } catch (err) {
     return next(err);
@@ -109,6 +128,13 @@ async function reviewRequest(req, res, next) {
       label_document_url,
     });
     emitRealtime('label:updated', asJson(data.request), 'orga');
+    const name = data.request?.structure_name || req.params.id;
+    await audit(req, {
+      action: status === 'approved' ? 'approve' : 'reject',
+      entityType: 'label_request',
+      entityId: req.params.id,
+      summary: `${status === 'approved' ? 'Acceptation' : 'Refus'} label ${name}`,
+    });
     return ApiResponse.success(res, data, 'Demande traitée');
   } catch (err) {
     return next(err);
