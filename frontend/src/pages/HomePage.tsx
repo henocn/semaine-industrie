@@ -38,7 +38,7 @@ const KEY_FIGURES: [string, string][] = [
 const CONTACT_INPUT =
   'w-full border-0 border-b border-forest/25 bg-transparent px-0 py-2 text-base text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
 
-/* Photo locale, aplat sage si fichier manquant. */
+/* Photo locale rectangulaire, aplat sage si fichier manquant. */
 function Photo({
   name,
   alt,
@@ -52,7 +52,7 @@ function Photo({
 }) {
   const [missing, setMissing] = useState(false)
   return (
-    <div className={`relative overflow-hidden bg-sage ${className}`}>
+    <div className={`photo-frame relative overflow-hidden bg-sage ${className}`}>
       {missing ? (
         <span className="absolute bottom-3 left-4 text-xs text-forest/50">images/{name}.jpg</span>
       ) : (
@@ -122,7 +122,7 @@ function Hero() {
 function Tools() {
   return (
     <section className="py-12 sm:py-16">
-      <div className={WRAP}>
+      <div className={`${WRAP} reveal`}>
         <SectionHeader
           title={YOUTH_PILLAR.title}
           lead="Trois étapes pour passer de la curiosité à l’action."
@@ -152,11 +152,11 @@ function About() {
   return (
     <section className="bg-sage py-12 sm:py-16">
       <div className={`${WRAP} grid gap-10 md:grid-cols-2 md:items-start`}>
-        <div>
+        <div className="reveal">
           <SectionHeader title="Voir ce que le Togo fabrique, où, et par qui." />
-          <Photo name="eleves" alt="Lycéennes et lycéens dans un établissement togolais" className="leaf-alt mt-8 aspect-[4/3]" />
+          <Photo name="eleves" alt="Lycéennes et lycéens dans un établissement togolais" className="mt-8 aspect-[4/3]" />
         </div>
-        <div className="space-y-4 text-[15px] leading-relaxed text-ink/80">
+        <div className="reveal space-y-4 text-[15px] leading-relaxed text-ink/80" style={{ transitionDelay: '60ms' }}>
           <p>
             La Semaine de l’industrie fait découvrir les usines et leurs métiers aux jeunes et au grand public. Elle réunit aussi investisseurs, industriels et PME locales.
           </p>
@@ -179,7 +179,7 @@ function ProgrammeStrip() {
 
   return (
     <section className="py-12 sm:py-16">
-      <div className={WRAP}>
+      <div className={`${WRAP} reveal`}>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <SectionHeader
             title="Journée phare"
@@ -219,14 +219,14 @@ function Women() {
   return (
     <section className="border-t border-forest/10 py-12 sm:py-16">
       <div className={`${WRAP} grid gap-10 md:grid-cols-[1fr_1.1fr]`}>
-        <div>
+        <div className="reveal">
           <SectionHeader
             title="Les métiers de l’industrie au féminin"
             lead="Table ronde du jeudi 19 novembre, à 15 heures."
           />
-          <Photo name="atelier" alt="Ouvrières dans un atelier textile" className="leaf mt-8 aspect-[4/3]" />
+          <Photo name="atelier" alt="Ouvrières dans un atelier textile" className="mt-8 aspect-[4/3]" />
         </div>
-        <ul className="self-start border-t border-forest/15">
+        <ul className="reveal self-start border-t border-forest/15" style={{ transitionDelay: '60ms' }}>
           {SPEAKERS.map(([name, org]) => (
             <li key={name} className="border-b border-forest/15 py-4">
               <p className="font-semibold text-forest">{name}</p>
@@ -243,13 +243,13 @@ function Women() {
 function Places() {
   return (
     <section id="lieux" className="bg-sage py-12 sm:py-16">
-      <div className={WRAP}>
+      <div className={`${WRAP} reveal`}>
         <SectionHeader title="Les sites ouverts, du port aux régions" />
         <Photo
           name="port"
           alt="Porte-conteneurs au Lomé Container Terminal"
           position="center 45%"
-          className="leaf-alt mt-8 aspect-[4/3] sm:aspect-[2.2/1]"
+          className="mt-8 aspect-[4/3] sm:aspect-[2.2/1]"
         />
         <dl className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {PLACES.map(([t, d]) => (
@@ -297,7 +297,7 @@ function Contact() {
   return (
     <section id="contact" className="py-12 sm:py-16">
       <div className={`${WRAP} grid gap-10 md:grid-cols-2`}>
-        <div>
+        <div className="reveal">
           <SectionHeader title="Une question ?" />
           <p className="mt-3 text-[15px] leading-relaxed text-ink/70">
             Presse, entreprise, établissement ou partenaire :{' '}
@@ -309,7 +309,7 @@ function Contact() {
         {sent ? (
           <p className="self-center text-forest">Merci, votre message a bien été pris en compte.</p>
         ) : (
-          <form onSubmit={submit} className="grid gap-6">
+          <form onSubmit={submit} className="reveal grid gap-6" style={{ transitionDelay: '60ms' }}>
             <Field label="Nom">
               <input required name="nom" className={CONTACT_INPUT} />
             </Field>

@@ -63,10 +63,11 @@ body {
   .lead { font-size: var(--text-lead); line-height: 1.6; }
 }
 
-/* Forme feuille de la charte, réservée aux photographies */
-.leaf { border-radius: 0 4rem 0 0; }
-.leaf-alt { border-radius: 3.5rem 0 0 0; }
-@media (max-width: 640px) { .leaf { border-radius: 0 2rem 0 0; } .leaf-alt { border-radius: 1.75rem 0 0 0; } }
+/* Photos : coins droits, cadre discret (plus de formes asymétriques) */
+.photo-frame {
+  border: 1px solid color-mix(in oklab, var(--color-forest) 12%, white);
+  border-radius: 0;
+}
 
 /* Filet or : visible par défaut ; animé seulement dans un .reveal */
 .rule-gold {
@@ -214,11 +215,11 @@ select.orga-input {
 /* Entrée douce au chargement (hero, blocs d'intro) */
 .animate-rise { animation: rise .8s var(--ease-leaf) both; }
 
-/* Apparition au scroll : data-in="true" rend l'élément visible */
+/* Apparition au scroll : discrète (opacity + léger décalage) */
 .reveal {
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity .5s var(--ease-leaf), transform .5s var(--ease-leaf);
+  transform: translateY(8px);
+  transition: opacity .55s ease, transform .55s ease;
 }
 .reveal[data-in="true"] {
   opacity: 1;

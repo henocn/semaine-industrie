@@ -23,7 +23,7 @@ export function useRevealInView<T extends HTMLElement = HTMLElement>() {
           observer.unobserve(entry.target)
         })
       },
-      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
+      { threshold: 0.08, rootMargin: '0px 0px -4% 0px' },
     )
 
     targets.forEach((el) => observer.observe(el))
