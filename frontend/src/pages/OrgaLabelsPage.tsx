@@ -4,12 +4,14 @@ import {
   deleteLabelRequest,
   formatLabelAddress,
   formatStructureType,
+  getLabelRequestQr,
   googleMapsUrl,
   listLabelRequests,
   reviewLabelRequest,
   updateLabelPdf,
   updateLabelRequest,
   type LabelRequest,
+  type QrBatchItem,
 } from '../api/labels'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
@@ -46,6 +48,7 @@ export default function OrgaLabelsPage() {
   const [approvePdf, setApprovePdf] = useState<File | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<LabelRequest | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedQr, setSelectedQr] = useState<QrBatchItem | null>(null)
 
   /* Ouvre le formulaire d'ajout. */
   function openCreate() {
@@ -137,6 +140,25 @@ export default function OrgaLabelsPage() {
     () => filtered.find((x) => x.id === selectedId) || items.find((x) => x.id === selectedId) || null,
     [filtered, items, selectedId],
   )
+
+  /* Charge le QR quand une ligne acceptée est ouverte. */
+  useEffect(() => {
+    if (!selected || selected.status !== 'approved') {
+      setSelectedQr(null)
+      return
+    }
+    let cancelled = false
+    getLabelRequestQr(selected.id)
+      .then((qr) => {
+        if (!cancelled) setSelectedQr(qr)
+      })
+      .catch(() => {
+        if (!cancelled) setSelectedQr(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [selected?.id, selected?.status])
 
   /* Rejette une demande. */
   async function onReject(id: string) {
@@ -266,7 +288,7 @@ export default function OrgaLabelsPage() {
 
   return (
     <OrgaShell
-      title="Labels"
+      title="Labels et demandes"
       searchPlaceholder="Rechercher une structure…"
       onSearch={setQuery}
       actions={
@@ -500,6 +522,50 @@ export default function OrgaLabelsPage() {
               </div>
             )}
           </div>
+
+          {selected.status === 'approved' && (
+            <div className="mt-5 border-t border-black pt-4">
+              <h3 className="text-[14px] font-semibold text-forest">QR code</h3>
+              {selectedQr ? (
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <img
+                    src={selectedQr.qr_data_url}
+                    alt={`QR ${selectedQr.name}`}
+                    className="h-36 w-36 border border-black bg-white p-2"
+                  />
+                  <div>
+                    <p className="text-[13px] text-ink/55">Fiche publique</p>
+                    <a
+                      href={selectedQr.fiche_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 block text-[14px] font-medium text-forest underline underline-offset-2"
+                    >
+                      {selectedQr.fiche_url}
+                    </a>
+                    <button
+                      type="button"
+                      className="orga-btn mt-3 px-3 py-2 text-[13px]"
+                      onClick={() => {
+                        const link = document.createElement('a')
+                        const name = (selectedQr.name || 'institution').replace(/[^\w\-]+/g, '_')
+                        const code = (selectedQr.label_code || 'sans-code').replace(/[^\w\-]+/g, '_')
+                        link.href = selectedQr.qr_data_url
+                        link.download = `${name}-${code}.png`
+                        document.body.appendChild(link)
+                        link.click()
+                        link.remove()
+                      }}
+                    >
+                      Télécharger le QR
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 text-[13px] text-ink/50">Chargement du QR…</p>
+              )}
+            </div>
+          )}
         </section>
       )}
 

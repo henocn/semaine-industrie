@@ -20,6 +20,8 @@ const passportRoutes = require('./modules/passports/passport.routes');
 const engagementRoutes = require('./modules/engagement/engagement.routes');
 const surveyRoutes = require('./modules/surveys/survey.routes');
 const whatsappRoutes = require('./modules/whatsapp/whatsapp.routes');
+const usersRoutes = require('./modules/users/users.routes');
+const auditRoutes = require('./modules/audit/audit.routes');
 
 const app = express();
 
@@ -50,6 +52,8 @@ app.use(`${env.API_PREFIX}/passports`, passportRoutes);
 app.use(`${env.API_PREFIX}/engagement`, engagementRoutes);
 app.use(`${env.API_PREFIX}/surveys`, surveyRoutes);
 app.use(`${env.API_PREFIX}/whatsapp`, whatsappRoutes);
+app.use(`${env.API_PREFIX}/users`, usersRoutes);
+app.use(`${env.API_PREFIX}/audit`, auditRoutes);
 
 /* 404 JSON pour les routes API inconnues. */
 app.use((req, res, next) => {

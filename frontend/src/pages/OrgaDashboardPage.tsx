@@ -42,7 +42,7 @@ export default function OrgaDashboardPage() {
           label: 'Labels validés',
           value: ind.labels_approved,
           hint: `${industries} industries · ${schools} écoles`,
-          to: '/orga/qr',
+          to: '/orga/labels',
         },
         {
           label: 'Demandes en attente',
@@ -125,11 +125,12 @@ export default function OrgaDashboardPage() {
             <h2 className="text-[15px] font-semibold text-forest">Accès rapides</h2>
             <div className="mt-4 flex flex-wrap gap-2">
               {[
-                { to: '/orga/labels', label: 'Demandes de label' },
-                { to: '/orga/visites', label: 'Calendrier des visites' },
-                { to: '/orga/qr', label: 'QR codes' },
-                { to: '/orga/enquete', label: 'Questions d\'enquête' },
+                { to: '/orga/labels', label: 'Labels et demandes' },
+                { to: '/orga/visites', label: 'Planning visites' },
+                { to: '/orga/enquete', label: 'Sondage' },
                 { to: '/orga/affaires', label: 'Rencontres d\'affaires' },
+                { to: '/orga/audit', label: 'Audit et logs' },
+                { to: '/orga/utilisateurs', label: 'Utilisateurs' },
               ].map((item) => (
                 <Link key={item.to} to={item.to} className="orga-btn-ghost px-3 py-2 text-[13px]">
                   {item.label}

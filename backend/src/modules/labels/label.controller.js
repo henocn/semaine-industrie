@@ -195,6 +195,16 @@ async function listQrBatch(req, res, next) {
   }
 }
 
+/* QR pour une demande acceptée. */
+async function getRequestQr(req, res, next) {
+  try {
+    const data = await labelService.getQrForRequest(req.params.id);
+    return ApiResponse.success(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   createRequest,
   createRequestOrga,
@@ -211,4 +221,5 @@ module.exports = {
   getPublicFiche,
   listMap,
   listQrBatch,
+  getRequestQr,
 };

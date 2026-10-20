@@ -162,9 +162,10 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">Pilotage</p>
         <div className="flex flex-col gap-0.5 pb-2">
           <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
+          <NavLink to="/orga/visites" className={linkClass}>Planning visites</NavLink>
           <NavLink to="/orga/labels" className={linkClass}>
             <span className="flex w-full items-center justify-between gap-2">
-              Labels
+              Labels et demandes
               {pendingCount > 0 && (
                 <span
                   className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
@@ -175,10 +176,15 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
               )}
             </span>
           </NavLink>
-          <NavLink to="/orga/visites" className={linkClass}>Visites</NavLink>
           <NavLink to="/orga/affaires" className={linkClass}>Rencontres d&apos;affaires</NavLink>
-          <NavLink to="/orga/enquete" className={linkClass}>Enquête</NavLink>
-          <NavLink to="/orga/qr" className={linkClass}>QR code</NavLink>
+          <NavLink to="/orga/enquete" className={linkClass}>Sondage</NavLink>
+        </div>
+        <p className="mb-2 mt-4 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">
+          Administration
+        </p>
+        <div className="flex flex-col gap-0.5 pb-2">
+          <NavLink to="/orga/audit" className={linkClass}>Audit et logs</NavLink>
+          <NavLink to="/orga/utilisateurs" className={linkClass}>Utilisateurs</NavLink>
         </div>
       </nav>
 

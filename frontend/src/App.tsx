@@ -11,11 +11,12 @@ import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
 import OrganizationPage from './pages/OrganizationPage'
+import OrgaAuditPage from './pages/OrgaAuditPage'
 import OrgaBusinessPage from './pages/OrgaBusinessPage'
 import OrgaDashboardPage from './pages/OrgaDashboardPage'
 import OrgaLabelsPage from './pages/OrgaLabelsPage'
-import OrgaQrPage from './pages/OrgaQrPage'
 import OrgaSurveyPage from './pages/OrgaSurveyPage'
+import OrgaUsersPage from './pages/OrgaUsersPage'
 import OrgaVisitsPage from './pages/OrgaVisitsPage'
 import PassportPage from './pages/PassportPage'
 import PrivacyPage from './pages/PrivacyPage'
@@ -68,7 +69,9 @@ export default function App() {
             <Route path="/orga/visites" element={<OrgaVisitsPage />} />
             <Route path="/orga/affaires" element={<OrgaBusinessPage />} />
             <Route path="/orga/enquete" element={<OrgaSurveyPage />} />
-            <Route path="/orga/qr" element={<OrgaQrPage />} />
+            <Route path="/orga/audit" element={<OrgaAuditPage />} />
+            <Route path="/orga/utilisateurs" element={<OrgaUsersPage />} />
+            <Route path="/orga/qr" element={<Navigate to="/orga/labels" replace />} />
             <Route path="/orga/live" element={<Navigate to="/orga/enquete" replace />} />
             <Route path="/orga/passeports" element={<Navigate to="/orga" replace />} />
           </Route>

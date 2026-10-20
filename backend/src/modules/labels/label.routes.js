@@ -40,6 +40,12 @@ router.get('/organizations/:slug', controller.getPublicFiche);
 // Orga authentifié
 router.get('/qr-batch', authenticate, authorize('orga'), controller.listQrBatch);
 router.get('/requests', authenticate, authorize('orga'), controller.listRequests);
+router.get(
+  '/requests/:id/qr',
+  authenticate,
+  authorize('orga'),
+  controller.getRequestQr,
+);
 router.post(
   '/requests/orga',
   authenticate,

@@ -486,6 +486,40 @@ async function listQrBatch() {
   return { count: items.length, items };
 }
 
+/* QR d'une demande acceptée (fiche publique). */
+async function getQrForRequest(requestId) {
+  const row = await LabelRequest.findByPk(requestId);
+  if (!row) throw ApiError.notFound('Demande introuvable');
+  if (row.status !== 'approved' || !row.organization_id) {
+    throw ApiError.badRequest('QR disponible uniquement pour un label accepté');
+  }
+
+  const org = await Organization.findByPk(row.organization_id, {
+    attributes: ['id', 'name', 'slug', 'label_code', 'type', 'city', 'region'],
+  });
+  if (!org || !org.slug) throw ApiError.notFound('Organisation introuvable');
+
+  const base = env.PUBLIC_APP_URL.replace(/\/$/, '');
+  const fiche_url = `${base}/o/${org.slug}`;
+  const qr_data_url = await QRCode.toDataURL(fiche_url, {
+    errorCorrectionLevel: 'M',
+    margin: 1,
+    width: 320,
+  });
+
+  return {
+    id: org.id,
+    name: org.name,
+    slug: org.slug,
+    label_code: org.label_code,
+    type: org.type,
+    city: org.city,
+    region: org.region,
+    fiche_url,
+    qr_data_url,
+  };
+}
+
 module.exports = {
   createRequest,
   createRequestByOrga,
@@ -499,6 +533,7 @@ module.exports = {
   listPublicIndustries,
   listMapPoints,
   listQrBatch,
+  getQrForRequest,
   verifyTrackingCode,
   setProgrammePdfUrl,
   getProgrammePdfPath,

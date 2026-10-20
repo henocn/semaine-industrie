@@ -317,3 +317,8 @@ export type QrBatchItem = {
 export function listQrBatch() {
   return apiFetch<{ count: number; items: QrBatchItem[] }>('/labels/qr-batch')
 }
+
+/* QR d'une demande acceptée. */
+export function getLabelRequestQr(id: string) {
+  return apiFetch<QrBatchItem>(`/labels/requests/${id}/qr`)
+}

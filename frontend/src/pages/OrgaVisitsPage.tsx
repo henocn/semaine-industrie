@@ -162,7 +162,7 @@ export default function OrgaVisitsPage() {
 
   return (
     <OrgaShell
-      title="Visites"
+      title="Planning visites"
       searchPlaceholder="Rechercher une visite…"
       onSearch={setQuery}
       actions={

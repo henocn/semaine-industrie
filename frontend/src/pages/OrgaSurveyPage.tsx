@@ -171,7 +171,7 @@ export default function OrgaSurveyPage() {
   }
 
   return (
-    <OrgaShell title="Enquête">
+    <OrgaShell title="Sondage">
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <section className="orga-panel mb-6">
