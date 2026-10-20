@@ -242,7 +242,7 @@ function Places() {
           name="port"
           alt="Porte-conteneurs au Lomé Container Terminal"
           position="center 45%"
-          className="mt-8 aspect-[4/3] sm:aspect-[2.2/1]"
+          className="mt-8 aspect-[16/9] max-h-64 w-full sm:max-h-72"
         />
         <dl className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {PLACES.map(([t, d]) => (
