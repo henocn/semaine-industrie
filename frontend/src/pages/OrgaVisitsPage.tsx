@@ -8,14 +8,18 @@ import {
   type BookableSite,
   type VisitBooking,
 } from '../api/bookings'
-import { googleMapsUrl } from '../api/labels'
+import { listMapPoints, type MapPoint } from '../api/labels'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { SitesMap } from '../components/map/SitesMap'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
 const iconBtn =
   'grid h-9 w-9 place-items-center border border-black bg-white text-forest hover:bg-forest hover:text-white disabled:opacity-40'
+
+const iconBtnDanger =
+  'grid h-9 w-9 place-items-center border border-black bg-white text-red-700 hover:bg-red-700 hover:text-white disabled:opacity-40'
 
 /* Semaine officielle SI 2026 (lundi 16 → dimanche 22 novembre). */
 const EVENT_WEEK = [
@@ -69,16 +73,6 @@ function IconTrash() {
   )
 }
 
-/* Icône carte / pin. */
-function IconMap() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M12 21s-6-5.4-6-10a6 6 0 1 1 12 0c0 4.6-6 10-6 10z" />
-      <circle cx="12" cy="11" r="2.2" />
-    </svg>
-  )
-}
-
 /* Arrangements de visites : site + établissement + créneau (orga). */
 export default function OrgaVisitsPage() {
   const [items, setItems] = useState<VisitBooking[]>([])
@@ -96,8 +90,11 @@ export default function OrgaVisitsPage() {
   const [busy, setBusy] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [view, setView] = useState<'table' | 'calendar'>('table')
+  const [view, setView] = useState<'table' | 'calendar' | 'map'>('table')
   const [selectedDay, setSelectedDay] = useState<string>(EVENT_WEEK[0].iso)
+  const [mapPoints, setMapPoints] = useState<MapPoint[]>([])
+  const [mapSelected, setMapSelected] = useState<string | null>(null)
+  const [mapError, setMapError] = useState<string | null>(null)
 
   const selectedSite = useMemo(() => sites.find((s) => s.id === siteId) || null, [sites, siteId])
   const selectedSchool = useMemo(() => schools.find((s) => s.id === schoolId) || null, [schools, schoolId])
@@ -126,6 +123,35 @@ export default function OrgaVisitsPage() {
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  /* Charge les points carte (sites avec visites) pour la vue Carte. */
+  useEffect(() => {
+    if (view !== 'map') return
+    let cancelled = false
+    async function loadMap() {
+      try {
+        setMapError(null)
+        const data = await listMapPoints({ type: 'entreprise' })
+        const withVisits = data.filter((p) => (p.visits?.groups ?? 0) > 0)
+        if (cancelled) return
+        setMapPoints(withVisits)
+        setMapSelected((prev) =>
+          prev && withVisits.some((p) => p.id === prev) ? prev : withVisits[0]?.id || null,
+        )
+      } catch (err) {
+        if (!cancelled) setMapError(err instanceof Error ? err.message : 'Carte indisponible')
+      }
+    }
+    void loadMap()
+    return () => {
+      cancelled = true
+    }
+  }, [view, items])
+
+  const activeMapPoint = useMemo(
+    () => mapPoints.find((p) => p.id === mapSelected) || null,
+    [mapPoints, mapSelected],
+  )
 
   /* Préremplit l'effectif depuis l'école (création uniquement). */
   useEffect(() => {
@@ -410,34 +436,36 @@ export default function OrgaVisitsPage() {
       )}
 
       <div className="mb-4 flex gap-0 border border-black">
-        <button
-          type="button"
-          onClick={() => setView('table')}
-          className={`flex-1 px-4 py-2.5 text-[14px] font-semibold transition-colors ${
-            view === 'table' ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
-          }`}
-        >
-          Tableau
-        </button>
-        <button
-          type="button"
-          onClick={() => setView('calendar')}
-          className={`flex-1 border-l border-black px-4 py-2.5 text-[14px] font-semibold transition-colors ${
-            view === 'calendar' ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
-          }`}
-        >
-          Calendrier
-        </button>
+        {(
+          [
+            { id: 'table' as const, label: 'Tableau' },
+            { id: 'calendar' as const, label: 'Calendrier' },
+            { id: 'map' as const, label: 'Carte' },
+          ] as const
+        ).map((tab, i) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setView(tab.id)}
+            className={`flex-1 px-4 py-2.5 text-[14px] font-semibold transition-colors ${
+              i > 0 ? 'border-l border-black' : ''
+            } ${
+              view === tab.id ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {view === 'table' ? (
+      {view === 'table' && (
         <section className="orga-panel !p-0 overflow-x-auto">
           <div className="border-b border-black px-4 py-3">
             <h2 className="text-[15px] font-semibold text-forest">
               {filtered.length} visite{filtered.length > 1 ? 's' : ''}
             </h2>
           </div>
-          <table className="orga-table min-w-[820px]">
+          <table className="orga-table min-w-[780px]">
             <thead>
               <tr>
                 <th>#</th>
@@ -446,7 +474,7 @@ export default function OrgaVisitsPage() {
                 <th>Créneau</th>
                 <th>Effectif</th>
                 <th>Contact</th>
-                <th className="w-36">Actions</th>
+                <th className="w-28">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -455,7 +483,6 @@ export default function OrgaVisitsPage() {
               )}
               {filtered.map((b, i) => {
                 const onMap = isOnMap(b)
-                const maps = googleMapsUrl(b.organization?.lat, b.organization?.lng)
                 return (
                   <tr key={b.id} className={onMap ? undefined : 'orga-row-pending'}>
                     <td className="font-semibold text-forest">{i + 1}</td>
@@ -480,23 +507,6 @@ export default function OrgaVisitsPage() {
                     </td>
                     <td>
                       <div className="flex flex-wrap gap-1.5">
-                        {maps ? (
-                          <a
-                            href={maps}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Voir sur la carte"
-                            aria-label="Voir sur la carte"
-                            className={iconBtn}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <IconMap />
-                          </a>
-                        ) : (
-                          <button type="button" disabled title="Pas de position" className={iconBtn}>
-                            <IconMap />
-                          </button>
-                        )}
                         <button
                           type="button"
                           title="Modifier"
@@ -511,7 +521,7 @@ export default function OrgaVisitsPage() {
                           type="button"
                           title="Supprimer"
                           aria-label="Supprimer"
-                          className={iconBtn}
+                          className={iconBtnDanger}
                           disabled={busy}
                           onClick={(e) => void onDelete(b.id, e)}
                         >
@@ -525,7 +535,9 @@ export default function OrgaVisitsPage() {
             </tbody>
           </table>
         </section>
-      ) : (
+      )}
+
+      {view === 'calendar' && (
         <section className="orga-panel">
           <div className="mb-4">
             <h2 className="text-[18px] font-semibold text-forest">Semaine du 16 au 22 novembre 2026</h2>
@@ -578,7 +590,6 @@ export default function OrgaVisitsPage() {
               <ul className="mt-4 space-y-3">
                 {dayVisits.map((b) => {
                   const onMap = isOnMap(b)
-                  const maps = googleMapsUrl(b.organization?.lat, b.organization?.lng)
                   return (
                     <li key={b.id} className="border border-black bg-white px-4 py-3">
                       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -599,21 +610,15 @@ export default function OrgaVisitsPage() {
                         </div>
                         <div className="flex items-center gap-1.5">
                           <p className="mr-2 text-[14px] font-bold text-forest">{b.headcount} pers.</p>
-                          {maps && (
-                            <a
-                              href={maps}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Voir sur la carte"
-                              className={iconBtn}
-                            >
-                              <IconMap />
-                            </a>
-                          )}
                           <button type="button" title="Modifier" className={iconBtn} onClick={() => openEdit(b)}>
                             <IconEdit />
                           </button>
-                          <button type="button" title="Supprimer" className={iconBtn} onClick={() => void onDelete(b.id)}>
+                          <button
+                            type="button"
+                            title="Supprimer"
+                            className={iconBtnDanger}
+                            onClick={() => void onDelete(b.id)}
+                          >
                             <IconTrash />
                           </button>
                         </div>
@@ -639,6 +644,88 @@ export default function OrgaVisitsPage() {
               </ul>
             )}
           </div>
+        </section>
+      )}
+
+      {view === 'map' && (
+        <section className="orga-panel">
+          <div className="mb-4">
+            <h2 className="text-[15px] font-semibold text-forest">Carte des visites</h2>
+            <p className="mt-1 text-[13px] text-ink/50">
+              Sites qui accueillent déjà des établissements.
+            </p>
+          </div>
+
+          {mapError && <p className="mb-4 text-[14px] text-red-700">{mapError}</p>}
+
+          {!mapError && mapPoints.length === 0 && (
+            <p className="text-[13px] text-ink/50">Aucune visite arrangée pour le moment.</p>
+          )}
+
+          {mapPoints.length > 0 && (
+            <div className="grid gap-4 lg:h-[min(68vh,680px)] lg:grid-cols-[minmax(0,1.7fr)_minmax(240px,0.9fr)] lg:items-stretch lg:overflow-hidden">
+              <div className="min-h-[320px] min-w-0 overflow-hidden border border-black sm:min-h-[400px] lg:min-h-0 lg:h-full">
+                <SitesMap
+                  points={mapPoints}
+                  selectedId={mapSelected}
+                  onSelect={setMapSelected}
+                  tall
+                />
+              </div>
+
+              <aside className="min-h-0 min-w-0 overflow-y-auto border border-black bg-white p-4">
+                {!activeMapPoint && (
+                  <p className="text-[13px] text-ink/50">Sélectionnez un site sur la carte.</p>
+                )}
+                {activeMapPoint && (
+                  <>
+                    <p className="text-[12px] font-semibold uppercase tracking-wide text-ink/45">
+                      Site
+                    </p>
+                    <h3 className="mt-1 text-[18px] font-semibold text-forest">{activeMapPoint.name}</h3>
+                    <p className="mt-1 text-[13px] text-ink/55">
+                      {[activeMapPoint.city, activeMapPoint.region, activeMapPoint.sector]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3 border-y border-black/10 py-3">
+                      <div>
+                        <p className="text-[22px] font-semibold text-forest">
+                          {activeMapPoint.visits?.groups ?? 0}
+                        </p>
+                        <p className="text-[12px] text-ink/50">groupes</p>
+                      </div>
+                      <div>
+                        <p className="text-[22px] font-semibold text-forest">
+                          {activeMapPoint.visits?.headcount ?? 0}
+                        </p>
+                        <p className="text-[12px] text-ink/50">visiteurs</p>
+                      </div>
+                    </div>
+
+                    <h4 className="mt-4 text-[13px] font-semibold text-forest">Qui vient</h4>
+                    <ul className="mt-2 space-y-2">
+                      {(activeMapPoint.visits?.items || []).map((v, i) => (
+                        <li
+                          key={`${v.school_name}-${v.visit_day}-${v.visit_start}-${i}`}
+                          className="border border-black/10 px-3 py-2"
+                        >
+                          <p className="font-semibold text-forest">{v.school_name}</p>
+                          <p className="mt-0.5 text-[13px] text-ink/60">
+                            {v.visit_day} · {v.visit_start}-{v.visit_end}
+                          </p>
+                          <p className="mt-0.5 text-[13px] text-ink/50">
+                            <span className="font-semibold text-forest">{v.headcount}</span> élèves
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </aside>
+            </div>
+          )}
         </section>
       )}
     </OrgaShell>
