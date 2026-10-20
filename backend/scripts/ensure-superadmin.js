@@ -1,6 +1,6 @@
 'use strict';
 
-/* Crée ou met à jour le seul compte orga (superadmin) depuis le .env. */
+/* Crée ou met à jour le compte admin principal depuis le .env. */
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const { User, sequelize } = require('../src/models');
@@ -25,20 +25,20 @@ async function ensureSuperadmin() {
       password_hash,
       first_name: firstName,
       last_name: lastName,
-      role: 'orga',
+      role: 'admin',
       is_active: true,
     });
-    console.log(`Superadmin mis à jour : ${email}`);
+    console.log(`Admin mis à jour : ${email}`);
   } else {
     await User.create({
       email,
       password_hash,
       first_name: firstName,
       last_name: lastName,
-      role: 'orga',
+      role: 'admin',
       is_active: true,
     });
-    console.log(`Superadmin créé : ${email}`);
+    console.log(`Admin créé : ${email}`);
   }
 }
 
