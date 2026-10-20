@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -9,10 +9,10 @@ type ButtonProps = {
   to?: string
   className?: string
   disabled?: boolean
-  /* Flèche à droite (ignorée pour la variante link). Actif par défaut. */
+  /* Flèche à droite (ignorée pour la variante link). */
   withArrow?: boolean
   type?: ButtonHTMLAttributes<HTMLButtonElement>['type']
-  onClick?: ButtonHTMLAttributes<HTMLButtonElement>['onClick']
+  onClick?: MouseEventHandler<HTMLElement>
   children: ReactNode
 }
 
