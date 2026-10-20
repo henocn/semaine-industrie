@@ -245,9 +245,8 @@ function Footer() {
       <div className="border-t border-forest/10">
         <div className={`${WRAP} flex flex-col gap-3 py-6 text-sm text-ink/55 sm:flex-row sm:items-center sm:justify-between`}>
           <p>© 2026 Semaine de l’industrie · République togolaise</p>
-          <p className="flex items-center gap-2 font-semibold text-forest">
-            <img src="/brand/symbole-couleur-transparent.png" alt="" className="h-6 w-auto" aria-hidden="true" />
-            #SemaineIndustrie2026
+          <p className="text-[12px] font-normal tracking-wide text-ink/40">
+            Powered by DEKA Editions · © 2026
           </p>
         </div>
       </div>
