@@ -8,7 +8,7 @@ const {
   submitSchema,
   createQuestionSchema,
   updateQuestionSchema,
-  moveQuestionSchema,
+  reorderSchema,
 } = require('./survey.validation');
 
 const router = Router();
@@ -24,19 +24,19 @@ router.post(
   validate(createQuestionSchema),
   controller.createQuestion,
 );
+router.post(
+  '/admin/questions/reorder',
+  authenticate,
+  authorize('orga'),
+  validate(reorderSchema),
+  controller.reorderQuestions,
+);
 router.patch(
   '/admin/questions/:id',
   authenticate,
   authorize('orga'),
   validate(updateQuestionSchema),
   controller.updateQuestion,
-);
-router.post(
-  '/admin/questions/:id/move',
-  authenticate,
-  authorize('orga'),
-  validate(moveQuestionSchema),
-  controller.moveQuestion,
 );
 router.delete('/admin/questions/:id', authenticate, authorize('orga'), controller.deleteQuestion);
 router.get('/stats', authenticate, authorize('orga'), controller.stats);

@@ -52,11 +52,11 @@ async function deleteQuestion(req, res, next) {
   }
 }
 
-/* Monte ou descend une question. */
-async function moveQuestion(req, res, next) {
+/* Réordonne les questions (drag and drop). */
+async function reorderQuestions(req, res, next) {
   try {
-    const data = await surveyService.moveQuestion(req.params.id, req.body.direction);
-    return ApiResponse.success(res, data);
+    const data = await surveyService.reorderQuestions(req.body.ordered_ids);
+    return ApiResponse.success(res, data, 'Ordre mis à jour');
   } catch (err) {
     return next(err);
   }
@@ -100,7 +100,7 @@ module.exports = {
   createQuestion,
   updateQuestion,
   deleteQuestion,
-  moveQuestion,
+  reorderQuestions,
   submit,
   stats,
   recent,

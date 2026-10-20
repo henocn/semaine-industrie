@@ -1,6 +1,5 @@
 'use strict';
 
-const { Op } = require('sequelize');
 const { SurveyResponse, SurveyQuestion, Passport } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 
@@ -16,6 +15,33 @@ function slugKey(label) {
   return `${base}_${Date.now().toString(36).slice(-4)}`;
 }
 
+/* Nettoie la liste d'options (choix multiples). */
+function cleanOptions(raw) {
+  const list = Array.isArray(raw)
+    ? raw.map((o) => String(o || '').trim()).filter(Boolean)
+    : [];
+  const unique = [...new Set(list)];
+  if (unique.length < 2) {
+    throw ApiError.badRequest('Au moins deux options sont requises');
+  }
+  if (unique.length > 12) {
+    throw ApiError.badRequest('Maximum 12 options');
+  }
+  return unique;
+}
+
+/* Sérialise une question pour l'API. */
+function toPublicQuestion(q) {
+  return {
+    id: q.id,
+    key: q.key,
+    label: q.label,
+    kind: q.kind === 'choice' ? 'choice' : 'scale',
+    options: q.kind === 'choice' && Array.isArray(q.options) ? q.options : null,
+    sort_order: q.sort_order,
+  };
+}
+
 /* Liste les questions actives (formulaire public). */
 async function getQuestions() {
   const rows = await SurveyQuestion.findAll({
@@ -25,28 +51,30 @@ async function getQuestions() {
       ['created_at', 'ASC'],
     ],
   });
-  return rows.map((q) => ({
-    id: q.id,
-    key: q.key,
-    label: q.label,
-    sort_order: q.sort_order,
-  }));
+  return rows.map(toPublicQuestion);
 }
 
 /* Liste toutes les questions (backoffice). */
 async function listQuestionsAdmin() {
-  return SurveyQuestion.findAll({
+  const rows = await SurveyQuestion.findAll({
     order: [
       ['sort_order', 'ASC'],
       ['created_at', 'ASC'],
     ],
   });
+  return rows.map((q) => ({
+    ...toPublicQuestion(q),
+    is_active: q.is_active,
+  }));
 }
 
 /* Crée une question d'enquête. */
-async function createQuestion({ label, sort_order }) {
+async function createQuestion({ label, kind = 'scale', options, sort_order }) {
   const text = String(label || '').trim();
   if (!text) throw ApiError.badRequest('Libellé requis');
+
+  const qKind = kind === 'choice' ? 'choice' : 'scale';
+  const opts = qKind === 'choice' ? cleanOptions(options) : null;
 
   let order = Number(sort_order);
   if (!Number.isFinite(order)) {
@@ -54,12 +82,15 @@ async function createQuestion({ label, sort_order }) {
     order = (Number(max) || 0) + 1;
   }
 
-  return SurveyQuestion.create({
+  const row = await SurveyQuestion.create({
     key: slugKey(text),
     label: text,
+    kind: qKind,
+    options: opts,
     sort_order: order,
     is_active: true,
   });
+  return toPublicQuestion(row);
 }
 
 /* Met à jour une question. */
@@ -72,14 +103,23 @@ async function updateQuestion(id, payload) {
     if (!text) throw ApiError.badRequest('Libellé requis');
     row.label = text;
   }
+  if (payload.kind != null) {
+    row.kind = payload.kind === 'choice' ? 'choice' : 'scale';
+  }
+  if (payload.options !== undefined || payload.kind === 'choice') {
+    if (row.kind === 'choice') {
+      row.options = cleanOptions(payload.options != null ? payload.options : row.options);
+    } else {
+      row.options = null;
+    }
+  }
+  if (row.kind === 'scale') row.options = null;
+
   if (payload.sort_order != null && Number.isFinite(Number(payload.sort_order))) {
     row.sort_order = Number(payload.sort_order);
   }
-  if (payload.is_active != null) {
-    row.is_active = Boolean(payload.is_active);
-  }
   await row.save();
-  return row;
+  return toPublicQuestion(row);
 }
 
 /* Supprime une question. */
@@ -88,6 +128,31 @@ async function deleteQuestion(id) {
   if (!row) throw ApiError.notFound('Question introuvable');
   await row.destroy();
   return { id };
+}
+
+/* Réordonne les questions (drag and drop). */
+async function reorderQuestions(orderedIds) {
+  const ids = [...new Set((orderedIds || []).map(String))];
+  if (!ids.length) throw ApiError.badRequest('Liste vide');
+
+  const rows = await SurveyQuestion.findAll();
+  if (rows.length !== ids.length) {
+    throw ApiError.badRequest('La liste doit contenir toutes les questions');
+  }
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  for (const id of ids) {
+    if (!byId.has(id)) throw ApiError.badRequest('Identifiant inconnu');
+  }
+
+  await Promise.all(
+    ids.map((id, index) => {
+      const row = byId.get(id);
+      row.sort_order = index + 1;
+      return row.save();
+    }),
+  );
+
+  return listQuestionsAdmin();
 }
 
 /* Enregistre une réponse before/after. */
@@ -109,11 +174,21 @@ async function submit({ passport_code, phase, answers, source = 'qr' }) {
 
   const cleaned = {};
   for (const q of questions) {
-    const v = Number(answers?.[q.key]);
-    if (!Number.isFinite(v) || v < 1 || v > 5) {
-      throw ApiError.badRequest(`Réponse invalide pour « ${q.label} » (1 à 5)`);
+    const raw = answers?.[q.key];
+    if (q.kind === 'choice') {
+      const opts = Array.isArray(q.options) ? q.options : [];
+      const val = String(raw ?? '').trim();
+      if (!opts.includes(val)) {
+        throw ApiError.badRequest(`Choix invalide pour « ${q.label} »`);
+      }
+      cleaned[q.key] = val;
+    } else {
+      const v = Number(raw);
+      if (!Number.isFinite(v) || v < 1 || v > 5) {
+        throw ApiError.badRequest(`Réponse invalide pour « ${q.label} » (1 à 5)`);
+      }
+      cleaned[q.key] = v;
     }
-    cleaned[q.key] = v;
   }
 
   return SurveyResponse.create({
@@ -134,10 +209,15 @@ async function getStats() {
   });
   const rows = await SurveyResponse.findAll({ raw: true });
   const agg = { before: {}, after: {}, counts: { before: 0, after: 0 } };
+  const choiceAgg = {};
 
   for (const q of questions) {
-    agg.before[q.key] = { sum: 0, n: 0 };
-    agg.after[q.key] = { sum: 0, n: 0 };
+    if (q.kind === 'choice') {
+      choiceAgg[q.key] = { before: {}, after: {} };
+    } else {
+      agg.before[q.key] = { sum: 0, n: 0 };
+      agg.after[q.key] = { sum: 0, n: 0 };
+    }
   }
 
   for (const row of rows) {
@@ -146,25 +226,51 @@ async function getStats() {
     agg.counts[phase] += 1;
     const answers = row.answers || {};
     for (const q of questions) {
-      const v = Number(answers[q.key]);
-      if (Number.isFinite(v)) {
-        agg[phase][q.key].sum += v;
-        agg[phase][q.key].n += 1;
+      if (q.kind === 'choice') {
+        const val = String(answers[q.key] ?? '').trim();
+        if (!val) continue;
+        choiceAgg[q.key][phase][val] = (choiceAgg[q.key][phase][val] || 0) + 1;
+      } else {
+        const v = Number(answers[q.key]);
+        if (Number.isFinite(v) && agg[phase][q.key]) {
+          agg[phase][q.key].sum += v;
+          agg[phase][q.key].n += 1;
+        }
       }
     }
   }
 
-  const averages = questions.map((q) => ({
-    key: q.key,
-    label: q.label,
-    before: agg.before[q.key].n ? +(agg.before[q.key].sum / agg.before[q.key].n).toFixed(2) : null,
-    after: agg.after[q.key].n ? +(agg.after[q.key].sum / agg.after[q.key].n).toFixed(2) : null,
-  }));
+  const averages = questions
+    .filter((q) => q.kind !== 'choice')
+    .map((q) => ({
+      key: q.key,
+      label: q.label,
+      kind: 'scale',
+      before: agg.before[q.key].n ? +(agg.before[q.key].sum / agg.before[q.key].n).toFixed(2) : null,
+      after: agg.after[q.key].n ? +(agg.after[q.key].sum / agg.after[q.key].n).toFixed(2) : null,
+    }));
+
+  const choices = questions
+    .filter((q) => q.kind === 'choice')
+    .map((q) => ({
+      key: q.key,
+      label: q.label,
+      kind: 'choice',
+      options: Array.isArray(q.options) ? q.options : [],
+      before: choiceAgg[q.key].before,
+      after: choiceAgg[q.key].after,
+    }));
 
   return {
-    questions: questions.map((q) => ({ key: q.key, label: q.label, is_active: q.is_active })),
+    questions: questions.map((q) => ({
+      key: q.key,
+      label: q.label,
+      kind: q.kind,
+      is_active: q.is_active,
+    })),
     counts: agg.counts,
     averages,
+    choices,
     total: rows.length,
   };
 }
@@ -179,34 +285,13 @@ async function listRecentResponses(limit = 30) {
   });
 }
 
-/* Réordonne deux questions (swap sort_order). */
-async function moveQuestion(id, direction) {
-  const row = await SurveyQuestion.findByPk(id);
-  if (!row) throw ApiError.notFound('Question introuvable');
-
-  const sibling = await SurveyQuestion.findOne({
-    where:
-      direction === 'up'
-        ? { sort_order: { [Op.lt]: row.sort_order } }
-        : { sort_order: { [Op.gt]: row.sort_order } },
-    order: [['sort_order', direction === 'up' ? 'DESC' : 'ASC']],
-  });
-  if (!sibling) return row;
-
-  const tmp = row.sort_order;
-  row.sort_order = sibling.sort_order;
-  sibling.sort_order = tmp;
-  await Promise.all([row.save(), sibling.save()]);
-  return row;
-}
-
 module.exports = {
   getQuestions,
   listQuestionsAdmin,
   createQuestion,
   updateQuestion,
   deleteQuestion,
-  moveQuestion,
+  reorderQuestions,
   submit,
   getStats,
   listRecentResponses,

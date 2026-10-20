@@ -1,27 +1,39 @@
 import { apiFetch } from './client'
 
+export type SurveyQuestionKind = 'scale' | 'choice'
+
 export type SurveyQuestion = {
   id?: string
   key: string
   label: string
+  kind?: SurveyQuestionKind
+  options?: string[] | null
   sort_order?: number
   is_active?: boolean
 }
 
 export type SurveyStats = {
-  questions: Array<{ key: string; label: string; is_active?: boolean }>
+  questions: Array<{ key: string; label: string; kind?: string; is_active?: boolean }>
   counts: { before: number; after: number }
-  averages: Array<{ key: string; label: string; before: number | null; after: number | null }>
+  averages: Array<{
+    key: string
+    label: string
+    kind?: string
+    before: number | null
+    after: number | null
+  }>
+  choices?: Array<{
+    key: string
+    label: string
+    kind: 'choice'
+    options: string[]
+    before: Record<string, number>
+    after: Record<string, number>
+  }>
   total: number
 }
 
-export type SurveyResponseRow = {
-  id: string
-  phase: 'before' | 'after'
-  answers: Record<string, number>
-  source: string
-  created_at: string
-}
+export type SurveyAnswerValue = number | string
 
 /* Questions actives (formulaire public). */
 export function getSurveyQuestions() {
@@ -31,7 +43,7 @@ export function getSurveyQuestions() {
 /* Soumet before/after. */
 export function submitSurvey(payload: {
   phase: 'before' | 'after'
-  answers: Record<string, number>
+  answers: Record<string, SurveyAnswerValue>
   passport_code?: string
   source?: 'qr' | 'paper'
 }) {
@@ -49,17 +61,21 @@ export function listSurveyQuestionsAdmin() {
 }
 
 /* Crée une question. */
-export function createSurveyQuestion(label: string) {
+export function createSurveyQuestion(payload: {
+  label: string
+  kind: SurveyQuestionKind
+  options?: string[]
+}) {
   return apiFetch<SurveyQuestion>('/surveys/admin/questions', {
     method: 'POST',
-    body: JSON.stringify({ label }),
+    body: JSON.stringify(payload),
   })
 }
 
 /* Met à jour une question. */
 export function updateSurveyQuestion(
   id: string,
-  payload: { label?: string; is_active?: boolean; sort_order?: number },
+  payload: { label?: string; kind?: SurveyQuestionKind; options?: string[] | null },
 ) {
   return apiFetch<SurveyQuestion>(`/surveys/admin/questions/${id}`, {
     method: 'PATCH',
@@ -72,15 +88,10 @@ export function deleteSurveyQuestion(id: string) {
   return apiFetch<{ id: string }>(`/surveys/admin/questions/${id}`, { method: 'DELETE' })
 }
 
-/* Monte ou descend une question. */
-export function moveSurveyQuestion(id: string, direction: 'up' | 'down') {
-  return apiFetch<SurveyQuestion>(`/surveys/admin/questions/${id}/move`, {
+/* Réordonne via drag and drop. */
+export function reorderSurveyQuestions(ordered_ids: string[]) {
+  return apiFetch<SurveyQuestion[]>('/surveys/admin/questions/reorder', {
     method: 'POST',
-    body: JSON.stringify({ direction }),
+    body: JSON.stringify({ ordered_ids }),
   })
-}
-
-/* Dernières réponses. */
-export function listSurveyResponses(limit = 30) {
-  return apiFetch<SurveyResponseRow[]>(`/surveys/responses?limit=${limit}`)
 }

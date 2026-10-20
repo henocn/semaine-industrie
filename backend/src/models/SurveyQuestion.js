@@ -21,6 +21,15 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(400),
         allowNull: false,
       },
+      kind: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+        defaultValue: 'scale',
+      },
+      options: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
       sort_order: {
         type: DataTypes.INTEGER,
         allowNull: false,
