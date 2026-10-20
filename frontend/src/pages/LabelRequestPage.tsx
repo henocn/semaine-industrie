@@ -170,7 +170,7 @@ export default function LabelRequestPage() {
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     multiple
-                    className="block w-full text-sm text-ink/80 file:mr-4 file:cursor-pointer file:rounded-full file:border-0 file:bg-forest file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-white hover:file:bg-energy"
+                    className="block w-full text-sm text-ink/80 file:mr-4 file:cursor-pointer file:border-0 file:bg-forest file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-white hover:file:bg-ink"
                     onChange={(e) => onGalleryChange(e.target.files)}
                   />
                 </Field>

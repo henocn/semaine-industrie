@@ -38,7 +38,7 @@ export function CookieConsent() {
         <p className="text-[14px] leading-relaxed text-white/90">
           Ce site utilise des cookies techniques nécessaires au fonctionnement (session, préférences).
           En continuant, vous acceptez notre{' '}
-          <Link to="/confidentialite" className="font-semibold text-sun underline underline-offset-2 hover:text-leaf">
+          <Link to="/confidentialite" className="font-semibold text-sun underline underline-offset-2 hover:text-white">
             politique de confidentialité
           </Link>
           .

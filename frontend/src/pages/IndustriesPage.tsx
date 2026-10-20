@@ -93,13 +93,13 @@ export default function IndustriesPage() {
                       <IndustryCover item={item} />
                     </div>
                     <div className="mt-4 border-t-2 border-sun pt-3">
-                      <h2 className="font-display text-xl font-bold text-forest group-hover:text-energy">
+                      <h2 className="font-display text-xl font-bold text-forest group-hover:text-ink">
                         {item.name}
                       </h2>
                       <p className="mt-1 text-[15px] text-ink/75">
                         {[item.sector, place].filter(Boolean).join(' · ') || 'Fiche à compléter'}
                       </p>
-                      <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-forest underline decoration-forest/30 underline-offset-4 group-hover:text-energy">
+                      <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-forest underline decoration-forest/30 underline-offset-4 group-hover:text-ink">
                         Voir la fiche
                         <span aria-hidden="true">→</span>
                       </span>

@@ -1,85 +1,63 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  ClipboardList,
-  Factory,
-  Handshake,
-  Mail,
-  MapPin,
-  Vote,
-} from 'lucide-react'
-import { Button } from '../ui/Button'
-import { BrandLogo, WRAP } from './Mark'
+import { ChevronDown } from 'lucide-react'
+import { WRAP, BrandLogo } from './Mark'
 
-type NavItem = { label: string; href?: string; to?: string; icon: ReactNode }
+type NavItem = { label: string; href?: string; to?: string }
 
 type NavGroup = {
   label: string
   items: NavItem[]
 }
 
-/* Icônes lucide du menu (trait fin, taille unique). */
-const ICON_PROPS = { strokeWidth: 1.75, className: 'h-4 w-4', 'aria-hidden': true } as const
-
-const Icon = {
-  mail: <Mail {...ICON_PROPS} />,
-  factory: <Factory {...ICON_PROPS} />,
-  handshake: <Handshake {...ICON_PROPS} />,
-  map: <MapPin {...ICON_PROPS} />,
-  vote: <Vote {...ICON_PROPS} />,
-  clipboard: <ClipboardList {...ICON_PROPS} />,
-}
+const PARTICIPER_ITEMS: NavItem[] = [
+  { label: 'Demander le label', to: '/label' },
+  { label: 'Rencontres d’affaires', to: '/affaires' },
+]
 
 const GROUPS: NavGroup[] = [
   {
     label: 'Explorer',
     items: [
-      { label: 'Industrie', to: '/industrie', icon: Icon.factory },
-      { label: 'Carte & visites', to: '/carte', icon: Icon.map },
-      { label: 'Rencontres d’affaires', to: '/affaires', icon: Icon.handshake },
+      { label: 'Industrie', to: '/industrie' },
+      { label: 'Carte & visites', to: '/carte' },
     ],
   },
   {
     label: 'Défis',
     items: [
-      { label: 'Vote coup de cœur', to: '/vote', icon: Icon.vote },
-      { label: 'Questionnaire', to: '/questionnaire', icon: Icon.clipboard },
+      { label: 'Vote coup de cœur', to: '/vote' },
+      { label: 'Questionnaire', to: '/questionnaire' },
     ],
   },
   {
     label: 'À propos',
     items: [
-      { label: 'Ressources', to: '/ressources', icon: Icon.clipboard },
-      { label: 'Contact', to: '/#contact', icon: Icon.mail },
+      { label: 'Ressources', to: '/ressources' },
+      { label: 'Contact', to: '/#contact' },
     ],
   },
 ]
 
-/* Lien d’un sous-menu avec icône. */
+/* Lien de sous-menu, texte seul (sans icône). */
 function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
   const className =
-    'flex items-center gap-3 px-4 py-2.5 text-[14px] text-ink/75 transition-colors hover:bg-sage hover:text-forest'
-  const content = (
-    <>
-      <span className="shrink-0 text-forest/70">{item.icon}</span>
-      <span>{item.label}</span>
-    </>
-  )
+    'block px-4 py-2.5 text-[14px] text-ink/80 transition-colors hover:bg-sage hover:text-forest'
   if (item.to) {
     return (
       <Link to={item.to} className={className} onClick={onNavigate}>
-        {content}
+        {item.label}
       </Link>
     )
   }
   return (
     <a href={item.href} className={className} onClick={onNavigate}>
-      {content}
+      {item.label}
     </a>
   )
 }
 
-/* Groupe desktop : un seul dropdown ouvert à la fois. */
+/* Groupe desktop classique (Explorer, Défis, À propos). */
 function DesktopGroup({
   group,
   align = 'left',
@@ -113,7 +91,7 @@ function DesktopGroup({
         <span className="relative z-10">{group.label}</span>
       </button>
       <div
-        className={`nav-group-panel absolute top-full z-30 w-60 min-w-full bg-white shadow-lg shadow-forest/10 ${panelPos}`}
+        className={`nav-group-panel absolute top-full z-30 w-56 min-w-full bg-white shadow-lg shadow-forest/10 ${panelPos}`}
       >
         {group.items.map((item) => (
           <NavLink key={item.label} item={item} onNavigate={onClose} />
@@ -123,18 +101,53 @@ function DesktopGroup({
   )
 }
 
-/* Header public : CTA Participer à la place de Label, sans lien Programme ni menu Participer. */
+/* CTA Participer : ouvre label et rencontres d'affaires. */
+function ParticiperMenu({
+  open,
+  onOpen,
+  onClose,
+}: {
+  open: boolean
+  onOpen: () => void
+  onClose: () => void
+}) {
+  return (
+    <div
+      className="relative hidden h-16 items-center md:flex"
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
+    >
+      <button
+        type="button"
+        className="ui-btn-accent inline-flex items-center gap-1.5"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => (open ? onClose() : onOpen())}
+      >
+        Participer
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={1.75} aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-30 w-56 bg-white py-1 shadow-lg shadow-forest/10">
+          {PARTICIPER_ITEMS.map((item) => (
+            <NavLink key={item.label} item={item} onNavigate={onClose} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* Header public. */
 export function SiteHeader() {
   const [open, setOpen] = useState(false)
   const [openGroup, setOpenGroup] = useState<string | null>(null)
 
   useEffect(() => {
-    /* Ferme le sous-menu au clic hors nav. */
+    /* Ferme le sous-menu au clic hors header. */
     function onDocClick(e: MouseEvent) {
       const t = e.target as HTMLElement | null
-      if (!t?.closest?.('nav[aria-label="Navigation principale"]')) {
-        setOpenGroup(null)
-      }
+      if (!t?.closest?.('header')) setOpenGroup(null)
     }
     document.addEventListener('click', onDocClick)
     return () => document.removeEventListener('click', onDocClick)
@@ -160,9 +173,11 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <Button to="/label" variant="accent" className="hidden md:inline-flex">
-          Participer
-        </Button>
+        <ParticiperMenu
+          open={openGroup === 'Participer'}
+          onOpen={() => setOpenGroup('Participer')}
+          onClose={() => setOpenGroup(null)}
+        />
 
         <button
           type="button"
@@ -183,6 +198,14 @@ export function SiteHeader() {
       {open && (
         <div id="nav-mobile" className="border-t border-forest/10 bg-white md:hidden">
           <div className={`${WRAP} space-y-4 py-4`}>
+            <div>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-forest/50">Participer</p>
+              <div className="mt-1">
+                {PARTICIPER_ITEMS.map((item) => (
+                  <NavLink key={item.label} item={item} onNavigate={() => setOpen(false)} />
+                ))}
+              </div>
+            </div>
             {GROUPS.map((group) => (
               <div key={group.label}>
                 <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-forest/50">
@@ -195,9 +218,6 @@ export function SiteHeader() {
                 </div>
               </div>
             ))}
-            <Button to="/label" variant="accent" onClick={() => setOpen(false)} className="w-full">
-              Participer
-            </Button>
           </div>
         </div>
       )}

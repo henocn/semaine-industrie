@@ -259,9 +259,9 @@ select.orga-input {
 }
 .ui-btn-link-arrow:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ui-btn-accent { background: var(--color-sun); color: var(--color-forest); }
-.ui-btn-accent:hover { background: var(--color-leaf); }
+.ui-btn-accent:hover { background: var(--color-forest); color: #fff; }
 .ui-btn-ondark { background: #fff; color: var(--color-forest); }
-.ui-btn-ondark:hover { background: var(--color-sage); }
+.ui-btn-ondark:hover { background: var(--color-sage); color: var(--color-forest); }
 .ui-btn-primary:disabled,
 .ui-btn-accent:disabled,
 .ui-btn-ondark:disabled,

@@ -21,7 +21,7 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   accent: 'ui-btn-accent',
   onDark: 'ui-btn-ondark',
   outline: 'ui-btn-outline',
-  link: 'inline-flex items-center gap-1.5 font-semibold text-forest underline decoration-forest/30 underline-offset-4 transition-colors hover:text-energy hover:decoration-energy',
+  link: 'inline-flex items-center gap-1.5 font-semibold text-forest underline decoration-forest/30 underline-offset-4 transition-colors hover:text-ink hover:decoration-forest',
 }
 
 /* Bouton ou lien stylé : rend un Link react-router si `to` est fourni, sinon un button. */
