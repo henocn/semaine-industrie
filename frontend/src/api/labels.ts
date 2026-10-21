@@ -249,7 +249,7 @@ export async function uploadProgrammePdf(file: File) {
   return json.data
 }
 
-/* Modifie une demande (orga, avant acceptation). */
+/* Modifie une demande, y compris après acceptation. */
 export function updateLabelRequest(id: string, payload: Partial<LabelRequestPayload> & { structure_type?: 'entreprise' | 'ecole'; address?: string }) {
   return apiFetch<LabelRequest>(`/labels/requests/${id}`, {
     method: 'PATCH',

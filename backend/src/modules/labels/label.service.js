@@ -185,15 +185,10 @@ async function getRequestById(id) {
   return row;
 }
 
-/* Met à jour une demande (orga) avant acceptation uniquement. */
+/* Met à jour une demande. Une fiche déjà acceptée est recopiée sur l'organisation. */
 async function updateRequest(id, payload) {
   const request = await getRequestById(id);
-  if (request.status === 'approved') {
-    throw ApiError.badRequest(
-      'Dossier accepté : seuls le kit (PDF) et le planning plus tard sont modifiables',
-    );
-  }
-
+  const previousName = request.structure_name;
   const data = { ...payload };
   const nextType = data.structure_type || request.structure_type;
   if (nextType === 'ecole') {
@@ -203,9 +198,34 @@ async function updateRequest(id, payload) {
   }
 
   Object.assign(request, data);
-  if (!request.contact_name) request.contact_name = request.structure_name;
+  if (!request.contact_name || request.contact_name === previousName) {
+    request.contact_name = request.structure_name;
+  }
   await request.save();
-  return request;
+
+  if (request.status === 'approved' && request.organization_id) {
+    const org = await Organization.findByPk(request.organization_id);
+    if (org) {
+      org.name = request.structure_name;
+      org.type = request.structure_type;
+      org.sector = request.sector;
+      org.region = request.region;
+      org.city = request.city;
+      org.address = request.address;
+      org.lat = request.lat;
+      org.lng = request.lng;
+      org.contact_name = request.contact_name;
+      org.contact_email = request.contact_email;
+      org.contact_phone = request.contact_phone;
+      org.description = request.description;
+      org.products = request.products || [];
+      org.max_visitors = request.max_visitors;
+      org.safety_rules = request.safety_rules;
+      await org.save();
+    }
+  }
+
+  return getEnrichedRequest(id);
 }
 
 /* Recharge une demande enrichie (code + kit). */

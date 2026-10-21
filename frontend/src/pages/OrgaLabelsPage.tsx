@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import {
   addKitFile,
   createLabelRequestOrga,
@@ -65,9 +65,8 @@ export default function OrgaLabelsPage() {
     setEditLng(null)
   }
 
-  /* Ouvre le formulaire d'édition (dossiers non acceptés). */
+  /* Ouvre le formulaire d’édition, y compris après acceptation. */
   function openEdit(item: LabelRequest) {
-    if (item.status === 'approved') return
     const a = Number(item.lat)
     const b = Number(item.lng)
     setEditLat(Number.isFinite(a) ? a : null)
@@ -355,8 +354,8 @@ export default function OrgaLabelsPage() {
               <tr><td colSpan={5}>Aucune demande pour ce filtre</td></tr>
             )}
             {filtered.map((item) => (
+              <Fragment key={item.id}>
               <tr
-                key={item.id}
                 className={`${rowClass(item.status)} cursor-pointer ${
                   selectedId === item.id ? 'bg-forest/10' : ''
                 }`}
@@ -378,15 +377,6 @@ export default function OrgaLabelsPage() {
                 <td>{formatStructureType(item.structure_type)}</td>
                 <td onClick={(e) => e.stopPropagation()}>
                   <div className="flex flex-wrap gap-1.5">
-                    {item.status !== 'approved' && (
-                      <IconButton
-                        label="Modifier"
-                        disabled={busyId === item.id}
-                        onClick={() => openEdit(item)}
-                      >
-                        <IconEdit />
-                      </IconButton>
-                    )}
                     {item.status === 'pending' && (
                       <>
                         <IconButton
@@ -411,6 +401,13 @@ export default function OrgaLabelsPage() {
                       </>
                     )}
                     <IconButton
+                      label="Modifier"
+                      disabled={busyId === item.id}
+                      onClick={() => openEdit(item)}
+                    >
+                      <IconEdit />
+                    </IconButton>
+                    <IconButton
                       label="Supprimer"
                       variant="danger"
                       disabled={busyId === item.id}
@@ -421,195 +418,26 @@ export default function OrgaLabelsPage() {
                   </div>
                 </td>
               </tr>
+              {selectedId === item.id && selected && (
+                <tr>
+                  <td colSpan={5} className="bg-white">
+                    <LabelDetail
+                      selected={selected}
+                      selectedQr={selectedQr}
+                      busyId={busyId}
+                      onClose={() => setSelectedId(null)}
+                      onAddKitFile={onAddKitFile}
+                      onDeleteKitFile={onDeleteKitFile}
+                    />
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
           </tbody>
         </table>
       </section>
 
-      {selected && (
-        <section className="orga-panel mt-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-[16px] font-semibold text-forest">{selected.structure_name}</h2>
-              <p className="mt-1 text-[13px] text-ink/50">
-                {formatStructureType(selected.structure_type)}
-                {selected.label_code ? ` · ${selected.label_code}` : ''}
-                {' · '}
-                {selected.status === 'pending'
-                  ? 'En attente'
-                  : selected.status === 'approved'
-                    ? 'Acceptée'
-                    : 'Refusée'}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="orga-btn-ghost px-3 py-1.5 text-[13px]"
-              onClick={() => setSelectedId(null)}
-            >
-              Fermer
-            </button>
-          </div>
-
-          <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
-            <p>
-              <span className="text-ink/45">E-mail · </span>
-              <a href={`mailto:${selected.contact_email}`} className="font-medium text-forest underline underline-offset-2">
-                {selected.contact_email}
-              </a>
-            </p>
-            <p>
-              <span className="text-ink/45">Téléphone · </span>
-              <span className="font-medium text-forest">{selected.contact_phone || '—'}</span>
-            </p>
-            <p className="sm:col-span-2">
-              <span className="text-ink/45">Adresse · </span>
-              {formatLabelAddress(selected) || '—'}
-              {googleMapsUrl(selected.lat, selected.lng) && (
-                <>
-                  {' · '}
-                  <a
-                    href={googleMapsUrl(selected.lat, selected.lng) || undefined}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-forest underline underline-offset-2"
-                  >
-                    Carte
-                  </a>
-                </>
-              )}
-            </p>
-            {selected.sector && (
-              <p>
-                <span className="text-ink/45">Secteur · </span>
-                {selected.sector}
-              </p>
-            )}
-            {selected.max_visitors != null && (
-              <p>
-                <span className="text-ink/45">Capacité · </span>
-                {selected.max_visitors}
-              </p>
-            )}
-            {selected.description && (
-              <p className="sm:col-span-2">
-                <span className="text-ink/45">Description · </span>
-                {selected.description}
-              </p>
-            )}
-            {selected.products?.length > 0 && (
-              <p className="sm:col-span-2">
-                <span className="text-ink/45">Produits · </span>
-                {selected.products.join(', ')}
-              </p>
-            )}
-          </div>
-
-          <div className="mt-5 border-t border-black pt-4">
-            <h3 className="text-[14px] font-semibold text-forest">Kit</h3>
-            {selected.status !== 'approved' ? (
-              <p className="mt-2 text-[13px] text-ink/50">
-                Les fichiers du kit (PDF, Word ou image) sont joints à l&apos;acceptation.
-              </p>
-            ) : (
-              <div className="mt-3">
-                {(selected.kit_files?.length || 0) === 0 && (
-                  <p className="mb-3 text-[13px] text-ink/50">Aucun fichier pour l&apos;instant.</p>
-                )}
-                {(selected.kit_files?.length || 0) > 0 && (
-                  <ul className="border border-black">
-                    {selected.kit_files!.map((f, i) => (
-                      <li
-                        key={f.id}
-                        className={`flex items-center gap-3 px-3 py-2.5 ${
-                          i > 0 ? 'border-t border-black/15' : ''
-                        }`}
-                      >
-                        <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-forest">
-                          {f.name}
-                        </span>
-                        <span className="shrink-0 text-[12px] uppercase tracking-wide text-ink/40">
-                          {kitExtLabel(f.name, f.mime)}
-                        </span>
-                        <IconButton
-                          label="Supprimer"
-                          variant="danger"
-                          disabled={busyId === selected.id}
-                          onClick={() => void onDeleteKitFile(selected, f.id)}
-                        >
-                          <IconTrash />
-                        </IconButton>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <label
-                  className={`orga-btn mt-3 inline-flex cursor-pointer px-4 py-2.5 text-[13px] ${
-                    busyId === selected.id ? 'pointer-events-none opacity-50' : ''
-                  }`}
-                >
-                  Ajouter
-                  <input
-                    type="file"
-                    accept={KIT_ACCEPT}
-                    className="hidden"
-                    disabled={busyId === selected.id}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null
-                      e.target.value = ''
-                      void onAddKitFile(selected, file)
-                    }}
-                  />
-                </label>
-              </div>
-            )}
-          </div>
-
-          {selected.status === 'approved' && (
-            <div className="mt-5 border-t border-black pt-4">
-              <h3 className="text-[14px] font-semibold text-forest">QR code</h3>
-              {selectedQr ? (
-                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <img
-                    src={selectedQr.qr_data_url}
-                    alt={`QR ${selectedQr.name}`}
-                    className="h-36 w-36 border border-black bg-white p-2"
-                  />
-                  <div>
-                    <p className="text-[13px] text-ink/55">Fiche publique</p>
-                    <a
-                      href={selectedQr.fiche_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 block text-[14px] font-medium text-forest underline underline-offset-2"
-                    >
-                      {selectedQr.fiche_url}
-                    </a>
-                    <button
-                      type="button"
-                      className="orga-btn mt-3 px-3 py-2 text-[13px]"
-                      onClick={() => {
-                        const link = document.createElement('a')
-                        const name = (selectedQr.name || 'institution').replace(/[^\w\-]+/g, '_')
-                        const code = (selectedQr.label_code || 'sans-code').replace(/[^\w\-]+/g, '_')
-                        link.href = selectedQr.qr_data_url
-                        link.download = `${name}-${code}.png`
-                        document.body.appendChild(link)
-                        link.click()
-                        link.remove()
-                      }}
-                    >
-                      Télécharger le QR
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="mt-2 text-[13px] text-ink/50">Chargement du QR…</p>
-              )}
-            </div>
-          )}
-        </section>
-      )}
 
       {formMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -883,5 +711,207 @@ function IconTrash() {
       <path d="M19 6l-1 14H6L5 6" />
       <path d="M10 11v6M14 11v6" />
     </svg>
+  )
+}
+
+/* Détail affiché juste sous la ligne cliquée. */
+function LabelDetail({
+  selected,
+  selectedQr,
+  busyId,
+  onClose,
+  onAddKitFile,
+  onDeleteKitFile,
+}: {
+  selected: LabelRequest
+  selectedQr: QrBatchItem | null
+  busyId: string | null
+  onClose: () => void
+  onAddKitFile: (item: LabelRequest, file: File | null) => void
+  onDeleteKitFile: (item: LabelRequest, fileId: string) => void
+}) {
+  return (
+    <div>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-[16px] font-semibold text-forest">{selected.structure_name}</h2>
+              <p className="mt-1 text-[13px] text-ink/50">
+                {formatStructureType(selected.structure_type)}
+                {selected.label_code ? ` · ${selected.label_code}` : ''}
+                {' · '}
+                {selected.status === 'pending'
+                  ? 'En attente'
+                  : selected.status === 'approved'
+                    ? 'Acceptée'
+                    : 'Refusée'}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="orga-btn-ghost px-3 py-1.5 text-[13px]"
+              onClick={onClose}
+            >
+              Fermer
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
+            <p>
+              <span className="text-ink/45">E-mail · </span>
+              <a href={`mailto:${selected.contact_email}`} className="font-medium text-forest underline underline-offset-2">
+                {selected.contact_email}
+              </a>
+            </p>
+            <p>
+              <span className="text-ink/45">Téléphone · </span>
+              <span className="font-medium text-forest">{selected.contact_phone || '—'}</span>
+            </p>
+            <p className="sm:col-span-2">
+              <span className="text-ink/45">Adresse · </span>
+              {formatLabelAddress(selected) || '—'}
+              {googleMapsUrl(selected.lat, selected.lng) && (
+                <>
+                  {' · '}
+                  <a
+                    href={googleMapsUrl(selected.lat, selected.lng) || undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-forest underline underline-offset-2"
+                  >
+                    Carte
+                  </a>
+                </>
+              )}
+            </p>
+            {selected.sector && (
+              <p>
+                <span className="text-ink/45">Secteur · </span>
+                {selected.sector}
+              </p>
+            )}
+            {selected.max_visitors != null && (
+              <p>
+                <span className="text-ink/45">Capacité · </span>
+                {selected.max_visitors}
+              </p>
+            )}
+            {selected.description && (
+              <p className="sm:col-span-2">
+                <span className="text-ink/45">Description · </span>
+                {selected.description}
+              </p>
+            )}
+            {selected.products?.length > 0 && (
+              <p className="sm:col-span-2">
+                <span className="text-ink/45">Produits · </span>
+                {selected.products.join(', ')}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-5 border-t border-black pt-4">
+            <h3 className="text-[14px] font-semibold text-forest">Kit</h3>
+            {selected.status !== 'approved' ? (
+              <p className="mt-2 text-[13px] text-ink/50">
+                Le kit s&apos;ajoute une fois la demande acceptée.
+              </p>
+            ) : (
+              <div className="mt-3">
+                {(selected.kit_files?.length || 0) === 0 && (
+                  <p className="mb-3 text-[13px] text-ink/50">Aucun fichier pour l&apos;instant.</p>
+                )}
+                {(selected.kit_files?.length || 0) > 0 && (
+                  <ul className="border border-black">
+                    {selected.kit_files!.map((f, i) => (
+                      <li
+                        key={f.id}
+                        className={`flex items-center gap-3 px-3 py-2.5 ${
+                          i > 0 ? 'border-t border-black/15' : ''
+                        }`}
+                      >
+                        <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-forest">
+                          {f.name}
+                        </span>
+                        <span className="shrink-0 text-[12px] uppercase tracking-wide text-ink/40">
+                          {kitExtLabel(f.name, f.mime)}
+                        </span>
+                        <IconButton
+                          label="Supprimer"
+                          variant="danger"
+                          disabled={busyId === selected.id}
+                          onClick={() => void onDeleteKitFile(selected, f.id)}
+                        >
+                          <IconTrash />
+                        </IconButton>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <label
+                  className={`orga-btn mt-3 inline-flex cursor-pointer px-4 py-2.5 text-[13px] ${
+                    busyId === selected.id ? 'pointer-events-none opacity-50' : ''
+                  }`}
+                >
+                  Ajouter
+                  <input
+                    type="file"
+                    accept={KIT_ACCEPT}
+                    className="hidden"
+                    disabled={busyId === selected.id}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null
+                      e.target.value = ''
+                      void onAddKitFile(selected, file)
+                    }}
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+
+          {selected.status === 'approved' && (
+            <div className="mt-5 border-t border-black pt-4">
+              <h3 className="text-[14px] font-semibold text-forest">QR code</h3>
+              {selectedQr ? (
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <img
+                    src={selectedQr.qr_data_url}
+                    alt={`QR ${selectedQr.name}`}
+                    className="h-36 w-36 border border-black bg-white p-2"
+                  />
+                  <div>
+                    <p className="text-[13px] text-ink/55">Fiche publique</p>
+                    <a
+                      href={selectedQr.fiche_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 block text-[14px] font-medium text-forest underline underline-offset-2"
+                    >
+                      {selectedQr.fiche_url}
+                    </a>
+                    <button
+                      type="button"
+                      className="orga-btn mt-3 px-3 py-2 text-[13px]"
+                      onClick={() => {
+                        const link = document.createElement('a')
+                        const name = (selectedQr.name || 'institution').replace(/[^\w\-]+/g, '_')
+                        const code = (selectedQr.label_code || 'sans-code').replace(/[^\w\-]+/g, '_')
+                        link.href = selectedQr.qr_data_url
+                        link.download = `${name}-${code}.png`
+                        document.body.appendChild(link)
+                        link.click()
+                        link.remove()
+                      }}
+                    >
+                      Télécharger le QR
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 text-[13px] text-ink/50">Chargement du QR…</p>
+              )}
+            </div>
+          )}
+    </div>
   )
 }
