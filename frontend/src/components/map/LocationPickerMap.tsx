@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -26,6 +26,31 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
   const markerRef = useRef<L.Marker | null>(null)
   const onPickRef = useRef(onPick)
   onPickRef.current = onPick
+  const focusRef = useRef(false)
+  const [locating, setLocating] = useState(false)
+  const [locError, setLocError] = useState<string | null>(null)
+
+  /* Place le point sur la position de l'appareil. */
+  function locateMe() {
+    if (!navigator.geolocation) {
+      setLocError('Position indisponible sur cet appareil.')
+      return
+    }
+    setLocating(true)
+    setLocError(null)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        focusRef.current = true
+        onPickRef.current(pos.coords.latitude, pos.coords.longitude)
+        setLocating(false)
+      },
+      () => {
+        setLocError('Position refusée ou indisponible.')
+        setLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 },
+    )
+  }
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
@@ -76,20 +101,29 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
     } else {
       markerRef.current.setLatLng(pos)
     }
-    map.setView(pos, Math.max(map.getZoom(), 12))
+    map.setView(pos, focusRef.current ? 16 : Math.max(map.getZoom(), 12))
+    focusRef.current = false
   }, [lat, lng])
 
   return (
     <div className={className}>
       <div ref={containerRef} className="h-56 w-full border border-forest/20 sm:h-64" />
-      <p className="mt-2 text-[13px] text-ink/55">
-        Cliquez sur la carte (ou glissez le point) pour situer la structure.
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={locateMe}
+          disabled={locating}
+          className="border border-forest bg-white px-3 py-1.5 text-[13px] font-semibold text-forest disabled:opacity-50"
+        >
+          {locating ? 'Localisation…' : 'Ma position'}
+        </button>
         {lat != null && lng != null && (
-          <span className="ml-1 font-medium text-forest">
+          <span className="text-[13px] font-medium text-forest">
             {lat.toFixed(5)}, {lng.toFixed(5)}
           </span>
         )}
-      </p>
+        {locError && <span className="text-[13px] text-red-700">{locError}</span>}
+      </div>
     </div>
   )
 }
