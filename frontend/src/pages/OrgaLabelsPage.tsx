@@ -180,13 +180,10 @@ export default function OrgaLabelsPage() {
     }
   }
 
-  /* Approuve avec au moins un fichier kit. */
+  /* Approuve la demande. Le fichier kit est facultatif. */
   async function onConfirmApprove(e: FormEvent) {
     e.preventDefault()
-    if (!approveTarget || !approvePdf) {
-      setError('Joignez un fichier kit pour accepter la demande')
-      return
-    }
+    if (!approveTarget) return
     setBusyId(approveTarget.id)
     setError(null)
     try {
@@ -750,14 +747,13 @@ export default function OrgaLabelsPage() {
             onSubmit={onConfirmApprove}
             className="w-full max-w-md border border-black bg-white p-5"
           >
-            <h3 className="text-[16px] font-semibold text-forest">Accepter et envoyer le kit</h3>
+            <h3 className="text-[16px] font-semibold text-forest">Accepter la demande</h3>
             <p className="mt-2 text-[13px] text-ink/60">
-              {approveTarget.structure_name} : joignez au moins un fichier (PDF, Word ou image).
+              {approveTarget.structure_name}. Le fichier du kit est facultatif, vous pourrez l&apos;ajouter ensuite.
             </p>
             <label className="mt-4 block text-[13px] font-medium text-forest">
               Fichier kit
               <input
-                required
                 type="file"
                 accept={KIT_ACCEPT}
                 className="mt-1 block w-full text-[13px]"
@@ -777,8 +773,8 @@ export default function OrgaLabelsPage() {
               </button>
               <button
                 type="submit"
-                className="orga-btn"
-                disabled={busyId === approveTarget.id || !approvePdf}
+                className="orga-btn disabled:opacity-50"
+                disabled={busyId === approveTarget.id}
               >
                 Approuver
               </button>

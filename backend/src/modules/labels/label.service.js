@@ -322,14 +322,11 @@ function absolutePublicUrl(pathOrUrl) {
 /* Approuve ou rejette une demande ; crée l'organisation si approuvée. */
 async function reviewRequest(id, { status, review_note, label_document_url, kit_file = null }) {
   let initialKit = [];
-  if (status === 'approved') {
-    if (kit_file?.filename) {
-      initialKit = [kitEntryFromFile(kit_file)];
-    } else {
-      const doc = String(label_document_url || '').trim();
-      if (!doc || !doc.startsWith('/uploads/docs/')) {
-        throw ApiError.badRequest('Joignez au moins un fichier kit pour approuver');
-      }
+  if (status === 'approved' && kit_file?.filename) {
+    initialKit = [kitEntryFromFile(kit_file)];
+  } else if (status === 'approved') {
+    const doc = String(label_document_url || '').trim();
+    if (doc.startsWith('/uploads/docs/')) {
       initialKit = [
         {
           id: uuidv4(),

@@ -127,7 +127,8 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     e.preventDefault()
     setAccountError(null)
     setAccountInfo(null)
-    const fd = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const fd = new FormData(form)
     const current_password = String(fd.get('current_password') || '')
     const new_password = String(fd.get('new_password') || '')
     const confirm = String(fd.get('confirm_password') || '')
@@ -139,7 +140,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     try {
       await changePassword(current_password, new_password)
       setAccountInfo('Mot de passe modifié')
-      e.currentTarget.reset()
+      form.reset()
     } catch (err) {
       setAccountError(err instanceof Error ? err.message : 'Changement impossible')
     } finally {

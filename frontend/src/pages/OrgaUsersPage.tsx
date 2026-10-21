@@ -88,7 +88,8 @@ export default function OrgaUsersPage() {
   /* Crée un compte. */
   async function onCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const fd = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const fd = new FormData(form)
     setBusy(true)
     try {
       await createUser({
@@ -98,7 +99,7 @@ export default function OrgaUsersPage() {
         role: String(fd.get('role') || 'simple') as StaffRole,
         password: String(fd.get('password') || ''),
       })
-      e.currentTarget.reset()
+      form.reset()
       setShowAdd(false)
       await load()
     } catch (err) {

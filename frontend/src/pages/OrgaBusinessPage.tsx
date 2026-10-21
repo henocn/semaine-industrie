@@ -160,7 +160,8 @@ export default function OrgaBusinessPage() {
   /* Ajoute une personne manuellement. */
   async function onCreatePerson(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const fd = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const fd = new FormData(form)
     setBusyId('create-person')
     setError(null)
     try {
@@ -177,7 +178,6 @@ export default function OrgaBusinessPage() {
         contact_opt_in: true,
         status: 'approved',
       })
-      const form = e.currentTarget
       form.reset()
       setShowAddPerson(false)
       await load()

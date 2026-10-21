@@ -56,7 +56,8 @@ export default function OrgaPassportsPage() {
     e.preventDefault()
     setError(null)
     setMsg(null)
-    const fd = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const fd = new FormData(form)
     try {
       await scanPassport({
         code: String(fd.get('code') || ''),
@@ -64,7 +65,7 @@ export default function OrgaPassportsPage() {
         scanned_by: user ? `${user.first_name} ${user.last_name}` : undefined,
       })
       setMsg('Site tamponné (valable pour tout le groupe)')
-      e.currentTarget.reset()
+      form.reset()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Scan impossible')
     }

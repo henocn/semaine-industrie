@@ -190,7 +190,7 @@ export function listLabelRequests(status?: string) {
   return apiFetch<LabelRequest[]>(`/labels/requests${q}`)
 }
 
-/* Approuve ou rejette une demande (PDF obligatoire si approved). */
+/* Approuve ou rejette une demande. Le fichier kit peut être ajouté plus tard. */
 export async function reviewLabelRequest(
   id: string,
   status: 'approved' | 'rejected',
@@ -200,8 +200,7 @@ export async function reviewLabelRequest(
   const body = new FormData()
   body.append('status', status)
   if (options?.review_note) body.append('review_note', options.review_note)
-  if (status === 'approved') {
-    if (!options?.labelPdf) throw new Error('Joignez le PDF du label pour approuver')
+  if (status === 'approved' && options?.labelPdf) {
     body.append('label_pdf', options.labelPdf)
   }
 
