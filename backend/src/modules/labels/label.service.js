@@ -6,6 +6,7 @@ const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
 const { LabelRequest, Organization, VisitBooking, sequelize } = require('../../models');
+const engagementService = require('../engagement/engagement.service');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
@@ -291,6 +292,9 @@ async function deleteRequest(id) {
       org.is_active = false;
       org.label_status = 'rejected';
       await org.save();
+      await engagementService.retireVoteOptionsForOrganization(org);
+    } else {
+      await engagementService.retireVoteOptionsForOrganization({ id: orgId });
     }
   }
 

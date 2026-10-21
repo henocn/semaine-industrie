@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { castVote, getVotes, type VoteOption } from '../api/engagement'
 import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
@@ -41,46 +41,74 @@ export default function VotePage() {
     }
   }
 
-  const total = options.reduce((s, o) => s + o.votes, 0) || 1
+  const ranked = useMemo(
+    () => [...options].sort((a, b) => b.votes - a.votes || a.label.localeCompare(b.label, 'fr')),
+    [options],
+  )
+  const total = ranked.reduce((s, o) => s + o.votes, 0)
 
   return (
     <main className="py-16 sm:py-24">
-        <Seo
-          title="Vote coup de cœur"
-          description="Votez pour le produit coup de cœur de l’exposition Semaine de l’industrie 2026."
-          path="/vote"
-        />
-        <div className={WRAP}>
-          <div className="animate-rise">
-            <SectionHeader
-              level={1}
-              eyebrow="Exposition du samedi"
-              title="Produit coup de cœur"
-              lead="Un vote par navigateur. Sans téléphone : urne physique à l’accueil."
-            />
-          </div>
-          {error && <p role="alert" className="mt-6 font-medium text-flag">{error}</p>}
-          {done && <p className="mt-6 font-medium text-forest">Merci, votre vote est enregistré.</p>}
+      <Seo
+        title="Vote coup de cœur"
+        description="Votez pour le produit coup de cœur de l'exposition Semaine de l'industrie 2026."
+        path="/vote"
+      />
+      <div className={WRAP}>
+        <div className="animate-rise">
+          <SectionHeader
+            level={1}
+            eyebrow="Exposition du samedi"
+            title="Produit coup de cœur"
+            lead="Un vote par personne. Le classement se met à jour au fil des voix."
+          />
+        </div>
+        {error && <p role="alert" className="mt-6 font-medium text-flag">{error}</p>}
+        {done && <p className="mt-6 font-medium text-forest">Merci, votre vote est enregistré.</p>}
 
-          <ul className="mt-10 space-y-4">
-            {options.map((o) => (
-              <li key={o.id} className="rounded-sm border border-forest/15 p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xl font-semibold text-forest">{o.label}</p>
-                    <p className="mt-1 text-[15px] text-ink/70">{o.votes} voix</p>
+        {ranked.length === 0 && !error && (
+          <p className="mt-10 text-[15px] text-ink/55">Les produits en lice seront affichés ici.</p>
+        )}
+
+        <ul className="mt-10 grid gap-3">
+          {ranked.map((o, index) => {
+            const pct = total ? Math.round((o.votes / total) * 100) : 0
+            const lead = index === 0 && o.votes > 0
+            return (
+              <li
+                key={o.id}
+                className={`bg-white p-4 sm:p-5 ${lead ? 'border-2 border-sun' : 'border border-forest/15'}`}
+              >
+                <div className="grid grid-cols-[2.5rem_1fr] items-center gap-x-3 gap-y-3 sm:grid-cols-[2.5rem_1fr_auto] sm:gap-x-4">
+                  <span
+                    className={`${done ? '' : 'row-span-2 sm:row-span-1 '}grid h-10 w-10 place-items-center text-[15px] font-bold ${
+                      lead ? 'bg-sun text-forest' : 'bg-forest text-white'
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-lg font-semibold text-forest sm:text-xl">{o.label}</p>
+                      <p className="shrink-0 text-[14px] text-ink/60">
+                        {o.votes} voix · {pct}%
+                      </p>
+                    </div>
+                    <div className="mt-3 h-1.5 bg-forest/10">
+                      <div className="h-full bg-forest transition-[width] duration-500" style={{ width: `${pct}%` }} />
+                    </div>
                   </div>
                   {!done && (
-                    <Button onClick={() => onVote(o.id)} withArrow={false}>Voter</Button>
+                    <Button onClick={() => onVote(o.id)} withArrow={false} className="col-start-2 w-fit sm:col-start-auto">
+                      Voter
+                    </Button>
                   )}
                 </div>
-                <div className="mt-3 h-2 overflow-hidden bg-sage">
-                  <div className="h-full bg-leaf" style={{ width: `${Math.round((o.votes / total) * 100)}%` }} />
-                </div>
               </li>
-            ))}
-          </ul>
-        </div>
-      </main>
+            )
+          })}
+        </ul>
+      </div>
+    </main>
   )
 }

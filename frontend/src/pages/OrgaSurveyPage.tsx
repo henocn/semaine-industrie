@@ -10,6 +10,7 @@ import {
   type SurveyQuestionKind,
   type SurveyStats,
 } from '../api/surveys'
+import { getVotes, type VoteOption } from '../api/engagement'
 import { OrgaShell } from '../components/layout/OrgaShell'
 
 const field =
@@ -65,6 +66,9 @@ export default function OrgaSurveyPage() {
   const [editKind, setEditKind] = useState<SurveyQuestionKind>('scale')
   const [editOptionsText, setEditOptionsText] = useState('')
   const [dragId, setDragId] = useState<string | null>(null)
+  const [tab, setTab] = useState<'sondage' | 'coeur'>('sondage')
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [votes, setVotes] = useState<VoteOption[]>([])
 
   /* Parse les options (une par ligne). */
   function parseOptions(text: string) {
@@ -78,9 +82,10 @@ export default function OrgaSurveyPage() {
   async function load() {
     try {
       setError(null)
-      const [q, s] = await Promise.all([listSurveyQuestionsAdmin(), getSurveyStats()])
+      const [q, s, v] = await Promise.all([listSurveyQuestionsAdmin(), getSurveyStats(), getVotes()])
       setQuestions(q)
       setStats(s)
+      setVotes(v)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur')
     }
@@ -170,185 +175,67 @@ export default function OrgaSurveyPage() {
     }
   }
 
+  const voteTotal = votes.reduce((sum, item) => sum + item.votes, 0)
+  const rankedVotes = [...votes].sort((a, b) => b.votes - a.votes || a.label.localeCompare(b.label, 'fr'))
+
   return (
-    <OrgaShell title="Sondage">
+    <OrgaShell
+      title="Sondage"
+      actions={
+        <button type="button" className="orga-btn" onClick={() => setEditorOpen(true)}>
+          Éditer les questions
+        </button>
+      }
+    >
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
-      <section className="orga-panel mb-6">
-        <h2 className="text-[15px] font-semibold text-forest">Questions</h2>
-        <p className="mt-1 text-[13px] text-ink/50">
-          Glissez pour réordonner. Note 1 à 5, ou question à choix.
-        </p>
-
-        <form onSubmit={onAdd} className="mt-4 space-y-3">
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-            <label className="text-[13px] font-medium text-forest">
-              Nouvelle question
-              <input
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                className={field}
-                placeholder="Ex. Je recommande cette visite"
-                maxLength={400}
-              />
-            </label>
-            <label className="text-[13px] font-medium text-forest">
-              Type
-              <select
-                value={kind}
-                onChange={(e) => setKind(e.target.value as SurveyQuestionKind)}
-                className={field}
-              >
-                <option value="scale">Note 1 à 5</option>
-                <option value="choice">Choix multiples</option>
-              </select>
-            </label>
-          </div>
-          {kind === 'choice' && (
-            <label className="block text-[13px] font-medium text-forest">
-              Options (une par ligne)
-              <textarea
-                value={optionsText}
-                onChange={(e) => setOptionsText(e.target.value)}
-                rows={4}
-                className={`${field} resize-y`}
-                placeholder={'Oui\nNon\nPeut-être'}
-              />
-            </label>
-          )}
+      <div className="mb-4 flex gap-0 border border-black">
+        {(['sondage', 'coeur'] as const).map((key) => (
           <button
-            type="submit"
-            disabled={busy || !label.trim() || (kind === 'choice' && parseOptions(optionsText).length < 2)}
-            className="orga-btn disabled:opacity-50"
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
+              tab === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
+            } ${key === 'coeur' ? 'border-l border-black' : ''}`}
           >
-            Ajouter
+            {key === 'sondage' ? 'Sondage' : 'Coup de cœur'}
           </button>
-        </form>
+        ))}
+      </div>
 
-        <ul className="mt-5 space-y-2">
-          {questions.length === 0 && (
-            <li className="text-[13px] text-ink/40">Aucune question pour l&apos;instant.</li>
-          )}
-          {questions.map((q, index) => (
-            <li
-              key={q.id || q.key}
-              draggable={Boolean(q.id) && editingId !== q.id}
-              onDragStart={() => q.id && onDragStart(q.id)}
-              onDragOver={(e) => q.id && onDragOver(e, q.id)}
-              onDragEnd={() => void onDragEnd()}
-              className={`border border-black bg-white px-3 py-3 ${
-                dragId === q.id ? 'opacity-60' : ''
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  className="mt-1 shrink-0 cursor-grab text-ink/35 active:cursor-grabbing"
-                  title="Glisser pour réordonner"
-                  aria-hidden="true"
-                >
-                  <IconGrip />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">
-                    #{index + 1} · {q.kind === 'choice' ? 'Choix' : 'Note 1-5'}
-                  </p>
-                  {editingId === q.id ? (
-                    <div className="mt-2 space-y-2">
-                      <input
-                        value={editLabel}
-                        onChange={(e) => setEditLabel(e.target.value)}
-                        className={field}
-                      />
-                      <select
-                        value={editKind}
-                        onChange={(e) => setEditKind(e.target.value as SurveyQuestionKind)}
-                        className={field}
-                      >
-                        <option value="scale">Note 1 à 5</option>
-                        <option value="choice">Choix multiples</option>
-                      </select>
-                      {editKind === 'choice' && (
-                        <textarea
-                          value={editOptionsText}
-                          onChange={(e) => setEditOptionsText(e.target.value)}
-                          rows={3}
-                          className={`${field} resize-y`}
-                        />
-                      )}
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          className="orga-btn px-3 py-1.5 text-[12px]"
-                          disabled={busy}
-                          onClick={() => q.id && void onSaveEdit(q.id)}
-                        >
-                          Enregistrer
-                        </button>
-                        <button
-                          type="button"
-                          className="orga-btn-ghost px-3 py-1.5 text-[12px]"
-                          onClick={() => setEditingId(null)}
-                        >
-                          Annuler
-                        </button>
-                      </div>
+      {tab === 'coeur' && (
+        <section className="orga-panel">
+          <h2 className="text-[15px] font-semibold text-forest">Coup de cœur</h2>
+          <p className="mt-1 text-[13px] text-ink/50">{voteTotal} voix</p>
+          {rankedVotes.length === 0 ? (
+            <p className="mt-4 text-[13px] text-ink/40">Aucun produit en lice.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {rankedVotes.map((item, index) => {
+                const pct = voteTotal ? Math.round((item.votes / voteTotal) * 100) : 0
+                return (
+                  <li key={item.id} className="border border-black bg-white px-3 py-3">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-[14px] font-medium text-forest">
+                        {index + 1}. {item.label}
+                      </p>
+                      <p className="text-[13px] text-ink/55">
+                        {item.votes} voix · {pct}%
+                      </p>
                     </div>
-                  ) : (
-                    <>
-                      <p className="mt-1 text-[14px] font-medium text-forest">{q.label}</p>
-                      {q.kind === 'choice' && Array.isArray(q.options) && (
-                        <p className="mt-1 text-[12px] text-ink/45">{q.options.join(' · ')}</p>
-                      )}
-                    </>
-                  )}
-                </div>
-                {editingId !== q.id && (
-                  <div className="flex shrink-0 gap-1">
-                    <button
-                      type="button"
-                      className={iconBtn}
-                      title="Modifier"
-                      aria-label="Modifier"
-                      disabled={busy || !q.id}
-                      onClick={() => {
-                        setEditingId(q.id || null)
-                        setEditLabel(q.label)
-                        setEditKind(q.kind === 'choice' ? 'choice' : 'scale')
-                        setEditOptionsText((q.options || []).join('\n'))
-                      }}
-                    >
-                      <IconEdit />
-                    </button>
-                    <button
-                      type="button"
-                      className={`${iconBtn} text-red-700 hover:bg-red-700 hover:text-white`}
-                      title="Supprimer"
-                      aria-label="Supprimer"
-                      disabled={busy || !q.id}
-                      onClick={async () => {
-                        if (!q.id) return
-                        if (!window.confirm('Supprimer cette question ?')) return
-                        setBusy(true)
-                        try {
-                          await deleteSurveyQuestion(q.id)
-                          await load()
-                        } catch (err) {
-                          setError(err instanceof Error ? err.message : 'Suppression impossible')
-                        } finally {
-                          setBusy(false)
-                        }
-                      }}
-                    >
-                      <IconTrash />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+                    <div className="mt-2 h-1.5 bg-forest/10">
+                      <div className="h-full bg-forest" style={{ width: `${pct}%` }} />
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+      )}
 
+      {tab === 'sondage' && (
       <section className="orga-panel">
         <h2 className="text-[15px] font-semibold text-forest">Résultats</h2>
         {stats ? (
@@ -371,8 +258,8 @@ export default function OrgaSurveyPage() {
                     {stats.averages.map((a) => (
                       <tr key={a.key}>
                         <td className="font-medium text-forest">{a.label}</td>
-                        <td>{a.before ?? '—'}</td>
-                        <td>{a.after ?? '—'}</td>
+                        <td>{a.before ?? 'n/a'}</td>
+                        <td>{a.after ?? 'n/a'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -403,6 +290,179 @@ export default function OrgaSurveyPage() {
           <p className="mt-2 text-[13px] text-ink/40">Chargement…</p>
         )}
       </section>
+      )}
+
+      {editorOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto bg-white p-5 shadow-lg">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-[15px] font-semibold text-forest">Questions</h2>
+                <p className="mt-1 text-[13px] text-ink/50">
+                  Glissez pour réordonner. Note 1 à 5, ou question à choix.
+                </p>
+              </div>
+              <button type="button" className="orga-btn-ghost px-3 py-1.5 text-[12px]" onClick={() => setEditorOpen(false)}>
+                Fermer
+              </button>
+            </div>
+
+            <form onSubmit={onAdd} className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <label className="text-[13px] font-medium text-forest">
+                  Nouvelle question
+                  <input
+                    value={label}
+                    onChange={(e) => setLabel(e.target.value)}
+                    className={field}
+                    placeholder="Ex. Je recommande cette visite"
+                    maxLength={400}
+                  />
+                </label>
+                <label className="text-[13px] font-medium text-forest">
+                  Type
+                  <select
+                    value={kind}
+                    onChange={(e) => setKind(e.target.value as SurveyQuestionKind)}
+                    className={field}
+                  >
+                    <option value="scale">Note 1 à 5</option>
+                    <option value="choice">Choix multiples</option>
+                  </select>
+                </label>
+              </div>
+              {kind === 'choice' && (
+                <label className="block text-[13px] font-medium text-forest">
+                  Options (une par ligne)
+                  <textarea
+                    value={optionsText}
+                    onChange={(e) => setOptionsText(e.target.value)}
+                    rows={4}
+                    className={`${field} resize-y`}
+                    placeholder={'Oui\nNon\nPeut-être'}
+                  />
+                </label>
+              )}
+              <button
+                type="submit"
+                disabled={busy || !label.trim() || (kind === 'choice' && parseOptions(optionsText).length < 2)}
+                className="orga-btn disabled:opacity-50"
+              >
+                Ajouter
+              </button>
+            </form>
+
+            <ul className="mt-5 space-y-2">
+              {questions.length === 0 && (
+                <li className="text-[13px] text-ink/40">Aucune question pour l&apos;instant.</li>
+              )}
+              {questions.map((q, index) => (
+                <li
+                  key={q.id || q.key}
+                  draggable={Boolean(q.id) && editingId !== q.id}
+                  onDragStart={() => q.id && onDragStart(q.id)}
+                  onDragOver={(e) => q.id && onDragOver(e, q.id)}
+                  onDragEnd={() => void onDragEnd()}
+                  className={`border border-black bg-white px-3 py-3 ${dragId === q.id ? 'opacity-60' : ''}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="mt-1 shrink-0 cursor-grab text-ink/35 active:cursor-grabbing" aria-hidden="true">
+                      <IconGrip />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">
+                        #{index + 1} · {q.kind === 'choice' ? 'Choix' : 'Note 1-5'}
+                      </p>
+                      {editingId === q.id ? (
+                        <div className="mt-2 space-y-2">
+                          <input value={editLabel} onChange={(e) => setEditLabel(e.target.value)} className={field} />
+                          <select
+                            value={editKind}
+                            onChange={(e) => setEditKind(e.target.value as SurveyQuestionKind)}
+                            className={field}
+                          >
+                            <option value="scale">Note 1 à 5</option>
+                            <option value="choice">Choix multiples</option>
+                          </select>
+                          {editKind === 'choice' && (
+                            <textarea
+                              value={editOptionsText}
+                              onChange={(e) => setEditOptionsText(e.target.value)}
+                              rows={3}
+                              className={`${field} resize-y`}
+                            />
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className="orga-btn px-3 py-1.5 text-[12px]"
+                              disabled={busy}
+                              onClick={() => q.id && void onSaveEdit(q.id)}
+                            >
+                              Enregistrer
+                            </button>
+                            <button type="button" className="orga-btn-ghost px-3 py-1.5 text-[12px]" onClick={() => setEditingId(null)}>
+                              Annuler
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="mt-1 text-[14px] font-medium text-forest">{q.label}</p>
+                          {q.kind === 'choice' && Array.isArray(q.options) && (
+                            <p className="mt-1 text-[12px] text-ink/45">{q.options.join(' · ')}</p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {editingId !== q.id && (
+                      <div className="flex shrink-0 gap-1">
+                        <button
+                          type="button"
+                          className={iconBtn}
+                          title="Modifier"
+                          aria-label="Modifier"
+                          disabled={busy || !q.id}
+                          onClick={() => {
+                            setEditingId(q.id || null)
+                            setEditLabel(q.label)
+                            setEditKind(q.kind === 'choice' ? 'choice' : 'scale')
+                            setEditOptionsText((q.options || []).join('\n'))
+                          }}
+                        >
+                          <IconEdit />
+                        </button>
+                        <button
+                          type="button"
+                          className={`${iconBtn} text-red-700 hover:bg-red-700 hover:text-white`}
+                          title="Supprimer"
+                          aria-label="Supprimer"
+                          disabled={busy || !q.id}
+                          onClick={async () => {
+                            if (!q.id) return
+                            if (!window.confirm('Supprimer cette question ?')) return
+                            setBusy(true)
+                            try {
+                              await deleteSurveyQuestion(q.id)
+                              await load()
+                            } catch (err) {
+                              setError(err instanceof Error ? err.message : 'Suppression impossible')
+                            } finally {
+                              setBusy(false)
+                            }
+                          }}
+                        >
+                          <IconTrash />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </OrgaShell>
   )
 }

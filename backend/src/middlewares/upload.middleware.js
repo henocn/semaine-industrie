@@ -94,11 +94,15 @@ const uploadKitFile = uploadKit.single('kit_file');
 /* Middleware : PDF programme officiel (champ programme_pdf). */
 const uploadProgrammePdf = uploadPdf.single('programme_pdf');
 
+/* Middleware : PDF ressource globale (champ file). */
+const uploadResourcePdf = uploadPdf.single('file');
+
 module.exports = {
   uploadGallery,
   uploadLabelPdf,
   uploadKitFile,
   uploadProgrammePdf,
+  uploadResourcePdf,
   UPLOAD_DIR,
   DOCS_DIR,
 };

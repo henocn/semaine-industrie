@@ -182,6 +182,212 @@ function programmePdfPath() {
   return env.PROGRAMME_PDF_URL || '/uploads/docs/programme-si2026.pdf';
 }
 
+/* Jours officiels (16-22 novembre 2026), alignés sur le site. */
+const PROGRAMME_DAYS = [
+  {
+    n: 16, name: 'Lundi', theme: 'Ouverture',
+    where: 'Lieu de cérémonie ; visite PIA l’après-midi',
+    slots: [
+      ['9h00', 'Accueil des invités et de la presse'],
+      ['9h30', 'Cérémonie d’ouverture'],
+      ['9h50', 'Film 2020-2025'],
+      ['10h10', 'Remise des premiers labels'],
+      ['10h30', 'Lancement du parcours jeunesse'],
+      ['15h00', 'Visite des entreprises de la PIA'],
+    ],
+  },
+  {
+    n: 17, name: 'Mardi', theme: 'Jeunes, métiers et qualité',
+    where: 'Usines le matin ; lieu principal l’après-midi',
+    slots: [
+      ['8h30', 'Visites d’usines, premier créneau'],
+      ['10h30', 'Visites d’usines, second créneau'],
+      ['9h00', 'HAUQE, Journées de la qualité'],
+      ['14h00', 'Forum des métiers'],
+      ['16h00', 'Ils ont commencé petit'],
+    ],
+  },
+  {
+    n: 18, name: 'Mercredi', theme: 'Innovation et mise à niveau',
+    where: 'Lieu principal',
+    slots: [
+      ['9h30', 'INPIT : de la recherche à l’innovation'],
+      ['9h30', 'Vitrine des innovateurs'],
+      ['14h00', 'BRMN : mise à niveau'],
+    ],
+  },
+  {
+    n: 19, name: 'Jeudi', theme: 'Femmes dans l’industrie',
+    where: 'Lieu principal le matin ; zone franche l’après-midi',
+    slots: [
+      ['9h00', 'Portraits de femmes de l’industrie'],
+      ['9h30', 'Panel des métiers au féminin'],
+      ['11h00', 'Cercle des industrielles'],
+      ['14h00', 'Visite de la zone franche'],
+    ],
+  },
+  {
+    n: 20, name: 'Vendredi', theme: 'Journée phare',
+    where: 'Lieu principal',
+    slots: [
+      ['8h30', 'Accueil des invités'],
+      ['9h30', 'Ouverture et message de l’ONUDI'],
+      ['9h45', 'Opportunités d’investissement'],
+      ['10h00', 'Table ronde : produire au Togo'],
+      ['11h30', 'Grand oral des jeunes industriels'],
+      ['12h30', 'Déjeuner-réseau et exposition'],
+      ['14h00', 'Rencontres d’affaires'],
+      ['17h00', 'Recommandations et clôture'],
+    ],
+  },
+  {
+    n: 21, name: 'Samedi', theme: 'Exposition, grand public',
+    where: 'Lieu principal',
+    slots: [
+      ['9h00', 'Ouverture de l’exposition'],
+      ['10h00', 'Atelier Ma première machine'],
+      ['14h00', 'Démonstrations'],
+      ['16h00', 'Résultat du coup de cœur'],
+    ],
+  },
+  {
+    n: 22, name: 'Dimanche', theme: 'Bilan',
+    where: 'Lieu principal / en ligne',
+    slots: [],
+  },
+];
+
+/* Liste WhatsApp : toute la semaine, puis chaque jour. */
+function programmeListPayload(to) {
+  return {
+    to,
+    body: "Programme de la semaine\n\nSélectionnez une date.",
+    buttonLabel: 'Choisir un jour',
+    header: 'Programme',
+    sections: [
+      {
+        title: 'Dates',
+        rows: [
+          { id: 'prog_all', title: 'Toute la semaine' },
+          ...PROGRAMME_DAYS.map((day) => ({
+            id: `prog_${day.n}`,
+            title: `${day.name} ${day.n} nov.`,
+          })),
+        ],
+      },
+    ],
+  };
+}
+
+/* Texte du programme d'un jour. */
+function formatProgrammeDay(day) {
+  const lines = [`${day.name} ${day.n} novembre`, day.theme, ''];
+  if (!day.slots.length) {
+    lines.push('Exposition et bilan. Le détail est sur le site.');
+  } else {
+    for (const [time, label] of day.slots) {
+      lines.push(`${time}  ${label}`);
+    }
+  }
+  lines.push('', `Lieu : ${day.where}`, '', `${SITE()}/programme`);
+  return lines.join('\n').slice(0, 1000);
+}
+
+/* URL du PDF marqué ressource principale, sinon le pointeur historique. */
+async function primaryProgrammeUrl() {
+  try {
+    const resourceService = require('../resources/resource.service');
+    const url = await resourceService.primaryResourceUrl();
+    if (url) return url;
+  } catch (err) {
+    logger.warn('[whatsapp] ressource principale indisponible', err.message);
+  }
+  return null;
+}
+
+/* Envoie le choix de date, le PDF de la semaine, ou le texte d'un jour. */
+async function replyProgramme(from, action, phoneNumberId) {
+  if (action === 'menu_programme') {
+    return sendList({ ...programmeListPayload(from), phoneNumberId });
+  }
+
+  if (action === 'prog_all') {
+    const url = await primaryProgrammeUrl();
+    if (!url) {
+      return sendWithNav({
+        to: from,
+        phoneNumberId,
+        body:
+          "Le PDF de la semaine n'est pas encore renseigné comme ressource principale.\n\n" +
+          'Choisissez un jour pour le détail, ou consultez le site.\n' +
+          `${SITE()}/programme`,
+      });
+    }
+    const sent = await sendDocument({
+      to: from,
+      phoneNumberId,
+      link: absUrl(url),
+      filename: 'Programme-SI2026.pdf',
+      caption: "Programme de la semaine",
+    });
+    if (!sent.ok) {
+      return sendWithNav({
+        to: from,
+        phoneNumberId,
+        body: `Le PDF n'a pas pu être envoyé.\n${SITE()}/programme`,
+      });
+    }
+    return sendWithNav({
+      to: from,
+      phoneNumberId,
+      body: 'Programme de la semaine envoyé.',
+    });
+  }
+
+  const day = PROGRAMME_DAYS.find((d) => action === `prog_${d.n}`);
+  if (!day) return sendList({ ...programmeListPayload(from), phoneNumberId });
+  return sendWithNav({
+    to: from,
+    phoneNumberId,
+    header: `${day.name} ${day.n} nov.`,
+    body: formatProgrammeDay(day),
+  });
+}
+
+/* Sous-menu Mon espace. */
+function espaceMenuPayload(to) {
+  return {
+    to,
+    body: "Mon espace\n\nQue souhaitez-vous consulter ?",
+    buttonLabel: 'Choisir',
+    header: 'Mon espace',
+    sections: [
+      {
+        title: 'Accès',
+        rows: [
+          { id: 'espace_label', title: 'Suivi de label' },
+          { id: 'espace_b2b', title: "Rencontres d'affaires" },
+          { id: 'menu_home', title: 'Menu' },
+        ],
+      },
+    ],
+  };
+}
+
+/* Demande un e-mail ou un code selon l'accès choisi. */
+function askIdent(intent) {
+  if (intent === 'b2b') {
+    return (
+      "Rencontres d'affaires\n\n" +
+      "Envoyez l'e-mail d'inscription ou le code de suivi du label (SI26-1234)."
+    );
+  }
+  return (
+    'Suivi de label\n\n' +
+    "Envoyez votre code de suivi (SI26-1234) ou l'e-mail du dossier."
+  );
+}
+
 /* Envoie un menu liste WhatsApp. */
 async function sendList({ to, body, buttonLabel, sections, phoneNumberId, header }) {
   const interactive = {
@@ -228,7 +434,6 @@ function mainMenuPayload(to) {
         title: 'Accès privé',
         rows: [
           { id: 'menu_suivi', title: 'Mon espace' },
-          { id: 'menu_b2b', title: "Rencontres d'affaires" },
         ],
       },
     ],
@@ -431,6 +636,18 @@ function extractLabelCode(text) {
   return m ? m[0] : null;
 }
 
+/* Charge une organisation labellisée par e-mail de contact. */
+async function findOrgByEmail(email) {
+  if (!email) return null;
+  return Organization.findOne({
+    where: {
+      contact_email: { [Op.iLike]: String(email).trim() },
+      label_status: 'approved',
+      is_active: true,
+    },
+  });
+}
+
 /* Charge une organisation labellisée par code. */
 async function findOrgByCode(code) {
   if (!code) return null;
@@ -566,7 +783,7 @@ async function formatVisites(org) {
 
 /* Envoie le menu principal. */
 async function replyMainMenu(from, phoneNumberId) {
-  setSession(from, { mode: 'idle' });
+  setSession(from, { mode: 'idle', intent: null });
   return sendList({ ...mainMenuPayload(from), phoneNumberId });
 }
 
@@ -586,6 +803,9 @@ function resolveActionId(id, title) {
     'menu_ressources',
     'menu_suivi',
     'menu_b2b',
+    'espace_label',
+    'espace_b2b',
+    'prog_all',
     'suivi_autre',
     'suivi_recap',
     'suivi_label_pdf',
@@ -594,7 +814,7 @@ function resolveActionId(id, title) {
     'b2b_rdv',
     'b2b_autre',
   ]);
-  if (known.has(id)) return id;
+  if (known.has(id) || String(id).startsWith('prog_')) return id;
   const t = normalize(title || id);
   if (t.includes('rencontre') || t.includes('affaire') || t.includes('b2b')) return 'menu_b2b';
   if (t.includes('espace') || t.includes('suivi') || t.includes('mon suivi')) return 'menu_suivi';
@@ -610,27 +830,9 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
   switch (action) {
     case 'menu_home':
       return replyMainMenu(from, phoneNumberId);
-    case 'menu_programme': {
-      const sent = await sendDocument({
-        to: from,
-        phoneNumberId,
-        link: absUrl(programmePdfPath()),
-        filename: 'Programme-SI2026.pdf',
-        caption: 'Programme officiel. Aussi sur le site après code de suivi.',
-      });
-      if (!sent.ok) {
-        return sendWithNav({
-          to: from,
-          phoneNumberId,
-          body: `Programme web : ${SITE()}/programme\nRessources : ${SITE()}/ressources`,
-        });
-      }
-      return sendWithNav({
-        to: from,
-        phoneNumberId,
-        body: 'Programme envoyé. Que souhaitez-vous ensuite ?',
-      });
-    }
+    case 'menu_programme':
+    case 'prog_all':
+      return replyProgramme(from, action, phoneNumberId);
     case 'menu_label':
       return sendWithNav({
         to: from,
@@ -666,18 +868,21 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
           `Aussi sur le site : ${SITE()}/ressources`,
       });
     case 'menu_suivi':
+      return sendList({ ...espaceMenuPayload(from), phoneNumberId });
+    case 'espace_label':
       if (session.orgId && session.labelCode) {
         const org = await findOrgByCode(session.labelCode);
         if (org) return replySuiviMenu(from, org, phoneNumberId);
       }
-      setSession(from, { mode: 'await_code' });
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body:
-          'Entrez votre code de suivi (exemple : SI26-1234).\n' +
-          'Il figure dans le message reçu à l\'acceptation du label.',
-      });
+      setSession(from, { mode: 'await_ident', intent: 'label' });
+      return sendText({ to: from, phoneNumberId, body: askIdent('label') });
+    case 'espace_b2b':
+      if (session.b2bId) {
+        const p = await BusinessParticipant.findByPk(session.b2bId);
+        if (p) return replyB2bMenu(from, p, phoneNumberId);
+      }
+      setSession(from, { mode: 'await_ident', intent: 'b2b' });
+      return sendText({ to: from, phoneNumberId, body: askIdent('b2b') });
     case 'suivi_autre':
       setSession(from, { mode: 'await_code', labelCode: null, orgId: null });
       return sendText({
@@ -716,21 +921,14 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         const p = await BusinessParticipant.findByPk(session.b2bId);
         if (p) return replyB2bMenu(from, p, phoneNumberId);
       }
-      setSession(from, { mode: 'await_b2b_email', b2bId: null });
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body:
-          "Rencontres d'affaires\n\n" +
-          'Envoyez l\'e-mail utilisé à l\'inscription.\n' +
-          `Inscription : ${SITE()}/affaires`,
-      });
+      setSession(from, { mode: 'await_ident', intent: 'b2b', b2bId: null });
+      return sendText({ to: from, phoneNumberId, body: askIdent('b2b') });
     case 'b2b_autre':
-      setSession(from, { mode: 'await_b2b_email', b2bId: null });
+      setSession(from, { mode: 'await_ident', intent: 'b2b', b2bId: null });
       return sendText({
         to: from,
         phoneNumberId,
-        body: 'Envoyez le nouvel e-mail d\'inscription.',
+        body: "Envoyez un autre e-mail ou un code de suivi.",
       });
     case 'b2b_recap':
     case 'b2b_rdv': {
@@ -751,8 +949,60 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
       return replyB2bMenu(from, p, phoneNumberId);
     }
     default:
+      if (String(action).startsWith('prog_')) {
+        return replyProgramme(from, action, phoneNumberId);
+      }
       return replyMainMenu(from, phoneNumberId);
   }
+}
+
+/* Ouvre le suivi label ou les rencontres selon l'e-mail ou le code reçu. */
+async function resolveIdent(from, text, phoneNumberId, intent) {
+  const email = extractEmail(text);
+  const code = extractLabelCode(text);
+
+  if (intent === 'b2b') {
+    let lookupEmail = email;
+    if (!lookupEmail && code) {
+      const org = await findOrgByCode(code);
+      lookupEmail = org?.contact_email || null;
+    }
+    if (!lookupEmail) {
+      return sendText({
+        to: from,
+        phoneNumberId,
+        body: 'Indiquez un e-mail ou un code de suivi (SI26-1234).',
+      });
+    }
+    const participant = await findB2bByEmail(lookupEmail);
+    if (!participant) {
+      return sendText({
+        to: from,
+        phoneNumberId,
+        body:
+          "Aucune inscription trouvée pour cet identifiant.\n" +
+          `Inscription : ${SITE()}/affaires`,
+      });
+    }
+    return replyB2bMenu(from, participant, phoneNumberId);
+  }
+
+  if (code) {
+    const org = await findOrgByCode(code);
+    if (org) return replySuiviMenu(from, org, phoneNumberId);
+  }
+  if (email) {
+    const org = await findOrgByEmail(email);
+    if (org) return replySuiviMenu(from, org, phoneNumberId);
+  }
+  return sendText({
+    to: from,
+    phoneNumberId,
+    body:
+      "Aucun dossier trouvé.\n" +
+      "Envoyez le code SI26-1234 ou l'e-mail du dossier.\n" +
+      'Ou tapez MENU.',
+  });
 }
 
 /* Traite un message texte libre. */
@@ -764,8 +1014,17 @@ async function handleText(from, text, phoneNumberId) {
     return replyMainMenu(from, phoneNumberId);
   }
 
+  if (session.mode === 'await_ident' || session.mode === 'await_b2b_email') {
+    return resolveIdent(
+      from,
+      text,
+      phoneNumberId,
+      session.intent === 'label' ? 'label' : session.mode === 'await_ident' ? session.intent || 'label' : 'b2b',
+    );
+  }
+
   const emailInText = extractEmail(text);
-  if (emailInText || session.mode === 'await_b2b_email') {
+  if (emailInText) {
     const email = emailInText || String(text).trim().toLowerCase();
     if (!extractEmail(email)) {
       setSession(from, { mode: 'await_b2b_email' });

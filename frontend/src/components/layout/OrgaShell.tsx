@@ -179,6 +179,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
           </NavLink>
           <NavLink to="/orga/affaires" className={linkClass}>Rencontres d&apos;affaires</NavLink>
           <NavLink to="/orga/enquete" className={linkClass}>Sondage</NavLink>
+          <NavLink to="/orga/ressources" className={linkClass}>Ressources</NavLink>
         </div>
         {isAdminRole(user?.role) && (
           <>

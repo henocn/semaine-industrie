@@ -33,6 +33,7 @@ const VoteBallot = require('./VoteBallot')(sequelize);
 const SurveyResponse = require('./SurveyResponse')(sequelize);
 const SurveyQuestion = require('./SurveyQuestion')(sequelize);
 const AuditEvent = require('./AuditEvent')(sequelize);
+const GlobalResource = require('./GlobalResource')(sequelize);
 
 LabelRequest.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 Organization.hasMany(LabelRequest, { foreignKey: 'organization_id', as: 'labelRequests' });
@@ -84,4 +85,5 @@ module.exports = {
   SurveyResponse,
   SurveyQuestion,
   AuditEvent,
+  GlobalResource,
 };

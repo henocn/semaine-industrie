@@ -1,5 +1,6 @@
 'use strict';
 
+const { Op } = require('sequelize');
 const { LiveQuestion, VoteOption, VoteBallot, Organization, sequelize } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 
@@ -76,6 +77,15 @@ async function castVote({ option_id, voter_key }) {
   return listVoteResults();
 }
 
+/* Retire une industrie des coups de cœur (options liées ou au même nom). */
+async function retireVoteOptionsForOrganization(org) {
+  if (!org?.id && !org?.name) return;
+  const or = [];
+  if (org.id) or.push({ organization_id: org.id });
+  if (org.name) or.push({ label: org.name });
+  await VoteOption.update({ is_active: false }, { where: { [Op.or]: or } });
+}
+
 /* Seed options depuis labels si vide. */
 async function ensureVoteOptionsFromLabels() {
   const count = await VoteOption.count();
@@ -104,4 +114,5 @@ module.exports = {
   listVoteResults,
   castVote,
   ensureVoteOptionsFromLabels,
+  retireVoteOptionsForOrganization,
 };
