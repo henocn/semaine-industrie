@@ -6,6 +6,7 @@ import { PublicLayout } from './components/layout/PublicLayout'
 import { isBackofficeHost } from './lib/seo'
 import { peekOrgaUser } from './api/auth'
 import BusinessRegisterPage from './pages/BusinessRegisterPage'
+import FaqPage from './pages/FaqPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
 import LabelRequestPage from './pages/LabelRequestPage'
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="/questions" element={<Navigate to="/" replace />} />
             <Route path="/vote" element={<VotePage />} />
             <Route path="/questionnaire" element={<SurveyPage />} />
+            <Route path="/faq" element={<FaqPage />} />
             <Route path="/confidentialite" element={<PrivacyPage />} />
             <Route path="/o/:slug" element={<OrganizationPage />} />
           </Route>

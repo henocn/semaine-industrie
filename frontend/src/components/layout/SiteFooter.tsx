@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ShareBar } from '../ShareBar'
 import { BrandLogoWhite, WRAP } from './Mark'
 
 /* Comptes officiels, relevés sur investissement.gouv.tg */
@@ -37,6 +38,7 @@ export function SiteFooter() {
             <li><Link to="/carte" className={LINK}>Carte des usines</Link></li>
             <li><Link to="/vote" className={LINK}>Vote samedi</Link></li>
             <li><Link to="/questionnaire" className={LINK}>Questionnaire</Link></li>
+            <li><Link to="/faq" className={LINK}>Questions fréquentes</Link></li>
             <li><Link to="/#contact" className={LINK}>Contact</Link></li>
           </ul>
         </div>
@@ -55,6 +57,11 @@ export function SiteFooter() {
           <a href="https://investissement.gouv.tg/" target="_blank" rel="noopener noreferrer" className="mt-5 inline-block text-white/75 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white">
             investissement.gouv.tg
           </a>
+        </div>
+      </div>
+      <div className="border-t border-white/15">
+        <div className={`${WRAP} py-5`}>
+          <ShareBar tone="dark" />
         </div>
       </div>
       <div className="border-t border-white/15">

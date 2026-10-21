@@ -67,7 +67,7 @@ export function applySeo({
   setMeta('property', 'og:image', image)
   setMeta('property', 'og:image:width', '1200')
   setMeta('property', 'og:image:height', '675')
-  setMeta('property', 'og:image:alt', SITE_NAME)
+  setMeta('property', 'og:image:alt', "Affiche officielle, Semaine de l'industrie 2026")
 
   setMeta('name', 'twitter:card', 'summary_large_image')
   setMeta('name', 'twitter:title', fullTitle)

@@ -46,6 +46,7 @@ const GROUPS: NavGroup[] = [
     icon: <Info {...ICON} />,
     items: [
       { label: 'Ressources', to: '/ressources' },
+      { label: 'Questions fréquentes', to: '/faq' },
       { label: 'Contact', to: '/#contact' },
     ],
   },

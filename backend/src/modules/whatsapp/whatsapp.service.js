@@ -261,7 +261,7 @@ const PROGRAMME_DAYS = [
 function programmeListPayload(to) {
   return {
     to,
-    body: "Programme de la semaine\n\nSélectionnez une date.",
+    body: 'Sélectionnez une date.',
     buttonLabel: 'Choisir un jour',
     header: 'Programme',
     sections: [
@@ -328,7 +328,7 @@ async function replyProgramme(from, action, phoneNumberId) {
       phoneNumberId,
       link: absUrl(url),
       filename: 'Programme-SI2026.pdf',
-      caption: "Programme de la semaine",
+      caption: 'PDF officiel',
     });
     if (!sent.ok) {
       return sendWithNav({
@@ -340,7 +340,7 @@ async function replyProgramme(from, action, phoneNumberId) {
     return sendWithNav({
       to: from,
       phoneNumberId,
-      body: 'Programme de la semaine envoyé.',
+      body: 'Le PDF est envoyé.',
     });
   }
 
@@ -349,7 +349,6 @@ async function replyProgramme(from, action, phoneNumberId) {
   return sendWithNav({
     to: from,
     phoneNumberId,
-    header: `${day.name} ${day.n} nov.`,
     body: formatProgrammeDay(day),
   });
 }
@@ -358,7 +357,7 @@ async function replyProgramme(from, action, phoneNumberId) {
 function espaceMenuPayload(to) {
   return {
     to,
-    body: "Mon espace\n\nQue souhaitez-vous consulter ?",
+    body: 'Suivi de label, ou rencontres d\'affaires.',
     buttonLabel: 'Choisir',
     header: 'Mon espace',
     sections: [
@@ -374,18 +373,12 @@ function espaceMenuPayload(to) {
   };
 }
 
-/* Demande un e-mail ou un code selon l'accès choisi. */
+/* Demande le code pour le label, l'e-mail pour les rencontres. */
 function askIdent(intent) {
   if (intent === 'b2b') {
-    return (
-      "Rencontres d'affaires\n\n" +
-      "Envoyez l'e-mail d'inscription ou le code de suivi du label (SI26-1234)."
-    );
+    return "Rencontres d'affaires\n\nEnvoyez l'e-mail utilisé à l'inscription.";
   }
-  return (
-    'Suivi de label\n\n' +
-    "Envoyez votre code de suivi (SI26-1234) ou l'e-mail du dossier."
-  );
+  return 'Suivi de label\n\nEnvoyez votre code de suivi (exemple : SI26-1234).';
 }
 
 /* Envoie un menu liste WhatsApp. */
@@ -634,18 +627,6 @@ function extractLabelCode(text) {
     .toUpperCase()
     .match(/\bSI\d{2}-\d{4}\b/);
   return m ? m[0] : null;
-}
-
-/* Charge une organisation labellisée par e-mail de contact. */
-async function findOrgByEmail(email) {
-  if (!email) return null;
-  return Organization.findOne({
-    where: {
-      contact_email: { [Op.iLike]: String(email).trim() },
-      label_status: 'approved',
-      is_active: true,
-    },
-  });
 }
 
 /* Charge une organisation labellisée par code. */
@@ -928,7 +909,7 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
       return sendText({
         to: from,
         phoneNumberId,
-        body: "Envoyez un autre e-mail ou un code de suivi.",
+        body: "Envoyez le nouvel e-mail d'inscription.",
       });
     case 'b2b_recap':
     case 'b2b_rdv': {
@@ -956,53 +937,54 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
   }
 }
 
-/* Ouvre le suivi label ou les rencontres selon l'e-mail ou le code reçu. */
+/* Ouvre le suivi label (code) ou les rencontres (e-mail). */
 async function resolveIdent(from, text, phoneNumberId, intent) {
   const email = extractEmail(text);
   const code = extractLabelCode(text);
 
   if (intent === 'b2b') {
-    let lookupEmail = email;
-    if (!lookupEmail && code) {
-      const org = await findOrgByCode(code);
-      lookupEmail = org?.contact_email || null;
-    }
-    if (!lookupEmail) {
+    if (!email) {
       return sendText({
         to: from,
         phoneNumberId,
-        body: 'Indiquez un e-mail ou un code de suivi (SI26-1234).',
+        body: code
+          ? "Le code de suivi sert au label.\nPour les rencontres, envoyez l'e-mail d'inscription."
+          : "Envoyez l'e-mail utilisé à l'inscription.\nExemple : nom@entreprise.tg",
       });
     }
-    const participant = await findB2bByEmail(lookupEmail);
+    const participant = await findB2bByEmail(email);
     if (!participant) {
       return sendText({
         to: from,
         phoneNumberId,
         body:
-          "Aucune inscription trouvée pour cet identifiant.\n" +
+          "Aucune inscription trouvée pour cet e-mail.\n" +
           `Inscription : ${SITE()}/affaires`,
       });
     }
     return replyB2bMenu(from, participant, phoneNumberId);
   }
 
-  if (code) {
-    const org = await findOrgByCode(code);
-    if (org) return replySuiviMenu(from, org, phoneNumberId);
+  if (!code) {
+    return sendText({
+      to: from,
+      phoneNumberId,
+      body: email
+        ? "L'e-mail sert aux rencontres d'affaires.\nPour le label, envoyez le code de suivi (SI26-1234)."
+        : 'Envoyez votre code de suivi.\nExemple : SI26-1234',
+    });
   }
-  if (email) {
-    const org = await findOrgByEmail(email);
-    if (org) return replySuiviMenu(from, org, phoneNumberId);
+  const org = await findOrgByCode(code);
+  if (!org) {
+    return sendText({
+      to: from,
+      phoneNumberId,
+      body:
+        'Code introuvable. Vérifiez le format SI26-1234.\n' +
+        'Ou tapez MENU pour le menu principal.',
+    });
   }
-  return sendText({
-    to: from,
-    phoneNumberId,
-    body:
-      "Aucun dossier trouvé.\n" +
-      "Envoyez le code SI26-1234 ou l'e-mail du dossier.\n" +
-      'Ou tapez MENU.',
-  });
+  return replySuiviMenu(from, org, phoneNumberId);
 }
 
 /* Traite un message texte libre. */
