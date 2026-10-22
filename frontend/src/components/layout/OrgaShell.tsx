@@ -168,50 +168,42 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         <BrandLogo className="h-9 w-auto" />
       </a>
 
-      <nav className="min-h-0 flex-1 overflow-y-auto">
-        <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">Pilotage</p>
-        <div className="flex flex-col gap-0.5 pb-2">
-          <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
-          <NavLink to="/orga/visites" className={linkClass}>Planning visites</NavLink>
-          <NavLink to="/orga/labels" className={linkClass}>
-            <span className="flex w-full items-center justify-between gap-2">
-              Demandes de labels
-              {pendingCount > 0 && (
-                <span
-                  className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
-                  title={`${pendingCount} en attente`}
-                >
-                  {pendingCount > 99 ? '99+' : pendingCount}
-                </span>
-              )}
-            </span>
-          </NavLink>
-          <NavLink to="/orga/participations" className={linkClass}>
-            <span className="flex w-full items-center justify-between gap-2">
-              Participations
-              {participationCount > 0 && (
-                <span
-                  className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
-                  title={`${participationCount} en attente`}
-                >
-                  {participationCount > 99 ? '99+' : participationCount}
-                </span>
-              )}
-            </span>
-          </NavLink>
-          <NavLink to="/orga/affaires" className={linkClass}>Rencontres d&apos;affaires</NavLink>
-          <NavLink to="/orga/enquete" className={linkClass}>Sondage</NavLink>
-          <NavLink to="/orga/ressources" className={linkClass}>Ressources</NavLink>
-        </div>
+      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
+        <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
+        <NavLink to="/orga/visites" className={linkClass}>Planning visites</NavLink>
+        <NavLink to="/orga/labels" className={linkClass}>
+          <span className="flex w-full items-center justify-between gap-2">
+            Demandes de labels
+            {pendingCount > 0 && (
+              <span
+                className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
+                title={`${pendingCount} en attente`}
+              >
+                {pendingCount > 99 ? '99+' : pendingCount}
+              </span>
+            )}
+          </span>
+        </NavLink>
+        <NavLink to="/orga/participations" className={linkClass}>
+          <span className="flex w-full items-center justify-between gap-2">
+            Participations
+            {participationCount > 0 && (
+              <span
+                className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
+                title={`${participationCount} en attente`}
+              >
+                {participationCount > 99 ? '99+' : participationCount}
+              </span>
+            )}
+          </span>
+        </NavLink>
+        <NavLink to="/orga/affaires" className={linkClass}>Rencontres d&apos;affaires</NavLink>
+        <NavLink to="/orga/enquete" className={linkClass}>Sondage</NavLink>
+        <NavLink to="/orga/ressources" className={linkClass}>Ressources</NavLink>
         {isAdminRole(user?.role) && (
           <>
-            <p className="mb-2 mt-4 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink/40">
-              Administration
-            </p>
-            <div className="flex flex-col gap-0.5 pb-2">
-              <NavLink to="/orga/audit" className={linkClass}>Audit et logs</NavLink>
-              <NavLink to="/orga/utilisateurs" className={linkClass}>Utilisateurs</NavLink>
-            </div>
+            <NavLink to="/orga/audit" className={linkClass}>Audit et logs</NavLink>
+            <NavLink to="/orga/utilisateurs" className={linkClass}>Utilisateurs</NavLink>
           </>
         )}
       </nav>
