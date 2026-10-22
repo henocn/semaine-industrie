@@ -69,22 +69,45 @@ body {
   border-radius: 0;
 }
 
-/* Fond photo discret derrière une section */
+/* Fond photo discret derrière une section, respiration très lente. */
 .section-soft-bg {
   position: absolute;
-  inset: 0;
+  inset: -4%;
   z-index: 0;
   background-size: cover;
   background-position: center;
-  opacity: 0.12;
+  opacity: 0.1;
   filter: grayscale(25%);
   pointer-events: none;
+  animation: bg-breathe 36s ease-in-out infinite;
 }
 .section-soft-bg + * { position: relative; z-index: 1; }
 /* Sur fond forest (footer) : un peu plus présent, teinté clair */
 .section-soft-bg--on-dark {
-  opacity: 0.18;
+  opacity: 0.16;
   filter: grayscale(40%) brightness(1.15);
+}
+
+/* Voile d'industrie derrière les pages publiques. */
+.page-industry-bg {
+  position: fixed;
+  inset: -8%;
+  z-index: 0;
+  background-image: url(/images/bg-industrie.png);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.07;
+  filter: grayscale(35%);
+  pointer-events: none;
+  animation: bg-breathe 36s ease-in-out infinite;
+}
+@keyframes bg-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .section-soft-bg,
+  .page-industry-bg { animation: none; }
 }
 
 /* Filet or : visible par défaut ; animé seulement dans un .reveal */

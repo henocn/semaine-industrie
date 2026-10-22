@@ -16,11 +16,14 @@ export function PublicLayout() {
   }, [pathname, hash])
 
   return (
-    <div className="min-h-svh overflow-x-clip">
-      <SiteHeader />
-      <Outlet />
-      <SiteFooter />
-      <CookieConsent />
+    <div className="relative min-h-svh overflow-x-clip">
+      <div className="page-industry-bg" aria-hidden="true" />
+      <div className="relative z-10">
+        <SiteHeader />
+        <Outlet />
+        <SiteFooter />
+        <CookieConsent />
+      </div>
     </div>
   )
 }
