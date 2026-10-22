@@ -47,6 +47,14 @@ export function getParticipation(id: string) {
   return apiFetch<Participation>(`/participations/${id}`)
 }
 
+/* Inscription publique (école ou particulier), sans compte. */
+export function registerParticipation(body: ParticipationInput & { kind: ParticipationKind }) {
+  return apiFetch<Participation>('/participations/public', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
 /* Enregistre une participation en attente. */
 export function createParticipation(body: ParticipationInput & { kind: ParticipationKind }) {
   return apiFetch<Participation>('/participations', {

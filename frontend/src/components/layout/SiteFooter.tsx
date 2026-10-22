@@ -34,6 +34,7 @@ export function SiteFooter() {
         <div>
           <p className="font-semibold text-white">La semaine</p>
           <ul className="mt-4 space-y-2.5">
+            <li><Link to="/inscription" className={LINK}>S&apos;inscrire</Link></li>
             <li><Link to="/programme" className={LINK}>Programme</Link></li>
             <li><Link to="/carte" className={LINK}>Carte des usines</Link></li>
             <li><Link to="/vote" className={LINK}>Vote samedi</Link></li>

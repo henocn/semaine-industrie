@@ -20,6 +20,7 @@ type NavGroup = {
 const ICON = { strokeWidth: 1.75, className: 'h-4 w-4 shrink-0', 'aria-hidden': true } as const
 
 const PARTICIPER_ITEMS: NavItem[] = [
+  { label: "S'inscrire", to: '/inscription' },
   { label: 'Demander le label', to: '/label' },
   { label: 'Rencontres d’affaires', to: '/affaires' },
 ]

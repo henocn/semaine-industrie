@@ -5,8 +5,25 @@ const controller = require('./participation.controller');
 const validate = require('../../middlewares/validate.middleware');
 const { authenticate, authorize } = require('../../middlewares/auth.middleware');
 const { createSchema, updateSchema } = require('./participation.validation');
+const ApiError = require('../../utils/ApiError');
 
 const router = Router();
+const publicHits = new Map();
+
+/* Limite les inscriptions publiques par adresse. */
+function limitPublic(req, res, next) {
+  const ip = req.ip || 'inconnu';
+  const now = Date.now();
+  const recent = (publicHits.get(ip) || []).filter((at) => now - at < 10 * 60 * 1000);
+  if (recent.length >= 8) {
+    return next(ApiError.badRequest('Trop d’inscriptions depuis cette adresse. Réessayez plus tard.'));
+  }
+  recent.push(now);
+  publicHits.set(ip, recent);
+  return next();
+}
+
+router.post('/public', limitPublic, validate(createSchema), controller.create);
 
 router.use(authenticate, authorize('orga'));
 

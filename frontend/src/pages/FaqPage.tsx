@@ -14,6 +14,10 @@ const FAQ = [
     a: 'Les entreprises, les écoles, les jeunes, les familles et les acteurs économiques. Certaines visites se font sur inscription.',
   },
   {
+    q: "Comment s'inscrire, école ou particulier ?",
+    a: "Depuis Participer, puis S'inscrire. Choisissez École ou Personne particulière. Après validation, un QR est remis pour le jour J.",
+  },
+  {
     q: 'Comment demander le label ?',
     a: 'Depuis Participer, puis Demander le label. Après acceptation, un code de suivi est envoyé.',
   },
