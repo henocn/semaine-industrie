@@ -97,10 +97,7 @@ function Hero() {
             <Button to="/programme" variant="onDark">
               Programme
             </Button>
-            <Button to="/inscription" variant="accent">
-              S&apos;inscrire
-            </Button>
-            <Button to="/label" variant="onDark">
+            <Button to="/label" variant="accent">
               Demander un label
             </Button>
           </div>
