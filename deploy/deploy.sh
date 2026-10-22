@@ -52,7 +52,7 @@ cd "$APP_ROOT/backend"
 npm ci --omit=dev
 
 echo "==> Uploads / logs (droits)"
-mkdir -p uploads/labels logs
+mkdir -p uploads/labels uploads/products logs
 chmod -R u+rwX,g+rX,o+rX uploads logs 2>/dev/null || true
 
 echo "==> Migrations"

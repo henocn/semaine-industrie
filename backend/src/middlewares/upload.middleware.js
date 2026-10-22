@@ -7,9 +7,10 @@ const { v4: uuidv4 } = require('uuid');
 
 const UPLOAD_DIR = path.join(__dirname, '../../uploads/labels');
 const DOCS_DIR = path.join(__dirname, '../../uploads/docs');
+const PRODUCTS_DIR = path.join(__dirname, '../../uploads/products');
 
 /* Garantit les dossiers d'upload. */
-for (const dir of [UPLOAD_DIR, DOCS_DIR]) {
+for (const dir of [UPLOAD_DIR, DOCS_DIR, PRODUCTS_DIR]) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
@@ -97,12 +98,29 @@ const uploadProgrammePdf = uploadPdf.single('programme_pdf');
 /* Middleware : PDF ressource globale (champ file). */
 const uploadResourcePdf = uploadPdf.single('file');
 
+const productStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, PRODUCTS_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `${uuidv4()}${ext}`);
+  },
+});
+
+/* Middleware : image d'un produit du coup de cœur (champ image). */
+const uploadProductImage = multer({
+  storage: productStorage,
+  fileFilter: imageFilter,
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+}).single('image');
+
 module.exports = {
   uploadGallery,
   uploadLabelPdf,
   uploadKitFile,
   uploadProgrammePdf,
   uploadResourcePdf,
+  uploadProductImage,
   UPLOAD_DIR,
   DOCS_DIR,
+  PRODUCTS_DIR,
 };

@@ -38,9 +38,10 @@ async function reviewQuestion(req, res, next) {
   }
 }
 
+/* Liste les produits du coup de cœur. */
 async function voteResults(req, res, next) {
   try {
-    const data = await engagementService.ensureVoteOptionsFromLabels();
+    const data = await engagementService.listVoteResults();
     return ApiResponse.success(res, data);
   } catch (err) {
     return next(err);
@@ -58,13 +59,48 @@ async function castVote(req, res, next) {
   }
 }
 
+/* Ajoute un produit (image, titre, description). */
 async function createOption(req, res, next) {
   try {
-    const data = await engagementService.createVoteOption(req.body);
+    const data = await engagementService.createVoteOption({
+      label: req.body?.label,
+      description: req.body?.description,
+      file: req.file,
+    });
     const results = await engagementService.listVoteResults();
     emitRealtime('vote:updated', results, 'votes');
     emitRealtime('vote:updated', results, 'live');
-    return ApiResponse.created(res, data);
+    return ApiResponse.created(res, data, 'Produit ajouté');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Met à jour un produit. */
+async function updateOption(req, res, next) {
+  try {
+    const data = await engagementService.updateVoteOption(req.params.id, {
+      label: req.body?.label,
+      description: req.body?.description,
+      file: req.file,
+    });
+    const results = await engagementService.listVoteResults();
+    emitRealtime('vote:updated', results, 'votes');
+    emitRealtime('vote:updated', results, 'live');
+    return ApiResponse.success(res, data, 'Produit mis à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Supprime un produit du vote. */
+async function removeOption(req, res, next) {
+  try {
+    const data = await engagementService.removeVoteOption(req.params.id);
+    const results = await engagementService.listVoteResults();
+    emitRealtime('vote:updated', results, 'votes');
+    emitRealtime('vote:updated', results, 'live');
+    return ApiResponse.success(res, data, 'Produit retiré');
   } catch (err) {
     return next(err);
   }
@@ -77,4 +113,6 @@ module.exports = {
   voteResults,
   castVote,
   createOption,
+  updateOption,
+  removeOption,
 };

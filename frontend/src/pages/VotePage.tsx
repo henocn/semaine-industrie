@@ -70,36 +70,42 @@ export default function VotePage() {
           <p className="mt-10 text-[15px] text-ink/55">Les produits en lice seront affichés ici.</p>
         )}
 
-        <ul className="mt-10 grid gap-3">
+        <ul className="mt-10 grid gap-6 sm:grid-cols-2">
           {ranked.map((o, index) => {
             const pct = total ? Math.round((o.votes / total) * 100) : 0
             const lead = index === 0 && o.votes > 0
             return (
               <li
                 key={o.id}
-                className={`bg-white p-4 sm:p-5 ${lead ? 'border-2 border-sun' : 'border border-forest/15'}`}
+                className={`flex flex-col bg-white ${lead ? 'border-2 border-sun' : 'border border-forest/15'}`}
               >
-                <div className="grid grid-cols-[2.5rem_1fr] items-center gap-x-3 gap-y-3 sm:grid-cols-[2.5rem_1fr_auto] sm:gap-x-4">
+                <div className="relative aspect-[4/3] bg-sage">
+                  {o.image_url ? (
+                    <img src={o.image_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="grid h-full place-items-center text-[13px] text-forest/40">Photo à venir</div>
+                  )}
                   <span
-                    className={`${done ? '' : 'row-span-2 sm:row-span-1 '}grid h-10 w-10 place-items-center text-[15px] font-bold ${
+                    className={`absolute left-3 top-3 grid h-9 w-9 place-items-center text-[14px] font-bold ${
                       lead ? 'bg-sun text-forest' : 'bg-forest text-white'
                     }`}
                   >
                     {index + 1}
                   </span>
-                  <div className="min-w-0">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="text-lg font-semibold text-forest sm:text-xl">{o.label}</p>
-                      <p className="shrink-0 text-[14px] text-ink/60">
-                        {o.votes} voix · {pct}%
-                      </p>
-                    </div>
-                    <div className="mt-3 h-1.5 bg-forest/10">
-                      <div className="h-full bg-forest transition-[width] duration-500" style={{ width: `${pct}%` }} />
-                    </div>
+                </div>
+                <div className="flex flex-1 flex-col p-4 sm:p-5">
+                  <p className="text-lg font-semibold text-forest sm:text-xl">{o.label}</p>
+                  {o.description && (
+                    <p className="mt-2 text-[14px] leading-relaxed text-ink/70">{o.description}</p>
+                  )}
+                  <div className="mt-4 h-1.5 bg-forest/10">
+                    <div className="h-full bg-forest transition-[width] duration-500" style={{ width: `${pct}%` }} />
                   </div>
+                  <p className="mt-2 text-[13px] text-ink/55">
+                    {o.votes} voix · {pct}%
+                  </p>
                   {!done && (
-                    <Button onClick={() => onVote(o.id)} withArrow={false} className="col-start-2 w-fit sm:col-start-auto">
+                    <Button onClick={() => onVote(o.id)} withArrow={false} className="mt-4 w-fit">
                       Voter
                     </Button>
                   )}

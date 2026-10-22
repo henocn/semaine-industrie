@@ -10,7 +10,7 @@ import {
   type SurveyQuestionKind,
   type SurveyStats,
 } from '../api/surveys'
-import { getVotes, type VoteOption } from '../api/engagement'
+import { createVoteProduct, deleteVoteProduct, getVotes, updateVoteProduct, type VoteOption } from '../api/engagement'
 import { OrgaShell } from '../components/layout/OrgaShell'
 
 const field =
@@ -69,6 +69,9 @@ export default function OrgaSurveyPage() {
   const [tab, setTab] = useState<'sondage' | 'coeur'>('sondage')
   const [editorOpen, setEditorOpen] = useState(false)
   const [votes, setVotes] = useState<VoteOption[]>([])
+  const [productId, setProductId] = useState<string | null>(null)
+  const [productTitle, setProductTitle] = useState('')
+  const [productText, setProductText] = useState('')
 
   /* Parse les options (une par ligne). */
   function parseOptions(text: string) {
@@ -94,6 +97,65 @@ export default function OrgaSurveyPage() {
   useEffect(() => {
     void load()
   }, [])
+
+  /* Ouvre le formulaire sur un produit existant. */
+  function openProduct(item: VoteOption) {
+    setProductId(item.id)
+    setProductTitle(item.label)
+    setProductText(item.description || '')
+    setError(null)
+  }
+
+  /* Ferme le formulaire produit. */
+  function closeProduct() {
+    setProductId(null)
+    setProductTitle('')
+    setProductText('')
+  }
+
+  /* Enregistre un produit (création ou modification). */
+  async function onSaveProduct(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    const fd = new FormData(form)
+    const title = String(fd.get('label') || '').trim()
+    const description = String(fd.get('description') || '').trim()
+    const input = form.elements.namedItem('image') as HTMLInputElement | null
+    const file = input?.files?.[0] || null
+    if (title.length < 2) {
+      setError('Indiquez un titre.')
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      if (productId) await updateVoteProduct(productId, title, description, file)
+      else await createVoteProduct(title, description, file)
+      form.reset()
+      closeProduct()
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Enregistrement impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /* Retire un produit du vote. */
+  async function onDeleteProduct(id: string) {
+    if (!window.confirm('Retirer ce produit du vote ?')) return
+    setBusy(true)
+    setError(null)
+    try {
+      await deleteVoteProduct(id)
+      if (productId === id) closeProduct()
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Suppression impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   /* Ajoute une question. */
   async function onAdd(e: FormEvent) {
@@ -182,9 +244,11 @@ export default function OrgaSurveyPage() {
     <OrgaShell
       title="Sondage"
       actions={
-        <button type="button" className="orga-btn" onClick={() => setEditorOpen(true)}>
-          Éditer les questions
-        </button>
+        tab === 'sondage' ? (
+          <button type="button" className="orga-btn" onClick={() => setEditorOpen(true)}>
+            Éditer les questions
+          </button>
+        ) : undefined
       }
     >
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
@@ -205,33 +269,76 @@ export default function OrgaSurveyPage() {
       </div>
 
       {tab === 'coeur' && (
-        <section className="orga-panel">
-          <h2 className="text-[15px] font-semibold text-forest">Coup de cœur</h2>
-          <p className="mt-1 text-[13px] text-ink/50">{voteTotal} voix</p>
-          {rankedVotes.length === 0 ? (
-            <p className="mt-4 text-[13px] text-ink/40">Aucun produit en lice.</p>
-          ) : (
-            <ul className="mt-4 space-y-3">
-              {rankedVotes.map((item, index) => {
-                const pct = voteTotal ? Math.round((item.votes / voteTotal) * 100) : 0
-                return (
-                  <li key={item.id} className="border border-black bg-white px-3 py-3">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="text-[14px] font-medium text-forest">
-                        {index + 1}. {item.label}
-                      </p>
-                      <p className="text-[13px] text-ink/55">
-                        {item.votes} voix · {pct}%
-                      </p>
-                    </div>
-                    <div className="mt-2 h-1.5 bg-forest/10">
-                      <div className="h-full bg-forest" style={{ width: `${pct}%` }} />
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+        <section className="space-y-4">
+          <form key={productId || 'new'} onSubmit={(e) => void onSaveProduct(e)} className="orga-panel grid gap-3 sm:grid-cols-2">
+            <h2 className="text-[15px] font-semibold text-forest sm:col-span-2">
+              {productId ? 'Modifier le produit' : 'Ajouter un produit'}
+            </h2>
+            <label className="text-[13px] font-medium text-forest sm:col-span-2">
+              Titre
+              <input name="label" required minLength={2} value={productTitle} onChange={(e) => setProductTitle(e.target.value)} className={field} />
+            </label>
+            <label className="text-[13px] font-medium text-forest sm:col-span-2">
+              Description
+              <textarea name="description" rows={3} value={productText} onChange={(e) => setProductText(e.target.value)} className={`${field} resize-none`} />
+            </label>
+            <label className="text-[13px] font-medium text-forest sm:col-span-2">
+              Image
+              <input name="image" type="file" accept="image/jpeg,image/png,image/webp" className={`${field} file:mr-3 file:border-0 file:bg-forest file:px-3 file:py-1.5 file:text-[13px] file:font-semibold file:text-white`} />
+            </label>
+            <div className="flex gap-2 sm:col-span-2">
+              <button type="submit" className="orga-btn" disabled={busy}>
+                {productId ? 'Enregistrer' : 'Ajouter'}
+              </button>
+              {productId && (
+                <button type="button" className="orga-btn" onClick={closeProduct}>
+                  Annuler
+                </button>
+              )}
+            </div>
+          </form>
+
+          <section className="orga-panel">
+            <h2 className="text-[15px] font-semibold text-forest">Produits en lice</h2>
+            <p className="mt-1 text-[13px] text-ink/50">{voteTotal} voix</p>
+            {rankedVotes.length === 0 ? (
+              <p className="mt-4 text-[13px] text-ink/40">Aucun produit. Ils s'afficheront sur la page Vote.</p>
+            ) : (
+              <ul className="mt-4 space-y-3">
+                {rankedVotes.map((item, index) => {
+                  const pct = voteTotal ? Math.round((item.votes / voteTotal) * 100) : 0
+                  return (
+                    <li key={item.id} className="flex gap-3 border border-black bg-white p-3">
+                      <div className="h-16 w-16 shrink-0 bg-sage">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt="" className="h-full w-full object-cover" />
+                        ) : null}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[14px] font-medium text-forest">
+                            {index + 1}. {item.label}
+                          </p>
+                          <p className="shrink-0 text-[13px] text-ink/55">
+                            {item.votes} voix · {pct}%
+                          </p>
+                        </div>
+                        {item.description && <p className="mt-1 line-clamp-2 text-[13px] text-ink/70">{item.description}</p>}
+                        <div className="mt-2 flex gap-1">
+                          <button type="button" className={iconBtn} aria-label="Modifier" title="Modifier" onClick={() => openProduct(item)}>
+                            <IconEdit />
+                          </button>
+                          <button type="button" className={iconBtn} aria-label="Supprimer" title="Supprimer" disabled={busy} onClick={() => void onDeleteProduct(item.id)}>
+                            <IconTrash />
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </section>
         </section>
       )}
 

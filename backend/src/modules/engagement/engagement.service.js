@@ -1,8 +1,10 @@
 'use strict';
 
-const { Op } = require('sequelize');
+const path = require('path');
+const fs = require('fs');
 const { LiveQuestion, VoteOption, VoteBallot, Organization, sequelize } = require('../../models');
 const ApiError = require('../../utils/ApiError');
+const { PRODUCTS_DIR } = require('../../middlewares/upload.middleware');
 
 /* Dépose une question en salle. */
 async function askQuestion({ session_key = 'forum', author_name, body }) {
@@ -32,16 +34,54 @@ async function reviewQuestion(id, status) {
   return q;
 }
 
-/* Crée une option de vote. */
-async function createVoteOption({ label, organization_id }) {
+/* Efface le fichier image d'un produit, s'il est dans le dossier prévu. */
+function removeProductImage(url) {
+  if (!url || !String(url).startsWith('/uploads/products/')) return;
+  const file = path.join(PRODUCTS_DIR, path.basename(url));
+  fs.unlink(file, () => {});
+}
+
+/* Crée un produit en lice (titre, description, image). */
+async function createVoteOption({ label, description, file }) {
+  const title = String(label || '').trim();
+  if (title.length < 2) throw ApiError.badRequest('Titre requis');
   return VoteOption.create({
-    label,
-    organization_id: organization_id || null,
+    label: title.slice(0, 200),
+    description: String(description || '').trim() || null,
+    image_url: file ? `/uploads/products/${file.filename}` : null,
+    organization_id: null,
     is_active: true,
   });
 }
 
-/* Options + scores. */
+/* Met à jour un produit. Une nouvelle image remplace l'ancienne. */
+async function updateVoteOption(id, { label, description, file }) {
+  const row = await VoteOption.findByPk(id);
+  if (!row) throw ApiError.notFound('Produit introuvable');
+  if (label != null) {
+    const title = String(label).trim();
+    if (title.length < 2) throw ApiError.badRequest('Titre requis');
+    row.label = title.slice(0, 200);
+  }
+  if (description != null) row.description = String(description).trim() || null;
+  if (file) {
+    removeProductImage(row.image_url);
+    row.image_url = `/uploads/products/${file.filename}`;
+  }
+  await row.save();
+  return row;
+}
+
+/* Retire un produit du vote. */
+async function removeVoteOption(id) {
+  const row = await VoteOption.findByPk(id);
+  if (!row) throw ApiError.notFound('Produit introuvable');
+  removeProductImage(row.image_url);
+  await row.destroy();
+  return { id };
+}
+
+/* Liste les produits en lice et leurs voix. */
 async function listVoteResults() {
   const options = await VoteOption.findAll({
     where: { is_active: true },
@@ -77,33 +117,10 @@ async function castVote({ option_id, voter_key }) {
   return listVoteResults();
 }
 
-/* Retire une industrie des coups de cœur (options liées ou au même nom). */
+/* Retire les anciennes options liées à une structure. Les produits saisis à la main restent. */
 async function retireVoteOptionsForOrganization(org) {
-  if (!org?.id && !org?.name) return;
-  const or = [];
-  if (org.id) or.push({ organization_id: org.id });
-  if (org.name) or.push({ label: org.name });
-  await VoteOption.update({ is_active: false }, { where: { [Op.or]: or } });
-}
-
-/* Seed options depuis labels si vide. */
-async function ensureVoteOptionsFromLabels() {
-  const count = await VoteOption.count();
-  if (count > 0) return listVoteResults();
-
-  const orgs = await Organization.findAll({
-    where: { label_status: 'approved', is_active: true },
-    limit: 20,
-    order: [['name', 'ASC']],
-  });
-  for (const org of orgs) {
-    await VoteOption.create({
-      label: org.name,
-      organization_id: org.id,
-      is_active: true,
-    });
-  }
-  return listVoteResults();
+  if (!org?.id) return;
+  await VoteOption.update({ is_active: false }, { where: { organization_id: org.id } });
 }
 
 module.exports = {
@@ -111,8 +128,9 @@ module.exports = {
   listQuestions,
   reviewQuestion,
   createVoteOption,
+  updateVoteOption,
+  removeVoteOption,
   listVoteResults,
   castVote,
-  ensureVoteOptionsFromLabels,
   retireVoteOptionsForOrganization,
 };
