@@ -18,6 +18,7 @@ import OrgaBusinessPage from './pages/OrgaBusinessPage'
 import OrgaDashboardPage from './pages/OrgaDashboardPage'
 import OrgaResourcesPage from './pages/OrgaResourcesPage'
 import OrgaLabelsPage from './pages/OrgaLabelsPage'
+import OrgaParticipationsPage from './pages/OrgaParticipationsPage'
 import OrgaSurveyPage from './pages/OrgaSurveyPage'
 import OrgaUsersPage from './pages/OrgaUsersPage'
 import OrgaVisitsPage from './pages/OrgaVisitsPage'
@@ -69,6 +70,7 @@ export default function App() {
           <Route element={<RequireOrga />}>
             <Route path="/orga" element={<OrgaDashboardPage />} />
             <Route path="/orga/labels" element={<OrgaLabelsPage />} />
+            <Route path="/orga/participations" element={<OrgaParticipationsPage />} />
             <Route path="/orga/visites" element={<OrgaVisitsPage />} />
             <Route path="/orga/affaires" element={<OrgaBusinessPage />} />
             <Route path="/orga/enquete" element={<OrgaSurveyPage />} />

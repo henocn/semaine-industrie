@@ -22,7 +22,7 @@ const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to
     cta: 'Ressources',
   },
   Commencer: {
-    text: 'Entreprise ou établissement : demandez le label et rejoignez la semaine.',
+    text: 'Industries : demandez le label et rejoignez la semaine.',
     to: '/label',
     cta: 'Demander le label',
   },

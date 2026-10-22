@@ -16,11 +16,9 @@ export default function LabelRequestPage() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [structureType, setStructureType] = useState<'entreprise' | 'ecole'>('entreprise')
   const [lat, setLat] = useState<number | null>(null)
   const [lng, setLng] = useState<number | null>(null)
   const [previews, setPreviews] = useState<string[]>([])
-  const isEntreprise = structureType === 'entreprise'
 
   /* Prévisualise les 3 images choisies. */
   function onGalleryChange(files: FileList | null) {
@@ -42,26 +40,21 @@ export default function LabelRequestPage() {
     const form = e.currentTarget
     const fd = new FormData(form)
     const productsRaw = String(fd.get('products') || '')
-    const products = isEntreprise
-      ? productsRaw
-          .split(',')
-          .map((p) => p.trim())
-          .filter(Boolean)
-      : []
+    const products = productsRaw
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean)
 
     try {
-      let gallery_urls: string[] | undefined
-      if (isEntreprise) {
-        const input = form.elements.namedItem('gallery') as HTMLInputElement
-        const files = input.files ? Array.from(input.files) : []
-        await assertGalleryFiles(files)
-        gallery_urls = await uploadLabelGallery(files)
-      }
+      const input = form.elements.namedItem('gallery') as HTMLInputElement
+      const files = input.files ? Array.from(input.files) : []
+      await assertGalleryFiles(files)
+      const gallery_urls = await uploadLabelGallery(files)
 
       await createLabelRequest({
         structure_name: String(fd.get('structure_name') || ''),
-        structure_type: structureType,
-        sector: isEntreprise ? String(fd.get('sector') || '') || undefined : undefined,
+        structure_type: 'entreprise',
+        sector: String(fd.get('sector') || '') || undefined,
         region: String(fd.get('region') || '') || undefined,
         city: String(fd.get('city') || '') || undefined,
         contact_email: String(fd.get('contact_email') || ''),
@@ -70,7 +63,7 @@ export default function LabelRequestPage() {
         description: String(fd.get('description') || '') || undefined,
         products,
         max_visitors: fd.get('max_visitors') ? Number(fd.get('max_visitors')) : null,
-        safety_rules: isEntreprise ? String(fd.get('safety_rules') || '') || undefined : undefined,
+        safety_rules: String(fd.get('safety_rules') || '') || undefined,
         lat,
         lng,
         gallery_urls,
@@ -87,7 +80,7 @@ export default function LabelRequestPage() {
     <main className="py-14 sm:py-20">
       <Seo
         title="Demander le label"
-        description="Entreprises et établissements : demandez le label Semaine de l’industrie 2026 pour rejoindre le parcours officiel."
+        description="Industries : demandez le label Semaine de l’industrie 2026 pour rejoindre le parcours officiel."
         path="/label"
       />
       <div className={`${WRAP} grid gap-12 md:grid-cols-[1fr_1.15fr]`}>
@@ -96,13 +89,11 @@ export default function LabelRequestPage() {
             level={1}
             eyebrow="Label 2026"
             title="Demander le label"
-            lead="Entreprises et écoles : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent."
+            lead="Industries : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent."
           />
-          {isEntreprise && (
-            <p className="mt-4 max-w-md text-[15px] text-ink/70">
-              Entreprises : 3 photos nettes (min. 1000×700, max 5 Mo) pour la fiche Industrie.
-            </p>
-          )}
+          <p className="mt-4 max-w-md text-[15px] text-ink/70">
+            3 photos nettes (min. 1000×700, max 5 Mo) pour la fiche Industrie.
+          </p>
         </div>
 
         {sent ? (
@@ -122,22 +113,9 @@ export default function LabelRequestPage() {
             <Field label="Nom de la structure" className="sm:col-span-2">
               <input required name="structure_name" className={field} />
             </Field>
-            <Field label="Type" className="sm:col-span-2">
-              <select
-                name="structure_type"
-                className={field}
-                value={structureType}
-                onChange={(e) => setStructureType(e.target.value as 'entreprise' | 'ecole')}
-              >
-                <option value="entreprise">Entreprise</option>
-                <option value="ecole">École</option>
-              </select>
+            <Field label="Secteur" className="sm:col-span-2">
+              <input name="sector" className={field} />
             </Field>
-            {isEntreprise && (
-              <Field label="Secteur" className="sm:col-span-2">
-                <input name="sector" className={field} />
-              </Field>
-            )}
             <Field label="Région">
               <input name="region" className={field} />
             </Field>
@@ -158,8 +136,7 @@ export default function LabelRequestPage() {
               />
             </div>
 
-            {isEntreprise && (
-              <div className="sm:col-span-2">
+            <div className="sm:col-span-2">
                 <Field
                   label="3 photos (usine, produits, équipe…)"
                   hint="Exactement 3 fichiers, JPEG/PNG/WebP, min. 1000×700 px, max 5 Mo chacun"
@@ -183,8 +160,7 @@ export default function LabelRequestPage() {
                     ))}
                   </div>
                 )}
-              </div>
-            )}
+            </div>
 
             <Field label="E-mail">
               <input required type="email" name="contact_email" className={field} />
@@ -192,28 +168,18 @@ export default function LabelRequestPage() {
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <input name="contact_phone" type="tel" autoComplete="tel" className={field} />
             </Field>
-            {isEntreprise ? (
-              <Field label="Capacité max. visiteurs" className="sm:col-span-2">
-                <input type="number" min={1} name="max_visitors" className={field} />
-              </Field>
-            ) : (
-              <Field label="Nombre d’élèves / étudiants visiteurs (approximatif)" className="sm:col-span-2">
-                <input type="number" min={1} name="max_visitors" className={field} />
-              </Field>
-            )}
-            {isEntreprise && (
-              <Field label="Produits phares" hint="Séparés par des virgules" className="sm:col-span-2">
-                <input name="products" placeholder="farine, huile…" className={field} />
-              </Field>
-            )}
+            <Field label="Capacité max. visiteurs" className="sm:col-span-2">
+              <input type="number" min={1} name="max_visitors" className={field} />
+            </Field>
+            <Field label="Produits phares" hint="Séparés par des virgules" className="sm:col-span-2">
+              <input name="products" placeholder="farine, huile…" className={field} />
+            </Field>
             <Field label="Description" className="sm:col-span-2">
               <textarea name="description" rows={3} className={`${field} resize-none`} />
             </Field>
-            {isEntreprise && (
-              <Field label="Règles de sécurité" className="sm:col-span-2">
-                <textarea name="safety_rules" rows={3} className={`${field} resize-none`} />
-              </Field>
-            )}
+            <Field label="Règles de sécurité" className="sm:col-span-2">
+              <textarea name="safety_rules" rows={3} className={`${field} resize-none`} />
+            </Field>
 
             <label className="flex items-start gap-3 text-[14px] text-ink/80 sm:col-span-2">
               <input required type="checkbox" name="contact_opt_in" className="mt-1 accent-forest" />

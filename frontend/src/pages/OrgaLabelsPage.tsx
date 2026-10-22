@@ -307,7 +307,7 @@ export default function OrgaLabelsPage() {
 
   return (
     <OrgaShell
-      title="Labels et demandes"
+      title="Demandes de labels"
       searchPlaceholder="Rechercher une structure…"
       onSearch={setQuery}
       actions={
@@ -473,7 +473,6 @@ export default function OrgaLabelsPage() {
                   className={field}
                 >
                   <option value="entreprise">Industrie</option>
-                  <option value="ecole">École</option>
                 </select>
               </label>
               <label className="text-[13px] font-medium text-forest">

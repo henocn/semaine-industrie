@@ -8,6 +8,7 @@ import {
   type AuthUser,
 } from '../../api/auth'
 import { listLabelRequests, type LabelRequest } from '../../api/labels'
+import { listParticipations } from '../../api/participations'
 import { LABEL_PENDING_EVENT } from '../../lib/labelPending'
 import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
 import { joinRoom, onRealtime } from '../../lib/socket'
@@ -39,6 +40,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
   const [open, setOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
+  const [participationCount, setParticipationCount] = useState(0)
   const [banner, setBanner] = useState<string | null>(null)
   const [accountError, setAccountError] = useState<string | null>(null)
   const [accountInfo, setAccountInfo] = useState<string | null>(null)
@@ -58,6 +60,12 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
       setPendingCount(rows.length)
     } catch {
       // ignore (session expirée gérée ailleurs)
+    }
+    try {
+      const parts = await listParticipations({ status: 'pending' })
+      setParticipationCount(parts.length)
+    } catch {
+      // ignore
     }
   }
 
@@ -167,13 +175,26 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
           <NavLink to="/orga/visites" className={linkClass}>Planning visites</NavLink>
           <NavLink to="/orga/labels" className={linkClass}>
             <span className="flex w-full items-center justify-between gap-2">
-              Labels et demandes
+              Demandes de labels
               {pendingCount > 0 && (
                 <span
                   className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
                   title={`${pendingCount} en attente`}
                 >
                   {pendingCount > 99 ? '99+' : pendingCount}
+                </span>
+              )}
+            </span>
+          </NavLink>
+          <NavLink to="/orga/participations" className={linkClass}>
+            <span className="flex w-full items-center justify-between gap-2">
+              Participations
+              {participationCount > 0 && (
+                <span
+                  className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
+                  title={`${participationCount} en attente`}
+                >
+                  {participationCount > 99 ? '99+' : participationCount}
                 </span>
               )}
             </span>

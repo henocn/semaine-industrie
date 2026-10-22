@@ -70,6 +70,9 @@ function normalizeByType(data) {
 /* Crée une demande de label (parcours public). */
 async function createRequest(payload) {
   const data = normalizeByType({ ...payload });
+  if (data.structure_type === 'ecole') {
+    throw ApiError.badRequest('Les écoles se déposent dans Participations');
+  }
   if (data.structure_type === 'entreprise') {
     const gallery = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
     if (gallery.length !== 3) {
@@ -86,6 +89,9 @@ async function createRequest(payload) {
 /* Crée une demande depuis le backoffice (sans galerie obligatoire). */
 async function createRequestByOrga(payload) {
   const data = normalizeByType({ ...payload });
+  if (data.structure_type === 'ecole') {
+    throw ApiError.badRequest('Les écoles se déposent dans Participations');
+  }
   if (!Array.isArray(data.gallery_urls)) data.gallery_urls = [];
   if (!Array.isArray(data.products)) data.products = [];
   const row = await LabelRequest.create({
@@ -161,7 +167,7 @@ function withOrgExtras(row) {
 
 /* Liste les demandes, filtrables par statut (+ code / kit si accepté). */
 async function listRequests({ status } = {}) {
-  const where = {};
+  const where = { structure_type: 'entreprise' };
   if (status) where.status = status;
   const rows = await LabelRequest.findAll({
     where,

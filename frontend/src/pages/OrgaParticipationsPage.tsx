@@ -1,0 +1,459 @@
+import { Fragment, useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import {
+  approveParticipation,
+  createParticipation,
+  deleteParticipation,
+  getParticipation,
+  listParticipations,
+  rejectParticipation,
+  updateParticipation,
+  type Participation,
+  type ParticipationKind,
+} from '../api/participations'
+import { OrgaShell } from '../components/layout/OrgaShell'
+
+const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
+
+/* Libellé court du statut. */
+function statusLabel(status: Participation['status']) {
+  if (status === 'approved') return 'Acceptée'
+  if (status === 'rejected') return 'Refusée'
+  return 'En attente'
+}
+
+/* Classe de ligne selon le statut. */
+function rowClass(status: Participation['status']) {
+  if (status === 'approved') return 'orga-row-approved'
+  if (status === 'rejected') return 'orga-row-rejected'
+  return 'orga-row-pending'
+}
+
+/* Bouton action icône seule. */
+function IconButton({
+  label,
+  children,
+  onClick,
+  disabled,
+  variant,
+}: {
+  label: string
+  children: ReactNode
+  onClick: () => void
+  disabled?: boolean
+  variant?: 'ok' | 'danger'
+}) {
+  const extra = variant === 'ok' ? 'orga-icon-btn--ok' : variant === 'danger' ? 'orga-icon-btn--danger' : ''
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`orga-icon-btn ${extra}`}
+    >
+      {children}
+    </button>
+  )
+}
+
+/* Icône validation. */
+function IconCheck() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M5 12.5 9.5 17 19 7" />
+    </svg>
+  )
+}
+
+/* Icône refus. */
+function IconX() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  )
+}
+
+/* Icône crayon. */
+function IconEdit() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+      <path d="m13 7 4 4" />
+    </svg>
+  )
+}
+
+/* Icône poubelle. */
+function IconTrash() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M5 7h14M10 11v6M14 11v6M9 7V5h6v2M7 7l1 12h8l1-12" />
+    </svg>
+  )
+}
+
+/* Télécharge l'image du QR. */
+function downloadQr(dataUrl: string, code: string) {
+  const a = document.createElement('a')
+  a.href = dataUrl
+  a.download = `qr-${code}.png`
+  a.click()
+}
+
+/* Lit le formulaire d'une participation. */
+function readForm(fd: FormData, kind: ParticipationKind) {
+  const headcountRaw = String(fd.get('headcount') || '').trim()
+  return {
+    name: String(fd.get('name') || '').trim(),
+    email: String(fd.get('email') || '').trim() || null,
+    phone: String(fd.get('phone') || '').trim() || null,
+    city: String(fd.get('city') || '').trim() || null,
+    description: String(fd.get('description') || '').trim() || null,
+    headcount: kind === 'ecole' && headcountRaw ? Number(headcountRaw) : null,
+  }
+}
+
+/* Backoffice : écoles et particuliers, avec QR à l'acceptation. */
+export default function OrgaParticipationsPage() {
+  const [tab, setTab] = useState<ParticipationKind>('ecole')
+  const [rows, setRows] = useState<Participation[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [detail, setDetail] = useState<Participation | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [showAdd, setShowAdd] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  /* Recharge l'onglet courant. */
+  async function load(kind = tab) {
+    const data = await listParticipations({ kind })
+    setRows(data)
+  }
+
+  useEffect(() => {
+    setRows([])
+    setSelectedId(null)
+    setDetail(null)
+    setEditingId(null)
+    setShowAdd(false)
+    setError(null)
+    void load(tab).catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
+  }, [tab])
+
+  /* Ouvre le détail juste sous la ligne, avec le QR s'il existe. */
+  async function openRow(id: string) {
+    if (selectedId === id) {
+      setSelectedId(null)
+      setDetail(null)
+      setEditingId(null)
+      return
+    }
+    setSelectedId(id)
+    setEditingId(null)
+    setError(null)
+    try {
+      setDetail(await getParticipation(id))
+    } catch (err) {
+      setDetail(rows.find((row) => row.id === id) || null)
+      setError(err instanceof Error ? err.message : 'Détail indisponible')
+    }
+  }
+
+  /* Enregistre une nouvelle participation dans l'onglet ouvert. */
+  async function onCreate(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    setBusy(true)
+    setError(null)
+    try {
+      await createParticipation({ kind: tab, ...readForm(new FormData(form), tab) })
+      form.reset()
+      setShowAdd(false)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Enregistrement impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /* Enregistre les corrections d'une ligne. */
+  async function onUpdate(e: FormEvent<HTMLFormElement>, id: string) {
+    e.preventDefault()
+    const form = e.currentTarget
+    setBusy(true)
+    setError(null)
+    try {
+      const updated = await updateParticipation(id, readForm(new FormData(form), tab))
+      setDetail(updated)
+      setEditingId(null)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Mise à jour impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /* Accepte et affiche le QR. */
+  async function onApprove(id: string) {
+    setBusy(true)
+    setError(null)
+    try {
+      const updated = await approveParticipation(id)
+      setSelectedId(id)
+      setDetail(updated)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Acceptation impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /* Refuse la participation. */
+  async function onReject(id: string) {
+    setBusy(true)
+    setError(null)
+    try {
+      const updated = await rejectParticipation(id)
+      setDetail(updated)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Refus impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /* Supprime la participation. */
+  async function onDelete(id: string) {
+    if (!window.confirm('Supprimer cette participation ?')) return
+    setBusy(true)
+    setError(null)
+    try {
+      await deleteParticipation(id)
+      if (selectedId === id) {
+        setSelectedId(null)
+        setDetail(null)
+      }
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Suppression impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const noun = tab === 'ecole'
+    ? (rows.length > 1 ? 'écoles' : 'école')
+    : (rows.length > 1 ? 'particuliers' : 'particulier')
+
+  return (
+    <OrgaShell
+      title="Participations"
+      actions={
+        <button type="button" className="orga-btn" onClick={() => setShowAdd((v) => !v)}>
+          {showAdd ? 'Fermer' : `Ajouter ${tab === 'ecole' ? 'une école' : 'un particulier'}`}
+        </button>
+      }
+    >
+      {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
+
+      <div className="mb-4 flex gap-0 border border-black">
+        {(['ecole', 'particulier'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
+              tab === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
+            } ${key === 'particulier' ? 'border-l border-black' : ''}`}
+          >
+            {key === 'ecole' ? 'Écoles' : 'Particuliers'}
+          </button>
+        ))}
+      </div>
+
+      {showAdd && (
+        <form onSubmit={(e) => void onCreate(e)} className="orga-panel mb-4 grid gap-3 sm:grid-cols-2">
+          <label className="text-[13px] font-medium text-forest sm:col-span-2">
+            Nom
+            <input required name="name" className={field} />
+          </label>
+          <label className="text-[13px] font-medium text-forest">
+            E-mail
+            <input type="email" name="email" className={field} />
+          </label>
+          <label className="text-[13px] font-medium text-forest">
+            Téléphone
+            <input name="phone" type="tel" className={field} />
+            <span className="mt-1 block text-[12px] font-normal text-ink/50">De préférence un numéro WhatsApp.</span>
+          </label>
+          <label className="text-[13px] font-medium text-forest">
+            Ville
+            <input name="city" className={field} />
+          </label>
+          {tab === 'ecole' && (
+            <label className="text-[13px] font-medium text-forest">
+              Effectif
+              <input name="headcount" type="number" min={1} className={field} />
+            </label>
+          )}
+          <label className="text-[13px] font-medium text-forest sm:col-span-2">
+            {tab === 'ecole' ? 'Filières' : 'Note'}
+            <textarea name="description" rows={3} className={`${field} resize-none`} />
+          </label>
+          <div className="sm:col-span-2">
+            <button type="submit" className="orga-btn" disabled={busy}>
+              Enregistrer
+            </button>
+          </div>
+        </form>
+      )}
+
+      <section className="orga-panel !p-0 overflow-x-auto">
+        <div className="flex items-center justify-between border-b border-black px-4 py-3">
+          <h2 className="text-[15px] font-semibold text-forest">
+            {rows.length} {noun}
+          </h2>
+          <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
+        </div>
+        <table className="orga-table min-w-[720px]">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th className="w-40">Contact</th>
+              <th className="w-28">Statut</th>
+              <th className="w-40">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={4}>Aucune participation</td>
+              </tr>
+            )}
+            {rows.map((item) => {
+              const open = selectedId === item.id
+              const shown = open && detail?.id === item.id ? detail : item
+              return (
+                <Fragment key={item.id}>
+                  <tr
+                    className={`${rowClass(item.status)} cursor-pointer ${open ? 'bg-forest/10' : ''}`}
+                    onClick={() => void openRow(item.id)}
+                  >
+                    <td className="font-medium text-forest">{item.name}</td>
+                    <td>{item.phone || item.email || '…'}</td>
+                    <td>{statusLabel(item.status)}</td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <div className="flex gap-1">
+                        {item.status !== 'approved' && (
+                          <IconButton label="Accepter" variant="ok" disabled={busy} onClick={() => void onApprove(item.id)}>
+                            <IconCheck />
+                          </IconButton>
+                        )}
+                        {item.status === 'pending' && (
+                          <IconButton label="Refuser" variant="danger" disabled={busy} onClick={() => void onReject(item.id)}>
+                            <IconX />
+                          </IconButton>
+                        )}
+                        <IconButton
+                          label="Modifier"
+                          disabled={busy}
+                          onClick={() => {
+                            setSelectedId(item.id)
+                            setEditingId(item.id)
+                            void getParticipation(item.id).then(setDetail).catch(() => setDetail(item))
+                          }}
+                        >
+                          <IconEdit />
+                        </IconButton>
+                        <IconButton label="Supprimer" variant="danger" disabled={busy} onClick={() => void onDelete(item.id)}>
+                          <IconTrash />
+                        </IconButton>
+                      </div>
+                    </td>
+                  </tr>
+                  {open && (
+                    <tr>
+                      <td colSpan={4} className="bg-white">
+                        {editingId === item.id ? (
+                          <form onSubmit={(e) => void onUpdate(e, item.id)} className="grid gap-3 p-4 sm:grid-cols-2">
+                            <label className="text-[13px] font-medium text-forest sm:col-span-2">
+                              Nom
+                              <input required name="name" defaultValue={shown.name} className={field} />
+                            </label>
+                            <label className="text-[13px] font-medium text-forest">
+                              E-mail
+                              <input type="email" name="email" defaultValue={shown.email || ''} className={field} />
+                            </label>
+                            <label className="text-[13px] font-medium text-forest">
+                              Téléphone
+                              <input name="phone" defaultValue={shown.phone || ''} className={field} />
+                            </label>
+                            <label className="text-[13px] font-medium text-forest">
+                              Ville
+                              <input name="city" defaultValue={shown.city || ''} className={field} />
+                            </label>
+                            {tab === 'ecole' && (
+                              <label className="text-[13px] font-medium text-forest">
+                                Effectif
+                                <input name="headcount" type="number" min={1} defaultValue={shown.headcount ?? ''} className={field} />
+                              </label>
+                            )}
+                            <label className="text-[13px] font-medium text-forest sm:col-span-2">
+                              {tab === 'ecole' ? 'Filières' : 'Note'}
+                              <textarea name="description" rows={3} defaultValue={shown.description || ''} className={`${field} resize-none`} />
+                            </label>
+                            <div className="sm:col-span-2 flex gap-2">
+                              <button type="submit" className="orga-btn" disabled={busy}>Enregistrer</button>
+                              <button type="button" className="orga-btn" onClick={() => setEditingId(null)}>Annuler</button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div className="flex flex-wrap items-start gap-6 p-4">
+                            <div className="min-w-0 flex-1 text-[14px] text-ink">
+                              {shown.city && <p>{shown.city}</p>}
+                              {shown.email && <p>{shown.email}</p>}
+                              {shown.phone && <p>{shown.phone}</p>}
+                              {shown.headcount ? <p>{shown.headcount} personnes</p> : null}
+                              {shown.description && <p className="mt-2 whitespace-pre-wrap text-ink/80">{shown.description}</p>}
+                              {!shown.description && !shown.email && !shown.phone && !shown.city && (
+                                <p className="text-ink/50">Complétez la fiche avant le jour J.</p>
+                              )}
+                            </div>
+                            {shown.status === 'approved' && shown.passport?.qr_data_url && (
+                              <div className="text-center">
+                                <img src={shown.passport.qr_data_url} alt="" className="h-36 w-36 border border-black bg-white" />
+                                <p className="mt-2 text-[13px] font-semibold text-forest">{shown.passport.code}</p>
+                                <button
+                                  type="button"
+                                  className="mt-2 text-[13px] font-semibold text-forest underline"
+                                  onClick={() => downloadQr(shown.passport!.qr_data_url!, shown.passport!.code)}
+                                >
+                                  Télécharger le QR
+                                </button>
+                              </div>
+                            )}
+                            {shown.status === 'approved' && !shown.passport?.qr_data_url && (
+                              <button type="button" className="orga-btn" disabled={busy} onClick={() => void onApprove(item.id)}>
+                                Créer le QR
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            })}
+          </tbody>
+        </table>
+      </section>
+    </OrgaShell>
+  )
+}

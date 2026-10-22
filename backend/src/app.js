@@ -23,6 +23,7 @@ const whatsappRoutes = require('./modules/whatsapp/whatsapp.routes');
 const usersRoutes = require('./modules/users/users.routes');
 const auditRoutes = require('./modules/audit/audit.routes');
 const resourceRoutes = require('./modules/resources/resource.routes');
+const participationRoutes = require('./modules/participations/participation.routes');
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use(`${env.API_PREFIX}/whatsapp`, whatsappRoutes);
 app.use(`${env.API_PREFIX}/users`, usersRoutes);
 app.use(`${env.API_PREFIX}/audit`, auditRoutes);
 app.use(`${env.API_PREFIX}/resources`, resourceRoutes);
+app.use(`${env.API_PREFIX}/participations`, participationRoutes);
 
 /* 404 JSON pour les routes API inconnues. */
 app.use((req, res, next) => {

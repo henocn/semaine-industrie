@@ -104,6 +104,19 @@ async function createBatch({ count = 10, school_name, class_label } = {}) {
   return { count: created.length, items: created };
 }
 
+/* Crée un passeport individuel (une personne, un QR). */
+async function createIndividual({ holder_name } = {}) {
+  const name = String(holder_name || '').trim();
+  if (!name) throw ApiError.badRequest('Nom requis');
+  const code = await uniqueCode();
+  const passport = await Passport.create({
+    code,
+    kind: 'individual',
+    holder_name: name,
+  });
+  return withQr(passport);
+}
+
 /* Fiche publique d'un passeport. */
 async function getByCode(code) {
   const passport = await Passport.findOne({
@@ -181,7 +194,9 @@ async function countScans() {
 
 module.exports = {
   createBatch,
+  createIndividual,
   createGroup,
+  withQr,
   getByCode,
   scanVisit,
   ensureGroupStampForBooking,

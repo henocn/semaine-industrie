@@ -28,9 +28,9 @@ async function getStats() {
     recentLabels,
   ] = await Promise.all([
     Organization.count({ where: { label_status: 'approved', is_active: true } }),
-    LabelRequest.count({ where: { status: 'pending' } }),
-    LabelRequest.count({ where: { status: 'rejected' } }),
-    LabelRequest.count(),
+    LabelRequest.count({ where: { status: 'pending', structure_type: 'entreprise' } }),
+    LabelRequest.count({ where: { status: 'rejected', structure_type: 'entreprise' } }),
+    LabelRequest.count({ where: { structure_type: 'entreprise' } }),
     Organization.count({
       where: {
         label_status: 'approved',
