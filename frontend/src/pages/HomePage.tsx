@@ -214,7 +214,7 @@ function Women() {
         <div className="reveal">
           <SectionHeader
             title="Les métiers de l’industrie au féminin"
-            lead="Table ronde du jeudi 19 novembre, à 15 heures."
+            lead="Panel du jeudi 19 novembre, à 9h30."
           />
           <Photo name="atelier" alt="Ouvrières dans un atelier textile" className="mt-8 aspect-[4/3]" />
         </div>

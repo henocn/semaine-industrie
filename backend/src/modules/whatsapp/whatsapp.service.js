@@ -182,7 +182,7 @@ function programmePdfPath() {
   return env.PROGRAMME_PDF_URL || '/uploads/docs/programme-si2026.pdf';
 }
 
-/* Jours officiels (16-22 novembre 2026), alignés sur le site. */
+/* Jours officiels (16-22 novembre 2026), alignés sur la proposition MDPISE. */
 const PROGRAMME_DAYS = [
   {
     n: 16, name: 'Lundi', theme: 'Ouverture',
@@ -190,9 +190,8 @@ const PROGRAMME_DAYS = [
     slots: [
       ['9h00', 'Accueil des invités et de la presse'],
       ['9h30', 'Cérémonie d’ouverture'],
-      ['9h50', 'Film 2020-2025'],
+      ['9h50', 'Film 2020-2025 et vision 2026-2031'],
       ['10h10', 'Remise des premiers labels'],
-      ['10h30', 'Lancement du parcours jeunesse'],
       ['15h00', 'Visite des entreprises de la PIA'],
     ],
   },
@@ -203,7 +202,7 @@ const PROGRAMME_DAYS = [
       ['8h30', 'Visites d’usines, premier créneau'],
       ['10h30', 'Visites d’usines, second créneau'],
       ['9h00', 'HAUQE, Journées de la qualité'],
-      ['14h00', 'Forum des métiers'],
+      ['14h00', 'Forum d’orientation des métiers'],
       ['16h00', 'Ils ont commencé petit'],
     ],
   },
@@ -211,8 +210,8 @@ const PROGRAMME_DAYS = [
     n: 18, name: 'Mercredi', theme: 'Innovation et mise à niveau',
     where: 'Lieu principal',
     slots: [
-      ['9h30', 'INPIT : de la recherche à l’innovation'],
-      ['9h30', 'Vitrine des innovateurs'],
+      ['9h00', 'Accueil des participants'],
+      ['9h30', 'INPIT et vitrine des innovateurs'],
       ['14h00', 'BRMN : mise à niveau'],
     ],
   },
@@ -223,7 +222,7 @@ const PROGRAMME_DAYS = [
       ['9h00', 'Portraits de femmes de l’industrie'],
       ['9h30', 'Panel des métiers au féminin'],
       ['11h00', 'Cercle des industrielles'],
-      ['14h00', 'Visite de la zone franche'],
+      ['14h00', 'Visite d’entreprises de femmes en zone franche'],
     ],
   },
   {
@@ -231,22 +230,21 @@ const PROGRAMME_DAYS = [
     where: 'Lieu principal',
     slots: [
       ['8h30', 'Accueil des invités'],
-      ['9h30', 'Ouverture et message de l’ONUDI'],
-      ['9h45', 'Opportunités d’investissement'],
-      ['10h00', 'Table ronde : produire au Togo'],
-      ['11h30', 'Grand oral des jeunes industriels'],
-      ['12h30', 'Déjeuner-réseau et exposition'],
+      ['9h00', 'Ouverture et message de l’ONUDI'],
+      ['9h20', 'Opportunités d’investissement'],
+      ['9h35', 'Table ronde : produire au Togo'],
+      ['10h50', 'Recommandations et clôture'],
+      ['11h30', 'Inauguration de l’exposition'],
       ['14h00', 'Rencontres d’affaires'],
-      ['17h00', 'Recommandations et clôture'],
+      ['14h00', 'Exposition et guichet Je me lance'],
     ],
   },
   {
     n: 21, name: 'Samedi', theme: 'Exposition, grand public',
     where: 'Lieu principal',
     slots: [
-      ['9h00', 'Ouverture de l’exposition'],
-      ['10h00', 'Atelier Ma première machine'],
-      ['14h00', 'Démonstrations'],
+      ['9h00', 'Ouverture de l’exposition, jeton de vote'],
+      ['14h00', 'Démonstrations et espace enfants'],
       ['16h00', 'Résultat du coup de cœur'],
     ],
   },
