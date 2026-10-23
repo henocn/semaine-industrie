@@ -14,7 +14,7 @@ export function listResources() {
   return apiFetch<GlobalResource[]>('/resources')
 }
 
-/* Envoie un PDF (orga). */
+/* Envoie un fichier (orga). */
 export async function uploadResource(file: File, title: string, isPrimary: boolean) {
   const token = getAccessToken()
   const body = new FormData()
@@ -37,7 +37,7 @@ export async function uploadResource(file: File, title: string, isPrimary: boole
   return json.data
 }
 
-/* Marque une ressource comme PDF principal. */
+/* Marque une ressource comme fichier principal. */
 export function setPrimaryResource(id: string) {
   return apiFetch<GlobalResource>(`/resources/${id}/primary`, { method: 'PATCH' })
 }

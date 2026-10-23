@@ -3,7 +3,7 @@
 const { Router } = require('express');
 const controller = require('./resource.controller');
 const { authenticate, authorize } = require('../../middlewares/auth.middleware');
-const { uploadResourcePdf } = require('../../middlewares/upload.middleware');
+const { uploadResource } = require('../../middlewares/upload.middleware');
 const ApiError = require('../../utils/ApiError');
 
 const router = Router();
@@ -23,7 +23,7 @@ router.post(
   '/',
   authenticate,
   authorize('orga'),
-  withUpload(uploadResourcePdf, controller.create),
+  withUpload(uploadResource, controller.create),
 );
 router.patch('/:id/primary', authenticate, authorize('orga'), controller.setPrimary);
 router.delete('/:id', authenticate, authorize('orga'), controller.remove);

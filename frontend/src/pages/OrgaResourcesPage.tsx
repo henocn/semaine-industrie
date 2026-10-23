@@ -11,7 +11,7 @@ import { OrgaShell } from '../components/layout/OrgaShell'
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
-/* Backoffice : documents partagés, dont le PDF principal de la semaine. */
+/* Backoffice : fichiers partagés, dont la ressource principale de la semaine. */
 export default function OrgaResourcesPage() {
   const [items, setItems] = useState<GlobalResource[]>([])
   const [title, setTitle] = useState('')
@@ -34,7 +34,7 @@ export default function OrgaResourcesPage() {
     void load()
   }, [])
 
-  /* Ajoute un PDF. */
+  /* Ajoute un fichier. */
   async function onAdd(e: FormEvent) {
     e.preventDefault()
     if (!file || !title.trim()) return
@@ -60,7 +60,7 @@ export default function OrgaResourcesPage() {
       <section className="orga-panel mb-6">
         <h2 className="text-[15px] font-semibold text-forest">Ajouter un document</h2>
         <p className="mt-1 text-[13px] text-ink/50">
-          La ressource principale est le PDF envoyé sur WhatsApp pour « Toute la semaine ».
+          La ressource principale est envoyée sur WhatsApp pour « Toute la semaine ».
         </p>
         <form onSubmit={onAdd} className="mt-4 space-y-3">
           <label className="block text-[13px] font-medium text-forest">
@@ -68,10 +68,9 @@ export default function OrgaResourcesPage() {
             <input value={title} onChange={(e) => setTitle(e.target.value)} className={field} maxLength={200} />
           </label>
           <label className="block text-[13px] font-medium text-forest">
-            Fichier PDF
+            Fichier
             <input
               type="file"
-              accept="application/pdf,.pdf"
               className={field}
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />

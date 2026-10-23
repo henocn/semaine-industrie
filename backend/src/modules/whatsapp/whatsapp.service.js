@@ -153,7 +153,30 @@ async function sendTemplate({
   });
 }
 
-/* Envoie un document PDF via URL publique HTTPS. */
+/* Envoie une image via URL publique HTTPS. */
+async function sendImage({ to, link, phoneNumberId, caption }) {
+  const image = { link: String(link) };
+  if (caption) image.caption = String(caption).slice(0, 1024);
+  return graphSend(phoneNumberId, { to, type: 'image', image });
+}
+
+/* Choisit image ou document selon l'extension du fichier. */
+async function sendResourceFile({ to, link, phoneNumberId, caption }) {
+  let filename = 'ressource';
+  try {
+    const base = decodeURIComponent(new URL(link, 'https://semaineindustrie.tg').pathname.split('/').pop() || '');
+    if (base && base !== '.' && base !== '..') filename = base.slice(0, 240);
+  } catch {
+    filename = 'ressource';
+  }
+  const ext = filename.includes('.') ? filename.slice(filename.lastIndexOf('.')).toLowerCase() : '';
+  if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+    return sendImage({ to, link, phoneNumberId, caption });
+  }
+  return sendDocument({ to, link, filename, phoneNumberId, caption });
+}
+
+/* Envoie un document via URL publique HTTPS. */
 async function sendDocument({ to, link, filename, phoneNumberId, caption }) {
   const doc = {
     link: String(link),
@@ -291,7 +314,7 @@ function formatProgrammeDay(day) {
   return lines.join('\n').slice(0, 1000);
 }
 
-/* URL du PDF marqué ressource principale, sinon le pointeur historique. */
+/* URL de la ressource marquée principale. */
 async function primaryProgrammeUrl() {
   try {
     const resourceService = require('../resources/resource.service');
@@ -316,17 +339,16 @@ async function replyProgramme(from, action, phoneNumberId) {
         to: from,
         phoneNumberId,
         body:
-          "Le PDF de la semaine n'est pas encore renseigné comme ressource principale.\n\n" +
+          "La ressource principale n'est pas encore renseignée.\n\n" +
           'Choisissez un jour pour le détail, ou consultez le site.\n' +
           `${SITE()}/programme`,
       });
     }
-    const sent = await sendDocument({
+    const sent = await sendResourceFile({
       to: from,
       phoneNumberId,
       link: absUrl(url),
-      filename: 'Programme-SI2026.pdf',
-      caption: 'PDF officiel',
+      caption: 'Programme de la semaine',
     });
     if (!sent.ok) {
       return sendWithNav({

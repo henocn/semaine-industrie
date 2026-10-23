@@ -32,11 +32,11 @@ async function clearPrimary(exceptId) {
   await GlobalResource.update({ is_primary: false }, { where });
 }
 
-/* Enregistre un PDF et peut le marquer comme ressource principale. */
+/* Enregistre un fichier et peut le marquer comme ressource principale. */
 async function createResource({ title, file, isPrimary }) {
   const name = String(title || '').trim();
   if (!name) throw ApiError.badRequest('Indiquez un titre');
-  if (!file?.filename) throw ApiError.badRequest('Ajoutez un fichier PDF');
+  if (!file?.filename) throw ApiError.badRequest('Ajoutez un fichier');
 
   const fileUrl = `/uploads/docs/${file.filename}`;
   const wantPrimary = isPrimary === true || isPrimary === 'true' || isPrimary === '1' || isPrimary === 'on';
@@ -52,7 +52,7 @@ async function createResource({ title, file, isPrimary }) {
   });
 }
 
-/* Marque une ressource comme PDF principal de la semaine. */
+/* Marque une ressource comme fichier principal de la semaine. */
 async function setPrimary(id) {
   const row = await GlobalResource.findByPk(id);
   if (!row) throw ApiError.notFound('Ressource introuvable');

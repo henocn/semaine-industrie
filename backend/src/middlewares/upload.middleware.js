@@ -46,6 +46,17 @@ function pdfFilter(_req, file, cb) {
   return cb(null, true);
 }
 
+/* Accepte une ressource : image, PDF ou autre fichier, hors exécutables. */
+function resourceFilter(_req, file, cb) {
+  const blocked = new Set([
+    '.exe', '.bat', '.cmd', '.com', '.msi', '.scr', '.ps1',
+    '.js', '.html', '.htm', '.svg', '.php', '.sh', '.dll',
+  ]);
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  if (blocked.has(ext)) return cb(new Error('Ce type de fichier n’est pas accepté'));
+  return cb(null, true);
+}
+
 /* Accepte PDF, Word ou images (kit label). */
 function kitFilter(_req, file, cb) {
   const ext = path.extname(file.originalname).toLowerCase();
@@ -95,8 +106,12 @@ const uploadKitFile = uploadKit.single('kit_file');
 /* Middleware : PDF programme officiel (champ programme_pdf). */
 const uploadProgrammePdf = uploadPdf.single('programme_pdf');
 
-/* Middleware : PDF ressource globale (champ file). */
-const uploadResourcePdf = uploadPdf.single('file');
+/* Middleware : fichier ressource globale (champ file). */
+const uploadResource = multer({
+  storage: pdfStorage,
+  fileFilter: resourceFilter,
+  limits: { fileSize: 15 * 1024 * 1024, files: 1 },
+}).single('file');
 
 const productStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, PRODUCTS_DIR),
@@ -118,7 +133,7 @@ module.exports = {
   uploadLabelPdf,
   uploadKitFile,
   uploadProgrammePdf,
-  uploadResourcePdf,
+  uploadResource,
   uploadProductImage,
   UPLOAD_DIR,
   DOCS_DIR,
