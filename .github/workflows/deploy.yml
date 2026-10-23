@@ -1,0 +1,24 @@
+# Deploy on the VPS via a self-hosted runner (outbound to GitHub only).
+# Never trigger on pull_request — no checkout of untrusted / fork code.
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy on VPS
+    runs-on: [self-hosted, linux, semaine-industrie]
+    timeout-minutes: 30
+    steps:
+      # Production tree only — deploy.sh does its own git fetch/reset in APP_ROOT.
+      # Do not actions/checkout here (keeps the job off untrusted worktrees).
+      - name: Run deploy/deploy.sh
+        run: bash /var/www/semaine-industrie/deploy/deploy.sh
