@@ -18,11 +18,11 @@ module.exports = (sequelize) => {
       },
       organization_name: {
         type: DataTypes.STRING(200),
-        allowNull: false,
+        allowNull: true,
       },
       contact_name: {
         type: DataTypes.STRING(160),
-        allowNull: false,
+        allowNull: true,
       },
       email: {
         type: DataTypes.STRING(180),

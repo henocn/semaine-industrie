@@ -6,13 +6,28 @@ const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const { sendNotifyMail } = require('../../utils/mailer');
 
+/* Vide une chaîne optionnelle. */
+function emptyToNull(value) {
+  if (value == null) return null;
+  const text = String(value).trim();
+  return text || null;
+}
+
 /* Inscription publique d'un participant B2B. */
 async function register(payload) {
   if (!payload.contact_opt_in) {
     throw ApiError.badRequest('Vous devez accepter d\'être contacté par e-mail / WhatsApp');
   }
   const row = await BusinessParticipant.create({
-    ...payload,
+    kind: payload.kind,
+    organization_name: emptyToNull(payload.organization_name),
+    contact_name: emptyToNull(payload.contact_name),
+    email: payload.email,
+    phone: emptyToNull(payload.phone),
+    sector: emptyToNull(payload.sector),
+    offers: emptyToNull(payload.offers),
+    seeks: emptyToNull(payload.seeks),
+    country: emptyToNull(payload.country),
     contact_opt_in: true,
     status: 'pending',
   });
@@ -29,14 +44,14 @@ async function register(payload) {
 async function createByOrga(payload) {
   const row = await BusinessParticipant.create({
     kind: payload.kind,
-    organization_name: payload.organization_name,
-    contact_name: payload.contact_name,
+    organization_name: emptyToNull(payload.organization_name),
+    contact_name: emptyToNull(payload.contact_name),
     email: payload.email,
-    phone: payload.phone || null,
-    sector: payload.sector || null,
-    offers: payload.offers || null,
-    seeks: payload.seeks || null,
-    country: payload.country || null,
+    phone: emptyToNull(payload.phone),
+    sector: emptyToNull(payload.sector),
+    offers: emptyToNull(payload.offers),
+    seeks: emptyToNull(payload.seeks),
+    country: emptyToNull(payload.country),
     contact_opt_in: payload.contact_opt_in !== false,
     status: payload.status === 'pending' ? 'pending' : 'approved',
   });
@@ -100,10 +115,11 @@ async function notifyAttendees(meeting, attendees, { rescheduled = false } = {})
   const day = new Date(meeting.slot_start).toLocaleDateString('fr-FR');
   const slot = `${formatTimeFr(meeting.slot_start)} à ${formatTimeFr(meeting.slot_end)}`;
   const lieu = meeting.location || 'À confirmer';
+  const displayName = (p) => p.contact_name || p.organization_name || p.email || 'Participant';
   const others = (self) =>
     attendees
       .filter((p) => p.id !== self.id)
-      .map((p) => p.contact_name || p.organization_name)
+      .map((p) => displayName(p))
       .join(', ') || 'l\'équipe';
 
   for (const p of attendees) {
@@ -113,7 +129,7 @@ async function notifyAttendees(meeting, attendees, { rescheduled = false } = {})
       ? `RDV reporté : ${day} (${slot})`
       : `RDV confirmé : ${day} (${slot})`;
     const text = [
-      `Bonjour ${p.contact_name},`,
+      `Bonjour ${displayName(p)},`,
       '',
       rescheduled ? 'Rendez-vous reporté' : 'Rendez-vous confirmé',
       `Date : ${day}`,

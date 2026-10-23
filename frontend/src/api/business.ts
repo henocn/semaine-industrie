@@ -3,8 +3,8 @@ import { apiFetch } from './client'
 export type BusinessParticipant = {
   id: string
   kind: 'investisseur' | 'pme' | 'acheteur'
-  organization_name: string
-  contact_name: string
+  organization_name: string | null
+  contact_name: string | null
   email: string
   phone: string | null
   sector: string | null
@@ -13,6 +13,11 @@ export type BusinessParticipant = {
   country: string | null
   status: 'pending' | 'approved' | 'rejected'
   contact_opt_in?: boolean
+}
+
+/* Libellé affichable d'un participant B2B (champs org/contact optionnels). */
+export function businessParticipantLabel(p: Pick<BusinessParticipant, 'contact_name' | 'organization_name' | 'email'>) {
+  return p.contact_name || p.organization_name || p.email || 'Participant'
 }
 
 export type BusinessMeeting = {
@@ -32,8 +37,8 @@ export type BusinessMeeting = {
 /* Inscription publique B2B. */
 export function registerParticipant(payload: {
   kind: string
-  organization_name: string
-  contact_name: string
+  organization_name?: string
+  contact_name?: string
   email: string
   phone?: string
   sector?: string

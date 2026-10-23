@@ -490,12 +490,17 @@ function b2bKindLabel(kind) {
   return 'PME';
 }
 
+/* Libellé affichable d'un participant B2B. */
+function b2bDisplayName(participant) {
+  return participant.contact_name || participant.organization_name || participant.email || 'Participant';
+}
+
 /* Menu espace rencontres d'affaires. */
 function b2bMenuPayload(to, participant) {
   return {
     to,
     body:
-      `${participant.contact_name}\n` +
+      `${b2bDisplayName(participant)}\n` +
       `Statut : ${b2bStatusLabel(participant.status)}\n\n` +
       'Que souhaitez-vous ?',
     buttonLabel: 'Mon espace',
@@ -533,8 +538,8 @@ function formatB2bRecap(p) {
   return [
     'Récapitulatif inscription',
     '',
-    `Contact : ${p.contact_name}`,
-    `Organisation : ${p.organization_name}`,
+    p.contact_name ? `Contact : ${p.contact_name}` : null,
+    p.organization_name ? `Organisation : ${p.organization_name}` : null,
     `Profil : ${b2bKindLabel(p.kind)}`,
     `Statut : ${b2bStatusLabel(p.status)}`,
     `E-mail : ${p.email}`,
@@ -1354,7 +1359,7 @@ async function notifyBusinessMeeting({
     }
     const others = list
       .filter((p) => p.id !== self.id)
-      .map((p) => p.contact_name || p.organization_name)
+      .map((p) => b2bDisplayName(p))
       .join(', ') || 'partenaire';
     const to = toWaRecipient(self.phone);
     if (!to) {
@@ -1362,7 +1367,7 @@ async function notifyBusinessMeeting({
       continue;
     }
     const bodyParams = [
-      self.contact_name || 'partenaire',
+      b2bDisplayName(self),
       others.slice(0, 60) || 'partenaire',
       day,
       slot,
@@ -1374,7 +1379,7 @@ async function notifyBusinessMeeting({
       sent = await sendText({
         to,
         body: [
-          `Bonjour ${self.contact_name || ''},`.trim(),
+          `Bonjour ${b2bDisplayName(self)},`,
           '',
           title,
           `Date : ${day}`,

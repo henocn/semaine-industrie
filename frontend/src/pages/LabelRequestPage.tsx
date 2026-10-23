@@ -6,7 +6,7 @@ import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { Field } from '../components/ui/Field'
 import { SectionHeader } from '../components/ui/SectionHeader'
-import { assertGalleryFiles } from '../lib/imageQuality'
+import { prepareGalleryFiles } from '../lib/imageQuality'
 
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
@@ -36,9 +36,13 @@ export default function LabelRequestPage() {
       setError('Placez le site sur la carte (clic).')
       return
     }
-    setLoading(true)
     const form = e.currentTarget
     const fd = new FormData(form)
+    if (fd.get('contact_opt_in') !== 'on') {
+      setError('Vous devez accepter d\'être contacté pour continuer.')
+      return
+    }
+    setLoading(true)
     const productsRaw = String(fd.get('products') || '')
     const products = productsRaw
       .split(',')
@@ -48,15 +52,14 @@ export default function LabelRequestPage() {
     try {
       const input = form.elements.namedItem('gallery') as HTMLInputElement
       const files = input.files ? Array.from(input.files) : []
-      await assertGalleryFiles(files)
-      const gallery_urls = await uploadLabelGallery(files)
+      const prepared = await prepareGalleryFiles(files)
+      const gallery_urls = await uploadLabelGallery(prepared)
 
       await createLabelRequest({
         structure_name: String(fd.get('structure_name') || ''),
         structure_type: 'entreprise',
         sector: String(fd.get('sector') || '') || undefined,
-        region: String(fd.get('region') || '') || undefined,
-        city: String(fd.get('city') || '') || undefined,
+        address: String(fd.get('address') || '') || undefined,
         contact_email: String(fd.get('contact_email') || ''),
         contact_phone: String(fd.get('contact_phone') || '').trim() || undefined,
         contact_opt_in: fd.get('contact_opt_in') === 'on',
@@ -92,7 +95,7 @@ export default function LabelRequestPage() {
             lead="Industries : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent."
           />
           <p className="mt-4 max-w-md text-[15px] text-ink/70">
-            3 photos nettes (min. 1000×700, max 5 Mo) pour la fiche Industrie.
+            3 photos (JPEG, PNG ou WebP, max 10 Mo) : elles sont compressées si besoin.
           </p>
         </div>
 
@@ -116,11 +119,8 @@ export default function LabelRequestPage() {
             <Field label="Secteur" className="sm:col-span-2">
               <input name="sector" className={field} />
             </Field>
-            <Field label="Région">
-              <input name="region" className={field} />
-            </Field>
-            <Field label="Ville">
-              <input name="city" className={field} />
+            <Field label="Adresse" className="sm:col-span-2">
+              <input name="address" className={field} placeholder="Quartier, ville…" />
             </Field>
 
             <div className="sm:col-span-2">
@@ -139,7 +139,7 @@ export default function LabelRequestPage() {
             <div className="sm:col-span-2">
                 <Field
                   label="3 photos (usine, produits, équipe…)"
-                  hint="Exactement 3 fichiers, JPEG/PNG/WebP, min. 1000×700 px, max 5 Mo chacun"
+                  hint="Exactement 3 fichiers, JPEG/PNG/WebP, max 10 Mo chacun (compression automatique)"
                 >
                   <input
                     required
@@ -168,7 +168,7 @@ export default function LabelRequestPage() {
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <input name="contact_phone" type="tel" autoComplete="tel" className={field} />
             </Field>
-            <Field label="Capacité max. visiteurs" className="sm:col-span-2">
+            <Field label="Capacité max. visiteurs par créneau" className="sm:col-span-2">
               <input type="number" min={1} name="max_visitors" className={field} />
             </Field>
             <Field label="Produits phares" hint="Séparés par des virgules" className="sm:col-span-2">

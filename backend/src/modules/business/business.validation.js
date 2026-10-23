@@ -4,8 +4,8 @@ const Joi = require('joi');
 
 const registerSchema = Joi.object({
   kind: Joi.string().valid('investisseur', 'pme', 'acheteur').required(),
-  organization_name: Joi.string().trim().min(2).max(200).required(),
-  contact_name: Joi.string().trim().min(2).max(160).required(),
+  organization_name: Joi.string().trim().min(2).max(200).allow('', null),
+  contact_name: Joi.string().trim().min(2).max(160).allow('', null),
   email: Joi.string().trim().email().max(180).required(),
   phone: Joi.string().trim().max(40).allow('', null),
   sector: Joi.string().trim().max(120).allow('', null),
@@ -18,8 +18,8 @@ const registerSchema = Joi.object({
 /* Ajout manuel orga (approuvé par défaut). */
 const createParticipantOrgaSchema = Joi.object({
   kind: Joi.string().valid('investisseur', 'pme', 'acheteur').required(),
-  organization_name: Joi.string().trim().min(2).max(200).required(),
-  contact_name: Joi.string().trim().min(2).max(160).required(),
+  organization_name: Joi.string().trim().min(2).max(200).allow('', null),
+  contact_name: Joi.string().trim().min(2).max(160).allow('', null),
   email: Joi.string().trim().email().max(180).required(),
   phone: Joi.string().trim().max(40).allow('', null),
   sector: Joi.string().trim().max(120).allow('', null),

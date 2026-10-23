@@ -26,9 +26,10 @@ const entrepriseOnly = {
 const createRequestSchema = Joi.object({
   structure_name: Joi.string().trim().min(2).max(200).required(),
   structure_type: Joi.string().valid('entreprise', 'ecole').required(),
+  /* Ville / région conservés en base (rétrocompat), le formulaire public envoie address. */
   region: Joi.string().trim().max(120).allow('', null),
   city: Joi.string().trim().max(120).allow('', null),
-  address: Joi.string().trim().allow('', null),
+  address: Joi.string().trim().max(500).allow('', null),
   lat: Joi.number().min(-90).max(90).allow(null),
   lng: Joi.number().min(-180).max(180).allow(null),
   contact_name: Joi.string().trim().max(160).allow('', null),
