@@ -59,7 +59,7 @@ sudo bash deploy/setup.sh
 bash deploy/deploy.sh
 ```
 
-`deploy/deploy.sh` : `flock`, log `/home/deploy/deploy.log`, `reset --hard origin/main`, rebuild, migrations, seed superadmin, PM2, healthcheck (15×2s). En échec : rollback git + rebuild (migrations **non** annulées). Pas de `sudo nginx reload`.
+`deploy/deploy.sh` : `flock`, log `/home/webuser/deploy.log`, `reset --hard origin/main`, rebuild, migrations, seed superadmin, PM2, healthcheck (15×2s), `sudo -n` nginx test/reload. En échec : rollback git + rebuild (migrations **non** annulées). Runner CI sous **webuser**.
 
 Backup Postgres : cron sur `deploy/postgres-backup.sh`.
 

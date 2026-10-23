@@ -19,7 +19,7 @@ BRANCH="${DEPLOY_BRANCH:-main}"
 PM2_APP="${PM2_APP:-industrie-api}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3005/api/v1/health}"
 LOCK="${LOCK:-/tmp/si-deploy.lock}"
-LOG="${LOG:-/home/deploy/deploy.log}"
+LOG="${LOG:-/home/webuser/deploy.log}"
 
 
 # Redirige stdout/stderr vers le journal (et le terminal).
@@ -40,8 +40,16 @@ acquire_lock() {
 }
 
 
+# Reload nginx via sudo -n (commandes exactes autorisées pour webuser).
+reload_nginx() {
+  echo "==> Nginx test + reload (sudo -n)"
+  sudo -n /usr/sbin/nginx -t
+  sudo -n /usr/bin/systemctl reload nginx
+}
+
+
 # Build frontend, install backend, migrate, seed superadmin, restart PM2.
-# Ne touche pas aux fichiers .env. Pas de sudo / nginx reload (dist statique).
+# Ne touche pas aux fichiers .env. Nginx : sudo -n nginx -t + systemctl reload.
 build_and_restart() {
   echo "==> Frontend : npm ci + build"
   cd "$APP_ROOT/frontend"
@@ -75,6 +83,8 @@ build_and_restart() {
     pm2 start deploy/ecosystem.config.cjs --only "$PM2_APP"
   fi
   pm2 save
+
+  reload_nginx
 }
 
 
