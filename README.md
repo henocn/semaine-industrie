@@ -40,6 +40,7 @@ Compte orga démo (après seed local) : `orga@semaine-industrie.tg` / `Orga2026!
 - Domaine : `https://semaineindustrie.tg`
 - Front Nginx : `/var/www/semaine-industrie/frontend/dist`
 - API PM2 : **`industrie-api`** sur le port **3005**
+- CI : push `main` → SSH forced command (`docs/DEPLOY.md`)
 
 ```bash
 # 1) Clone
@@ -58,7 +59,7 @@ sudo bash deploy/setup.sh
 bash deploy/deploy.sh
 ```
 
-`deploy.sh` force l’alignement git (`reset --hard origin/<branche>`), rebuild, migrations, seed du seul superadmin, restart PM2.
+`deploy/deploy.sh` : `flock`, log `/home/deploy/deploy.log`, `reset --hard origin/main`, rebuild, migrations, seed superadmin, PM2, healthcheck (15×2s). En échec : rollback git + rebuild (migrations **non** annulées). Pas de `sudo nginx reload`.
 
 Backup Postgres : cron sur `deploy/postgres-backup.sh`.
 

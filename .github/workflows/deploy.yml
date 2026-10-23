@@ -1,4 +1,5 @@
 # Deploy to VPS on every push to main (and manual runs).
+# SSH with no remote command: the deploy key's forced command runs deploy.sh.
 name: Deploy
 
 on:
@@ -17,18 +18,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          port: ${{ secrets.VPS_PORT }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          # Host key pinning (ssh-keyscan -H host, or content of known_hosts line).
-          known_hosts: ${{ secrets.VPS_KNOWN_HOSTS }}
-          # Forced command on the deploy key should run scripts/deploy.sh;
-          # this invocation is what GitHub Actions expects to fail the job on error.
-          script_stop: true
-          command_timeout: 15m
-          script: |
-            /var/www/semaine-industrie/scripts/deploy.sh
+      - name: SSH (forced command = deploy.sh)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          # No remote command: authorized_keys forced command runs deploy.sh.
+          # Exit status of that script fails this job.
+          ssh -T \
+            -i ~/.ssh/deploy_key \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            -p "${VPS_PORT}" \
+            "${VPS_USER}@${VPS_HOST}"
