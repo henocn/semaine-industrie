@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Déploiement VPS (manuel ou forced command SSH de la clé CI).
+# Déploiement VPS (manuel ou job self-hosted GitHub Actions).
 # Vite build → frontend/dist (Nginx), migrations Sequelize, PM2 industrie-api.
 #
 # Usage :
 #   bash deploy/deploy.sh
-#   # ou forcé : command="/home/deploy/deploy.sh" dans authorized_keys
+#   # CI : .github/workflows/deploy.yml → bash /var/www/semaine-industrie/deploy/deploy.sh
 #
 # Variables : APP_ROOT / DEPLOY_DIR (défaut /var/www/semaine-industrie),
 #             DEPLOY_BRANCH (défaut main), LOG, LOCK

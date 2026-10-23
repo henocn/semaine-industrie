@@ -40,7 +40,7 @@ Compte orga démo (après seed local) : `orga@semaine-industrie.tg` / `Orga2026!
 - Domaine : `https://semaineindustrie.tg`
 - Front Nginx : `/var/www/semaine-industrie/frontend/dist`
 - API PM2 : **`industrie-api`** sur le port **3005**
-- CI : push `main` → SSH forced command (`docs/DEPLOY.md`)
+- CI : push `main` → self-hosted runner (`docs/DEPLOY.md`)
 
 ```bash
 # 1) Clone
