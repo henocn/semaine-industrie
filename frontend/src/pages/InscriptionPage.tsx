@@ -87,7 +87,7 @@ export default function InscriptionPage() {
             <Field label="E-mail">
               <input type="email" name="email" className={field} />
             </Field>
-            <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
+            <Field label="Téléphone" optional hint="De préférence un numéro WhatsApp.">
               <input name="phone" type="tel" autoComplete="tel" className={field} />
             </Field>
             {isSchool && (
