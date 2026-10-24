@@ -7,7 +7,7 @@ const { GlobalResource } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const { DOCS_DIR } = require('../../middlewares/upload.middleware');
 
-/* Liste les ressources, principale en premier. */
+/* Liste les ressources, programme en premier. */
 async function listResources() {
   return GlobalResource.findAll({
     order: [
@@ -17,40 +17,57 @@ async function listResources() {
   });
 }
 
-/* Retourne l'URL de la ressource marquée principale. */
-async function primaryResourceUrl() {
-  const row = await GlobalResource.findOne({
+/* Retourne la ressource marquée programme. */
+async function primaryResource() {
+  return GlobalResource.findOne({
     where: { is_primary: true },
     order: [['updated_at', 'DESC']],
   });
+}
+
+/* Retourne l'URL de la ressource marquée programme. */
+async function primaryResourceUrl() {
+  const row = await primaryResource();
   return row?.file_url || null;
 }
 
-/* Décoche les autres ressources principales. */
+/* Décoche les autres drapeaux programme. */
 async function clearPrimary(exceptId) {
   const where = exceptId ? { id: { [Op.ne]: exceptId } } : {};
   await GlobalResource.update({ is_primary: false }, { where });
 }
 
-/* Enregistre un fichier (colonne is_primary conservée, plus utilisée à la saisie). */
-async function createResource({ title, file }) {
+/* Interprète une case programme (formulaire). */
+function wantsProgramme(value) {
+  return value === true || value === 'true' || value === '1' || value === 'on';
+}
+
+/* Enregistre un fichier ; un seul programme à la fois. */
+async function createResource({ title, file, isPrimary }) {
   const name = String(title || '').trim();
   if (!name) throw ApiError.badRequest('Indiquez un titre');
   if (!file?.filename) throw ApiError.badRequest('Ajoutez un fichier');
 
+  const asProgramme = wantsProgramme(isPrimary);
+  if (asProgramme) await clearPrimary();
+
   return GlobalResource.create({
     title: name.slice(0, 200),
     file_url: `/uploads/docs/${file.filename}`,
-    is_primary: false,
+    is_primary: asProgramme,
   });
 }
 
-/* Marque une ressource comme fichier principal de la semaine. */
-async function setPrimary(id) {
+/* Marque ou retire le drapeau programme (exclusif). */
+async function setPrimary(id, flagged = true) {
   const row = await GlobalResource.findByPk(id);
   if (!row) throw ApiError.notFound('Ressource introuvable');
-  await clearPrimary(id);
-  row.is_primary = true;
+  if (flagged) {
+    await clearPrimary(id);
+    row.is_primary = true;
+  } else {
+    row.is_primary = false;
+  }
   await row.save();
   return row;
 }
@@ -66,21 +83,15 @@ async function removeResource(id) {
       fs.unlinkSync(full);
     }
   }
-  const wasPrimary = row.is_primary;
   await row.destroy();
-  if (wasPrimary) {
-    const next = await GlobalResource.findOne({ order: [['created_at', 'DESC']] });
-    if (next) {
-      next.is_primary = true;
-      await next.save();
-    }
-  }
   return { id, deleted: true };
 }
 
 module.exports = {
   listResources,
+  primaryResource,
   primaryResourceUrl,
+  wantsProgramme,
   createResource,
   setPrimary,
   removeResource,

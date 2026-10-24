@@ -539,54 +539,39 @@ function formatProgrammeDay(day) {
   return lines.join('\n').slice(0, 1000);
 }
 
-/* URL de la ressource marquée principale. */
-async function primaryProgrammeUrl() {
+/* Envoie le fichier programme, ou prévient s'il n'est pas encore là. */
+async function replyProgrammeDocument(from, phoneNumberId) {
+  const missing = "Le programme n'est pas encore disponible. Revenez bientôt.";
+  let row = null;
   try {
-    const resourceService = require('../resources/resource.service');
-    const url = await resourceService.primaryResourceUrl();
-    if (url) return url;
+    row = await resourceService.primaryResource();
   } catch (err) {
-    logger.warn('[whatsapp] ressource principale indisponible', err.message);
+    logger.warn('[whatsapp] programme indisponible', err.message);
   }
-  return null;
+  if (!row?.file_url) {
+    return sendWithMenu({ to: from, phoneNumberId, body: missing });
+  }
+  const sent = await sendDocument({
+    to: from,
+    phoneNumberId,
+    link: absUrl(row.file_url),
+    filename: documentFilename(row.title, row.file_url),
+    caption: row.title,
+  });
+  if (!sent?.ok) {
+    return sendWithMenu({ to: from, phoneNumberId, body: missing });
+  }
+  return sendWithMenu({
+    to: from,
+    phoneNumberId,
+    body: 'Voici le programme.',
+  });
 }
 
-/* Envoie le choix de date, le PDF de la semaine, ou le texte d'un jour. */
+/* Envoie le fichier programme, ou le texte d'un jour. */
 async function replyProgramme(from, action, phoneNumberId) {
-  if (action === 'menu_programme') {
-    return sendList({ ...programmeListPayload(from), phoneNumberId });
-  }
-
-  if (action === 'prog_all') {
-    const url = await primaryProgrammeUrl();
-    if (!url) {
-      return sendWithNav({
-        to: from,
-        phoneNumberId,
-        body:
-          "La ressource principale n'est pas encore renseignée.\n\n" +
-          'Choisissez un jour pour le détail, ou consultez le site.\n' +
-          `${SITE()}/programme`,
-      });
-    }
-    const sent = await sendResourceFile({
-      to: from,
-      phoneNumberId,
-      link: absUrl(url),
-      caption: 'Programme de la semaine',
-    });
-    if (!sent.ok) {
-      return sendWithNav({
-        to: from,
-        phoneNumberId,
-        body: `Le PDF n'a pas pu être envoyé.\n${SITE()}/programme`,
-      });
-    }
-    return sendWithNav({
-      to: from,
-      phoneNumberId,
-      body: 'Le PDF est envoyé.',
-    });
+  if (action === 'menu_programme' || action === 'prog_all') {
+    return replyProgrammeDocument(from, phoneNumberId);
   }
 
   const day = PROGRAMME_DAYS.find((d) => action === `prog_${d.n}`);

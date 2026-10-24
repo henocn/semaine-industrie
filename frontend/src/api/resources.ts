@@ -15,11 +15,12 @@ export function listResources() {
 }
 
 /* Envoie un fichier (orga). */
-export async function uploadResource(file: File, title: string) {
+export async function uploadResource(file: File, title: string, asProgramme = false) {
   const token = getAccessToken()
   const body = new FormData()
   body.append('file', file)
   body.append('title', title)
+  body.append('is_primary', asProgramme ? '1' : '0')
   const res = await fetch(`${API_BASE}/resources`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -34,6 +35,14 @@ export async function uploadResource(file: File, title: string) {
     throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
   }
   return json.data
+}
+
+/* Marque ou retire le fichier programme (un seul à la fois). */
+export function setProgrammeResource(id: string, flagged: boolean) {
+  return apiFetch<GlobalResource>(`/resources/${id}/primary`, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_primary: flagged }),
+  })
 }
 
 /* Supprime une ressource. */
