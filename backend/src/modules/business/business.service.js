@@ -2,6 +2,7 @@
 
 const { Op } = require('sequelize');
 const { BusinessParticipant, BusinessMeeting } = require('../../models');
+const trackingService = require('../tracking/tracking.service');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const { sendNotifyMail } = require('../../utils/mailer');
@@ -54,6 +55,7 @@ async function createByOrga(payload) {
     country: emptyToNull(payload.country),
     contact_opt_in: payload.contact_opt_in !== false,
     status: payload.status === 'pending' ? 'pending' : 'approved',
+    tracking_code: payload.status === 'pending' ? null : await trackingService.nextCode('AF'),
   });
   await notifyN8n('business.participant_registered', {
     id: row.id,
@@ -79,6 +81,9 @@ async function reviewParticipant(id, status) {
   if (!row) throw ApiError.notFound('Participant introuvable');
   if (row.status !== 'pending') throw ApiError.conflict('Déjà traité');
   row.status = status;
+  if (status === 'approved' && !row.tracking_code) {
+    row.tracking_code = await trackingService.nextCode('AF');
+  }
   await row.save();
   await notifyN8n('business.participant_reviewed', {
     id: row.id,

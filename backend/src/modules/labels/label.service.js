@@ -6,6 +6,7 @@ const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
 const { LabelRequest, Organization, VisitBooking, sequelize } = require('../../models');
+const trackingService = require('../tracking/tracking.service');
 const engagementService = require('../engagement/engagement.service');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
@@ -37,16 +38,10 @@ async function uniqueSlug(baseName, transaction) {
   return slug;
 }
 
-/* Génère un code label court unique. */
-async function uniqueLabelCode(transaction) {
-  const year = new Date().getFullYear().toString().slice(-2);
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const n = Math.floor(1000 + Math.random() * 9000);
-    const code = `SI${year}-${n}`;
-    const exists = await Organization.findOne({ where: { label_code: code }, transaction });
-    if (!exists) return code;
-  }
-  throw ApiError.internal('Impossible de générer un code label');
+/* Génère le prochain code label du groupe (IN industrie, EC école). */
+async function uniqueLabelCode(structureType, transaction) {
+  const prefix = trackingService.prefixFor(structureType === 'ecole' ? 'ecole' : 'industrie');
+  return trackingService.nextCode(prefix, transaction);
 }
 
 /* Normalise les champs selon le type (école / industrie). */
@@ -386,7 +381,7 @@ async function reviewRequest(id, { status, review_note, label_document_url, kit_
     }
 
     const slug = await uniqueSlug(request.structure_name, transaction);
-    const label_code = await uniqueLabelCode(transaction);
+    const label_code = await uniqueLabelCode(request.structure_type, transaction);
 
     const organization = await Organization.create(
       {
@@ -478,19 +473,12 @@ async function listPublicIndustries() {
 
 /* Vérifie un code de suivi et renvoie les liens de téléchargement. */
 async function verifyTrackingCode(rawCode) {
-  const code = String(rawCode || '')
-    .trim()
-    .toUpperCase();
-  if (!/^SI\d{2}-\d{4}$/.test(code)) {
+  const code = trackingService.normalizeCode(rawCode);
+  if (!trackingService.isKnownCodeShape(code)) {
     throw ApiError.badRequest('Code de suivi invalide');
   }
-  const org = await Organization.findOne({
-    where: {
-      label_code: code,
-      label_status: 'approved',
-      is_active: true,
-    },
-  });
+  const found = await trackingService.findByCode(code);
+  const org = found?.kind === 'organization' ? found.organization : null;
   if (!org) throw ApiError.notFound('Code de suivi introuvable');
   const kit = normalizeKitFiles(org);
   const primary = primaryKitUrl(kit);

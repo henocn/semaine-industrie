@@ -13,6 +13,7 @@ export type BusinessParticipant = {
   country: string | null
   status: 'pending' | 'approved' | 'rejected'
   contact_opt_in?: boolean
+  tracking_code?: string | null
 }
 
 /* Libellé affichable d'un participant B2B (champs org/contact optionnels). */

@@ -84,6 +84,11 @@ module.exports = (sequelize) => {
         allowNull: true,
         unique: true,
       },
+      legacy_code: {
+        type: DataTypes.STRING(40),
+        allowNull: true,
+        unique: true,
+      },
       label_document_url: {
         type: DataTypes.STRING(500),
         allowNull: true,

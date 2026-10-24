@@ -1,19 +1,15 @@
 'use strict';
 
-const crypto = require('crypto');
 const QRCode = require('qrcode');
 const { Passport, PassportVisit, Organization } = require('../../models');
+const trackingService = require('../tracking/tracking.service');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 
-/* Génère un code passeport court unique. */
-async function uniqueCode() {
-  for (let i = 0; i < 20; i += 1) {
-    const code = `P${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
-    const exists = await Passport.findOne({ where: { code } });
-    if (!exists) return code;
-  }
-  throw ApiError.internal('Impossible de générer un code passeport');
+/* Génère le prochain code passeport du groupe (EC école, PA particulier). */
+async function uniqueCode(kind, transaction) {
+  const prefix = trackingService.prefixFor(kind === 'group' ? 'group' : 'individual');
+  return trackingService.nextCode(prefix, transaction);
 }
 
 /* Enrichit un passeport avec URL publique + QR. */
@@ -58,7 +54,7 @@ async function createGroup({
       return withQr(existing);
     }
 
-    const code = await uniqueCode();
+    const code = await uniqueCode('group');
     const passport = await Passport.create({
       code,
       kind: 'group',
@@ -73,7 +69,7 @@ async function createGroup({
 
   if (!school_name) throw ApiError.badRequest('École requise pour un passeport de groupe');
 
-  const code = await uniqueCode();
+  const code = await uniqueCode('group');
   const passport = await Passport.create({
     code,
     kind: 'group',
@@ -91,7 +87,7 @@ async function createBatch({ count = 10, school_name, class_label } = {}) {
   const created = [];
 
   for (let i = 0; i < n; i += 1) {
-    const code = await uniqueCode();
+    const code = await uniqueCode('individual');
     const passport = await Passport.create({
       code,
       kind: 'individual',
@@ -108,7 +104,7 @@ async function createBatch({ count = 10, school_name, class_label } = {}) {
 async function createIndividual({ holder_name } = {}) {
   const name = String(holder_name || '').trim();
   if (!name) throw ApiError.badRequest('Nom requis');
-  const code = await uniqueCode();
+  const code = await uniqueCode('individual');
   const passport = await Passport.create({
     code,
     kind: 'individual',
@@ -119,8 +115,10 @@ async function createIndividual({ holder_name } = {}) {
 
 /* Fiche publique d'un passeport. */
 async function getByCode(code) {
+  const found = await trackingService.findByCode(code);
+  if (found?.kind !== 'passport') throw ApiError.notFound('Passeport introuvable');
   const passport = await Passport.findOne({
-    where: { code: String(code).toUpperCase(), is_active: true },
+    where: { id: found.passport.id, is_active: true },
     include: [{
       model: PassportVisit,
       as: 'visits',
@@ -135,9 +133,8 @@ async function getByCode(code) {
 
 /* Enregistre un tampon pour un site (un seul par site, valable pour tout le groupe). */
 async function scanVisit({ code, organization_id, scanned_by }) {
-  const passport = await Passport.findOne({
-    where: { code: String(code).toUpperCase(), is_active: true },
-  });
+  const found = await trackingService.findByCode(code);
+  const passport = found?.kind === 'passport' ? found.passport : null;
   if (!passport) throw ApiError.notFound('Passeport introuvable');
 
   const org = await Organization.findOne({

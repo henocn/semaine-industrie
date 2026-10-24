@@ -9,6 +9,7 @@ const {
   BusinessParticipant,
   BusinessMeeting,
 } = require('../../models');
+const trackingService = require('../tracking/tracking.service');
 
 const GRAPH_BASE = 'https://graph.facebook.com/v21.0';
 const SITE = () => String(env.PUBLIC_APP_URL || 'https://semaineindustrie.tg').replace(/\/$/, '');
@@ -396,9 +397,9 @@ function espaceMenuPayload(to) {
 /* Demande le code pour le label, l'e-mail pour les rencontres. */
 function askIdent(intent) {
   if (intent === 'b2b') {
-    return "Rencontres d'affaires\n\nEnvoyez l'e-mail utilisé à l'inscription.";
+    return "Rencontres d'affaires\n\nEnvoyez l'e-mail d'inscription ou votre code (exemple : AF-2001).";
   }
-  return 'Suivi de label\n\nEnvoyez votre code de suivi (exemple : SI26-1234).';
+  return 'Suivi de label\n\nEnvoyez votre code de suivi (exemple : IN-2001).';
 }
 
 /* Envoie un menu liste WhatsApp. */
@@ -542,6 +543,7 @@ function formatB2bRecap(p) {
     p.organization_name ? `Organisation : ${p.organization_name}` : null,
     `Profil : ${b2bKindLabel(p.kind)}`,
     `Statut : ${b2bStatusLabel(p.status)}`,
+    p.tracking_code ? `Code de suivi : ${p.tracking_code}` : null,
     `E-mail : ${p.email}`,
     p.phone ? `Téléphone : ${p.phone}` : null,
     p.sector ? `Secteur : ${p.sector}` : null,
@@ -646,23 +648,39 @@ function normalize(text) {
     .replace(/\s+/g, ' ');
 }
 
-/* Détecte un code de suivi du type SI26-1234. */
+/* Détecte un code de suivi actuel ou ancien. */
 function extractLabelCode(text) {
-  const m = String(text || '')
-    .toUpperCase()
-    .match(/\bSI\d{2}-\d{4}\b/);
-  return m ? m[0] : null;
+  return trackingService.extractCode(text);
 }
 
-/* Charge une organisation labellisée par code. */
+/* Charge une organisation labellisée par code actuel ou ancien. */
 async function findOrgByCode(code) {
-  if (!code) return null;
-  return Organization.findOne({
-    where: {
-      label_code: String(code).toUpperCase(),
-      label_status: 'approved',
-      is_active: true,
-    },
+  const found = await trackingService.findByCode(code);
+  return found?.kind === 'organization' ? found.organization : null;
+}
+
+/* Ouvre le bon espace WhatsApp selon le type de code. */
+async function openByTrackingCode(from, raw, phoneNumberId) {
+  const found = await trackingService.findByCode(raw);
+  if (!found) return null;
+  if (found.kind === 'organization') return replySuiviMenu(from, found.organization, phoneNumberId);
+  if (found.kind === 'business') return replyB2bMenu(from, found.participant, phoneNumberId);
+  return replyPassportRecap(from, found.passport, phoneNumberId);
+}
+
+/* Récap passeport école / particulier. */
+async function replyPassportRecap(from, passport, phoneNumberId) {
+  const url = `${SITE()}/passeport/${passport.code}`;
+  return sendWithNav({
+    to: from,
+    phoneNumberId,
+    body: [
+      'Votre inscription',
+      '',
+      passport.holder_name || passport.school_name || 'Participant',
+      `Code de suivi : ${passport.code}`,
+      `Passeport : ${url}`,
+    ].join('\n'),
   });
 }
 
@@ -894,7 +912,7 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
       return sendText({
         to: from,
         phoneNumberId,
-        body: 'Entrez le nouveau code de suivi (ex. SI26-1234).',
+        body: 'Entrez le nouveau code de suivi (ex. IN-2001).',
       });
     case 'suivi_recap':
     case 'suivi_label_pdf':
@@ -962,19 +980,23 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
   }
 }
 
-/* Ouvre le suivi label (code) ou les rencontres (e-mail). */
+/* Ouvre le suivi label (code) ou les rencontres (e-mail ou code AF). */
 async function resolveIdent(from, text, phoneNumberId, intent) {
   const email = extractEmail(text);
-  const code = extractLabelCode(text);
+  const code = extractLabelCode(text)
+    || (trackingService.isKnownCodeShape(text) ? trackingService.normalizeCode(text) : null);
+
+  if (code) {
+    const opened = await openByTrackingCode(from, code, phoneNumberId);
+    if (opened) return opened;
+  }
 
   if (intent === 'b2b') {
     if (!email) {
       return sendText({
         to: from,
         phoneNumberId,
-        body: code
-          ? "Le code de suivi sert au label.\nPour les rencontres, envoyez l'e-mail d'inscription."
-          : "Envoyez l'e-mail utilisé à l'inscription.\nExemple : nom@entreprise.tg",
+        body: "Envoyez l'e-mail d'inscription ou votre code (exemple : AF-2001).",
       });
     }
     const participant = await findB2bByEmail(email);
@@ -995,21 +1017,17 @@ async function resolveIdent(from, text, phoneNumberId, intent) {
       to: from,
       phoneNumberId,
       body: email
-        ? "L'e-mail sert aux rencontres d'affaires.\nPour le label, envoyez le code de suivi (SI26-1234)."
-        : 'Envoyez votre code de suivi.\nExemple : SI26-1234',
+        ? "L'e-mail sert aux rencontres d'affaires.\nPour le label, envoyez le code de suivi (IN-2001)."
+        : 'Envoyez votre code de suivi.\nExemple : IN-2001',
     });
   }
-  const org = await findOrgByCode(code);
-  if (!org) {
-    return sendText({
-      to: from,
-      phoneNumberId,
-      body:
-        'Code introuvable. Vérifiez le format SI26-1234.\n' +
-        'Ou tapez MENU pour le menu principal.',
-    });
-  }
-  return replySuiviMenu(from, org, phoneNumberId);
+  return sendText({
+    to: from,
+    phoneNumberId,
+    body:
+      'Code introuvable. Vérifiez le format IN-2001, EC-2001, PA-2001 ou AF-2001.\n' +
+      'Ou tapez MENU pour le menu principal.',
+  });
 }
 
 /* Traite un message texte libre. */
@@ -1055,21 +1073,22 @@ async function handleText(from, text, phoneNumberId) {
     return replyB2bMenu(from, participant, phoneNumberId);
   }
 
-  const codeInText = extractLabelCode(text);
+  const codeInText = extractLabelCode(text)
+    || (session.mode === 'await_code' && trackingService.isKnownCodeShape(text)
+      ? trackingService.normalizeCode(text)
+      : null);
   if (codeInText || session.mode === 'await_code') {
-    const code = codeInText || String(text).trim().toUpperCase();
-    const org = await findOrgByCode(code);
-    if (!org) {
-      setSession(from, { mode: 'await_code' });
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body:
-          'Code introuvable. Vérifiez le format SI26-1234.\n' +
-          'Ou tapez MENU pour le menu principal.',
-      });
-    }
-    return replySuiviMenu(from, org, phoneNumberId);
+    const code = codeInText || trackingService.normalizeCode(text);
+    const opened = await openByTrackingCode(from, code, phoneNumberId);
+    if (opened) return opened;
+    setSession(from, { mode: 'await_code' });
+    return sendText({
+      to: from,
+      phoneNumberId,
+      body:
+        'Code introuvable. Vérifiez le format IN-2001, EC-2001, PA-2001 ou AF-2001.\n' +
+        'Ou tapez MENU pour le menu principal.',
+    });
   }
 
   if (t === '1' || t.includes('programme')) return handleInteractive(from, 'menu_programme', phoneNumberId);
@@ -1187,6 +1206,18 @@ async function notifyLabelApproved(organization) {
   return sent;
 }
 
+/* Corps session si si26_dossier_maj n'est pas encore approuvé. */
+function buildParticipationApprovalBody(participation, code) {
+  return [
+    `Bonjour ${participation.name},`,
+    '',
+    'Votre inscription est acceptée.',
+    `Votre code de suivi est ${code}.`,
+    '',
+    'Présentez ce code le jour J.',
+  ].join('\n');
+}
+
 /* Confirme l'inscription d'une école ou d'un particulier. */
 async function notifyParticipationApproved(participation) {
   const to = toWaRecipient(participation?.phone);
@@ -1194,11 +1225,20 @@ async function notifyParticipationApproved(participation) {
   if (!to) return { ok: false, reason: 'no_phone' };
   if (!code) return { ok: false, reason: 'no_code' };
 
-  return sendTemplate({
+  let sent = await sendTemplate({
     to,
     name: 'si26_dossier_maj',
     bodyParams: [participation.name, participation.name, code],
   });
+
+  if (!sent.ok) {
+    logger.warn('[whatsapp] template acceptation indisponible, secours session', 'si26_dossier_maj');
+    sent = await sendWithNav({
+      to,
+      body: buildParticipationApprovalBody(participation, code),
+    });
+  }
+  return sent;
 }
 
 /* Rappel du code de suivi, en message de session. */
@@ -1269,13 +1309,27 @@ function formatSlotFr(start, end) {
   return `${a.toLocaleTimeString('fr-FR', opts)} à ${b.toLocaleTimeString('fr-FR', opts)}`;
 }
 
+/* Formate deux heures de visite en « 09:00 à 11:00 ». */
+function formatVisitHours(start, end) {
+  const toHm = (value) => {
+    const raw = String(value || '').trim();
+    const match = raw.match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return raw;
+    return `${String(match[1]).padStart(2, '0')}:${match[2]}`;
+  };
+  const from = toHm(start);
+  const to = toHm(end);
+  if (from && to) return `${from} à ${to}`;
+  return from || to || '-';
+}
+
 /* Notifie école + site quand une visite est programmée (label accepté). */
 async function notifyVisitScheduled({ school, site, visitDay, visitStart, visitEnd }) {
   const day =
     typeof visitDay === 'string' && visitDay.includes('-')
       ? visitDay.split('-').reverse().join('/')
       : String(visitDay || '-');
-  const slot = `${visitStart || ''}-${visitEnd || ''}`.replace(/^-|-$/g, '') || '-';
+  const slot = formatVisitHours(visitStart, visitEnd);
   const targets = [
     {
       org: school,
@@ -1345,7 +1399,7 @@ async function notifyBusinessMeeting({
   const day = formatDayFr(meeting.slot_start);
   const slot = formatSlotFr(meeting.slot_start, meeting.slot_end);
   const lieu = meeting.location || 'À confirmer';
-  const templateName = 'si26_rdv_fixe';
+  const templateName = rescheduled ? 'si26_rdv_reporte2' : 'si26_rdv_fixe';
 
   const results = [];
   for (const self of list) {
@@ -1362,27 +1416,38 @@ async function notifyBusinessMeeting({
       results.push({ ok: false, reason: 'no_phone', email: self.email });
       continue;
     }
-    const bodyParams = [
-      b2bDisplayName(self),
-      day,
-      slot,
-      others.slice(0, 60) || 'partenaire',
-      lieu.slice(0, 60),
-    ];
+    const bodyParams = rescheduled
+      ? [b2bDisplayName(self), day, slot, lieu.slice(0, 60)]
+      : [
+        b2bDisplayName(self),
+        day,
+        slot,
+        others.slice(0, 60) || 'partenaire',
+        lieu.slice(0, 60),
+      ];
     let sent = await sendTemplate({ to, name: templateName, bodyParams });
     if (!sent.ok) {
-      const title = rescheduled ? 'Rendez-vous reporté' : 'Rendez-vous confirmé';
-      sent = await sendText({
-        to,
-        body: [
+      const fallback = rescheduled
+        ? [
           `Bonjour ${b2bDisplayName(self)},`,
           '',
-          title,
+          'Rendez-vous reporté',
+          `Date : ${day}`,
+          `Horaire : ${slot}`,
+          `Lieu : ${lieu}`,
+        ]
+        : [
+          `Bonjour ${b2bDisplayName(self)},`,
+          '',
+          'Rendez-vous confirmé',
           `Date : ${day}`,
           `Horaire : ${slot}`,
           `Lieu : ${lieu}`,
           `Avec : ${others}`,
-        ].join('\n'),
+        ];
+      sent = await sendText({
+        to,
+        body: fallback.join('\n'),
       });
     }
     results.push(sent);
