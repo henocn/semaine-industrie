@@ -1,7 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { VisitBooking, Organization } = require('../../models');
+const { VisitBooking, Organization, Passport } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const passportService = require('../passports/passport.service');
@@ -133,6 +133,25 @@ async function createSingleBooking(payload) {
   return getBookingById(booking.id);
 }
 
+/* Ajoute le passage (OUI si le passeport groupe de l'école a été scanné). */
+async function attachPassage(rows) {
+  const list = (Array.isArray(rows) ? rows : [rows]).filter(Boolean);
+  const schoolIds = [...new Set(list.map((row) => row.school_organization_id || row.school?.id).filter(Boolean))];
+  const passports = schoolIds.length
+    ? await Passport.findAll({
+      where: { school_organization_id: schoolIds, kind: 'group', is_active: true },
+      attributes: ['school_organization_id', 'passed_at'],
+    })
+    : [];
+  const passed = new Set(passports.filter((p) => p.passed_at).map((p) => p.school_organization_id));
+  return list.map((row) => {
+    const json = typeof row.toJSON === 'function' ? row.toJSON() : { ...row };
+    const schoolId = json.school_organization_id || json.school?.id;
+    json.passage = Boolean(schoolId && passed.has(schoolId));
+    return json;
+  });
+}
+
 /* Détail réservation avec site + école. */
 async function getBookingById(id) {
   const row = await VisitBooking.findByPk(id, {
@@ -150,7 +169,8 @@ async function getBookingById(id) {
     ],
   });
   if (!row) throw ApiError.notFound('Réservation introuvable');
-  return row;
+  const [withPassage] = await attachPassage([row]);
+  return withPassage;
 }
 
 /* Met à jour une visite arrangée (orga). */
@@ -228,7 +248,7 @@ async function deleteBooking(id) {
 async function listBookings({ status } = {}) {
   const where = {};
   if (status) where.status = status;
-  return VisitBooking.findAll({
+  const rows = await VisitBooking.findAll({
     where,
     include: [
       { model: Organization, as: 'organization', attributes: ['id', 'name', 'slug', 'city', 'lat', 'lng'] },
@@ -240,6 +260,7 @@ async function listBookings({ status } = {}) {
     ],
     order: [['created_at', 'DESC']],
   });
+  return attachPassage(rows);
 }
 
 /* Organisations labellisées filtrables (sites ou écoles). */

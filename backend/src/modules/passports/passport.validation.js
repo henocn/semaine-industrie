@@ -22,4 +22,9 @@ const scanSchema = Joi.object({
   scanned_by: Joi.string().trim().max(160).allow('', null),
 });
 
-module.exports = { groupSchema, batchSchema, scanSchema };
+const passageSchema = Joi.object({
+  visitor_code: Joi.string().trim().min(4).max(40).required(),
+  industry_code: Joi.string().trim().min(4).max(40).required(),
+});
+
+module.exports = { groupSchema, batchSchema, scanSchema, passageSchema };

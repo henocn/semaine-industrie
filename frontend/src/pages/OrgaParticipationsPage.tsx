@@ -21,6 +21,11 @@ function statusLabel(status: Participation['status']) {
   return 'En attente'
 }
 
+/* Libellé du passage. */
+function passageLabel(item: Participation) {
+  return item.passport?.passed_at ? 'OUI' : 'NON'
+}
+
 /* Classe de ligne selon le statut. */
 function rowClass(status: Participation['status']) {
   if (status === 'approved') return 'orga-row-approved'
@@ -344,13 +349,14 @@ export default function OrgaParticipationsPage() {
               <th>Nom</th>
               <th className="w-40">Contact</th>
               <th className="w-28">Statut</th>
+              <th className="w-24">Passage</th>
               <th className="w-40">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5}>Aucune participation</td>
+                <td colSpan={6}>Aucune participation</td>
               </tr>
             )}
             {filtered.map((item) => {
@@ -368,6 +374,9 @@ export default function OrgaParticipationsPage() {
                     <td className="font-medium text-forest">{item.name}</td>
                     <td>{item.phone || item.email || '…'}</td>
                     <td>{statusLabel(item.status)}</td>
+                    <td className={item.passport?.passed_at ? 'font-semibold text-forest' : 'text-ink/45'}>
+                      {passageLabel(item)}
+                    </td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-1">
                         {item.status !== 'approved' && (
@@ -399,7 +408,7 @@ export default function OrgaParticipationsPage() {
                   </tr>
                   {open && (
                     <tr>
-                      <td colSpan={5} className="bg-white">
+                      <td colSpan={6} className="bg-white">
                         {editingId === item.id ? (
                           <form onSubmit={(e) => void onUpdate(e, item.id)} className="grid gap-3 p-4 sm:grid-cols-2">
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">

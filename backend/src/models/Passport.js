@@ -52,6 +52,10 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: true,
       },
+      passed_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     { tableName: 'passports' },
   );
