@@ -425,6 +425,32 @@ async function sendList({ to, body, buttonLabel, sections, phoneNumberId, header
   return graphSend(phoneNumberId, { to, type: 'interactive', interactive });
 }
 
+/* Message Participer : les trois parcours publics + code de suivi. */
+function participateBody() {
+  const site = SITE();
+  return [
+    "*Participer à la Semaine de l'Industrie*",
+    '',
+    `1️⃣ *Industrie* : demandez le label sur ${site}/label`,
+    `2️⃣ *École, centre de formation ou particulier* : inscrivez vos apprenants sur ${site}/inscription`,
+    `3️⃣ *Investisseur ou entreprise* : réservez une visite d'affaires avec l'API-ZF sur ${site}/affaires`,
+    '',
+    '📩 Vous recevrez un *code de suivi* pour voir où en est votre participation dans « Mon espace ».',
+  ].join('\n');
+}
+
+/* Message Informations : porteur, thème, contacts. */
+function infosBody() {
+  return [
+    '*Informations*',
+    "La Semaine de l'Industrie 2026 est portée par le Ministère délégué chargé de l'Industrie, de la Promotion des investissements et de la Souveraineté économique.",
+    "Thème : « L'industrie à portée de main »",
+    '📞 71 53 53 58',
+    '✉️ infos@semaineindustrie.tg',
+    `🌐 ${SITE()}`,
+  ].join('\n');
+}
+
 /* Menu principal (liste, sans sous-textes). */
 function mainMenuPayload(to) {
   return {
@@ -440,7 +466,7 @@ function mainMenuPayload(to) {
         title: 'Découvrir',
         rows: [
           { id: 'menu_programme', title: 'Programme' },
-          { id: 'menu_label', title: 'Demander le label' },
+          { id: 'menu_label', title: 'Participer à la semaine' },
           { id: 'menu_infos', title: 'Informations' },
         ],
       },
@@ -842,6 +868,8 @@ function resolveActionId(id, title) {
   const t = normalize(title || id);
   if (t.includes('rencontre') || t.includes('affaire') || t.includes('b2b')) return 'menu_b2b';
   if (t.includes('espace') || t.includes('suivi') || t.includes('mon suivi')) return 'menu_suivi';
+  if (t.includes('participer') || t.includes('demander le label') || t === 'label') return 'menu_label';
+  if (t.includes('information')) return 'menu_infos';
   if (t === 'menu' || t.startsWith('menu')) return 'menu_home';
   return id;
 }
@@ -858,22 +886,18 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
     case 'prog_all':
       return replyProgramme(from, action, phoneNumberId);
     case 'menu_label':
-      return sendWithNav({
+      return sendButtons({
         to: from,
         phoneNumberId,
-        body:
-          `Demander le label\n\n${SITE()}/label\n\n` +
-          'Après acceptation, vous recevez un code de suivi privé.',
+        body: participateBody(),
+        buttons: [{ id: 'menu_home', title: 'Menu' }],
       });
     case 'menu_infos':
-      return sendWithNav({
+      return sendButtons({
         to: from,
         phoneNumberId,
-        body:
-          'Informations\n\n' +
-          'Email : infos@semaineindustrie.tg\n' +
-          `Site : ${SITE()}\n` +
-          'Contact : 70 00 00 00',
+        body: infosBody(),
+        buttons: [{ id: 'menu_home', title: 'Menu' }],
       });
     case 'menu_ressources':
       if (session.orgId && session.labelCode) {
@@ -1098,7 +1122,7 @@ async function handleText(from, text, phoneNumberId) {
   }
 
   if (t === '1' || t.includes('programme')) return handleInteractive(from, 'menu_programme', phoneNumberId);
-  if (t === '2' || t.includes('label')) return handleInteractive(from, 'menu_label', phoneNumberId);
+  if (t === '2' || t.includes('label') || t.includes('participer')) return handleInteractive(from, 'menu_label', phoneNumberId);
   if (t.includes('rencontre') || t.includes('affaire') || t.includes('b2b')) {
     return handleInteractive(from, 'menu_b2b', phoneNumberId);
   }
