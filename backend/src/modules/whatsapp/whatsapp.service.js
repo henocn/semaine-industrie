@@ -1399,7 +1399,7 @@ async function notifyBusinessMeeting({
   const day = formatDayFr(meeting.slot_start);
   const slot = formatSlotFr(meeting.slot_start, meeting.slot_end);
   const lieu = meeting.location || 'À confirmer';
-  const templateName = rescheduled ? 'si26_rdv_reporte' : 'si26_rdv_fixe';
+  const templateName = rescheduled ? 'si26_rdv_reporte2' : 'si26_rdv_fixe';
 
   const results = [];
   for (const self of list) {
