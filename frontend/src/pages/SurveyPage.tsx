@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { CalendarDays, Check, Clock, Lightbulb, Lock, MapPin, Ticket } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { Check, Clock, Lock, Ticket } from 'lucide-react'
 import {
   getSurveyQuestions,
   submitSurvey,
@@ -109,9 +109,8 @@ function SurveyFlow({
   const [answers, setAnswers] = useState<Record<string, SurveyAnswerValue>>(
     () => readStore<Record<string, SurveyAnswerValue>>(draftKey) || {},
   )
-  const [alreadyDone, setAlreadyDone] = useState(() => Boolean(readStore<boolean>(doneKey)))
   /* Déjà répondu sur cet appareil : on affiche directement le remerciement. */
-  const [screen, setScreen] = useState<Screen>(() => (alreadyDone ? 'sent' : 'intro'))
+  const [screen, setScreen] = useState<Screen>(() => (readStore<boolean>(doneKey) ? 'sent' : 'intro'))
   const [justSent, setJustSent] = useState(false)
   const [afterDone] = useState(() => Boolean(readStore<boolean>(`survey-done:after:${code}`)))
   const [step, setStep] = useState(0)
@@ -225,7 +224,6 @@ function SurveyFlow({
       }
       writeStore(draftKey, null)
       writeStore(doneKey, true)
-      setAlreadyDone(true)
       setJustSent(true)
       setScreen('sent')
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -308,13 +306,6 @@ function SurveyFlow({
               )}
             </ul>
 
-            {alreadyDone && (
-              <p className="mt-6 border-l-4 border-sun bg-sage px-4 py-3 text-[14px] text-ink/80">
-                Vous avez déjà répondu au questionnaire « {phaseInfo.title.toLowerCase()} » sur cet appareil. Vous pouvez
-                répondre à nouveau si une autre personne utilise ce téléphone.
-              </p>
-            )}
-
             <div className="mt-8">
               <Button onClick={start} withArrow>
                 {answeredCount > 0 && answeredCount < total ? `Reprendre (${answeredCount}/${total})` : 'Commencer'}
@@ -340,29 +331,6 @@ function SurveyFlow({
                   <Button variant="outline" to={afterHref}>Répondre après la visite</Button>
                 </div>
               )}
-            </div>
-            {!justSent && (
-              <p className="mt-4 text-center text-[13px] text-ink/60">
-                Une autre personne utilise ce téléphone ?{' '}
-                <button type="button" className="font-semibold text-forest underline underline-offset-2" onClick={() => setScreen('intro')}>
-                  Répondre à nouveau
-                </button>
-              </p>
-            )}
-
-            <p className="mt-8 text-[14px] font-semibold text-forest">Et maintenant ?</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              {[
-                { to: '/vue-par-vous', label: 'Jouer', lead: "L'industrie, vue par vous !", icon: Lightbulb },
-                { to: '/carte', label: 'Carte', lead: 'Les usines ouvertes', icon: MapPin },
-                { to: '/programme', label: 'Programme', lead: 'Les temps forts de la semaine', icon: CalendarDays },
-              ].map(({ to, label, lead, icon: Icon }) => (
-                <Link key={to} to={to} className="border border-forest/30 bg-white p-4 transition-colors hover:bg-sage">
-                  <Icon className="h-5 w-5 text-energy" aria-hidden />
-                  <span className="mt-2 block text-[15px] font-semibold text-forest">{label}</span>
-                  <span className="block text-[13px] text-ink/65">{lead}</span>
-                </Link>
-              ))}
             </div>
           </div>
         ) : current ? (
