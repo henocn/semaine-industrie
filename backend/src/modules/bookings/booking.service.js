@@ -6,8 +6,27 @@ const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const passportService = require('../passports/passport.service');
 
-/* Crée un arrangement de visite (orga) à partir du site et de l'école. */
+/* Crée une ou plusieurs visites (même site / date / heures). */
 async function createBooking(payload) {
+  const schoolIds = uniqueSchoolIds(payload);
+  if (!schoolIds.length) throw ApiError.badRequest('Choisissez au moins un établissement');
+  const created = [];
+  for (const schoolId of schoolIds) {
+    created.push(await createSingleBooking({ ...payload, school_organization_id: schoolId }));
+  }
+  return created.length === 1 ? created[0] : created;
+}
+
+/* Identifiants d'écoles uniques depuis le payload. */
+function uniqueSchoolIds(payload) {
+  const raw = Array.isArray(payload.school_organization_ids) && payload.school_organization_ids.length
+    ? payload.school_organization_ids
+    : [payload.school_organization_id];
+  return [...new Set(raw.map((id) => String(id || '').trim()).filter(Boolean))];
+}
+
+/* Crée un arrangement de visite (orga) à partir du site et de l'école. */
+async function createSingleBooking(payload) {
   const site = await Organization.findOne({
     where: {
       id: payload.organization_id,
@@ -17,9 +36,6 @@ async function createBooking(payload) {
     },
   });
   if (!site) throw ApiError.notFound('Site industriel introuvable ou non labellisé');
-  if (site.lat == null || site.lng == null) {
-    throw ApiError.badRequest('Ce site n’a pas de position carte — ajoutez lat/lng via Demandes label → Modifier');
-  }
 
   const school = await Organization.findOne({
     where: {
@@ -34,11 +50,9 @@ async function createBooking(payload) {
     throw ApiError.badRequest('Cet établissement n’a pas d’e-mail de contact');
   }
 
-  /* Créneau libre : l'orga arrange le rendez-vous. */
-  const headcount = Number(payload.headcount || school.max_visitors || 0);
-  if (!Number.isFinite(headcount) || headcount < 1) {
-    throw ApiError.badRequest('Effectif invalide (renseignez l’estimation élèves de l’école)');
-  }
+  /* Effectif conservé en base, plus exigé à la saisie. */
+  const rawHeadcount = Number(payload.headcount || school.max_visitors || 1);
+  const headcount = Number.isFinite(rawHeadcount) && rawHeadcount >= 1 ? rawHeadcount : 1;
 
   if (site.max_visitors) {
     const used = await VisitBooking.sum('headcount', {
@@ -147,9 +161,6 @@ async function updateBooking(id, payload) {
     },
   });
   if (!site) throw ApiError.notFound('Site industriel introuvable ou non labellisé');
-  if (site.lat == null || site.lng == null) {
-    throw ApiError.badRequest('Ce site n’a pas de position carte — ajoutez lat/lng via Demandes label → Modifier');
-  }
 
   const school = await Organization.findOne({
     where: {
@@ -164,10 +175,8 @@ async function updateBooking(id, payload) {
     throw ApiError.badRequest('Cet établissement n’a pas d’e-mail de contact');
   }
 
-  const headcount = Number(payload.headcount || school.max_visitors || 0);
-  if (!Number.isFinite(headcount) || headcount < 1) {
-    throw ApiError.badRequest('Effectif invalide');
-  }
+  const rawHeadcount = Number(payload.headcount || school.max_visitors || existing.headcount || 1);
+  const headcount = Number.isFinite(rawHeadcount) && rawHeadcount >= 1 ? rawHeadcount : 1;
 
   if (site.max_visitors) {
     const used = await VisitBooking.sum('headcount', {
@@ -235,11 +244,6 @@ async function listBookings({ status } = {}) {
 async function listBookableSites({ type } = {}) {
   const where = { label_status: 'approved', is_active: true };
   if (type === 'entreprise' || type === 'ecole') where.type = type;
-  /* Sites visite : uniquement ceux placés sur la carte. */
-  if (type === 'entreprise') {
-    where.lat = { [Op.ne]: null };
-    where.lng = { [Op.ne]: null };
-  }
 
   return Organization.findAll({
     where,

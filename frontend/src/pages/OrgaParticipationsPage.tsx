@@ -10,6 +10,7 @@ import {
   type Participation,
   type ParticipationKind,
 } from '../api/participations'
+import { EntryResourcesPanel } from '../components/EntryResourcesPanel'
 import { OrgaShell } from '../components/layout/OrgaShell'
 
 const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -458,6 +459,11 @@ export default function OrgaParticipationsPage() {
                               <button type="button" className="orga-btn" disabled={busy} onClick={() => void onApprove(item.id)}>
                                 Créer le QR
                               </button>
+                            )}
+                            {shown.status === 'approved' && (
+                              <div className="w-full">
+                                <EntryResourcesPanel kind="participation" entryId={shown.id} />
+                              </div>
                             )}
                           </div>
                         )}

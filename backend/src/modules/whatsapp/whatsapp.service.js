@@ -13,8 +13,11 @@ const {
   BusinessMeeting,
   Passport,
   PassportVisit,
+  Participation,
 } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
+const resourceService = require('../resources/resource.service');
+const entryResourceService = require('../entry-resources/entry-resource.service');
 
 const QR_DIR = path.join(__dirname, '../../../uploads/qr');
 const BTN_SUIVI = 'Suivi participation';
@@ -235,6 +238,91 @@ function absUrl(pathOrUrl) {
   return `${SITE()}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
 }
 
+/* Nom de fichier WhatsApp dérivé du titre. */
+function documentFilename(title, fileUrl, originalName) {
+  const source = originalName || fileUrl || 'document.pdf';
+  let ext = '';
+  try {
+    const base = path.basename(String(source));
+    const idx = base.lastIndexOf('.');
+    if (idx > 0) ext = base.slice(idx).toLowerCase().replace(/[^a-z0-9.]/g, '');
+  } catch {
+    ext = '';
+  }
+  const safe = String(title || 'ressource')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'ressource';
+  return `${safe}${ext || ''}`.slice(0, 240);
+}
+
+/* Envoie des documents titrés ; indique les échecs. */
+async function sendTitledDocuments({ to, phoneNumberId, items, emptyBody, fallbackBody, finish }) {
+  const end = (body) => (finish ? finish(body) : sendWithMenu({ to, phoneNumberId, body }));
+  if (!items.length) return end(emptyBody);
+  let failed = 0;
+  for (const item of items) {
+    const link = absUrl(item.file_url);
+    if (!link) {
+      failed += 1;
+      continue;
+    }
+    const sent = await sendDocument({
+      to,
+      phoneNumberId,
+      link,
+      filename: documentFilename(item.title, item.file_url, item.original_name),
+      caption: item.title,
+    });
+    if (!sent?.ok) failed += 1;
+  }
+  if (failed) return end(fallbackBody);
+  return end(items.length === 1 ? 'Voici votre document.' : 'Voici vos documents.');
+}
+
+/* Ressources jointes à la fiche ouverte. */
+async function resourcesForLinked(linked) {
+  if (linked?.organization) {
+    return entryResourceService.listByEntry('organization', linked.organization.id);
+  }
+  if (linked?.participant) {
+    return entryResourceService.listByEntry('business', linked.participant.id);
+  }
+  if (linked?.passport) {
+    const participation = await Participation.findOne({ where: { passport_id: linked.passport.id } });
+    if (!participation) return [];
+    return entryResourceService.listByEntry('participation', participation.id);
+  }
+  return [];
+}
+
+/* Envoie les fichiers de la fiche, ou prévient s'il n'y en a pas. */
+async function replyEntryResources(from, phoneNumberId, linked) {
+  const items = await resourcesForLinked(linked);
+  return sendTitledDocuments({
+    to: from,
+    phoneNumberId,
+    items,
+    emptyBody: 'Aucune ressource n\'est encore jointe à votre dossier.',
+    fallbackBody: `Certaines ressources n'ont pas pu être envoyées.\nTéléchargez-les ici : ${SITE()}/ressources`,
+    finish: (body) => sendSuiviButtons(from, phoneNumberId, body, linked.kind),
+  });
+}
+
+/* Envoie toutes les ressources globales du back-office. */
+async function replyGlobalResources(from, phoneNumberId) {
+  const items = await resourceService.listResources();
+  return sendTitledDocuments({
+    to: from,
+    phoneNumberId,
+    items,
+    emptyBody: `Aucune ressource pour le moment.\n\n${SITE()}/ressources`,
+    fallbackBody: `Certaines ressources n'ont pas pu être envoyées.\nTéléchargez-les ici : ${SITE()}/ressources`,
+  });
+}
+
 /* Cible encodée dans le QR selon le groupe. */
 function qrPayloadUrl(linked) {
   if (linked.organization?.slug) return `${SITE()}/o/${linked.organization.slug}`;
@@ -264,26 +352,42 @@ async function sendTrackingQr(from, phoneNumberId, linked) {
   });
 }
 
-/* Boutons du sous-menu selon le groupe (max 20 car.). */
-function suiviButtons(kind, { includeRecap = true } = {}) {
+/* Actions du sous-menu selon le groupe (max 20 car. en bouton). */
+function suiviActions(kind, { includeRecap = true } = {}) {
   const third = kind === 'in'
     ? { id: 'suivi_programme', title: 'Programme' }
     : kind === 'af'
       ? { id: 'b2b_rdv', title: 'Mes rendez-vous' }
       : { id: 'suivi_visites', title: 'Mes visites' };
-  const buttons = [];
-  if (includeRecap) buttons.push({ id: 'suivi_recap', title: 'Récapitulatif' });
-  buttons.push({ id: 'suivi_qr', title: 'Mon QR' }, third);
-  return buttons;
+  const actions = [];
+  if (includeRecap) actions.push({ id: 'suivi_recap', title: 'Récapitulatif' });
+  actions.push(
+    { id: 'suivi_qr', title: 'Mon QR' },
+    third,
+    { id: 'suivi_ressources', title: 'Mes ressources' },
+  );
+  return actions;
 }
 
-/* Sous-menu, sans Menu. */
+/* Sous-menu : boutons si 3 actions, liste sinon (limite WhatsApp). */
 async function sendSuiviButtons(from, phoneNumberId, body, kind, options) {
-  return sendButtons({
+  const actions = suiviActions(kind, options);
+  const text = String(body || 'Que souhaitez-vous ?').slice(0, 1024);
+  if (actions.length <= 3) {
+    return sendButtons({
+      to: from,
+      phoneNumberId,
+      body: text,
+      buttons: actions,
+    });
+  }
+  return sendList({
     to: from,
     phoneNumberId,
-    body: String(body || 'Que souhaitez-vous ?').slice(0, 1024),
-    buttons: suiviButtons(kind, options),
+    body: text,
+    buttonLabel: 'Options',
+    header: 'Suivi de participation',
+    sections: [{ title: 'Espace', rows: actions }],
   });
 }
 
@@ -581,6 +685,7 @@ function mainMenuPayload(to) {
           { id: 'menu_programme', title: 'Programme' },
           { id: 'menu_label', title: 'Participer à la semaine' },
           { id: 'menu_infos', title: 'Informations' },
+          { id: 'menu_ressources', title: 'Ressources' },
         ],
       },
       {
@@ -1151,12 +1256,14 @@ function resolveActionId(id, title) {
     'suivi_programme',
     'suivi_label_pdf',
     'suivi_visites',
+    'suivi_ressources',
     'b2b_recap',
     'b2b_rdv',
     'b2b_autre',
   ]);
   if (known.has(id) || String(id).startsWith('prog_')) return id;
   const t = normalize(title || id);
+  if (t.includes('mes ressources')) return 'suivi_ressources';
   if (t.includes('document') || t.includes('ressource')) return 'menu_ressources';
   if (
     t.includes('rencontre')
@@ -1198,11 +1305,7 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         buttons: [{ id: 'menu_home', title: 'Menu' }],
       });
     case 'menu_ressources':
-      return sendWithMenu({
-        to: from,
-        phoneNumberId,
-        body: `Ressources de la Semaine de l'industrie\n\n${SITE()}/ressources`,
-      });
+      return replyGlobalResources(from, phoneNumberId);
     case 'menu_suivi':
     case 'espace_label':
     case 'espace_b2b':
@@ -1216,6 +1319,7 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
     case 'suivi_programme':
     case 'suivi_label_pdf':
     case 'suivi_visites':
+    case 'suivi_ressources':
     case 'b2b_recap':
     case 'b2b_rdv': {
       const linked = await loadLinked(session);
@@ -1229,6 +1333,9 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
           logger.warn('[whatsapp] QR image failed', err.message);
         }
         return sendSuiviButtons(from, phoneNumberId, 'Que souhaitez-vous ?', linked.kind);
+      }
+      if (action === 'suivi_ressources') {
+        return replyEntryResources(from, phoneNumberId, linked);
       }
       if (action === 'suivi_recap' || action === 'b2b_recap') {
         return replyLinkedContent(
@@ -1333,8 +1440,11 @@ async function handleText(from, text, phoneNumberId) {
   if (t === '3' || t.includes('info') || t.includes('contact')) {
     return handleInteractive(from, 'menu_infos', phoneNumberId);
   }
+  if (t === '4' || t.includes('ressource') || t.includes('telecharg') || t.includes('document')) {
+    return handleInteractive(from, 'menu_ressources', phoneNumberId);
+  }
   if (
-    t === '4'
+    t === '5'
     || t.includes('suivi')
     || t.includes('espace')
     || t.includes('code')
@@ -1343,9 +1453,6 @@ async function handleText(from, text, phoneNumberId) {
     || t.includes('b2b')
   ) {
     return handleInteractive(from, 'menu_suivi', phoneNumberId);
-  }
-  if (t.includes('ressource') || t.includes('telecharg') || t.includes('document')) {
-    return handleInteractive(from, 'menu_ressources', phoneNumberId);
   }
 
   return replyMainMenu(from, phoneNumberId);

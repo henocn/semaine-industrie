@@ -13,6 +13,8 @@ export type BookableSite = {
   contact_name?: string | null
   contact_email?: string | null
   contact_phone?: string | null
+  lat?: string | number | null
+  lng?: string | number | null
 }
 
 export type VisitBooking = {
@@ -51,17 +53,20 @@ export function listBookableSites(type?: 'entreprise' | 'ecole') {
   return apiFetch<BookableSite[]>(`/bookings/sites${q}`)
 }
 
-/* Crée un arrangement de visite (orga). */
-export function createBooking(payload: {
+export type CreateBookingPayload = {
   organization_id: string
-  school_organization_id: string
+  school_organization_id?: string
+  school_organization_ids?: string[]
   visit_day: string
   visit_start: string
   visit_end: string
   headcount?: number | null
   notes?: string
-}) {
-  return apiFetch<VisitBooking>('/bookings', {
+}
+
+/* Crée un arrangement de visite (orga). */
+export function createBooking(payload: CreateBookingPayload) {
+  return apiFetch<VisitBooking | VisitBooking[]>('/bookings', {
     method: 'POST',
     body: JSON.stringify(payload),
   })

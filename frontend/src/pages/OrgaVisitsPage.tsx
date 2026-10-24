@@ -80,11 +80,10 @@ export default function OrgaVisitsPage() {
   const [schools, setSchools] = useState<BookableSite[]>([])
   const [siteId, setSiteId] = useState('')
   const [schoolId, setSchoolId] = useState('')
+  const [schoolIds, setSchoolIds] = useState<string[]>([])
   const [visitDay, setVisitDay] = useState('')
   const [visitStart, setVisitStart] = useState('09:00')
   const [visitEnd, setVisitEnd] = useState('12:00')
-  const [headcount, setHeadcount] = useState('')
-  const [notes, setNotes] = useState('')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -97,7 +96,10 @@ export default function OrgaVisitsPage() {
   const [mapError, setMapError] = useState<string | null>(null)
 
   const selectedSite = useMemo(() => sites.find((s) => s.id === siteId) || null, [sites, siteId])
-  const selectedSchool = useMemo(() => schools.find((s) => s.id === schoolId) || null, [schools, schoolId])
+  const addedSchools = useMemo(
+    () => schoolIds.map((id) => schools.find((s) => s.id === id)).filter((s): s is BookableSite => Boolean(s)),
+    [schoolIds, schools],
+  )
   const suggestedSlots = selectedSite?.visit_slots || []
 
   /* Charge listes. */
@@ -153,13 +155,6 @@ export default function OrgaVisitsPage() {
     [mapPoints, mapSelected],
   )
 
-  /* Préremplit l'effectif depuis l'école (création uniquement). */
-  useEffect(() => {
-    if (editingId) return
-    if (selectedSchool?.max_visitors) setHeadcount(String(selectedSchool.max_visitors))
-    else if (!editingId) setHeadcount('')
-  }, [selectedSchool, editingId])
-
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return items
@@ -190,13 +185,23 @@ export default function OrgaVisitsPage() {
   /* Remet le formulaire à vide. */
   function resetForm() {
     setEditingId(null)
-    setNotes('')
+    setSchoolIds([])
     setVisitDay('')
     setVisitStart('09:00')
     setVisitEnd('12:00')
     if (sites[0]) setSiteId(sites[0].id)
     if (schools[0]) setSchoolId(schools[0].id)
-    setHeadcount(schools[0]?.max_visitors ? String(schools[0].max_visitors) : '')
+  }
+
+  /* Ajoute l'école sélectionnée au cadre. */
+  function addSelectedSchool() {
+    if (!schoolId) return
+    setSchoolIds((prev) => (prev.includes(schoolId) ? prev : [...prev, schoolId]))
+  }
+
+  /* Retire une école du cadre. */
+  function removeSchool(id: string) {
+    setSchoolIds((prev) => prev.filter((x) => x !== id))
   }
 
   /* Ouvre le formulaire en création. */
@@ -214,8 +219,7 @@ export default function OrgaVisitsPage() {
     setVisitDay(b.visit_day)
     setVisitStart(b.visit_start.slice(0, 5))
     setVisitEnd(b.visit_end.slice(0, 5))
-    setHeadcount(String(b.headcount))
-    setNotes('')
+    setSchoolIds(b.school?.id ? [b.school.id] : [])
     setShowForm(true)
     setError(null)
   }
@@ -235,7 +239,11 @@ export default function OrgaVisitsPage() {
   /* Enregistre ou met à jour la visite. */
   async function onArrange(e: FormEvent) {
     e.preventDefault()
-    if (!siteId || !schoolId) return
+    const ids = editingId ? (schoolId ? [schoolId] : []) : schoolIds
+    if (!siteId || ids.length === 0) {
+      setError('Ajoutez au moins un établissement avec +.')
+      return
+    }
     if (!isEventWeekDay(visitDay)) {
       setError('Choisissez un jour entre le 16 et le 22 novembre 2026.')
       return
@@ -246,18 +254,24 @@ export default function OrgaVisitsPage() {
     }
     setBusy(true)
     setError(null)
-    const payload = {
-      organization_id: siteId,
-      school_organization_id: schoolId,
-      visit_day: visitDay,
-      visit_start: visitStart,
-      visit_end: visitEnd,
-      headcount: headcount ? Number(headcount) : undefined,
-      notes: notes || undefined,
-    }
     try {
-      if (editingId) await updateBooking(editingId, payload)
-      else await createBooking(payload)
+      if (editingId) {
+        await updateBooking(editingId, {
+          organization_id: siteId,
+          school_organization_id: ids[0],
+          visit_day: visitDay,
+          visit_start: visitStart,
+          visit_end: visitEnd,
+        })
+      } else {
+        await createBooking({
+          organization_id: siteId,
+          school_organization_ids: ids,
+          visit_day: visitDay,
+          visit_start: visitStart,
+          visit_end: visitEnd,
+        })
+      }
       resetForm()
       setShowForm(false)
       await load()
@@ -317,12 +331,9 @@ export default function OrgaVisitsPage() {
           <h2 className="text-[15px] font-semibold text-forest">
             {editingId ? 'Modifier la visite' : 'Nouvelle visite'}
           </h2>
-          <p className="mt-1 text-[13px] text-ink/50">
-            Site → établissement → créneau (16 au 22 novembre 2026). Seuls les sites avec position carte sont proposés.
-          </p>
           {sites.length === 0 && (
             <p className="mt-3 text-[13px] text-red-700">
-              Aucun site positionné. Approuvez une industrie avec emplacement (carte) dans Labels.
+              Aucun site labellisé. Approuvez une industrie dans Labels.
             </p>
           )}
 
@@ -331,34 +342,78 @@ export default function OrgaVisitsPage() {
               Site (industrie)
               <select required value={siteId} onChange={(e) => setSiteId(e.target.value)} className={field}>
                 {sites.length === 0 && <option value="">Aucun site labellisé</option>}
-                {sites.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}{s.city ? ` · ${s.city}` : ''}
-                    {s.max_visitors ? ` · cap. ${s.max_visitors}` : ''}
-                  </option>
-                ))}
+                {sites.map((s) => {
+                  const mapped = s.lat != null && s.lng != null
+                  return (
+                    <option key={s.id} value={s.id}>
+                      {s.name}{s.city ? ` · ${s.city}` : ''}
+                      {s.max_visitors ? ` · cap. ${s.max_visitors}` : ''}
+                      {mapped ? '' : ' · hors carte'}
+                    </option>
+                  )
+                })}
               </select>
             </label>
 
-            <label className="text-[13px] font-medium text-forest sm:col-span-2">
-              Établissement (école)
-              <select required value={schoolId} onChange={(e) => setSchoolId(e.target.value)} className={field}>
-                {schools.length === 0 && <option value="">Aucune école labellisée</option>}
-                {schools.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}{s.city ? ` · ${s.city}` : ''}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="sm:col-span-2">
+              <p className="text-[13px] font-medium text-forest">Établissement (école)</p>
+              <div className="mt-1 flex items-start gap-2">
+                <select
+                  value={schoolId}
+                  onChange={(e) => setSchoolId(e.target.value)}
+                  className={`${field} mt-0 flex-1`}
+                >
+                  {schools.length === 0 && <option value="">Aucune école labellisée</option>}
+                  {schools.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}{s.city ? ` · ${s.city}` : ''}
+                    </option>
+                  ))}
+                </select>
+                {!editingId && (
+                  <button
+                    type="button"
+                    title="Ajouter cet établissement"
+                    aria-label="Ajouter cet établissement"
+                    className={`${iconBtn} mt-0 shrink-0`}
+                    disabled={!schoolId}
+                    onClick={addSelectedSchool}
+                  >
+                    +
+                  </button>
+                )}
+              </div>
+            </div>
 
-            {selectedSchool && (
+            {!editingId && (
               <div className="border border-black bg-white px-3 py-2.5 text-[13px] sm:col-span-2">
-                <p className="font-semibold text-forest">{selectedSchool.name}</p>
-                <p className="mt-1 text-ink/60">
-                  {selectedSchool.contact_email || '—'}
-                  {selectedSchool.contact_phone ? ` · ${selectedSchool.contact_phone}` : ''}
-                </p>
+                {addedSchools.length === 0 && (
+                  <p className="text-ink/50">Aucun établissement ajouté. Cliquez sur + pour l&apos;ajouter.</p>
+                )}
+                {addedSchools.length > 0 && (
+                  <ul className="space-y-2">
+                    {addedSchools.map((s) => (
+                      <li key={s.id} className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-forest">{s.name}</p>
+                          <p className="mt-0.5 text-ink/60">
+                            {s.contact_email || 'Sans e-mail'}
+                            {s.contact_phone ? ` · ${s.contact_phone}` : ''}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className={iconBtnDanger}
+                          title="Retirer"
+                          aria-label={`Retirer ${s.name}`}
+                          onClick={() => removeSchool(s.id)}
+                        >
+                          ×
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
@@ -402,17 +457,6 @@ export default function OrgaVisitsPage() {
               </select>
             </label>
             <label className="text-[13px] font-medium text-forest">
-              Effectif
-              <input
-                required
-                type="number"
-                min={1}
-                value={headcount}
-                onChange={(e) => setHeadcount(e.target.value)}
-                className={field}
-              />
-            </label>
-            <label className="text-[13px] font-medium text-forest">
               Début
               <input required type="time" value={visitStart} onChange={(e) => setVisitStart(e.target.value)} className={field} />
             </label>
@@ -421,13 +465,12 @@ export default function OrgaVisitsPage() {
               <input required type="time" value={visitEnd} onChange={(e) => setVisitEnd(e.target.value)} className={field} />
             </label>
 
-            <label className="text-[13px] font-medium text-forest sm:col-span-2">
-              Notes (optionnel)
-              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={field} />
-            </label>
-
             <div className="sm:col-span-2">
-              <button type="submit" disabled={busy || !siteId || !schoolId} className="orga-btn disabled:opacity-50">
+              <button
+                type="submit"
+                disabled={busy || !siteId || (editingId ? !schoolId : schoolIds.length === 0)}
+                className="orga-btn disabled:opacity-50"
+              >
                 {busy ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Confirmer'}
               </button>
             </div>

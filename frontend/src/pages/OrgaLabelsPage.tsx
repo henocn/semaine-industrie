@@ -14,13 +14,14 @@ import {
   type LabelRequest,
   type QrBatchItem,
 } from '../api/labels'
-
-const KIT_ACCEPT =
-  '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
+import { EntryResourcesPanel } from '../components/EntryResourcesPanel'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { notifyLabelPendingChanged } from '../lib/labelPending'
 import { joinRoom, onRealtime } from '../lib/socket'
+
+const KIT_ACCEPT =
+  '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -51,7 +52,6 @@ export default function OrgaLabelsPage() {
   const [editLat, setEditLat] = useState<number | null>(null)
   const [editLng, setEditLng] = useState<number | null>(null)
   const [approveTarget, setApproveTarget] = useState<LabelRequest | null>(null)
-  const [approvePdf, setApprovePdf] = useState<File | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<LabelRequest | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedQr, setSelectedQr] = useState<QrBatchItem | null>(null)
@@ -179,16 +179,15 @@ export default function OrgaLabelsPage() {
     }
   }
 
-  /* Approuve la demande. Le fichier kit est facultatif. */
+  /* Approuve la demande, sans fichier à joindre. */
   async function onConfirmApprove(e: FormEvent) {
     e.preventDefault()
     if (!approveTarget) return
     setBusyId(approveTarget.id)
     setError(null)
     try {
-      await reviewLabelRequest(approveTarget.id, 'approved', { labelPdf: approvePdf })
+      await reviewLabelRequest(approveTarget.id, 'approved')
       setApproveTarget(null)
-      setApprovePdf(null)
       notifyLabelPendingChanged()
       await load()
     } catch (err) {
@@ -383,10 +382,7 @@ export default function OrgaLabelsPage() {
                           label="Approuver"
                           variant="ok"
                           disabled={busyId === item.id}
-                          onClick={() => {
-                            setApprovePdf(null)
-                            setApproveTarget(item)
-                          }}
+                          onClick={() => setApproveTarget(item)}
                         >
                           <IconCheck />
                         </IconButton>
@@ -576,25 +572,13 @@ export default function OrgaLabelsPage() {
           >
             <h3 className="text-[16px] font-semibold text-forest">Accepter la demande</h3>
             <p className="mt-2 text-[13px] text-ink/60">
-              {approveTarget.structure_name}. Le fichier du kit est facultatif, vous pourrez l&apos;ajouter ensuite.
+              {approveTarget.structure_name}. Un code de suivi sera attribué. Les ressources s&apos;ajoutent ensuite sur la fiche.
             </p>
-            <label className="mt-4 block text-[13px] font-medium text-forest">
-              Fichier kit
-              <input
-                type="file"
-                accept={KIT_ACCEPT}
-                className="mt-1 block w-full text-[13px]"
-                onChange={(e) => setApprovePdf(e.target.files?.[0] || null)}
-              />
-            </label>
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
                 className="orga-btn-ghost"
-                onClick={() => {
-                  setApproveTarget(null)
-                  setApprovePdf(null)
-                }}
+                onClick={() => setApproveTarget(null)}
               >
                 Annuler
               </button>
@@ -867,6 +851,10 @@ function LabelDetail({
               </div>
             )}
           </div>
+
+          {selected.status === 'approved' && selected.organization_id && (
+            <EntryResourcesPanel kind="organization" entryId={selected.organization_id} />
+          )}
 
           {selected.status === 'approved' && (
             <div className="mt-5 border-t border-black pt-4">
