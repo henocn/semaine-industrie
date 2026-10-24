@@ -153,7 +153,7 @@ function About() {
       <div className={`${WRAP} reveal`}>
         <SectionHeader title="Voir ce que le Togo fabrique, où, et par qui." />
         <div className="mt-8 grid gap-8 md:grid-cols-2 md:items-start md:gap-10">
-          <Photo name="eleves" alt="Lycéennes et lycéens dans un établissement togolais" className="aspect-[4/3]" />
+          <Photo name="atelier-textile" alt="Ouvrières à leurs machines dans un atelier de confection textile" className="aspect-[4/3]" />
           <div className="space-y-4 text-[15px] leading-relaxed text-ink/80">
             <p>
               La Semaine de l’industrie fait découvrir les usines et leurs métiers aux jeunes et au grand public. Elle réunit aussi investisseurs, industriels et PME locales.
