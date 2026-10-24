@@ -265,37 +265,44 @@ async function sendTrackingQr(from, phoneNumberId, linked) {
 }
 
 /* Boutons du sous-menu selon le groupe (max 20 car.). */
-function suiviButtons(kind) {
+function suiviButtons(kind, { includeRecap = true } = {}) {
   const third = kind === 'in'
     ? { id: 'suivi_programme', title: 'Programme' }
     : kind === 'af'
       ? { id: 'b2b_rdv', title: 'Mes rendez-vous' }
       : { id: 'suivi_visites', title: 'Mes visites' };
-  return [
-    { id: 'suivi_recap', title: 'Récapitulatif' },
-    { id: 'suivi_qr', title: 'Mon QR' },
-    third,
-  ];
+  const buttons = [];
+  if (includeRecap) buttons.push({ id: 'suivi_recap', title: 'Récapitulatif' });
+  buttons.push({ id: 'suivi_qr', title: 'Mon QR' }, third);
+  return buttons;
 }
 
-/* Sous-menu à 3 boutons, sans Menu. */
-async function sendSuiviButtons(from, phoneNumberId, body, kind) {
+/* Sous-menu, sans Menu. */
+async function sendSuiviButtons(from, phoneNumberId, body, kind, options) {
   return sendButtons({
     to: from,
     phoneNumberId,
     body: String(body || 'Que souhaitez-vous ?').slice(0, 1024),
-    buttons: suiviButtons(kind),
+    buttons: suiviButtons(kind, options),
   });
 }
 
-/* Récap / liste : un message avec les 3 boutons, ou texte puis boutons si trop long. */
-async function replyLinkedContent(from, phoneNumberId, kind, body) {
+/* Récap / liste : un message avec les boutons, ou texte puis boutons si trop long. */
+async function replyLinkedContent(from, phoneNumberId, kind, body, options) {
   const text = String(body || '');
   if (text.length <= 1024) {
-    return sendSuiviButtons(from, phoneNumberId, text, kind);
+    return sendSuiviButtons(from, phoneNumberId, text, kind, options);
   }
   await sendText({ to: from, phoneNumberId, body: text });
-  return sendSuiviButtons(from, phoneNumberId, 'Que souhaitez-vous ?', kind);
+  return sendSuiviButtons(from, phoneNumberId, 'Que souhaitez-vous ?', kind, options);
+}
+
+/* Texte du récap selon le type de fiche liée. */
+function formatLinkedRecap(linked) {
+  if (linked.organization) return formatRecap(linked.organization);
+  if (linked.passport) return formatPassportRecap(linked.passport);
+  if (linked.participant) return formatB2bRecap(linked.participant);
+  return 'Récapitulatif indisponible.';
 }
 
 /* Chemin PDF programme (pointeur ou défaut env). */
@@ -820,15 +827,16 @@ function suiviIntro(kind, name) {
   return `${label} : ${name}\nQue souhaitez-vous ?`;
 }
 
-/* Ouvre le suivi : mémorise le code, envoie le QR, puis le sous-menu. */
+/* Ouvre le suivi : mémorise le code et envoie le récap + actions (sans QR auto). */
 async function openLinkedSuivi(from, phoneNumberId, patch, linked) {
   setSession(from, { mode: 'linked', ...patch });
-  try {
-    await sendTrackingQr(from, phoneNumberId, linked);
-  } catch (err) {
-    logger.warn('[whatsapp] QR image failed', err.message);
-  }
-  return sendSuiviButtons(from, phoneNumberId, suiviIntro(patch.kind, linked.name), patch.kind);
+  return replyLinkedContent(
+    from,
+    phoneNumberId,
+    patch.kind,
+    formatLinkedRecap(linked),
+    { includeRecap: false },
+  );
 }
 
 /* Récap passeport école / particulier. */
@@ -1220,15 +1228,16 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         } catch (err) {
           logger.warn('[whatsapp] QR image failed', err.message);
         }
-        return sendSuiviButtons(from, phoneNumberId, suiviIntro(linked.kind, linked.name), linked.kind);
+        return sendSuiviButtons(from, phoneNumberId, 'Que souhaitez-vous ?', linked.kind);
       }
       if (action === 'suivi_recap' || action === 'b2b_recap') {
-        const recap = linked.organization
-          ? formatRecap(linked.organization)
-          : linked.passport
-            ? formatPassportRecap(linked.passport)
-            : formatB2bRecap(linked.participant);
-        return replyLinkedContent(from, phoneNumberId, linked.kind, recap);
+        return replyLinkedContent(
+          from,
+          phoneNumberId,
+          linked.kind,
+          formatLinkedRecap(linked),
+          { includeRecap: false },
+        );
       }
       if (action === 'suivi_programme' || action === 'suivi_label_pdf') {
         if (!linked.organization) {
