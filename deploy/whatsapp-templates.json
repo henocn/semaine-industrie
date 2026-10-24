@@ -22,14 +22,14 @@
       ]
     },
     {
-      "name": "si26_part_acceptee",
+      "name": "si26_dossier_maj",
       "language": "fr",
-      "category": "UTILITY",
+      "category": "MARKETING",
       "allow_category_change": false,
       "components": [
         {
           "type": "BODY",
-          "text": "Bonjour {{1}}, votre inscription pour {{2}} est acceptée. Votre code à présenter est {{3}}. Présentez ce code le jour de la visite.",
+          "text": "Bonjour {{1}}, votre dossier pour {{2}} est accepté. Votre code de suivi est {{3}}. Conservez ce code pour retrouver votre dossier.",
           "example": {
             "body_text": [["Afi Mensah", "Lycee technique de Lome", "P1A2B3C"]]
           }
@@ -37,7 +37,7 @@
         {
           "type": "BUTTONS",
           "buttons": [
-            { "type": "QUICK_REPLY", "text": "Menu" }
+            { "type": "QUICK_REPLY", "text": "Mon espace" }
           ]
         }
       ]

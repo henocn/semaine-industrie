@@ -1156,7 +1156,7 @@ async function notifyLabelApproved(organization) {
   }
 
   const templateName =
-    organization.type === 'ecole' ? 'si26_part_acceptee' : 'si26_label_industrie';
+    organization.type === 'ecole' ? 'si26_dossier_maj' : 'si26_label_industrie';
   const bodyParams = [
     organization.contact_name || 'partenaire',
     organization.name,
@@ -1196,7 +1196,7 @@ async function notifyParticipationApproved(participation) {
 
   return sendTemplate({
     to,
-    name: 'si26_part_acceptee',
+    name: 'si26_dossier_maj',
     bodyParams: [participation.name, participation.name, code],
   });
 }
