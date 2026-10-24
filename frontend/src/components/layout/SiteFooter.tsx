@@ -38,6 +38,7 @@ export function SiteFooter() {
             <li><Link to="/programme" className={LINK}>Programme</Link></li>
             <li><Link to="/carte" className={LINK}>Carte des usines</Link></li>
             <li><Link to="/vote" className={LINK}>Vote samedi</Link></li>
+            <li><Link to="/vue-par-vous" className={LINK}>L’industrie, vue par vous</Link></li>
             <li><Link to="/questionnaire" className={LINK}>Questionnaire</Link></li>
             <li><Link to="/faq" className={LINK}>Questions fréquentes</Link></li>
             <li><Link to="/#contact" className={LINK}>Contact</Link></li>

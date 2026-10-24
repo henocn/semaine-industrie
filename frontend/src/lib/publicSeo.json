@@ -49,6 +49,11 @@
     "description": "Répondez au questionnaire avant ou après votre visite d’usine, Semaine de l’industrie 2026 au Togo."
   },
   {
+    "path": "/vue-par-vous",
+    "title": "L’industrie, vue par vous !",
+    "description": "Testez vos connaissances sur l’industrie et découvrez votre profil de talents en cinq questions, Semaine de l’industrie 2026 au Togo."
+  },
+  {
     "path": "/faq",
     "title": "Questions fréquentes",
     "description": "Dates, label, inscriptions, visites et vote : les questions fréquentes de la Semaine de l’industrie 2026."
