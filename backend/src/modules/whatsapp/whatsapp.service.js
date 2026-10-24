@@ -1187,6 +1187,18 @@ async function notifyLabelApproved(organization) {
   return sent;
 }
 
+/* Corps session si si26_dossier_maj n'est pas encore approuvé. */
+function buildParticipationApprovalBody(participation, code) {
+  return [
+    `Bonjour ${participation.name},`,
+    '',
+    'Votre inscription est acceptée.',
+    `Votre code QR est ${code}.`,
+    '',
+    'Présentez ce code le jour J.',
+  ].join('\n');
+}
+
 /* Confirme l'inscription d'une école ou d'un particulier. */
 async function notifyParticipationApproved(participation) {
   const to = toWaRecipient(participation?.phone);
@@ -1194,11 +1206,20 @@ async function notifyParticipationApproved(participation) {
   if (!to) return { ok: false, reason: 'no_phone' };
   if (!code) return { ok: false, reason: 'no_code' };
 
-  return sendTemplate({
+  let sent = await sendTemplate({
     to,
     name: 'si26_dossier_maj',
     bodyParams: [participation.name, participation.name, code],
   });
+
+  if (!sent.ok) {
+    logger.warn('[whatsapp] template acceptation indisponible, secours session', 'si26_dossier_maj');
+    sent = await sendWithNav({
+      to,
+      body: buildParticipationApprovalBody(participation, code),
+    });
+  }
+  return sent;
 }
 
 /* Rappel du code de suivi, en message de session. */
@@ -1269,13 +1290,27 @@ function formatSlotFr(start, end) {
   return `${a.toLocaleTimeString('fr-FR', opts)} à ${b.toLocaleTimeString('fr-FR', opts)}`;
 }
 
+/* Formate deux heures de visite en « 09:00 à 11:00 ». */
+function formatVisitHours(start, end) {
+  const toHm = (value) => {
+    const raw = String(value || '').trim();
+    const match = raw.match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return raw;
+    return `${String(match[1]).padStart(2, '0')}:${match[2]}`;
+  };
+  const from = toHm(start);
+  const to = toHm(end);
+  if (from && to) return `${from} à ${to}`;
+  return from || to || '-';
+}
+
 /* Notifie école + site quand une visite est programmée (label accepté). */
 async function notifyVisitScheduled({ school, site, visitDay, visitStart, visitEnd }) {
   const day =
     typeof visitDay === 'string' && visitDay.includes('-')
       ? visitDay.split('-').reverse().join('/')
       : String(visitDay || '-');
-  const slot = `${visitStart || ''}-${visitEnd || ''}`.replace(/^-|-$/g, '') || '-';
+  const slot = formatVisitHours(visitStart, visitEnd);
   const targets = [
     {
       org: school,
@@ -1345,7 +1380,7 @@ async function notifyBusinessMeeting({
   const day = formatDayFr(meeting.slot_start);
   const slot = formatSlotFr(meeting.slot_start, meeting.slot_end);
   const lieu = meeting.location || 'À confirmer';
-  const templateName = 'si26_rdv_fixe';
+  const templateName = rescheduled ? 'si26_rdv_reporte' : 'si26_rdv_fixe';
 
   const results = [];
   for (const self of list) {
