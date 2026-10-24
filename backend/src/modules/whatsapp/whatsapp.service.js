@@ -1156,7 +1156,7 @@ async function notifyLabelApproved(organization) {
   }
 
   const templateName =
-    organization.type === 'ecole' ? 'si26_acc_ecole_qr' : 'si26_acc_industrie_qr';
+    organization.type === 'ecole' ? 'si26_part_acceptee' : 'si26_label_industrie';
   const bodyParams = [
     organization.contact_name || 'partenaire',
     organization.name,
@@ -1187,37 +1187,36 @@ async function notifyLabelApproved(organization) {
   return sent;
 }
 
-/* Rappel espace / code de suivi (template UTILITY). */
+/* Confirme l'inscription d'une école ou d'un particulier. */
+async function notifyParticipationApproved(participation) {
+  const to = toWaRecipient(participation?.phone);
+  const code = participation?.passport?.code;
+  if (!to) return { ok: false, reason: 'no_phone' };
+  if (!code) return { ok: false, reason: 'no_code' };
+
+  return sendTemplate({
+    to,
+    name: 'si26_part_acceptee',
+    bodyParams: [participation.name, participation.name, code],
+  });
+}
+
+/* Rappel du code de suivi, en message de session. */
 async function notifyLabelReminder(organization) {
   const to = toWaRecipient(organization.contact_phone);
   if (!to) return { ok: false, reason: 'no_phone' };
 
-  const bodyParams = [
-    organization.contact_name || 'partenaire',
-    organization.name,
-    organization.label_code,
-  ];
-
-  let sent = await sendTemplate({
+  return sendWithNav({
     to,
-    name: 'si26_rappel_code_qr',
-    bodyParams,
+    body: [
+      `Bonjour${organization.contact_name ? ` ${organization.contact_name}` : ''},`,
+      '',
+      `Rappel pour ${organization.name}.`,
+      `Code de suivi : ${organization.label_code}`,
+      '',
+      `Ressources : ${SITE()}/ressources`,
+    ].join('\n'),
   });
-
-  if (!sent.ok) {
-    sent = await sendWithNav({
-      to,
-      body: [
-        `Bonjour${organization.contact_name ? ` ${organization.contact_name}` : ''},`,
-        '',
-        `Rappel Semaine de l'industrie pour ${organization.name}.`,
-        `Code de suivi : ${organization.label_code}`,
-        '',
-        `Ressources : ${SITE()}/ressources`,
-      ].join('\n'),
-    });
-  }
-  return sent;
 }
 
 /* Rappel visite (template UTILITY). */
@@ -1227,16 +1226,15 @@ async function notifyVisitReminder({ organization, visitDay, visitSlot, place, r
 
   const bodyParams = [
     organization.contact_name || 'partenaire',
-    role || 'Visite',
+    'visite',
     visitDay || '-',
     visitSlot || '-',
     place || organization.name,
-    organization.label_code,
   ];
 
   let sent = await sendTemplate({
     to,
-    name: 'si26_rappel_visite_v3',
+    name: 'si26_rappel_fixe',
     bodyParams,
   });
 
@@ -1304,15 +1302,13 @@ async function notifyVisitScheduled({ school, site, visitDay, visitStart, visitE
     }
     const bodyParams = [
       t.org.contact_name || 'partenaire',
-      t.roleName || 'visite',
       day,
       slot,
       t.place || '-',
-      t.org.label_code || '-',
     ];
     let sent = await sendTemplate({
       to,
-      name: 'si26_visite_programmee',
+      name: 'si26_visite_fixee',
       bodyParams,
     });
     if (!sent.ok) {
@@ -1349,7 +1345,7 @@ async function notifyBusinessMeeting({
   const day = formatDayFr(meeting.slot_start);
   const slot = formatSlotFr(meeting.slot_start, meeting.slot_end);
   const lieu = meeting.location || 'À confirmer';
-  const templateName = rescheduled ? 'si26_rdv_reporte' : 'si26_rdv_affaires';
+  const templateName = 'si26_rdv_fixe';
 
   const results = [];
   for (const self of list) {
@@ -1368,9 +1364,9 @@ async function notifyBusinessMeeting({
     }
     const bodyParams = [
       b2bDisplayName(self),
-      others.slice(0, 60) || 'partenaire',
       day,
       slot,
+      others.slice(0, 60) || 'partenaire',
       lieu.slice(0, 60),
     ];
     let sent = await sendTemplate({ to, name: templateName, bodyParams });
@@ -1422,6 +1418,7 @@ module.exports = {
   processInbound,
   handleWebhook,
   notifyLabelApproved,
+  notifyParticipationApproved,
   notifyLabelReminder,
   notifyVisitReminder,
   notifyVisitScheduled,
