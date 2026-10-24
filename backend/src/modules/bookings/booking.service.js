@@ -46,9 +46,6 @@ async function createSingleBooking(payload) {
     },
   });
   if (!school) throw ApiError.notFound('Établissement introuvable ou non labellisé');
-  if (!school.contact_email) {
-    throw ApiError.badRequest('Cet établissement n’a pas d’e-mail de contact');
-  }
 
   /* Effectif conservé en base, plus exigé à la saisie. */
   const rawHeadcount = Number(payload.headcount || school.max_visitors || 1);
@@ -77,7 +74,7 @@ async function createSingleBooking(payload) {
     school_organization_id: school.id,
     school_name: school.name,
     teacher_name: school.contact_name || school.name,
-    teacher_email: school.contact_email,
+    teacher_email: school.contact_email || 'non-renseigne@semaineindustrie.tg',
     teacher_phone: school.contact_phone || null,
     visit_day: payload.visit_day,
     visit_start: payload.visit_start,
@@ -171,9 +168,6 @@ async function updateBooking(id, payload) {
     },
   });
   if (!school) throw ApiError.notFound('Établissement introuvable ou non labellisé');
-  if (!school.contact_email) {
-    throw ApiError.badRequest('Cet établissement n’a pas d’e-mail de contact');
-  }
 
   const rawHeadcount = Number(payload.headcount || school.max_visitors || existing.headcount || 1);
   const headcount = Number.isFinite(rawHeadcount) && rawHeadcount >= 1 ? rawHeadcount : 1;
@@ -202,7 +196,7 @@ async function updateBooking(id, payload) {
     school_organization_id: school.id,
     school_name: school.name,
     teacher_name: school.contact_name || school.name,
-    teacher_email: school.contact_email,
+    teacher_email: school.contact_email || 'non-renseigne@semaineindustrie.tg',
     teacher_phone: school.contact_phone || null,
     visit_day: payload.visit_day,
     visit_start: payload.visit_start,

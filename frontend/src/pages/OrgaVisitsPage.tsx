@@ -100,6 +100,10 @@ export default function OrgaVisitsPage() {
     () => schoolIds.map((id) => schools.find((s) => s.id === id)).filter((s): s is BookableSite => Boolean(s)),
     [schoolIds, schools],
   )
+  const availableSchools = useMemo(
+    () => (editingId ? schools : schools.filter((s) => !schoolIds.includes(s.id))),
+    [editingId, schools, schoolIds],
+  )
   const suggestedSlots = selectedSite?.visit_slots || []
 
   /* Charge listes. */
@@ -196,12 +200,16 @@ export default function OrgaVisitsPage() {
   /* Ajoute l'école sélectionnée au cadre. */
   function addSelectedSchool() {
     if (!schoolId) return
-    setSchoolIds((prev) => (prev.includes(schoolId) ? prev : [...prev, schoolId]))
+    const nextIds = schoolIds.includes(schoolId) ? schoolIds : [...schoolIds, schoolId]
+    setSchoolIds(nextIds)
+    const remaining = schools.filter((s) => !nextIds.includes(s.id))
+    setSchoolId(remaining[0]?.id || '')
   }
 
   /* Retire une école du cadre. */
   function removeSchool(id: string) {
     setSchoolIds((prev) => prev.filter((x) => x !== id))
+    if (!schoolId) setSchoolId(id)
   }
 
   /* Ouvre le formulaire en création. */
@@ -357,14 +365,16 @@ export default function OrgaVisitsPage() {
 
             <div className="sm:col-span-2">
               <p className="text-[13px] font-medium text-forest">Établissement (école)</p>
-              <div className="mt-1 flex items-start gap-2">
+              <div className="mt-1 flex items-stretch gap-2">
                 <select
                   value={schoolId}
                   onChange={(e) => setSchoolId(e.target.value)}
-                  className={`${field} mt-0 flex-1`}
+                  className="min-h-9 w-full flex-1 border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none"
                 >
-                  {schools.length === 0 && <option value="">Aucune école labellisée</option>}
-                  {schools.map((s) => (
+                  {availableSchools.length === 0 && (
+                    <option value="">{schools.length === 0 ? 'Aucune école labellisée' : 'Tous les établissements sont ajoutés'}</option>
+                  )}
+                  {availableSchools.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}{s.city ? ` · ${s.city}` : ''}
                     </option>
@@ -375,7 +385,7 @@ export default function OrgaVisitsPage() {
                     type="button"
                     title="Ajouter cet établissement"
                     aria-label="Ajouter cet établissement"
-                    className={`${iconBtn} mt-0 shrink-0`}
+                    className="grid w-9 shrink-0 place-items-center self-stretch border border-black bg-white text-[18px] leading-none text-forest hover:bg-forest hover:text-white disabled:opacity-40"
                     disabled={!schoolId}
                     onClick={addSelectedSchool}
                   >
@@ -391,16 +401,10 @@ export default function OrgaVisitsPage() {
                   <p className="text-ink/50">Aucun établissement ajouté. Cliquez sur + pour l&apos;ajouter.</p>
                 )}
                 {addedSchools.length > 0 && (
-                  <ul className="space-y-2">
+                  <ul className="space-y-1">
                     {addedSchools.map((s) => (
                       <li key={s.id} className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="font-semibold text-forest">{s.name}</p>
-                          <p className="mt-0.5 text-ink/60">
-                            {s.contact_email || 'Sans e-mail'}
-                            {s.contact_phone ? ` · ${s.contact_phone}` : ''}
-                          </p>
-                        </div>
+                        <p className="min-w-0 truncate font-semibold text-forest">{s.name}</p>
                         <button
                           type="button"
                           className={iconBtnDanger}
