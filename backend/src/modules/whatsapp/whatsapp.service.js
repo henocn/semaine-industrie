@@ -113,6 +113,28 @@ async function sendWithNav({ to, body, phoneNumberId, header }) {
   });
 }
 
+/* Fin de parcours ou invite : texte + bouton Menu. */
+async function sendWithMenu({ to, phoneNumberId, body }) {
+  return sendButtons({
+    to,
+    phoneNumberId,
+    body: String(body || '').slice(0, 1024),
+    buttons: [{ id: 'menu_home', title: 'Menu' }],
+  });
+}
+
+/* Invite à saisir un code de suivi. */
+async function replyAskCode(from, phoneNumberId, body) {
+  setSession(from, { mode: 'await_code', labelCode: null, orgId: null, b2bId: null });
+  return sendWithMenu({
+    to: from,
+    phoneNumberId,
+    body:
+      body
+      || "Espace de suivi pour les industries, groupe (écoles/universités) ou particulier. Entrez le code de suivi envoyé à l'inscription.",
+  });
+}
+
 /* Envoie un template WhatsApp approuvé (hors fenêtre 24h). */
 async function sendTemplate({
   to,
@@ -489,12 +511,12 @@ function suiviMenuPayload(to, org) {
     to,
     body: `${typeLabel} : ${org.name}\nQue souhaitez-vous ?`,
     buttonLabel: 'Suivi de participation',
-    header: 'Suivi label',
+    header: 'Suivi de participation',
     sections: [
       {
         title: 'Espace',
         rows: [
-          { id: 'suivi_recap', title: 'Récap label' },
+          { id: 'suivi_recap', title: 'Récapitulatif' },
           { id: 'suivi_label_pdf', title: 'PDF du label' },
           { id: 'suivi_visites', title: 'Mes visites' },
           { id: 'suivi_autre', title: 'Autre code' },
@@ -540,7 +562,7 @@ function b2bMenuPayload(to, participant) {
         rows: [
           { id: 'b2b_recap', title: 'Récapitulatif' },
           { id: 'b2b_rdv', title: 'Rendez-vous' },
-          { id: 'b2b_autre', title: 'Autre e-mail' },
+          { id: 'b2b_autre', title: 'Autre code' },
           { id: 'menu_home', title: 'Menu' },
         ],
       },
@@ -578,6 +600,8 @@ function formatB2bRecap(p) {
     p.country ? `Pays : ${p.country}` : null,
     p.offers ? `Offre : ${p.offers}` : null,
     p.seeks ? `Recherche : ${p.seeks}` : null,
+    p.tracking_code ? '' : null,
+    p.tracking_code ? 'Conservez ce code de suivi.' : null,
   ]
     .filter(Boolean)
     .join('\n');
@@ -699,15 +723,24 @@ async function openByTrackingCode(from, raw, phoneNumberId) {
 /* Récap passeport école / particulier. */
 async function replyPassportRecap(from, passport, phoneNumberId) {
   const url = `${SITE()}/passeport/${passport.code}`;
+  const kind = passport.kind === 'group' ? 'École' : 'Particulier';
+  setSession(from, {
+    mode: 'linked',
+    labelCode: passport.code,
+    orgId: null,
+    b2bId: null,
+  });
   return sendWithNav({
     to: from,
     phoneNumberId,
     body: [
-      'Votre inscription',
+      'Récapitulatif',
       '',
-      passport.holder_name || passport.school_name || 'Participant',
+      `${kind} : ${passport.holder_name || passport.school_name || 'Participant'}`,
       `Code de suivi : ${passport.code}`,
       `Passeport : ${url}`,
+      '',
+      'Conservez ce code de suivi.',
     ].join('\n'),
   });
 }
@@ -717,7 +750,7 @@ function formatRecap(org) {
   const typeLabel = org.type === 'ecole' ? 'École' : 'Industrie';
   const fiche = `${SITE()}/o/${org.slug}`;
   const lines = [
-    'Récapitulatif label',
+    'Récapitulatif',
     '',
     `${typeLabel} : ${org.name}`,
     `Code de suivi : ${org.label_code}`,
@@ -728,7 +761,7 @@ function formatRecap(org) {
     '',
     `Fiche publique : ${fiche}`,
     '',
-    'Gardez ce code pour suivre vos visites et documents.',
+    'Conservez ce code de suivi.',
   ];
   return lines.filter(Boolean).join('\n');
 }
@@ -868,8 +901,15 @@ function resolveActionId(id, title) {
   ]);
   if (known.has(id) || String(id).startsWith('prog_')) return id;
   const t = normalize(title || id);
-  if (t.includes('rencontre') || t.includes('affaire') || t.includes('b2b')) return 'menu_b2b';
-  if (t.includes('espace') || t.includes('suivi') || t.includes('mon suivi')) return 'menu_suivi';
+  if (t.includes('document') || t.includes('ressource')) return 'menu_ressources';
+  if (
+    t.includes('rencontre')
+    || t.includes('affaire')
+    || t.includes('b2b')
+    || t.includes('espace')
+    || t.includes('suivi')
+    || t.includes('mon suivi')
+  ) return 'menu_suivi';
   if (t.includes('participer') || t.includes('demander le label') || t === 'label') return 'menu_label';
   if (t.includes('information')) return 'menu_infos';
   if (t === 'menu' || t.startsWith('menu')) return 'menu_home';
@@ -902,50 +942,19 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         buttons: [{ id: 'menu_home', title: 'Menu' }],
       });
     case 'menu_ressources':
-      if (session.orgId && session.labelCode) {
-        const org = await findOrgByCode(session.labelCode);
-        if (org) {
-          await sendOrgDocuments(from, org, phoneNumberId, 'both');
-          return replySuiviMenu(from, org, phoneNumberId);
-        }
-      }
-      setSession(from, { mode: 'await_code' });
-      return sendText({
+      return sendWithMenu({
         to: from,
         phoneNumberId,
-        body:
-          'Pour télécharger votre label et le programme, entrez votre code de suivi.\n' +
-          `Aussi sur le site : ${SITE()}/ressources`,
+        body: `Ressources de la Semaine de l'industrie\n\n${SITE()}/ressources`,
       });
     case 'menu_suivi':
-      setSession(from, { mode: 'await_code', labelCode: null, orgId: null });
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body:
-          "Espace de suivi pour les industries, groupe (écoles/universités) ou particulier. Entrez le code de suivi envoyé à l'inscription.",
-      });
     case 'espace_label':
-      if (session.orgId && session.labelCode) {
-        const org = await findOrgByCode(session.labelCode);
-        if (org) return replySuiviMenu(from, org, phoneNumberId);
-      }
-      setSession(from, { mode: 'await_ident', intent: 'label' });
-      return sendText({ to: from, phoneNumberId, body: askIdent('label') });
     case 'espace_b2b':
-      if (session.b2bId) {
-        const p = await BusinessParticipant.findByPk(session.b2bId);
-        if (p) return replyB2bMenu(from, p, phoneNumberId);
-      }
-      setSession(from, { mode: 'await_ident', intent: 'b2b' });
-      return sendText({ to: from, phoneNumberId, body: askIdent('b2b') });
+    case 'menu_b2b':
+      return replyAskCode(from, phoneNumberId);
     case 'suivi_autre':
-      setSession(from, { mode: 'await_code', labelCode: null, orgId: null });
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body: 'Entrez le nouveau code de suivi (ex. IN-2001).',
-      });
+    case 'b2b_autre':
+      return replyAskCode(from, phoneNumberId, 'Entrez le nouveau code de suivi (ex. IN-2001).');
     case 'suivi_recap':
     case 'suivi_label_pdf':
     case 'suivi_visites': {
@@ -953,12 +962,7 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         ? await findOrgByCode(session.labelCode)
         : null;
       if (!org) {
-        setSession(from, { mode: 'await_code' });
-        return sendText({
-          to: from,
-          phoneNumberId,
-          body: 'Session expirée. Entrez à nouveau votre code de suivi.',
-        });
+        return replyAskCode(from, phoneNumberId, 'Session expirée. Entrez à nouveau votre code de suivi.');
       }
       if (action === 'suivi_label_pdf') {
         await sendOrgDocuments(from, org, phoneNumberId, 'label');
@@ -972,37 +976,17 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         action === 'suivi_recap' ? formatRecap(org) : await formatVisites(org);
       return sendWithNav({ to: from, phoneNumberId, body });
     }
-    case 'menu_b2b':
-      if (session.b2bId) {
-        const p = await BusinessParticipant.findByPk(session.b2bId);
-        if (p) return replyB2bMenu(from, p, phoneNumberId);
-      }
-      setSession(from, { mode: 'await_ident', intent: 'b2b', b2bId: null });
-      return sendText({ to: from, phoneNumberId, body: askIdent('b2b') });
-    case 'b2b_autre':
-      setSession(from, { mode: 'await_ident', intent: 'b2b', b2bId: null });
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body: "Envoyez le nouvel e-mail d'inscription.",
-      });
     case 'b2b_recap':
     case 'b2b_rdv': {
       const p = session.b2bId
         ? await BusinessParticipant.findByPk(session.b2bId)
         : null;
       if (!p) {
-        setSession(from, { mode: 'await_b2b_email' });
-        return sendText({
-          to: from,
-          phoneNumberId,
-          body: 'Session expirée. Envoyez à nouveau votre e-mail.',
-        });
+        return replyAskCode(from, phoneNumberId, 'Session expirée. Entrez à nouveau votre code de suivi.');
       }
       const body =
         action === 'b2b_recap' ? formatB2bRecap(p) : await formatB2bMeetings(p);
-      await sendText({ to: from, phoneNumberId, body });
-      return replyB2bMenu(from, p, phoneNumberId);
+      return sendWithNav({ to: from, phoneNumberId, body });
     }
     default:
       if (String(action).startsWith('prog_')) {
@@ -1023,43 +1007,16 @@ async function resolveIdent(from, text, phoneNumberId, intent) {
     if (opened) return opened;
   }
 
-  if (intent === 'b2b') {
-    if (!email) {
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body: "Envoyez l'e-mail d'inscription ou votre code (exemple : AF-2001).",
-      });
-    }
+  if (intent === 'b2b' && email) {
     const participant = await findB2bByEmail(email);
-    if (!participant) {
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body:
-          "Aucune inscription trouvée pour cet e-mail.\n" +
-          `Inscription : ${SITE()}/affaires`,
-      });
-    }
-    return replyB2bMenu(from, participant, phoneNumberId);
+    if (participant) return replyB2bMenu(from, participant, phoneNumberId);
   }
 
-  if (!code) {
-    return sendText({
-      to: from,
-      phoneNumberId,
-      body: email
-        ? "L'e-mail sert aux rencontres d'affaires.\nPour le label, envoyez le code de suivi (IN-2001)."
-        : 'Envoyez votre code de suivi.\nExemple : IN-2001',
-    });
-  }
-  return sendText({
-    to: from,
+  return replyAskCode(
+    from,
     phoneNumberId,
-    body:
-      'Code introuvable. Vérifiez le format IN-2001, EC-2001, PA-2001 ou AF-2001.\n' +
-      'Ou tapez MENU pour le menu principal.',
-  });
+    'Code introuvable. Vérifiez-le et renvoyez-le (IN-2001, EC-2001, PA-2001 ou AF-2001).',
+  );
 }
 
 /* Traite un message texte libre. */
@@ -1071,71 +1028,51 @@ async function handleText(from, text, phoneNumberId) {
     return replyMainMenu(from, phoneNumberId);
   }
 
+  const awaitingCode = session.mode === 'await_code'
+    || session.mode === 'await_ident'
+    || session.mode === 'await_b2b_email';
   if (session.mode === 'await_ident' || session.mode === 'await_b2b_email') {
-    return resolveIdent(
-      from,
-      text,
-      phoneNumberId,
-      session.intent === 'label' ? 'label' : session.mode === 'await_ident' ? session.intent || 'label' : 'b2b',
-    );
+    setSession(from, { mode: 'await_code' });
   }
 
   const emailInText = extractEmail(text);
-  if (emailInText) {
-    const email = emailInText || String(text).trim().toLowerCase();
-    if (!extractEmail(email)) {
-      setSession(from, { mode: 'await_b2b_email' });
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body: 'E-mail invalide. Exemple : nom@entreprise.tg',
-      });
-    }
-    const participant = await findB2bByEmail(email);
-    if (!participant) {
-      setSession(from, { mode: 'await_b2b_email' });
-      return sendText({
-        to: from,
-        phoneNumberId,
-        body:
-          'Aucune inscription trouvée pour cet e-mail.\n' +
-          `Inscrivez-vous ici : ${SITE()}/affaires`,
-      });
-    }
-    return replyB2bMenu(from, participant, phoneNumberId);
+  if (emailInText && !awaitingCode) {
+    const participant = await findB2bByEmail(emailInText);
+    if (participant) return replyB2bMenu(from, participant, phoneNumberId);
   }
-
   const codeInText = extractLabelCode(text)
-    || (session.mode === 'await_code' && trackingService.isKnownCodeShape(text)
+    || (awaitingCode && trackingService.isKnownCodeShape(text)
       ? trackingService.normalizeCode(text)
       : null);
-  if (codeInText || session.mode === 'await_code') {
+  if (codeInText || awaitingCode) {
     const code = trackingService.normalizeCode(codeInText || text);
     const opened = await openByTrackingCode(from, code, phoneNumberId);
     if (opened) return opened;
-    setSession(from, { mode: 'await_code' });
-    return sendButtons({
-      to: from,
+    return replyAskCode(
+      from,
       phoneNumberId,
-      body:
-        'Code introuvable. Vérifiez-le et renvoyez-le (IN-2001, EC-2001, PA-2001 ou AF-2001).',
-      buttons: [{ id: 'menu_home', title: 'Menu' }],
-    });
+      'Code introuvable. Vérifiez-le et renvoyez-le (IN-2001, EC-2001, PA-2001 ou AF-2001).',
+    );
   }
 
   if (t === '1' || t.includes('programme')) return handleInteractive(from, 'menu_programme', phoneNumberId);
   if (t === '2' || t.includes('label') || t.includes('participer')) return handleInteractive(from, 'menu_label', phoneNumberId);
-  if (t.includes('rencontre') || t.includes('affaire') || t.includes('b2b')) {
-    return handleInteractive(from, 'menu_b2b', phoneNumberId);
-  }
-  if (t.includes('info') || t.includes('contact')) {
+  if (t === '3' || t.includes('info') || t.includes('contact')) {
     return handleInteractive(from, 'menu_infos', phoneNumberId);
+  }
+  if (
+    t === '4'
+    || t.includes('suivi')
+    || t.includes('espace')
+    || t.includes('code')
+    || t.includes('rencontre')
+    || t.includes('affaire')
+    || t.includes('b2b')
+  ) {
+    return handleInteractive(from, 'menu_suivi', phoneNumberId);
   }
   if (t.includes('ressource') || t.includes('telecharg') || t.includes('document')) {
     return handleInteractive(from, 'menu_ressources', phoneNumberId);
-  }
-  if (t.includes('suivi') || t.includes('espace') || t.includes('code')) {
-    return handleInteractive(from, 'menu_suivi', phoneNumberId);
   }
 
   return replyMainMenu(from, phoneNumberId);
@@ -1182,10 +1119,10 @@ function buildApprovalBody(organization) {
     '',
     `Le label Semaine de l'industrie est accepté pour votre ${typeLabel} ${organization.name}.`,
     '',
-    `Code de suivi privé : ${organization.label_code}`,
+    `Code de suivi : ${organization.label_code}`,
     `Fiche : ${SITE()}/o/${organization.slug}`,
     '',
-    'Ne partagez pas ce code.',
+    'Conservez ce code de suivi.',
     'Sur WhatsApp : Suivi de participation, ou envoyez le code.',
     `Sur le site : ${SITE()}/ressources`,
   ].join('\n');
