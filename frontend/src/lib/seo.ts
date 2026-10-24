@@ -1,6 +1,37 @@
+import publicSeoCatalog from './publicSeo.json' with { type: 'json' }
+
 export const SITE_URL = 'https://semaineindustrie.tg'
 export const BACKOFFICE_URL = 'https://backoffice.semaineindustrie.tg'
 export const SITE_NAME = 'Semaine de l’industrie 2026'
+
+export type SeoInput = {
+  title?: string
+  description?: string
+  path?: string
+  image?: string
+  noIndex?: boolean
+}
+
+export type PublicSeoEntry = {
+  path: string
+  title?: string
+  description: string
+}
+
+export const PUBLIC_SEO: Record<string, PublicSeoEntry> = Object.fromEntries(
+  publicSeoCatalog.map((row) => [row.path, row]),
+)
+
+/* Retourne le SEO français d'une route publique connue. */
+export function publicSeo(path: string): SeoInput {
+  const row = PUBLIC_SEO[path]
+  if (!row) return { path }
+  return {
+    path: row.path,
+    title: row.title,
+    description: row.description,
+  }
+}
 
 /* Indique si on est sur le sous-domaine backoffice. */
 export function isBackofficeHost() {
@@ -10,14 +41,6 @@ export function isBackofficeHost() {
 export const DEFAULT_DESCRIPTION =
   'Du 16 au 22 novembre 2026 au Togo : usines ouvertes, métiers, journée phare du 20 novembre et rencontres d’affaires.'
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og.jpg`
-
-export type SeoInput = {
-  title?: string
-  description?: string
-  path?: string
-  image?: string
-  noIndex?: boolean
-}
 
 /* Met à jour ou crée une balise meta / link dans le head. */
 function setMeta(attr: 'name' | 'property', key: string, content: string) {

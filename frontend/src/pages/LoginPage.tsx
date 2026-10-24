@@ -58,7 +58,12 @@ export default function LoginPage() {
   if (checking) {
     return (
       <div className="grid h-svh place-items-center bg-white text-[14px] text-ink/50">
-        <Seo title="Connexion" path="/login" noIndex />
+        <Seo
+          title="Connexion"
+          description="Connexion à l’espace organisation de la Semaine de l’industrie 2026."
+          path="/login"
+          noIndex
+        />
         Vérification de la session…
       </div>
     )
@@ -66,7 +71,12 @@ export default function LoginPage() {
 
   return (
     <div className="grid h-svh overflow-hidden lg:grid-cols-2">
-      <Seo title="Connexion" path="/login" noIndex />
+      <Seo
+        title="Connexion"
+        description="Connexion à l’espace organisation de la Semaine de l’industrie 2026."
+        path="/login"
+        noIndex
+      />
       <div className="relative flex h-full items-center justify-center px-6 sm:px-12">
         <a
           href={isBackofficeHost() ? SITE_URL : '/'}

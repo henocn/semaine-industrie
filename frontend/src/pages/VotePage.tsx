@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { castVote, getVotes, type VoteOption } from '../api/engagement'
 import { Seo } from '../components/Seo'
+import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
@@ -49,11 +50,7 @@ export default function VotePage() {
 
   return (
     <main className="py-16 sm:py-24">
-      <Seo
-        title="Vote coup de cœur"
-        description="Votez pour le produit coup de cœur de l'exposition Semaine de l'industrie 2026."
-        path="/vote"
-      />
+      <Seo {...publicSeo('/vote')} />
       <div className={WRAP}>
         <div className="animate-rise">
           <SectionHeader

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listIndustries, type IndustryCard } from '../api/labels'
 import { Seo } from '../components/Seo'
+import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
@@ -46,11 +47,7 @@ export default function IndustriesPage() {
 
   return (
     <main className="py-14 sm:py-20">
-      <Seo
-        title="Industrie"
-        description="Entreprises labellisées de la Semaine de l’industrie 2026. Parcourez les fiches et découvrez les sites ouverts."
-        path="/industrie"
-      />
+      <Seo {...publicSeo('/industrie')} />
       <div className={WRAP}>
         <div className="animate-rise">
           <SectionHeader

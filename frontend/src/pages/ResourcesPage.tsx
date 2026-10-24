@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { listResources, type GlobalResource } from '../api/resources'
 import { Seo } from '../components/Seo'
+import { publicSeo } from '../lib/seo'
 import { ResourcesModal } from '../components/ResourcesModal'
 import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
@@ -17,11 +18,7 @@ export default function ResourcesPage() {
 
   return (
     <main className={`${WRAP} pb-20 pt-16 sm:pt-24`}>
-      <Seo
-        title="Ressources"
-        description="Téléchargez votre label et le programme avec votre code de suivi."
-        path="/ressources"
-      />
+      <Seo {...publicSeo('/ressources')} />
       <div className="animate-rise">
         <SectionHeader
           level={1}

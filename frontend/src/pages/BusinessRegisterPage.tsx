@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { registerParticipant } from '../api/business'
 import { Seo } from '../components/Seo'
+import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { Field } from '../components/ui/Field'
@@ -46,11 +47,7 @@ export default function BusinessRegisterPage() {
 
   return (
     <main className="py-14 sm:py-20">
-      <Seo
-        title="Rencontres d’affaires"
-        description="Investisseurs, acheteurs et PME : inscrivez-vous aux rencontres d’affaires du vendredi 20 novembre."
-        path="/affaires"
-      />
+      <Seo {...publicSeo('/affaires')} />
       <div className={`${WRAP} grid gap-12 md:grid-cols-[1fr_1.15fr]`}>
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader

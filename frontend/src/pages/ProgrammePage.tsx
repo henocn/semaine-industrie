@@ -3,6 +3,7 @@ import { Minus, Plus } from 'lucide-react'
 import { DAYS } from '../data'
 import { Seo } from '../components/Seo'
 import { CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
+import { publicSeo } from '../lib/seo'
 import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
 
@@ -12,11 +13,7 @@ export default function ProgrammePage() {
 
   return (
     <main className="bg-white pb-16 sm:pb-20">
-      <Seo
-        title="Programme"
-        description="Programme officiel du 16 au 22 novembre 2026. Un thème par jour, journée phare le vendredi 20 novembre."
-        path="/programme"
-      />
+      <Seo {...publicSeo('/programme')} />
 
       <section className="border-b border-forest/10 py-10 sm:py-14">
         <div className={WRAP}>

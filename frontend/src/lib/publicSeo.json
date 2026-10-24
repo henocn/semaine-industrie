@@ -1,0 +1,61 @@
+[
+  {
+    "path": "/",
+    "description": "Du 16 au 22 novembre 2026 au Togo : usines ouvertes, métiers, journée phare du 20 novembre et rencontres d’affaires."
+  },
+  {
+    "path": "/programme",
+    "title": "Programme",
+    "description": "Programme officiel de la Semaine de l’industrie 2026 au Togo : un thème par jour du 16 au 22 novembre, journée phare le 20."
+  },
+  {
+    "path": "/label",
+    "title": "Demander le label",
+    "description": "Industries togolaises : demandez le label officiel pour ouvrir votre site et rejoindre le parcours de la Semaine de l’industrie 2026."
+  },
+  {
+    "path": "/inscription",
+    "title": "S’inscrire",
+    "description": "Écoles et visiteurs : inscrivez-vous à la Semaine de l’industrie 2026 pour visiter les usines et recevoir votre QR de participation."
+  },
+  {
+    "path": "/ressources",
+    "title": "Ressources",
+    "description": "Documents et ressources de la Semaine de l’industrie 2026 : programme, label et fichiers utiles pour les structures labellisées."
+  },
+  {
+    "path": "/affaires",
+    "title": "Rencontres d’affaires",
+    "description": "Investisseurs, acheteurs et PME : inscrivez-vous aux rencontres d’affaires du vendredi 20 novembre 2026 à Lomé."
+  },
+  {
+    "path": "/carte",
+    "title": "Carte des visites",
+    "description": "Carte des usines ouvertes au Togo pendant la Semaine de l’industrie 2026 : sites, visites d’établissements et accès."
+  },
+  {
+    "path": "/industrie",
+    "title": "Industrie",
+    "description": "Annuaire des entreprises labellisées de la Semaine de l’industrie 2026 : fiches, produits et sites ouverts au public."
+  },
+  {
+    "path": "/vote",
+    "title": "Vote coup de cœur",
+    "description": "Votez pour le produit coup de cœur de l’exposition « Fabriqué au Togo » pendant la Semaine de l’industrie 2026."
+  },
+  {
+    "path": "/questionnaire",
+    "title": "Questionnaire",
+    "description": "Répondez au questionnaire avant ou après votre visite d’usine, Semaine de l’industrie 2026 au Togo."
+  },
+  {
+    "path": "/faq",
+    "title": "Questions fréquentes",
+    "description": "Dates, label, inscriptions, visites et vote : les questions fréquentes de la Semaine de l’industrie 2026."
+  },
+  {
+    "path": "/confidentialite",
+    "title": "Confidentialité",
+    "description": "Politique de confidentialité et cookies du site semaineindustrie.tg, Semaine de l’industrie 2026."
+  }
+]

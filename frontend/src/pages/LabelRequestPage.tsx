@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent } from 'react'
 import { createLabelRequest, uploadLabelGallery } from '../api/labels'
 import { Seo } from '../components/Seo'
+import { publicSeo } from '../lib/seo'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
@@ -90,11 +91,7 @@ export default function LabelRequestPage() {
 
   return (
     <main className="py-14 sm:py-20">
-      <Seo
-        title="Demander le label"
-        description="Industries : demandez le label Semaine de l’industrie 2026 pour rejoindre le parcours officiel."
-        path="/label"
-      />
+      <Seo {...publicSeo('/label')} />
       <div className={`${WRAP} grid gap-12 md:grid-cols-[1fr_1.15fr]`}>
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
