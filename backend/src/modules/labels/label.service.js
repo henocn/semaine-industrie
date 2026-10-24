@@ -130,10 +130,11 @@ function primaryKitUrl(kitFiles) {
 }
 
 /* Construit une entrée kit depuis un fichier multer. */
-function kitEntryFromFile(file) {
+function kitEntryFromFile(file, title) {
+  const labeled = String(title || '').trim();
   return {
     id: uuidv4(),
-    name: String(file.originalname || file.filename || 'fichier').slice(0, 200),
+    name: (labeled || String(file.originalname || file.filename || 'fichier')).slice(0, 200),
     url: `/uploads/docs/${file.filename}`,
     mime: file.mimetype || null,
     size: Number.isFinite(file.size) ? file.size : null,
@@ -250,7 +251,7 @@ async function getEnrichedRequest(id) {
 }
 
 /* Ajoute un fichier au kit d'une organisation acceptée. */
-async function addKitFile(id, file) {
+async function addKitFile(id, file, title) {
   if (!file?.filename) throw ApiError.badRequest('Fichier kit requis');
 
   const request = await getRequestById(id);
@@ -261,7 +262,7 @@ async function addKitFile(id, file) {
   const org = await Organization.findByPk(request.organization_id);
   if (!org) throw ApiError.notFound('Organisation introuvable');
 
-  const entry = kitEntryFromFile(file);
+  const entry = kitEntryFromFile(file, title);
   const next = [...normalizeKitFiles(org), entry];
   org.kit_files = next;
   org.label_document_url = primaryKitUrl(next);

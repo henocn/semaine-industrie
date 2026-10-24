@@ -19,7 +19,6 @@ async function create(req, res, next) {
     const data = await resourceService.createResource({
       title: req.body?.title,
       file: req.file,
-      isPrimary: req.body?.is_primary,
     });
     await audit(req, {
       action: 'create',

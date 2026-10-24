@@ -81,7 +81,7 @@ async function updateRequest(req, res, next) {
 async function updateLabelPdf(req, res, next) {
   try {
     if (!req.file) throw ApiError.badRequest('Fichier kit requis');
-    const data = await labelService.addKitFile(req.params.id, req.file);
+    const data = await labelService.addKitFile(req.params.id, req.file, req.body?.title);
     emitRealtime('label:updated', asJson(data), 'orga');
     return ApiResponse.success(res, data, 'Fichier ajouté au kit');
   } catch (err) {
@@ -93,7 +93,7 @@ async function updateLabelPdf(req, res, next) {
 async function addKitFile(req, res, next) {
   try {
     if (!req.file) throw ApiError.badRequest('Fichier kit requis');
-    const data = await labelService.addKitFile(req.params.id, req.file);
+    const data = await labelService.addKitFile(req.params.id, req.file, req.body?.title);
     emitRealtime('label:updated', asJson(data), 'orga');
     return ApiResponse.success(res, data, 'Fichier ajouté au kit');
   } catch (err) {

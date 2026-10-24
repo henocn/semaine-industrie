@@ -14,7 +14,6 @@ import {
   type LabelRequest,
   type QrBatchItem,
 } from '../api/labels'
-import { EntryResourcesPanel } from '../components/EntryResourcesPanel'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { notifyLabelPendingChanged } from '../lib/labelPending'
@@ -216,12 +215,12 @@ export default function OrgaLabelsPage() {
   }
 
   /* Ajoute un fichier au kit. */
-  async function onAddKitFile(item: LabelRequest, file: File | null) {
+  async function onAddKitFile(item: LabelRequest, file: File | null, title?: string) {
     if (!file) return
     setBusyId(item.id)
     setError(null)
     try {
-      await addKitFile(item.id, file)
+      await addKitFile(item.id, file, title)
       setInfo(`Fichier ajouté au kit de ${item.structure_name}`)
       setSelectedId(item.id)
       await load()
@@ -710,9 +709,11 @@ function LabelDetail({
   selectedQr: QrBatchItem | null
   busyId: string | null
   onClose: () => void
-  onAddKitFile: (item: LabelRequest, file: File | null) => void
+  onAddKitFile: (item: LabelRequest, file: File | null, title?: string) => void
   onDeleteKitFile: (item: LabelRequest, fileId: string) => void
 }) {
+  const [kitTitle, setKitTitle] = useState('')
+
   return (
     <div>
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -830,31 +831,40 @@ function LabelDetail({
                     ))}
                   </ul>
                 )}
-                <label
-                  className={`orga-btn mt-3 inline-flex cursor-pointer px-4 py-2.5 text-[13px] ${
-                    busyId === selected.id ? 'pointer-events-none opacity-50' : ''
-                  }`}
-                >
-                  Ajouter
-                  <input
-                    type="file"
-                    accept={KIT_ACCEPT}
-                    className="hidden"
-                    disabled={busyId === selected.id}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null
-                      e.target.value = ''
-                      void onAddKitFile(selected, file)
-                    }}
-                  />
-                </label>
+                <div className="mt-3 flex flex-wrap items-end gap-2">
+                  <label className="min-w-[180px] flex-1 text-[13px] font-medium text-forest">
+                    Titre
+                    <input
+                      value={kitTitle}
+                      onChange={(e) => setKitTitle(e.target.value)}
+                      className={field}
+                      maxLength={200}
+                    />
+                  </label>
+                  <label
+                    className={`orga-btn inline-flex cursor-pointer px-4 py-2.5 text-[13px] ${
+                      busyId === selected.id || !kitTitle.trim() ? 'pointer-events-none opacity-50' : ''
+                    }`}
+                  >
+                    Ajouter
+                    <input
+                      type="file"
+                      accept={KIT_ACCEPT}
+                      className="hidden"
+                      disabled={busyId === selected.id || !kitTitle.trim()}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null
+                        e.target.value = ''
+                        const title = kitTitle.trim()
+                        setKitTitle('')
+                        void onAddKitFile(selected, file, title)
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
             )}
           </div>
-
-          {selected.status === 'approved' && selected.organization_id && (
-            <EntryResourcesPanel kind="organization" entryId={selected.organization_id} />
-          )}
 
           {selected.status === 'approved' && (
             <div className="mt-5 border-t border-black pt-4">

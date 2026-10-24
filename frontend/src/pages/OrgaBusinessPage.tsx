@@ -11,7 +11,6 @@ import {
   type BusinessMeeting,
   type BusinessParticipant,
 } from '../api/business'
-import { EntryResourcesPanel } from '../components/EntryResourcesPanel'
 import { OrgaShell } from '../components/layout/OrgaShell'
 
 const field =
@@ -545,10 +544,6 @@ export default function OrgaBusinessPage() {
                   {selectedParticipant.seeks || '—'}
                 </p>
               </div>
-
-              {selectedParticipant.status === 'approved' && (
-                <EntryResourcesPanel kind="business" entryId={selectedParticipant.id} />
-              )}
 
               {selectedParticipant.status === 'pending' && (
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-black/10 pt-4">

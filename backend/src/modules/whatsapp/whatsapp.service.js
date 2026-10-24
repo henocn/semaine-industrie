@@ -13,11 +13,9 @@ const {
   BusinessMeeting,
   Passport,
   PassportVisit,
-  Participation,
 } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
 const resourceService = require('../resources/resource.service');
-const entryResourceService = require('../entry-resources/entry-resource.service');
 
 const QR_DIR = path.join(__dirname, '../../../uploads/qr');
 const BTN_SUIVI = 'Suivi participation';
@@ -282,18 +280,29 @@ async function sendTitledDocuments({ to, phoneNumberId, items, emptyBody, fallba
   return end(items.length === 1 ? 'Voici votre document.' : 'Voici vos documents.');
 }
 
-/* Ressources jointes à la fiche ouverte. */
+/* Convertit les fichiers kit en documents WhatsApp titrés. */
+function kitDocuments(org) {
+  const raw = Array.isArray(org?.kit_files) ? org.kit_files : [];
+  const files = raw.length
+    ? raw
+    : org?.label_document_url
+      ? [{ name: 'kit.pdf', url: org.label_document_url }]
+      : [];
+  return files
+    .filter((f) => f?.url)
+    .map((f) => ({
+      title: f.name || 'Ressource',
+      file_url: f.url,
+      original_name: f.name || null,
+    }));
+}
+
+/* Ressources kit de la fiche ouverte. */
 async function resourcesForLinked(linked) {
-  if (linked?.organization) {
-    return entryResourceService.listByEntry('organization', linked.organization.id);
-  }
-  if (linked?.participant) {
-    return entryResourceService.listByEntry('business', linked.participant.id);
-  }
-  if (linked?.passport) {
-    const participation = await Participation.findOne({ where: { passport_id: linked.passport.id } });
-    if (!participation) return [];
-    return entryResourceService.listByEntry('participation', participation.id);
+  if (linked?.organization) return kitDocuments(linked.organization);
+  if (linked?.passport?.school_organization_id) {
+    const org = await Organization.findByPk(linked.passport.school_organization_id);
+    return kitDocuments(org);
   }
   return [];
 }
