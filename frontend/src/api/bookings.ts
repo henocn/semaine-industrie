@@ -28,7 +28,7 @@ export type VisitBooking = {
   visit_end: string
   headcount: number
   status: string
-  passage?: boolean
+  passage?: number
   organization?: {
     id: string
     name: string

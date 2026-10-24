@@ -21,9 +21,9 @@ function statusLabel(status: Participation['status']) {
   return 'En attente'
 }
 
-/* Libellé du passage. */
-function passageLabel(item: Participation) {
-  return item.passport?.passed_at ? 'OUI' : 'NON'
+/* Nombre de passages (0 tant qu'aucun scan). */
+function passageCount(item: Participation) {
+  return item.passport?.passages ?? 0
 }
 
 /* Classe de ligne selon le statut. */
@@ -374,8 +374,8 @@ export default function OrgaParticipationsPage() {
                     <td className="font-medium text-forest">{item.name}</td>
                     <td>{item.phone || item.email || '…'}</td>
                     <td>{statusLabel(item.status)}</td>
-                    <td className={item.passport?.passed_at ? 'font-semibold text-forest' : 'text-ink/45'}>
-                      {passageLabel(item)}
+                    <td className={passageCount(item) > 0 ? 'font-semibold text-forest' : 'text-ink/45'}>
+                      {passageCount(item)}
                     </td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-1">

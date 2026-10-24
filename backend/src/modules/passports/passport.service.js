@@ -1,10 +1,14 @@
 'use strict';
 
 const QRCode = require('qrcode');
+const { Op, fn, col } = require('sequelize');
 const { Passport, PassportVisit, Organization } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
+
+/* Tampon posé à l'arrangement d'une visite : pas un passage réel. */
+const ARRANGEMENT_STAMP = 'arrangement orga';
 
 /* Génère le prochain code passeport du groupe (EC école, PA particulier). */
 async function uniqueCode(kind, transaction) {
@@ -165,6 +169,11 @@ async function recordPassage({ visitorCode, industryCode }) {
       scanned_by: org.label_code || org.name,
       scanned_at: new Date(),
     });
+  } else if (existing.scanned_by === ARRANGEMENT_STAMP) {
+    /* Le tampon d'arrangement devient un passage réel. */
+    existing.scanned_by = org.label_code || org.name;
+    existing.scanned_at = new Date();
+    await existing.save();
   }
 
   return {
@@ -229,12 +238,30 @@ async function ensureGroupStampForBooking({ school, site, headcount, scanned_by 
     await PassportVisit.create({
       passport_id: passport.id,
       organization_id: site.id,
-      scanned_by: scanned_by || 'arrangement orga',
+      scanned_by: scanned_by || ARRANGEMENT_STAMP,
       scanned_at: new Date(),
     });
   }
 
   return withQr(passport);
+}
+
+/* Nombre de passages réels par passeport (tampons d'arrangement exclus). */
+async function countPassages(passports) {
+  const list = passports.filter(Boolean);
+  if (!list.length) return new Map();
+  const rows = await PassportVisit.findAll({
+    where: {
+      passport_id: list.map((p) => p.id),
+      [Op.or]: [{ scanned_by: null }, { scanned_by: { [Op.ne]: ARRANGEMENT_STAMP } }],
+    },
+    attributes: ['passport_id', [fn('COUNT', col('id')), 'total']],
+    group: ['passport_id'],
+    raw: true,
+  });
+  const counts = new Map(rows.map((row) => [row.passport_id, Number(row.total)]));
+  /* Ancien passage posé sur un tampon d'arrangement : compte au moins 1. */
+  return new Map(list.map((p) => [p.id, Math.max(counts.get(p.id) || 0, p.passed_at ? 1 : 0)]));
 }
 
 /* Compte total des scans. */
@@ -252,4 +279,5 @@ module.exports = {
   scanVisit,
   ensureGroupStampForBooking,
   countScans,
+  countPassages,
 };

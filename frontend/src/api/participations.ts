@@ -9,6 +9,7 @@ export type ParticipationPassport = {
   url?: string | null
   qr_data_url?: string | null
   passed_at?: string | null
+  passages?: number
 }
 
 export type Participation = {
