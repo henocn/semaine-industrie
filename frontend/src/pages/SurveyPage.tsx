@@ -109,11 +109,14 @@ function SurveyFlow({
   const [answers, setAnswers] = useState<Record<string, SurveyAnswerValue>>(
     () => readStore<Record<string, SurveyAnswerValue>>(draftKey) || {},
   )
-  const [screen, setScreen] = useState<Screen>('intro')
+  const [alreadyDone, setAlreadyDone] = useState(() => Boolean(readStore<boolean>(doneKey)))
+  /* Déjà répondu sur cet appareil : on affiche directement le remerciement. */
+  const [screen, setScreen] = useState<Screen>(() => (alreadyDone ? 'sent' : 'intro'))
+  const [justSent, setJustSent] = useState(false)
+  const [afterDone] = useState(() => Boolean(readStore<boolean>(`survey-done:after:${code}`)))
   const [step, setStep] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [alreadyDone, setAlreadyDone] = useState(() => Boolean(readStore<boolean>(doneKey)))
   const autoNext = useRef<number | null>(null)
 
   useEffect(() => () => {
@@ -223,6 +226,7 @@ function SurveyFlow({
       writeStore(draftKey, null)
       writeStore(doneKey, true)
       setAlreadyDone(true)
+      setJustSent(true)
       setScreen('sent')
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
@@ -323,18 +327,28 @@ function SurveyFlow({
               <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-forest text-white">
                 <Check className="h-6 w-6" aria-hidden />
               </span>
-              <p className="mt-4 text-xl font-semibold text-forest">Merci pour vos réponses !</p>
-              <p className="mt-2 text-[15px] text-ink/75">
-                {phase === 'before'
-                  ? 'Bonne visite ! Revenez après pour nous dire ce que vous en avez retenu.'
-                  : "Elles nous aident à préparer les prochaines éditions de la Semaine de l'industrie."}
+              <p className="mt-4 text-xl font-semibold text-forest">
+                {justSent ? 'Merci pour vos réponses !' : `Questionnaire « ${phaseInfo.title.toLowerCase()} » déjà rempli`}
               </p>
-              {phase === 'before' && (
+              <p className="mt-2 text-[15px] text-ink/75">
+                {phase === 'before' && !afterDone
+                  ? 'Bonne visite ! Revenez après pour nous dire ce que vous en avez retenu.'
+                  : "Vos réponses nous aident à préparer les prochaines éditions de la Semaine de l'industrie."}
+              </p>
+              {phase === 'before' && !afterDone && (
                 <div className="mt-5">
                   <Button variant="outline" to={afterHref}>Répondre après la visite</Button>
                 </div>
               )}
             </div>
+            {!justSent && (
+              <p className="mt-4 text-center text-[13px] text-ink/60">
+                Une autre personne utilise ce téléphone ?{' '}
+                <button type="button" className="font-semibold text-forest underline underline-offset-2" onClick={() => setScreen('intro')}>
+                  Répondre à nouveau
+                </button>
+              </p>
+            )}
 
             <p className="mt-8 text-[14px] font-semibold text-forest">Et maintenant ?</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
