@@ -2,6 +2,7 @@
 
 const { Op } = require('sequelize');
 const { BusinessParticipant, BusinessMeeting } = require('../../models');
+const trackingService = require('../tracking/tracking.service');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const { sendNotifyMail } = require('../../utils/mailer');
@@ -30,6 +31,7 @@ async function register(payload) {
     country: emptyToNull(payload.country),
     contact_opt_in: true,
     status: 'pending',
+    tracking_code: await trackingService.nextCode('AF'),
   });
   await notifyN8n('business.participant_registered', {
     id: row.id,
@@ -54,6 +56,7 @@ async function createByOrga(payload) {
     country: emptyToNull(payload.country),
     contact_opt_in: payload.contact_opt_in !== false,
     status: payload.status === 'pending' ? 'pending' : 'approved',
+    tracking_code: await trackingService.nextCode('AF'),
   });
   await notifyN8n('business.participant_registered', {
     id: row.id,

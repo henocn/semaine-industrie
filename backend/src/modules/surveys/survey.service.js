@@ -1,6 +1,7 @@
 'use strict';
 
 const { SurveyResponse, SurveyQuestion, Passport } = require('../../models');
+const trackingService = require('../tracking/tracking.service');
 const ApiError = require('../../utils/ApiError');
 
 /* Génère une clé technique unique à partir du libellé. */
@@ -167,7 +168,8 @@ async function submit({ passport_code, phase, answers, source = 'qr' }) {
 
   let passport_id = null;
   if (passport_code) {
-    const p = await Passport.findOne({ where: { code: String(passport_code).toUpperCase() } });
+    const found = await trackingService.findByCode(passport_code);
+    const p = found?.kind === 'passport' ? found.passport : null;
     if (!p) throw ApiError.notFound('Passeport introuvable');
     passport_id = p.id;
   }

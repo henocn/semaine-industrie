@@ -93,7 +93,7 @@ export default function OrgaBusinessPage() {
     const q = query.trim().toLowerCase()
     if (!q) return participants
     return participants.filter((p) =>
-      [p.organization_name, p.contact_name, p.email, p.phone, p.sector, p.kind, p.country]
+      [p.organization_name, p.contact_name, p.email, p.phone, p.sector, p.kind, p.country, p.tracking_code]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     )
@@ -473,6 +473,7 @@ export default function OrgaBusinessPage() {
                     {selectedParticipant.kind}
                     {' · '}
                     {statusLabel(selectedParticipant.status)}
+                    {selectedParticipant.tracking_code ? ` · ${selectedParticipant.tracking_code}` : ''}
                   </p>
                 </div>
                 <button

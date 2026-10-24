@@ -58,6 +58,16 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: false,
       },
+      tracking_code: {
+        type: DataTypes.STRING(16),
+        allowNull: true,
+        unique: true,
+      },
+      legacy_code: {
+        type: DataTypes.STRING(40),
+        allowNull: true,
+        unique: true,
+      },
     },
     {
       tableName: 'business_participants',

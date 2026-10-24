@@ -10,7 +10,7 @@
           "type": "BODY",
           "text": "Bonjour {{1}}, votre demande de label pour {{2}} est acceptée. Votre code de suivi est {{3}}. Conservez ce code pour retrouver votre dossier.",
           "example": {
-            "body_text": [["Henoc Ngasama", "Industrie Demo", "SI26-5678"]]
+            "body_text": [["Henoc Ngasama", "Industrie Demo", "IN-2001"]]
           }
         },
         {
@@ -29,9 +29,9 @@
       "components": [
         {
           "type": "BODY",
-          "text": "Bonjour {{1}}, votre dossier pour {{2}} est accepté. Votre code QR est {{3}}. Conservez ce code pour retrouver votre dossier.",
+          "text": "Bonjour {{1}}, votre dossier pour {{2}} est accepté. Votre code de suivi est {{3}}. Conservez ce code pour retrouver votre dossier.",
           "example": {
-            "body_text": [["Afi Mensah", "Lycee technique de Lome", "P1A2B3C"]]
+            "body_text": [["Afi Mensah", "Lycee technique de Lome", "EC-2001"]]
           }
         },
         {
@@ -71,7 +71,7 @@
       "components": [
         {
           "type": "BODY",
-          "text": "Bonjour {{1}}, votre rendez-vous du {{2}} est reporté. Horaire {{3}}, avec {{4}}, lieu {{5}}. Ce créneau est enregistré.",
+          "text": "Bonjour {{1}}, votre rendez-vous est reporté au {{2}}, de {{3}}, avec {{4}}, lieu {{5}}. Ce nouveau créneau est enregistré.",
           "example": {
             "body_text": [["Jean Koffi", "20/11/2026", "15:00 à 15:20", "PME Demo", "Table T12"]]
           }

@@ -17,6 +17,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         unique: true,
       },
+      legacy_code: {
+        type: DataTypes.STRING(40),
+        allowNull: true,
+        unique: true,
+      },
       kind: {
         type: DataTypes.ENUM('individual', 'group'),
         allowNull: false,
