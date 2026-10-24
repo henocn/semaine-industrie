@@ -107,7 +107,7 @@ async function sendWithNav({ to, body, phoneNumberId, header }) {
     header,
     body: String(body || '').slice(0, 1024),
     buttons: [
-      { id: 'menu_suivi', title: 'Mon espace' },
+      { id: 'menu_suivi', title: 'Suivi de participation' },
       { id: 'menu_home', title: 'Menu' },
     ],
   });
@@ -380,7 +380,7 @@ function espaceMenuPayload(to) {
     to,
     body: 'Suivi de label, ou rencontres d\'affaires.',
     buttonLabel: 'Choisir',
-    header: 'Mon espace',
+    header: 'Suivi de participation',
     sections: [
       {
         title: 'Accès',
@@ -437,7 +437,7 @@ function participateBody() {
     '',
     `3. *Investisseur ou entreprise* : réservez une visite d'affaires avec l'API-ZF sur ${site}/affaires`,
     '',
-    '📩 Vous recevrez un *code de suivi* pour voir où en est votre participation dans « Mon espace ».',
+    '📩 Vous recevrez un *code de suivi* pour voir où en est votre participation dans « Suivi de participation ».',
   ].join('\n');
 }
 
@@ -475,7 +475,7 @@ function mainMenuPayload(to) {
       {
         title: 'Accès privé',
         rows: [
-          { id: 'menu_suivi', title: 'Mon espace' },
+          { id: 'menu_suivi', title: 'Suivi de participation' },
         ],
       },
     ],
@@ -488,7 +488,7 @@ function suiviMenuPayload(to, org) {
   return {
     to,
     body: `${typeLabel} : ${org.name}\nQue souhaitez-vous ?`,
-    buttonLabel: 'Mon espace',
+    buttonLabel: 'Suivi de participation',
     header: 'Suivi label',
     sections: [
       {
@@ -532,7 +532,7 @@ function b2bMenuPayload(to, participant) {
       `${b2bDisplayName(participant)}\n` +
       `Statut : ${b2bStatusLabel(participant.status)}\n\n` +
       'Que souhaitez-vous ?',
-    buttonLabel: 'Mon espace',
+    buttonLabel: 'Suivi de participation',
     header: "Rencontres d'affaires",
     sections: [
       {
@@ -1186,7 +1186,7 @@ function buildApprovalBody(organization) {
     `Fiche : ${SITE()}/o/${organization.slug}`,
     '',
     'Ne partagez pas ce code.',
-    'Sur WhatsApp : Mon espace, ou envoyez le code.',
+    'Sur WhatsApp : Suivi de participation, ou envoyez le code.',
     `Sur le site : ${SITE()}/ressources`,
   ].join('\n');
 }
