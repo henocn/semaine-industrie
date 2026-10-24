@@ -15,7 +15,7 @@ async function uniqueCode(kind, transaction) {
 /* Enrichit un passeport avec URL publique + QR. */
 async function withQr(passport) {
   const base = env.PUBLIC_APP_URL.replace(/\/$/, '');
-  const url = `${base}/passeport/${passport.code}`;
+  const url = `${base}/passage/${passport.code}`;
   const qr_data_url = await QRCode.toDataURL(url, { width: 280, margin: 1 });
   return { ...passport.toJSON(), url, qr_data_url };
 }
@@ -131,6 +131,54 @@ async function getByCode(code) {
   return passport;
 }
 
+/* Valide un passage : QR visiteur + code industrie. */
+async function recordPassage({ visitorCode, industryCode }) {
+  const visitor = await trackingService.findByCode(visitorCode);
+  if (visitor?.kind !== 'passport') {
+    throw ApiError.badRequest('QR visiteur introuvable');
+  }
+  const passport = visitor.passport;
+  if (!passport?.is_active) throw ApiError.notFound('Passeport introuvable');
+
+  const industry = await trackingService.findByCode(industryCode);
+  if (industry?.kind !== 'organization' || industry.organization.type !== 'entreprise') {
+    throw ApiError.badRequest('Code industrie invalide. Entrez le code de suivi de l\'industrie (IN-2001).');
+  }
+  const org = industry.organization;
+  if (org.label_status !== 'approved' || !org.is_active) {
+    throw ApiError.badRequest('Industrie non labellisée');
+  }
+
+  const already = Boolean(passport.passed_at);
+  if (!passport.passed_at) {
+    passport.passed_at = new Date();
+    await passport.save();
+  }
+
+  const existing = await PassportVisit.findOne({
+    where: { passport_id: passport.id, organization_id: org.id },
+  });
+  if (!existing) {
+    await PassportVisit.create({
+      passport_id: passport.id,
+      organization_id: org.id,
+      scanned_by: org.label_code || org.name,
+      scanned_at: new Date(),
+    });
+  }
+
+  return {
+    already,
+    passage: true,
+    visitor: {
+      code: passport.code,
+      name: passport.holder_name || passport.school_name || 'Visiteur',
+      kind: passport.kind,
+    },
+    site: { name: org.name, code: org.label_code },
+  };
+}
+
 /* Enregistre un tampon pour un site (un seul par site, valable pour tout le groupe). */
 async function scanVisit({ code, organization_id, scanned_by }) {
   const found = await trackingService.findByCode(code);
@@ -153,6 +201,11 @@ async function scanVisit({ code, organization_id, scanned_by }) {
     scanned_by: scanned_by || null,
     scanned_at: new Date(),
   });
+
+  if (!passport.passed_at) {
+    passport.passed_at = visit.scanned_at;
+    await passport.save();
+  }
 
   return { passport, visit, organization: org };
 }
@@ -195,6 +248,7 @@ module.exports = {
   createGroup,
   withQr,
   getByCode,
+  recordPassage,
   scanVisit,
   ensureGroupStampForBooking,
   countScans,

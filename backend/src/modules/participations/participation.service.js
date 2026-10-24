@@ -31,7 +31,7 @@ async function present(row, { withImage = false } = {}) {
   const passport = await Passport.findByPk(row.passport_id);
   if (!passport) return { ...json, passport: null };
   if (!withImage) {
-    return { ...json, passport: { id: passport.id, code: passport.code } };
+    return { ...json, passport: { id: passport.id, code: passport.code, passed_at: passport.passed_at || null } };
   }
   return { ...json, passport: await passportService.withQr(passport) };
 }

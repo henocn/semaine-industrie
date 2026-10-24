@@ -332,10 +332,21 @@ async function replyGlobalResources(from, phoneNumberId) {
   });
 }
 
-/* Cible encodée dans le QR selon le groupe. */
-function qrPayloadUrl(linked) {
+/* Cible encodée dans le QR : lien de validation de passage. */
+async function qrPayloadUrl(linked) {
+  if (linked.passport?.code) return `${SITE()}/passage/${linked.passport.code}`;
+  if (linked.organization?.type === 'ecole' && linked.organization.id) {
+    const group = await Passport.findOne({
+      where: {
+        school_organization_id: linked.organization.id,
+        kind: 'group',
+        is_active: true,
+      },
+      order: [['created_at', 'DESC']],
+    });
+    if (group?.code) return `${SITE()}/passage/${group.code}`;
+  }
   if (linked.organization?.slug) return `${SITE()}/o/${linked.organization.slug}`;
-  if (linked.passport?.code) return `${SITE()}/passeport/${linked.passport.code}`;
   return String(linked.code || SITE());
 }
 
@@ -352,7 +363,7 @@ async function qrImageUrl(code, payloadUrl) {
 async function sendTrackingQr(from, phoneNumberId, linked) {
   const code = linked.code;
   if (!code) return { ok: false, reason: 'no_code' };
-  const link = await qrImageUrl(code, qrPayloadUrl(linked));
+  const link = await qrImageUrl(code, await qrPayloadUrl(linked));
   return sendImage({
     to: from,
     phoneNumberId,

@@ -17,6 +17,7 @@ export type Passport = {
   visits?: PassportVisit[]
   url?: string
   qr_data_url?: string
+  passed_at?: string | null
 }
 
 /* Charge un passeport par code. */
@@ -49,4 +50,22 @@ export function createPassportBatch(payload: { count: number; school_name?: stri
 /* Tamponne une visite (un site = un tampon pour tout le groupe). */
 export function scanPassport(payload: { code: string; organization_id: string; scanned_by?: string }) {
   return apiFetch('/passports/scan', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export type PassageResult = {
+  already: boolean
+  passage: boolean
+  visitor: { code: string; name: string; kind?: string }
+  site: { name: string; code?: string | null }
+}
+
+/* Valide un passage (QR visiteur + code industrie). */
+export function recordPassage(visitorCode: string, industryCode: string) {
+  return apiFetch<PassageResult>('/passports/passage', {
+    method: 'POST',
+    body: JSON.stringify({
+      visitor_code: visitorCode,
+      industry_code: industryCode,
+    }),
+  })
 }

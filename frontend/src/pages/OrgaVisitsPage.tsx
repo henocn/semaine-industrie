@@ -520,13 +520,14 @@ export default function OrgaVisitsPage() {
                 <th>Site</th>
                 <th>Créneau</th>
                 <th>Effectif</th>
+                <th className="w-24">Passage</th>
                 <th>Contact</th>
                 <th className="w-28">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={7}>Aucune visite</td></tr>
+                <tr><td colSpan={8}>Aucune visite</td></tr>
               )}
               {filtered.map((b, i) => {
                 const onMap = isOnMap(b)
@@ -544,6 +545,9 @@ export default function OrgaVisitsPage() {
                     </td>
                     <td>{b.visit_day} {b.visit_start}-{b.visit_end}</td>
                     <td className="font-semibold text-forest">{b.headcount}</td>
+                    <td className={b.passage ? 'font-semibold text-forest' : 'text-ink/45'}>
+                      {b.passage ? 'OUI' : 'NON'}
+                    </td>
                     <td>
                       <a href={`tel:${b.teacher_phone || ''}`} className="block font-semibold text-forest underline underline-offset-2">
                         {b.teacher_phone || '—'}
