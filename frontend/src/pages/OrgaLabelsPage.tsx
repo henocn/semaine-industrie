@@ -14,13 +14,13 @@ import {
   type LabelRequest,
   type QrBatchItem,
 } from '../api/labels'
-
-const KIT_ACCEPT =
-  '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { notifyLabelPendingChanged } from '../lib/labelPending'
 import { joinRoom, onRealtime } from '../lib/socket'
+
+const KIT_ACCEPT =
+  '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -51,7 +51,6 @@ export default function OrgaLabelsPage() {
   const [editLat, setEditLat] = useState<number | null>(null)
   const [editLng, setEditLng] = useState<number | null>(null)
   const [approveTarget, setApproveTarget] = useState<LabelRequest | null>(null)
-  const [approvePdf, setApprovePdf] = useState<File | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<LabelRequest | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedQr, setSelectedQr] = useState<QrBatchItem | null>(null)
@@ -179,16 +178,15 @@ export default function OrgaLabelsPage() {
     }
   }
 
-  /* Approuve la demande. Le fichier kit est facultatif. */
+  /* Approuve la demande, sans fichier à joindre. */
   async function onConfirmApprove(e: FormEvent) {
     e.preventDefault()
     if (!approveTarget) return
     setBusyId(approveTarget.id)
     setError(null)
     try {
-      await reviewLabelRequest(approveTarget.id, 'approved', { labelPdf: approvePdf })
+      await reviewLabelRequest(approveTarget.id, 'approved')
       setApproveTarget(null)
-      setApprovePdf(null)
       notifyLabelPendingChanged()
       await load()
     } catch (err) {
@@ -217,12 +215,12 @@ export default function OrgaLabelsPage() {
   }
 
   /* Ajoute un fichier au kit. */
-  async function onAddKitFile(item: LabelRequest, file: File | null) {
+  async function onAddKitFile(item: LabelRequest, file: File | null, title?: string) {
     if (!file) return
     setBusyId(item.id)
     setError(null)
     try {
-      await addKitFile(item.id, file)
+      await addKitFile(item.id, file, title)
       setInfo(`Fichier ajouté au kit de ${item.structure_name}`)
       setSelectedId(item.id)
       await load()
@@ -383,10 +381,7 @@ export default function OrgaLabelsPage() {
                           label="Approuver"
                           variant="ok"
                           disabled={busyId === item.id}
-                          onClick={() => {
-                            setApprovePdf(null)
-                            setApproveTarget(item)
-                          }}
+                          onClick={() => setApproveTarget(item)}
                         >
                           <IconCheck />
                         </IconButton>
@@ -576,25 +571,13 @@ export default function OrgaLabelsPage() {
           >
             <h3 className="text-[16px] font-semibold text-forest">Accepter la demande</h3>
             <p className="mt-2 text-[13px] text-ink/60">
-              {approveTarget.structure_name}. Le fichier du kit est facultatif, vous pourrez l&apos;ajouter ensuite.
+              {approveTarget.structure_name}. Un code de suivi sera attribué. Les ressources s&apos;ajoutent ensuite sur la fiche.
             </p>
-            <label className="mt-4 block text-[13px] font-medium text-forest">
-              Fichier kit
-              <input
-                type="file"
-                accept={KIT_ACCEPT}
-                className="mt-1 block w-full text-[13px]"
-                onChange={(e) => setApprovePdf(e.target.files?.[0] || null)}
-              />
-            </label>
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
                 className="orga-btn-ghost"
-                onClick={() => {
-                  setApproveTarget(null)
-                  setApprovePdf(null)
-                }}
+                onClick={() => setApproveTarget(null)}
               >
                 Annuler
               </button>
@@ -726,9 +709,11 @@ function LabelDetail({
   selectedQr: QrBatchItem | null
   busyId: string | null
   onClose: () => void
-  onAddKitFile: (item: LabelRequest, file: File | null) => void
+  onAddKitFile: (item: LabelRequest, file: File | null, title?: string) => void
   onDeleteKitFile: (item: LabelRequest, fileId: string) => void
 }) {
+  const [kitTitle, setKitTitle] = useState('')
+
   return (
     <div>
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -846,24 +831,37 @@ function LabelDetail({
                     ))}
                   </ul>
                 )}
-                <label
-                  className={`orga-btn mt-3 inline-flex cursor-pointer px-4 py-2.5 text-[13px] ${
-                    busyId === selected.id ? 'pointer-events-none opacity-50' : ''
-                  }`}
-                >
-                  Ajouter
-                  <input
-                    type="file"
-                    accept={KIT_ACCEPT}
-                    className="hidden"
-                    disabled={busyId === selected.id}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null
-                      e.target.value = ''
-                      void onAddKitFile(selected, file)
-                    }}
-                  />
-                </label>
+                <div className="mt-3 flex flex-wrap items-end gap-2">
+                  <label className="min-w-[180px] flex-1 text-[13px] font-medium text-forest">
+                    Titre
+                    <input
+                      value={kitTitle}
+                      onChange={(e) => setKitTitle(e.target.value)}
+                      className={field}
+                      maxLength={200}
+                    />
+                  </label>
+                  <label
+                    className={`orga-btn inline-flex cursor-pointer px-4 py-2.5 text-[13px] ${
+                      busyId === selected.id || !kitTitle.trim() ? 'pointer-events-none opacity-50' : ''
+                    }`}
+                  >
+                    Ajouter
+                    <input
+                      type="file"
+                      accept={KIT_ACCEPT}
+                      className="hidden"
+                      disabled={busyId === selected.id || !kitTitle.trim()}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null
+                        e.target.value = ''
+                        const title = kitTitle.trim()
+                        setKitTitle('')
+                        void onAddKitFile(selected, file, title)
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
             )}
           </div>

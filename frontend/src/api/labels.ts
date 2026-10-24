@@ -273,10 +273,11 @@ export function createLabelRequestOrga(payload: Partial<LabelRequestPayload> & {
 }
 
 /* Ajoute un fichier au kit après acceptation. */
-export async function addKitFile(id: string, file: File) {
+export async function addKitFile(id: string, file: File, title?: string) {
   const token = getAccessToken()
   const body = new FormData()
   body.append('kit_file', file)
+  if (title?.trim()) body.append('title', title.trim())
   const res = await fetch(`${API_BASE}/labels/requests/${id}/kit`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,

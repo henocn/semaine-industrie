@@ -15,12 +15,11 @@ export function listResources() {
 }
 
 /* Envoie un fichier (orga). */
-export async function uploadResource(file: File, title: string, isPrimary: boolean) {
+export async function uploadResource(file: File, title: string) {
   const token = getAccessToken()
   const body = new FormData()
   body.append('file', file)
   body.append('title', title)
-  body.append('is_primary', isPrimary ? '1' : '0')
   const res = await fetch(`${API_BASE}/resources`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -35,11 +34,6 @@ export async function uploadResource(file: File, title: string, isPrimary: boole
     throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
   }
   return json.data
-}
-
-/* Marque une ressource comme fichier principal. */
-export function setPrimaryResource(id: string) {
-  return apiFetch<GlobalResource>(`/resources/${id}/primary`, { method: 'PATCH' })
 }
 
 /* Supprime une ressource. */

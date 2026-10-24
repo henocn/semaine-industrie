@@ -32,23 +32,16 @@ async function clearPrimary(exceptId) {
   await GlobalResource.update({ is_primary: false }, { where });
 }
 
-/* Enregistre un fichier et peut le marquer comme ressource principale. */
-async function createResource({ title, file, isPrimary }) {
+/* Enregistre un fichier (colonne is_primary conservée, plus utilisée à la saisie). */
+async function createResource({ title, file }) {
   const name = String(title || '').trim();
   if (!name) throw ApiError.badRequest('Indiquez un titre');
   if (!file?.filename) throw ApiError.badRequest('Ajoutez un fichier');
 
-  const fileUrl = `/uploads/docs/${file.filename}`;
-  const wantPrimary = isPrimary === true || isPrimary === 'true' || isPrimary === '1' || isPrimary === 'on';
-  const existingPrimary = await GlobalResource.count({ where: { is_primary: true } });
-  const primary = wantPrimary || existingPrimary === 0;
-
-  if (primary) await clearPrimary();
-
   return GlobalResource.create({
     title: name.slice(0, 200),
-    file_url: fileUrl,
-    is_primary: primary,
+    file_url: `/uploads/docs/${file.filename}`,
+    is_primary: false,
   });
 }
 
