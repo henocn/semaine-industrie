@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { Op } = require('sequelize');
+const { Op, fn, col, where } = require('sequelize');
 const QRCode = require('qrcode');
 const env = require('../../config/env');
 const logger = require('../../utils/logger');
@@ -1187,12 +1187,21 @@ async function formatOutgoingVisites(org) {
 
 /* Visites d'un passeport (arrangements école, sinon tampons). */
 async function formatPassportVisites(passport) {
-  if (passport.school_organization_id) {
-    const school = await Organization.findByPk(passport.school_organization_id);
-    if (school) {
-      const booked = await formatOutgoingVisites(school);
-      if (!booked.startsWith('Aucune')) return booked;
-    }
+  /* Passeport d'inscription pas encore rattaché : retrouve la fiche école par son nom. */
+  const schoolName = String(passport.school_name || '').trim().toLowerCase();
+  const school = passport.school_organization_id
+    ? await Organization.findByPk(passport.school_organization_id)
+    : passport.kind === 'group' && schoolName
+      ? await Organization.findOne({
+        where: {
+          type: 'ecole',
+          [Op.and]: [where(fn('lower', fn('trim', col('name'))), schoolName)],
+        },
+      })
+      : null;
+  if (school) {
+    const booked = await formatOutgoingVisites(school);
+    if (!booked.startsWith('Aucune')) return booked;
   }
 
   const visits = await PassportVisit.findAll({

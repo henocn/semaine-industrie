@@ -1,15 +1,72 @@
 'use strict';
 
-const { Op } = require('sequelize');
-const { VisitBooking, Organization, Passport } = require('../../models');
+const { Op, fn, col, where: whereFn } = require('sequelize');
+const { VisitBooking, Organization, Passport, PassportVisit, Participation } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const passportService = require('../passports/passport.service');
 
-/* Effectif de l'école, 0 si rien n'est renseigné. */
-function schoolHeadcount(school) {
-  const n = Number(school?.max_visitors);
-  return Number.isFinite(n) && n >= 1 ? n : 0;
+/* Effectif de l'école (fiche, sinon inscription), 0 si rien n'est renseigné. */
+function schoolHeadcount(school, participation) {
+  for (const value of [school?.max_visitors, participation?.headcount]) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n >= 1) return n;
+  }
+  return 0;
+}
+
+/* Inscription école acceptée portant le même nom que la fiche labellisée. */
+async function findSchoolParticipation(school) {
+  const name = String(school?.name || '').trim().toLowerCase();
+  if (!name) return null;
+  return Participation.findOne({
+    where: {
+      kind: 'ecole',
+      status: 'approved',
+      passport_id: { [Op.ne]: null },
+      [Op.and]: [whereFn(fn('lower', fn('trim', col('name'))), name)],
+    },
+    order: [['created_at', 'ASC']],
+  });
+}
+
+/* Rattache le passeport reçu à l'inscription à la fiche école ; les doublons créés à l'arrangement
+   lui cèdent leurs tampons puis sont désactivés (rien n'est supprimé). */
+async function linkSchoolParticipation(school) {
+  const participation = await findSchoolParticipation(school);
+  if (!participation) return null;
+  const passport = await Passport.findOne({ where: { id: participation.passport_id, is_active: true } });
+  if (!passport) return participation;
+  if (!passport.school_organization_id) {
+    passport.school_organization_id = school.id;
+    await passport.save();
+  }
+  if (passport.school_organization_id !== school.id) return participation;
+
+  const duplicates = await Passport.findAll({
+    where: {
+      kind: 'group',
+      school_organization_id: school.id,
+      class_label: null,
+      is_active: true,
+      id: { [Op.ne]: passport.id },
+    },
+  });
+  for (const dup of duplicates) {
+    const visits = await PassportVisit.findAll({ where: { passport_id: dup.id } });
+    for (const visit of visits) {
+      const taken = await PassportVisit.findOne({
+        where: { passport_id: passport.id, organization_id: visit.organization_id },
+      });
+      if (!taken) await visit.update({ passport_id: passport.id });
+    }
+    if (dup.passed_at && !passport.passed_at) {
+      passport.passed_at = dup.passed_at;
+      await passport.save();
+    }
+    await dup.update({ is_active: false });
+  }
+  return participation;
 }
 
 /* E-mail école, vide si absent (pas de valeur fictive). */
@@ -58,7 +115,7 @@ async function createSingleBooking(payload) {
   });
   if (!school) throw ApiError.notFound('Établissement introuvable ou non labellisé');
 
-  const headcount = schoolHeadcount(school);
+  const headcount = schoolHeadcount(school, await linkSchoolParticipation(school));
 
   if (site.max_visitors) {
     const used = await VisitBooking.sum('headcount', {
@@ -207,7 +264,7 @@ async function updateBooking(id, payload) {
   });
   if (!school) throw ApiError.notFound('Établissement introuvable ou non labellisé');
 
-  const headcount = schoolHeadcount(school);
+  const headcount = schoolHeadcount(school, await linkSchoolParticipation(school));
 
   if (site.max_visitors) {
     const used = await VisitBooking.sum('headcount', {
