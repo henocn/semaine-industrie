@@ -30,10 +30,14 @@ async function present(row, { withImage = false } = {}) {
   if (!row.passport_id) return { ...json, passport: null };
   const passport = await Passport.findByPk(row.passport_id);
   if (!passport) return { ...json, passport: null };
+  const passages = (await passportService.countPassages([passport])).get(passport.id) || 0;
   if (!withImage) {
-    return { ...json, passport: { id: passport.id, code: passport.code, passed_at: passport.passed_at || null } };
+    return {
+      ...json,
+      passport: { id: passport.id, code: passport.code, passed_at: passport.passed_at || null, passages },
+    };
   }
-  return { ...json, passport: await passportService.withQr(passport) };
+  return { ...json, passport: { ...(await passportService.withQr(passport)), passages } };
 }
 
 /* Liste les participations, filtrables par type et statut. */

@@ -546,7 +546,7 @@ export default function OrgaVisitsPage() {
                     <td>{b.visit_day} {b.visit_start}-{b.visit_end}</td>
                     <td className="font-semibold text-forest">{b.headcount}</td>
                     <td className={b.passage ? 'font-semibold text-forest' : 'text-ink/45'}>
-                      {b.passage ? 'OUI' : 'NON'}
+                      {b.passage ?? 0}
                     </td>
                     <td>
                       <a href={`tel:${b.teacher_phone || ''}`} className="block font-semibold text-forest underline underline-offset-2">
