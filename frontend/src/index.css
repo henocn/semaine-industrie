@@ -268,11 +268,13 @@ select.orga-input {
 /* Entrée douce au chargement (hero, blocs d'intro) */
 .animate-rise { animation: rise .8s var(--ease-leaf) both; }
 
-/* Apparition au scroll : discrète (opacity + léger décalage) */
+/* Apparition au scroll : visible sans JS ; masqué seulement si JS et pas encore entré. */
 .reveal {
-  opacity: 0;
   transform: translateY(8px);
   transition: opacity .55s ease, transform .55s ease;
+}
+.js .reveal:not([data-in="true"]) {
+  opacity: 0;
 }
 .reveal[data-in="true"] {
   opacity: 1;
@@ -332,7 +334,8 @@ select.orga-input {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .reveal,
-  .reveal[data-in="true"] { opacity: 1; transform: none; transition: none; animation: none; }
+  .reveal[data-in="true"],
+  .js .reveal:not([data-in="true"]) { opacity: 1; transform: none; transition: none; animation: none; }
   .animate-rise { animation: none; opacity: 1; }
   .ui-btn-primary,
   .ui-btn-accent,

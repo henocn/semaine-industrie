@@ -88,7 +88,7 @@ function Hero() {
             {CAMPAIGN_TAGLINE.replace(/\.$/, '')}
             <span className="text-leaf">.</span>
           </h1>
-          <p className="hero-copy mt-4 max-w-md text-[15px] leading-relaxed text-white sm:text-base">
+          <p className="hero-copy mt-4 max-w-md text-base leading-relaxed text-white">
             Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public.
           </p>
           <div className="mt-6 flex flex-wrap gap-2.5">
@@ -99,7 +99,7 @@ function Hero() {
               Demander un label
             </Button>
           </div>
-          <p className="hero-copy mt-8 text-[13px] text-white">16 au 22 novembre 2026 · Lomé et les régions</p>
+          <p className="hero-copy mt-8 text-sm text-white">16 au 22 novembre 2026 · Lomé et les régions</p>
         </div>
       </div>
       <div className={`relative z-10 ${WRAP} border-t border-white/15 py-6`}>
@@ -107,7 +107,7 @@ function Hero() {
           {KEY_FIGURES.map(([value, label]) => (
             <div key={value}>
               <dt className="text-[15px] font-semibold text-white">{value}</dt>
-              <dd className="mt-0.5 text-[13px] text-white/90">{label}</dd>
+              <dd className="mt-0.5 text-sm text-white/90">{label}</dd>
             </div>
           ))}
         </dl>
