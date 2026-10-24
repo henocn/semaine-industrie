@@ -892,7 +892,13 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
           `Aussi sur le site : ${SITE()}/ressources`,
       });
     case 'menu_suivi':
-      return sendList({ ...espaceMenuPayload(from), phoneNumberId });
+      setSession(from, { mode: 'await_code', labelCode: null, orgId: null });
+      return sendText({
+        to: from,
+        phoneNumberId,
+        body:
+          "Espace de suivi pour les industries, groupe (écoles/universités) ou particulier. Entrez le code de suivi envoyé à l'inscription.",
+      });
     case 'espace_label':
       if (session.orgId && session.labelCode) {
         const org = await findOrgByCode(session.labelCode);
@@ -1078,16 +1084,16 @@ async function handleText(from, text, phoneNumberId) {
       ? trackingService.normalizeCode(text)
       : null);
   if (codeInText || session.mode === 'await_code') {
-    const code = codeInText || trackingService.normalizeCode(text);
+    const code = trackingService.normalizeCode(codeInText || text);
     const opened = await openByTrackingCode(from, code, phoneNumberId);
     if (opened) return opened;
     setSession(from, { mode: 'await_code' });
-    return sendText({
+    return sendButtons({
       to: from,
       phoneNumberId,
       body:
-        'Code introuvable. Vérifiez le format IN-2001, EC-2001, PA-2001 ou AF-2001.\n' +
-        'Ou tapez MENU pour le menu principal.',
+        'Code introuvable. Vérifiez-le et renvoyez-le (IN-2001, EC-2001, PA-2001 ou AF-2001).',
+      buttons: [{ id: 'menu_home', title: 'Menu' }],
     });
   }
 
