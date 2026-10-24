@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import {
+  businessParticipantLabel,
   createMeeting,
   createParticipantOrga,
   listMeetings,
@@ -44,7 +45,7 @@ function meetingNames(
   approvedPool: BusinessParticipant[],
   participants: BusinessParticipant[],
 ) {
-  const names = meetingAttendees(m, approvedPool, participants).map((p) => p.organization_name)
+  const names = meetingAttendees(m, approvedPool, participants).map((p) => businessParticipantLabel(p))
   return names.join(' × ') || 'Participants'
 }
 
@@ -350,11 +351,11 @@ export default function OrgaBusinessPage() {
               <form onSubmit={onCreatePerson} className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="text-[13px] font-medium text-forest">
                   Personne
-                  <input required name="contact_name" className={field} />
+                  <input name="contact_name" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest">
                   Organisation
-                  <input required name="organization_name" className={field} />
+                  <input name="organization_name" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest">
                   Profil
@@ -432,7 +433,7 @@ export default function OrgaBusinessPage() {
                     onClick={() => selectParticipant(p.id)}
                   >
                     <td className="text-ink/45">{i + 1}</td>
-                    <td className="font-semibold text-forest">{p.contact_name}</td>
+                    <td className="font-semibold text-forest">{businessParticipantLabel(p)}</td>
                     <td>
                       {p.phone ? (
                         <a
@@ -466,7 +467,7 @@ export default function OrgaBusinessPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-[16px] font-semibold text-forest">
-                    {selectedParticipant.contact_name}
+                    {businessParticipantLabel(selectedParticipant)}
                   </h2>
                   <p className="mt-1 text-[13px] text-ink/50">
                     {selectedParticipant.kind}
@@ -486,7 +487,7 @@ export default function OrgaBusinessPage() {
               <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
                 <p>
                   <span className="text-ink/45">Organisation · </span>
-                  {selectedParticipant.organization_name}
+                  {selectedParticipant.organization_name || '—'}
                 </p>
                 <p>
                   <span className="text-ink/45">E-mail · </span>
@@ -596,7 +597,7 @@ export default function OrgaBusinessPage() {
                           className="border border-forest bg-forest/10 px-2 py-1 text-[12px] font-medium text-forest"
                           onClick={() => setSelectedIds((prev) => prev.filter((x) => x !== id))}
                         >
-                          {p.organization_name} ×
+                          {businessParticipantLabel(p)} ×
                         </button>
                       )
                     })}
@@ -622,8 +623,8 @@ export default function OrgaBusinessPage() {
                             className="block w-full px-3 py-2 text-left text-[13px] hover:bg-forest/5"
                             onClick={() => addPerson(p.id)}
                           >
-                            <span className="font-semibold text-forest">{p.organization_name}</span>
-                            <span className="text-ink/50"> · {p.contact_name} · {p.kind}</span>
+                            <span className="font-semibold text-forest">{businessParticipantLabel(p)}</span>
+                            <span className="text-ink/50"> · {p.kind}</span>
                           </button>
                         </li>
                       ))}
@@ -761,9 +762,9 @@ export default function OrgaBusinessPage() {
                 <ul className="mt-2 space-y-2">
                   {meetingAttendees(selectedMeeting, approvedPool, participants).map((p) => (
                     <li key={p.id} className="border border-black/10 px-3 py-2 text-[13px]">
-                      <p className="font-semibold text-forest">{p.organization_name}</p>
+                      <p className="font-semibold text-forest">{businessParticipantLabel(p)}</p>
                       <p className="mt-0.5 text-ink/55">
-                        {p.contact_name}
+                        {[p.organization_name, p.contact_name].filter(Boolean).join(' · ') || '—'}
                         {p.kind ? ` · ${p.kind}` : ''}
                       </p>
                       <p className="mt-0.5">

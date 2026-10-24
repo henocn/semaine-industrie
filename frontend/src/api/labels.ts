@@ -8,9 +8,10 @@ export type LabelRequestPayload = {
   sector?: string
   region?: string
   city?: string
+  address?: string
   contact_email: string
   contact_phone?: string
-  contact_opt_in?: boolean
+  contact_opt_in: boolean
   description?: string
   products?: string[]
   max_visitors?: number | null

@@ -21,18 +21,20 @@ export default function BusinessRegisterPage() {
     setLoading(true)
     setError(null)
     const fd = new FormData(e.currentTarget)
+    if (fd.get('contact_opt_in') !== 'on') {
+      setError('Vous devez accepter d\'être contacté pour continuer.')
+      setLoading(false)
+      return
+    }
     try {
       await registerParticipant({
         kind: String(fd.get('kind') || 'pme'),
-        organization_name: String(fd.get('organization_name') || ''),
-        contact_name: String(fd.get('contact_name') || ''),
         email: String(fd.get('email') || ''),
         phone: String(fd.get('phone') || '') || undefined,
         sector: String(fd.get('sector') || '') || undefined,
         offers: String(fd.get('offers') || '') || undefined,
-        seeks: String(fd.get('seeks') || '') || undefined,
         country: String(fd.get('country') || '') || undefined,
-        contact_opt_in: fd.get('contact_opt_in') === 'on',
+        contact_opt_in: true,
       })
       setSent(true)
     } catch (err) {
@@ -82,26 +84,17 @@ export default function BusinessRegisterPage() {
             <Field label="Pays">
               <input name="country" defaultValue="Togo" className={field} />
             </Field>
-            <Field label="Organisation" className="sm:col-span-2">
-              <input required name="organization_name" className={field} />
-            </Field>
-            <Field label="Contact">
-              <input required name="contact_name" className={field} />
-            </Field>
             <Field label="E-mail">
               <input required type="email" name="email" className={field} />
             </Field>
-            <Field label="Téléphone" optional>
+            <Field label="Téléphone" optional hint="De préférence un numéro WhatsApp.">
               <input name="phone" type="tel" autoComplete="tel" className={field} />
             </Field>
-            <Field label="Secteur">
+            <Field label="Secteur" className="sm:col-span-2">
               <input name="sector" className={field} />
             </Field>
             <Field label="Ce que je fabrique / propose" className="sm:col-span-2">
               <textarea name="offers" rows={3} className={`${field} resize-none`} />
-            </Field>
-            <Field label="Ce que je cherche" className="sm:col-span-2">
-              <textarea name="seeks" rows={3} className={`${field} resize-none`} />
             </Field>
             <label className="flex items-start gap-3 text-[14px] text-ink/80 sm:col-span-2">
               <input required type="checkbox" name="contact_opt_in" className="mt-1 accent-forest" />

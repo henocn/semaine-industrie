@@ -69,6 +69,9 @@ function normalizeByType(data) {
 
 /* Crée une demande de label (parcours public). */
 async function createRequest(payload) {
+  if (!payload.contact_opt_in) {
+    throw ApiError.badRequest('Vous devez accepter d\'être contacté par e-mail / WhatsApp');
+  }
   const data = normalizeByType({ ...payload });
   if (data.structure_type === 'ecole') {
     throw ApiError.badRequest('Les écoles se déposent dans Participations');
@@ -76,11 +79,12 @@ async function createRequest(payload) {
   if (data.structure_type === 'entreprise') {
     const gallery = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
     if (gallery.length !== 3) {
-      throw ApiError.badRequest('Trois images de bonne qualité sont obligatoires pour une industrie');
+      throw ApiError.badRequest('Trois images sont obligatoires pour une industrie');
     }
   }
   const row = await LabelRequest.create({
     ...data,
+    contact_opt_in: true,
     status: 'pending',
   });
   return row;

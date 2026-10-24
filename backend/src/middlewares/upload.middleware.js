@@ -79,7 +79,7 @@ function kitFilter(_req, file, cb) {
 const uploadImages = multer({
   storage: imageStorage,
   fileFilter: imageFilter,
-  limits: { fileSize: 5 * 1024 * 1024, files: 3 },
+  limits: { fileSize: 10 * 1024 * 1024, files: 3 },
 });
 
 const uploadPdf = multer({

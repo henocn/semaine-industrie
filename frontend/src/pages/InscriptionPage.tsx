@@ -31,7 +31,6 @@ export default function InscriptionPage() {
         name: String(fd.get('name') || '').trim(),
         email: String(fd.get('email') || '').trim() || null,
         phone: String(fd.get('phone') || '').trim() || null,
-        city: String(fd.get('city') || '').trim() || null,
         description: String(fd.get('description') || '').trim() || null,
         headcount: isSchool && headcountRaw ? Number(headcountRaw) : null,
       })
@@ -88,18 +87,15 @@ export default function InscriptionPage() {
             <Field label="E-mail">
               <input type="email" name="email" className={field} />
             </Field>
-            <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
+            <Field label="Téléphone" optional hint="De préférence un numéro WhatsApp.">
               <input name="phone" type="tel" autoComplete="tel" className={field} />
             </Field>
-            <Field label="Ville" className="sm:col-span-2">
-              <input name="city" className={field} />
-            </Field>
             {isSchool && (
-              <Field label="Effectif" className="sm:col-span-2">
+              <Field label="Effectif de participation" className="sm:col-span-2">
                 <input name="headcount" type="number" min={1} className={field} />
               </Field>
             )}
-            <Field label={isSchool ? 'Filières' : 'Note'} className="sm:col-span-2">
+            <Field label={isSchool ? 'Filière/Série' : 'Note'} className="sm:col-span-2">
               <textarea name="description" rows={3} className={`${field} resize-none`} />
             </Field>
             {error && <p className="sm:col-span-2 text-sm text-red-700">{error}</p>}

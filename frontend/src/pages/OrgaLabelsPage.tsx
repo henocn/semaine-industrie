@@ -476,7 +476,7 @@ export default function OrgaLabelsPage() {
                 </select>
               </label>
               <label className="text-[13px] font-medium text-forest">
-                Capacité / estimation
+                Capacité max. visiteurs par créneau
                 <input
                   type="number"
                   min={1}
@@ -790,7 +790,7 @@ function LabelDetail({
             )}
             {selected.max_visitors != null && (
               <p>
-                <span className="text-ink/45">Capacité · </span>
+                <span className="text-ink/45">Capacité / créneau · </span>
                 {selected.max_visitors}
               </p>
             )}

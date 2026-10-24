@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { createLabelRequest, uploadLabelGallery } from '../api/labels'
 import { Seo } from '../components/Seo'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
@@ -6,7 +6,7 @@ import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { Field } from '../components/ui/Field'
 import { SectionHeader } from '../components/ui/SectionHeader'
-import { assertGalleryFiles } from '../lib/imageQuality'
+import { prepareGalleryFiles } from '../lib/imageQuality'
 
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
@@ -19,13 +19,22 @@ export default function LabelRequestPage() {
   const [lat, setLat] = useState<number | null>(null)
   const [lng, setLng] = useState<number | null>(null)
   const [previews, setPreviews] = useState<string[]>([])
+  const [fileNames, setFileNames] = useState<string[]>([])
+  const galleryInputId = useId()
 
-  /* Prévisualise les 3 images choisies. */
+  /* Prévisualise les 3 images choisies et mémorise leurs noms. */
   function onGalleryChange(files: FileList | null) {
-    setPreviews([])
-    if (!files?.length) return
-    const urls = Array.from(files).slice(0, 3).map((f) => URL.createObjectURL(f))
-    setPreviews(urls)
+    setPreviews((prev) => {
+      for (const url of prev) URL.revokeObjectURL(url)
+      return []
+    })
+    if (!files?.length) {
+      setFileNames([])
+      return
+    }
+    const list = Array.from(files).slice(0, 3)
+    setFileNames(list.map((f) => f.name))
+    setPreviews(list.map((f) => URL.createObjectURL(f)))
   }
 
   /* Soumet le formulaire vers l'API. */
@@ -36,9 +45,13 @@ export default function LabelRequestPage() {
       setError('Placez le site sur la carte (clic).')
       return
     }
-    setLoading(true)
     const form = e.currentTarget
     const fd = new FormData(form)
+    if (fd.get('contact_opt_in') !== 'on') {
+      setError('Vous devez accepter d\'être contacté pour continuer.')
+      return
+    }
+    setLoading(true)
     const productsRaw = String(fd.get('products') || '')
     const products = productsRaw
       .split(',')
@@ -48,15 +61,14 @@ export default function LabelRequestPage() {
     try {
       const input = form.elements.namedItem('gallery') as HTMLInputElement
       const files = input.files ? Array.from(input.files) : []
-      await assertGalleryFiles(files)
-      const gallery_urls = await uploadLabelGallery(files)
+      const prepared = await prepareGalleryFiles(files)
+      const gallery_urls = await uploadLabelGallery(prepared)
 
       await createLabelRequest({
         structure_name: String(fd.get('structure_name') || ''),
         structure_type: 'entreprise',
         sector: String(fd.get('sector') || '') || undefined,
-        region: String(fd.get('region') || '') || undefined,
-        city: String(fd.get('city') || '') || undefined,
+        address: String(fd.get('address') || '') || undefined,
         contact_email: String(fd.get('contact_email') || ''),
         contact_phone: String(fd.get('contact_phone') || '').trim() || undefined,
         contact_opt_in: fd.get('contact_opt_in') === 'on',
@@ -92,7 +104,7 @@ export default function LabelRequestPage() {
             lead="Industries : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent."
           />
           <p className="mt-4 max-w-md text-[15px] text-ink/70">
-            3 photos nettes (min. 1000×700, max 5 Mo) pour la fiche Industrie.
+            3 photos (JPEG, PNG ou WebP, max 10 Mo) : elles sont compressées si besoin.
           </p>
         </div>
 
@@ -116,11 +128,8 @@ export default function LabelRequestPage() {
             <Field label="Secteur" className="sm:col-span-2">
               <input name="sector" className={field} />
             </Field>
-            <Field label="Région">
-              <input name="region" className={field} />
-            </Field>
-            <Field label="Ville">
-              <input name="city" className={field} />
+            <Field label="Adresse" className="sm:col-span-2">
+              <input name="address" className={field} placeholder="Quartier, ville…" />
             </Field>
 
             <div className="sm:col-span-2">
@@ -137,38 +146,53 @@ export default function LabelRequestPage() {
             </div>
 
             <div className="sm:col-span-2">
-                <Field
-                  label="3 photos (usine, produits, équipe…)"
-                  hint="Exactement 3 fichiers, JPEG/PNG/WebP, min. 1000×700 px, max 5 Mo chacun"
+              <p className="text-sm font-semibold text-forest">3 photos (usine, produits, équipe…)</p>
+              <div className="mt-1.5">
+                <input
+                  id={galleryInputId}
+                  required
+                  name="gallery"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  className="sr-only"
+                  onChange={(e) => onGalleryChange(e.target.files)}
+                />
+                <label
+                  htmlFor={galleryInputId}
+                  className="inline-flex cursor-pointer items-center border border-forest bg-forest px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-ink"
                 >
-                  <input
-                    required
-                    name="gallery"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    className="block w-full text-sm text-ink/80 file:mr-4 file:cursor-pointer file:border-0 file:bg-forest file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-white hover:file:bg-ink"
-                    onChange={(e) => onGalleryChange(e.target.files)}
-                  />
-                </Field>
-                {previews.length > 0 && (
-                  <div className="mt-4 grid grid-cols-3 gap-2">
-                    {previews.map((src) => (
-                      <div key={src} className="aspect-[4/3] overflow-hidden bg-sage">
-                        <img src={src} alt="" className="h-full w-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  Choisir des photos
+                </label>
+                <p className="mt-2 text-[13px] text-ink/70" aria-live="polite">
+                  {fileNames.length === 0
+                    ? 'Aucun fichier choisi'
+                    : fileNames.length === 1
+                      ? `1 fichier : ${fileNames[0]}`
+                      : `${fileNames.length} fichiers : ${fileNames.join(', ')}`}
+                </p>
+                <p className="mt-1.5 text-xs text-muted">
+                  Exactement 3 fichiers, JPEG/PNG/WebP, max 10 Mo chacun (compression automatique)
+                </p>
+              </div>
+              {previews.length > 0 && (
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {previews.map((src) => (
+                    <div key={src} className="aspect-[4/3] overflow-hidden bg-sage">
+                      <img src={src} alt="" className="h-full w-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <Field label="E-mail">
               <input required type="email" name="contact_email" className={field} />
             </Field>
-            <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
+            <Field label="Téléphone" optional hint="De préférence un numéro WhatsApp.">
               <input name="contact_phone" type="tel" autoComplete="tel" className={field} />
             </Field>
-            <Field label="Capacité max. visiteurs" className="sm:col-span-2">
+            <Field label="Capacité max. visiteurs par créneau" className="sm:col-span-2">
               <input type="number" min={1} name="max_visitors" className={field} />
             </Field>
             <Field label="Produits phares" hint="Séparés par des virgules" className="sm:col-span-2">
