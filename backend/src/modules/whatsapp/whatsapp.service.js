@@ -1416,27 +1416,38 @@ async function notifyBusinessMeeting({
       results.push({ ok: false, reason: 'no_phone', email: self.email });
       continue;
     }
-    const bodyParams = [
-      b2bDisplayName(self),
-      day,
-      slot,
-      others.slice(0, 60) || 'partenaire',
-      lieu.slice(0, 60),
-    ];
+    const bodyParams = rescheduled
+      ? [b2bDisplayName(self), day, slot, lieu.slice(0, 60)]
+      : [
+        b2bDisplayName(self),
+        day,
+        slot,
+        others.slice(0, 60) || 'partenaire',
+        lieu.slice(0, 60),
+      ];
     let sent = await sendTemplate({ to, name: templateName, bodyParams });
     if (!sent.ok) {
-      const title = rescheduled ? 'Rendez-vous reporté' : 'Rendez-vous confirmé';
-      sent = await sendText({
-        to,
-        body: [
+      const fallback = rescheduled
+        ? [
           `Bonjour ${b2bDisplayName(self)},`,
           '',
-          title,
+          'Rendez-vous reporté',
+          `Date : ${day}`,
+          `Horaire : ${slot}`,
+          `Lieu : ${lieu}`,
+        ]
+        : [
+          `Bonjour ${b2bDisplayName(self)},`,
+          '',
+          'Rendez-vous confirmé',
           `Date : ${day}`,
           `Horaire : ${slot}`,
           `Lieu : ${lieu}`,
           `Avec : ${others}`,
-        ].join('\n'),
+        ];
+      sent = await sendText({
+        to,
+        body: fallback.join('\n'),
       });
     }
     results.push(sent);

@@ -71,9 +71,9 @@
       "components": [
         {
           "type": "BODY",
-          "text": "Bonjour {{1}}, votre rendez-vous est reporté au {{2}}, de {{3}}, avec {{4}}, lieu {{5}}. Ce nouveau créneau est enregistré.",
+          "text": "Bonjour {{1}}, votre rendez-vous est reporté au {{2}}, de {{3}}, lieu {{4}}. Merci pour votre disponibilité.",
           "example": {
-            "body_text": [["Jean Koffi", "20/11/2026", "15:00 à 15:20", "PME Demo", "Table T12"]]
+            "body_text": [["Jean Koffi", "20/11/2026", "15:00 à 15:20", "Hotel 2 Fév"]]
           }
         },
         {
