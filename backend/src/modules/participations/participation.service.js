@@ -3,6 +3,7 @@
 const { Participation, Passport } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const passportService = require('../passports/passport.service');
+const logger = require('../../utils/logger');
 
 /* Vide une chaîne optionnelle. */
 function emptyToNull(value) {
@@ -99,6 +100,13 @@ async function approve(id) {
 
   row.status = 'approved';
   await row.save();
+  const presented = await present(row, { withImage: false });
+  try {
+    const whatsappService = require('../whatsapp/whatsapp.service');
+    await whatsappService.notifyParticipationApproved(presented);
+  } catch (err) {
+    logger.warn('[participation] notify WhatsApp failed', err.message);
+  }
   return present(row, { withImage: true });
 }
 
