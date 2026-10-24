@@ -10,7 +10,7 @@ const createBookingSchema = Joi.object({
   visit_day: Joi.string().trim().max(40).required(),
   visit_start: Joi.string().trim().max(10).required(),
   visit_end: Joi.string().trim().max(10).required(),
-  headcount: Joi.number().integer().min(1).max(500).allow(null),
+  headcount: Joi.number().integer().min(0).max(500).allow(null),
   notes: Joi.string().trim().allow('', null),
 }).or('school_organization_id', 'school_organization_ids');
 
@@ -21,7 +21,7 @@ const updateBookingSchema = Joi.object({
   visit_day: Joi.string().trim().max(40).required(),
   visit_start: Joi.string().trim().max(10).required(),
   visit_end: Joi.string().trim().max(10).required(),
-  headcount: Joi.number().integer().min(1).max(500).allow(null),
+  headcount: Joi.number().integer().min(0).max(500).allow(null),
   notes: Joi.string().trim().allow('', null),
 });
 

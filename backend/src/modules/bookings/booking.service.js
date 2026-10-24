@@ -6,6 +6,17 @@ const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const passportService = require('../passports/passport.service');
 
+/* Effectif de l'école, 0 si rien n'est renseigné. */
+function schoolHeadcount(school) {
+  const n = Number(school?.max_visitors);
+  return Number.isFinite(n) && n >= 1 ? n : 0;
+}
+
+/* E-mail école, vide si absent (pas de valeur fictive). */
+function schoolEmail(school) {
+  return String(school?.contact_email || '').trim();
+}
+
 /* Crée une ou plusieurs visites (même site / date / heures). */
 async function createBooking(payload) {
   const schoolIds = uniqueSchoolIds(payload);
@@ -47,9 +58,7 @@ async function createSingleBooking(payload) {
   });
   if (!school) throw ApiError.notFound('Établissement introuvable ou non labellisé');
 
-  /* Effectif conservé en base, plus exigé à la saisie. */
-  const rawHeadcount = Number(payload.headcount || school.max_visitors || 1);
-  const headcount = Number.isFinite(rawHeadcount) && rawHeadcount >= 1 ? rawHeadcount : 1;
+  const headcount = schoolHeadcount(school);
 
   if (site.max_visitors) {
     const used = await VisitBooking.sum('headcount', {
@@ -74,7 +83,7 @@ async function createSingleBooking(payload) {
     school_organization_id: school.id,
     school_name: school.name,
     teacher_name: school.contact_name || school.name,
-    teacher_email: school.contact_email || 'non-renseigne@semaineindustrie.tg',
+    teacher_email: schoolEmail(school),
     teacher_phone: school.contact_phone || null,
     visit_day: payload.visit_day,
     visit_start: payload.visit_start,
@@ -169,8 +178,7 @@ async function updateBooking(id, payload) {
   });
   if (!school) throw ApiError.notFound('Établissement introuvable ou non labellisé');
 
-  const rawHeadcount = Number(payload.headcount || school.max_visitors || existing.headcount || 1);
-  const headcount = Number.isFinite(rawHeadcount) && rawHeadcount >= 1 ? rawHeadcount : 1;
+  const headcount = schoolHeadcount(school);
 
   if (site.max_visitors) {
     const used = await VisitBooking.sum('headcount', {
@@ -196,7 +204,7 @@ async function updateBooking(id, payload) {
     school_organization_id: school.id,
     school_name: school.name,
     teacher_name: school.contact_name || school.name,
-    teacher_email: school.contact_email || 'non-renseigne@semaineindustrie.tg',
+    teacher_email: schoolEmail(school),
     teacher_phone: school.contact_phone || null,
     visit_day: payload.visit_day,
     visit_start: payload.visit_start,

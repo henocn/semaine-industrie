@@ -548,9 +548,13 @@ export default function OrgaVisitsPage() {
                       <a href={`tel:${b.teacher_phone || ''}`} className="block font-semibold text-forest underline underline-offset-2">
                         {b.teacher_phone || '—'}
                       </a>
-                      <a href={`mailto:${b.teacher_email}`} className="mt-0.5 block text-ink/55 underline underline-offset-2">
-                        {b.teacher_email}
-                      </a>
+                      {b.teacher_email ? (
+                        <a href={`mailto:${b.teacher_email}`} className="mt-0.5 block text-ink/55 underline underline-offset-2">
+                          {b.teacher_email}
+                        </a>
+                      ) : (
+                        <span className="mt-0.5 block text-ink/55">—</span>
+                      )}
                     </td>
                     <td>
                       <div className="flex flex-wrap gap-1.5">
