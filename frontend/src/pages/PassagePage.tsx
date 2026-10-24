@@ -116,7 +116,7 @@ export default function PassagePage() {
                 value={industryCode}
                 onChange={(e) => setIndustryCode(e.target.value.toUpperCase())}
                 className={`${field} mt-1`}
-                placeholder="IN-2001"
+                placeholder="IN-K7P4"
                 autoComplete="off"
                 autoCapitalize="characters"
                 required

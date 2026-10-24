@@ -152,6 +152,11 @@ async function attachPassage(rows) {
     const json = typeof row.toJSON === 'function' ? row.toJSON() : { ...row };
     const schoolId = json.school_organization_id || json.school?.id;
     json.passage = (schoolId && bySchool.get(schoolId)) || 0;
+    /* Contact à jour depuis la fiche école (vide si non renseigné). */
+    if (json.school) {
+      json.teacher_email = schoolEmail(json.school);
+      json.teacher_phone = json.school.contact_phone || null;
+    }
     return json;
   });
 }

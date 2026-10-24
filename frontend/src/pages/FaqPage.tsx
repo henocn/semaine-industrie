@@ -27,11 +27,11 @@ const FAQ = [
   },
   {
     q: 'Comment suivre un dossier de label ?',
-    a: 'Avec le code de suivi (exemple : IN-2001 pour une industrie), sur le site dans Ressources, ou sur WhatsApp dans Mon espace, puis Suivi de label.',
+    a: 'Avec le code de suivi (exemple : IN-K7P4 pour une industrie), sur le site dans Ressources, ou sur WhatsApp dans Mon espace, puis Suivi de label.',
   },
   {
     q: "Comment retrouver mes rencontres d'affaires ?",
-    a: "Avec l'e-mail utilisé à l'inscription, ou le code (exemple : AF-2001), sur WhatsApp : Mon espace, puis Rencontres d'affaires.",
+    a: "Avec l'e-mail utilisé à l'inscription, ou le code (exemple : AF-9TQB), sur WhatsApp : Mon espace, puis Rencontres d'affaires.",
   },
   {
     q: 'Où consulter le programme ?',

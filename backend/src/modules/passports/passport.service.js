@@ -146,7 +146,7 @@ async function recordPassage({ visitorCode, industryCode }) {
 
   const industry = await trackingService.findByCode(industryCode);
   if (industry?.kind !== 'organization' || industry.organization.type !== 'entreprise') {
-    throw ApiError.badRequest('Code industrie invalide. Entrez le code de suivi de l\'industrie (IN-2001).');
+    throw ApiError.badRequest('Code industrie invalide. Entrez le code de suivi de l\'industrie (IN-K7P4).');
   }
   const org = industry.organization;
   if (org.label_status !== 'approved' || !org.is_active) {

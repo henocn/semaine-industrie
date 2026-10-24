@@ -1,10 +1,15 @@
 'use strict';
 
+const crypto = require('crypto');
 const { QueryTypes, Op } = require('sequelize');
 const { sequelize, Organization, Passport, BusinessParticipant } = require('../../models');
 
 const START = 2001;
 const PREFIXES = ['EC', 'PA', 'AF', 'IN'];
+/* Sans 0/O ni 1/I pour éviter les confusions ; 32 signes = tirage uniforme sur un octet. */
+const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const SUFFIX_LENGTH = 4;
+const MAX_ATTEMPTS = 50;
 
 /* Normalise un code de suivi (majuscules, sans espaces). */
 function normalizeCode(raw) {
@@ -15,7 +20,8 @@ function normalizeCode(raw) {
 function isKnownCodeShape(raw) {
   const code = normalizeCode(raw);
   return (
-    /^(?:SI\d{2}|EC|PA|AF|IN)-\d{4}$/.test(code)
+    /^(?:EC|PA|AF|IN)-[A-Z0-9]{4}$/.test(code)
+    || /^SI\d{2}-\d{4}$/.test(code)
     || /^P[A-F0-9]{6}$/.test(code)
     || /^SI-DEMO-[A-Z0-9]+$/.test(code)
   );
@@ -24,7 +30,8 @@ function isKnownCodeShape(raw) {
 /* Extrait le premier code de suivi d'un texte libre. */
 function extractCode(text) {
   const upper = String(text || '').toUpperCase();
-  const match = upper.match(/\b(?:SI\d{2}|EC|PA|AF|IN)-\d{4}\b/)
+  const match = upper.match(/\b(?:EC|PA|AF|IN)-[A-Z0-9]{4}\b/)
+    || upper.match(/\bSI\d{2}-\d{4}\b/)
     || upper.match(/\bP[A-F0-9]{6}\b/)
     || upper.match(/\bSI-DEMO-[A-Z0-9]+\b/);
   return match ? match[0] : null;
@@ -38,25 +45,34 @@ function prefixFor(group) {
   return 'IN';
 }
 
-/* Attribue le prochain code du préfixe, de façon concurrente (UPSERT). */
+/* Tire 4 signes au hasard (lettres et chiffres). */
+function randomSuffix() {
+  return Array.from(crypto.randomBytes(SUFFIX_LENGTH), (byte) => ALPHABET[byte % ALPHABET.length]).join('');
+}
+
+/* Vrai si le code est déjà pris (actuel ou ancien, toutes fiches confondues). */
+async function isCodeTaken(code, transaction) {
+  const rows = await sequelize.query(
+    `SELECT 1 FROM organizations WHERE label_code = :code OR legacy_code = :code
+     UNION ALL SELECT 1 FROM passports WHERE code = :code OR legacy_code = :code
+     UNION ALL SELECT 1 FROM business_participants WHERE tracking_code = :code OR legacy_code = :code
+     LIMIT 1`,
+    { replacements: { code }, transaction, type: QueryTypes.SELECT },
+  );
+  return rows.length > 0;
+}
+
+/* Attribue un code aléatoire libre du préfixe (ex. EC-G7H5), impossible à deviner par incrément. */
 async function nextCode(prefix, transaction) {
   const key = String(prefix || '').toUpperCase();
   if (!PREFIXES.includes(key)) {
     throw new Error(`Préfixe de suivi invalide : ${key}`);
   }
-  const [row] = await sequelize.query(
-    `INSERT INTO tracking_counters (prefix, last_value)
-     VALUES (:prefix, :start)
-     ON CONFLICT (prefix) DO UPDATE
-     SET last_value = tracking_counters.last_value + 1
-     RETURNING last_value`,
-    {
-      replacements: { prefix: key, start: START },
-      transaction,
-      type: QueryTypes.SELECT,
-    },
-  );
-  return `${key}-${String(row.last_value).padStart(4, '0')}`;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+    const code = `${key}-${randomSuffix()}`;
+    if (!(await isCodeTaken(code, transaction))) return code;
+  }
+  throw new Error(`Aucun code de suivi libre trouvé pour ${key}`);
 }
 
 /* Filtre code actuel ou ancien. */
