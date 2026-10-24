@@ -125,15 +125,15 @@ body {
 /* Photo du hero : léger zoom arrière à l'arrivée, une seule fois */
 .hero-photo { animation: hero-zoom 1.6s var(--ease-leaf) 1 both; }
 
-/* Photo du hero accueil : fondu progressif dans le fond (vers le haut sur mobile, vers la gauche ensuite). */
+/* Photos du hero accueil : fondu progressif dans le fond (vers le haut sur mobile, de gauche à droite ensuite). */
 .hero-fade {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.35) 25%, rgba(0, 0, 0, 0.8) 55%, #000 80%);
   mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.35) 25%, rgba(0, 0, 0, 0.8) 55%, #000 80%);
 }
 @media (min-width: 768px) {
   .hero-fade {
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.12) 15%, rgba(0, 0, 0, 0.35) 30%, rgba(0, 0, 0, 0.62) 45%, rgba(0, 0, 0, 0.85) 62%, #000 80%);
-    mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.12) 15%, rgba(0, 0, 0, 0.35) 30%, rgba(0, 0, 0, 0.62) 45%, rgba(0, 0, 0, 0.85) 62%, #000 80%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.06) 18%, rgba(0, 0, 0, 0.22) 34%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.8) 68%, #000 88%);
+    mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.06) 18%, rgba(0, 0, 0, 0.22) 34%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.8) 68%, #000 88%);
   }
 }
 

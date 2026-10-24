@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { sendContactMessage } from '../api/contact'
 import { DAYS, SPEAKERS, PLACES, PARTNERS, YOUTH_PILLAR } from '../data'
@@ -70,8 +70,24 @@ function Photo({
   )
 }
 
-/* Hero sobre : texte à gauche, photo sur toute la hauteur à droite qui se fond vers la gauche. */
+/* Photos du hero, en fondu enchaîné. */
+const HERO_SLIDES = [
+  { src: '/images/pia.jpg', alt: 'Plateforme industrielle d’Adétikopé (PIA), au nord de Lomé' },
+  { src: '/images/hero-cimenterie.jpg', alt: 'Four rotatif et passerelles d’une cimenterie' },
+  { src: '/images/hero-usine.jpg', alt: 'Site industriel de transformation' },
+]
+const HERO_INTERVAL_MS = 4000
+
+/* Hero sobre : texte à gauche, photos qui défilent et se fondent de gauche à droite. */
 function Hero() {
+  const [slide, setSlide] = useState(0)
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const id = window.setInterval(() => setSlide((s) => (s + 1) % HERO_SLIDES.length), HERO_INTERVAL_MS)
+    return () => window.clearInterval(id)
+  }, [])
+
   return (
     <section id="top" className="border-b border-forest/10 bg-sage">
       <div className="relative flex flex-col md:block">
@@ -92,12 +108,18 @@ function Hero() {
             </div>
           </div>
         </div>
-        <div className="relative h-64 sm:h-80 md:absolute md:inset-y-0 md:right-0 md:h-auto md:w-[65%]">
-          <img
-            src="/images/pia.jpg"
-            alt="Plateforme industrielle d’Adétikopé (PIA), au nord de Lomé"
-            className="hero-fade h-full w-full object-cover"
-          />
+        <div className="hero-fade relative h-64 sm:h-80 md:absolute md:inset-0 md:h-auto">
+          {HERO_SLIDES.map((s, i) => (
+            <img
+              key={s.src}
+              src={s.src}
+              alt={i === slide ? s.alt : ''}
+              aria-hidden={i !== slide}
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+                i === slide ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          ))}
           <div className="absolute inset-0 bg-sage/25" aria-hidden="true" />
         </div>
       </div>
