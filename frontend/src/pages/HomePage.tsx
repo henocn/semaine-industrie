@@ -70,44 +70,43 @@ function Photo({
   )
 }
 
-/* Hero : photo en fond, texte dans le flux (jamais recouvert), contraste AA. */
+/* Hero sobre : texte à gauche, photo sur toute la hauteur à droite qui se fond vers la gauche. */
 function Hero() {
   return (
-    <section id="top" className="relative z-0 isolate bg-forest text-white">
-      <div className="relative">
-        <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-          <img
-            src="/images/hall.jpg"
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center"
-          />
-          <div className="hero-overlay" />
-        </div>
-        <div className={`${WRAP} relative z-10 flex min-h-[28rem] flex-col justify-end py-16 sm:min-h-[34rem] sm:py-20`}>
-          <h1 className="hero-copy display max-w-2xl !text-white text-balance text-[clamp(2.5rem,1.6rem+3.5vw,4.75rem)] font-extrabold leading-[1.05]">
-            {CAMPAIGN_TAGLINE.replace(/\.$/, '')}
-            <span className="text-leaf">.</span>
-          </h1>
-          <p className="hero-copy mt-4 max-w-md text-base leading-relaxed text-white">
-            Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-2.5">
-            <Button to="/programme" variant="onDark">
-              Programme
-            </Button>
-            <Button to="/label" variant="accent">
-              Demander un label
-            </Button>
+    <section id="top" className="border-b border-forest/10 bg-sage">
+      <div className="relative flex flex-col md:block">
+        <div className={`${WRAP} relative z-10 grid pt-12 pb-6 sm:pt-16 md:min-h-[32rem] md:grid-cols-2 md:items-center md:py-16`}>
+          <div>
+            <h1 className="display mt-4 max-w-xl text-balance text-[clamp(2.25rem,1.5rem+3vw,4rem)] font-extrabold leading-[1.05] text-forest">
+              {CAMPAIGN_TAGLINE.replace(/\.$/, '')}
+              <span className="text-energy">.</span>
+            </h1>
+            <p className="mt-5 max-w-md text-base leading-relaxed text-ink/75">
+              Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-2.5">
+              <Button to="/programme">Programme</Button>
+              <Button to="/label" variant="outline">
+                Demander un label
+              </Button>
+            </div>
           </div>
-          <p className="hero-copy mt-8 text-sm text-white">16 au 22 novembre 2026 · Lomé et les régions</p>
+        </div>
+        <div className="relative h-64 sm:h-80 md:absolute md:inset-y-0 md:right-0 md:h-auto md:w-[65%]">
+          <img
+            src="/images/pia.jpg"
+            alt="Plateforme industrielle d’Adétikopé (PIA), au nord de Lomé"
+            className="hero-fade h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-sage/25" aria-hidden="true" />
         </div>
       </div>
-      <div className={`relative z-10 ${WRAP} border-t border-white/15 py-6`}>
+      <div className={`${WRAP} border-t border-forest/15 py-6`}>
         <dl className="grid gap-5 sm:grid-cols-3 sm:gap-8">
           {KEY_FIGURES.map(([value, label]) => (
             <div key={value}>
-              <dt className="text-[15px] font-semibold text-white">{value}</dt>
-              <dd className="mt-0.5 text-sm text-white/90">{label}</dd>
+              <dt className="text-[15px] font-semibold text-forest">{value}</dt>
+              <dd className="mt-0.5 text-sm text-ink/65">{label}</dd>
             </div>
           ))}
         </dl>
@@ -153,7 +152,7 @@ function About() {
       <div className={`${WRAP} reveal`}>
         <SectionHeader title="Voir ce que le Togo fabrique, où, et par qui." />
         <div className="mt-8 grid gap-8 md:grid-cols-2 md:items-start md:gap-10">
-          <Photo name="eleves" alt="Lycéennes et lycéens dans un établissement togolais" className="aspect-[4/3]" />
+          <Photo name="atelier-textile" alt="Ouvrières à leurs machines dans un atelier de confection textile" className="aspect-[4/3]" />
           <div className="space-y-4 text-[15px] leading-relaxed text-ink/80">
             <p>
               La Semaine de l’industrie fait découvrir les usines et leurs métiers aux jeunes et au grand public. Elle réunit aussi investisseurs, industriels et PME locales.

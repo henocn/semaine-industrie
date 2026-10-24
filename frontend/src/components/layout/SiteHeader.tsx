@@ -1,23 +1,14 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  ChevronDown,
-  Compass,
-  Handshake,
-  Info,
-  Medal,
-} from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { WRAP, BrandLogo } from './Mark'
 
 type NavItem = { label: string; href?: string; to?: string }
 
 type NavGroup = {
   label: string
-  icon: ReactNode
   items: NavItem[]
 }
-
-const ICON = { strokeWidth: 1.75, className: 'h-4 w-4 shrink-0', 'aria-hidden': true } as const
 
 const PARTICIPER_ITEMS: NavItem[] = [
   { label: "S'inscrire", to: '/inscription' },
@@ -28,7 +19,6 @@ const PARTICIPER_ITEMS: NavItem[] = [
 const GROUPS: NavGroup[] = [
   {
     label: 'Explorer',
-    icon: <Compass {...ICON} />,
     items: [
       { label: 'Industrie', to: '/industrie' },
       { label: 'Carte & visites', to: '/carte' },
@@ -36,7 +26,6 @@ const GROUPS: NavGroup[] = [
   },
   {
     label: 'Défis',
-    icon: <Medal {...ICON} />,
     items: [
       { label: 'L’industrie, vue par vous', to: '/vue-par-vous' },
       { label: 'Vote coup de cœur', to: '/vote' },
@@ -45,7 +34,6 @@ const GROUPS: NavGroup[] = [
   },
   {
     label: 'À propos',
-    icon: <Info {...ICON} />,
     items: [
       { label: 'Ressources', to: '/ressources' },
       { label: 'Questions fréquentes', to: '/faq' },
@@ -54,10 +42,10 @@ const GROUPS: NavGroup[] = [
   },
 ]
 
-/* Lien de sous-menu : texte seul, sans changement de fond au survol. */
+/* Lien de sous-menu : fond vert au survol. */
 function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
   const className =
-    'block px-4 py-2.5 text-[14px] text-ink/80 transition-colors hover:text-forest'
+    'block px-4 py-2.5 text-[14px] text-ink/80 transition-colors hover:bg-forest hover:text-white'
   if (item.to) {
     return (
       <Link to={item.to} className={className} onClick={onNavigate}>
@@ -72,7 +60,7 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
   )
 }
 
-/* Groupe desktop : icône sur le bouton visible, pas dans le sous-menu. */
+/* Groupe desktop : bouton et sous-menu au survol. */
 function DesktopGroup({
   group,
   align = 'left',
@@ -95,15 +83,14 @@ function DesktopGroup({
     >
       <button
         type="button"
-        className={`relative z-10 flex h-full items-center gap-1.5 px-4 text-[15px] font-medium transition-colors ${
-          open ? 'text-forest' : 'text-ink/70 hover:text-forest'
+        className={`relative z-10 flex h-full w-28 items-center justify-center px-2 text-[15px] font-medium transition-colors ${
+          open ? 'bg-sage text-forest' : 'text-ink/70 hover:bg-sage hover:text-forest'
         }`}
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => (open ? onClose() : onOpen())}
         onFocus={onOpen}
       >
-        {group.icon}
         <span>{group.label}</span>
       </button>
       {open && (
@@ -119,7 +106,7 @@ function DesktopGroup({
   )
 }
 
-/* CTA Participer : icône + menu label / affaires. */
+/* CTA Participer : menu label / affaires. */
 function ParticiperMenu({
   open,
   onOpen,
@@ -142,7 +129,6 @@ function ParticiperMenu({
         aria-haspopup="true"
         onClick={() => (open ? onClose() : onOpen())}
       >
-        <Handshake className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
         Participer
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={1.75} aria-hidden="true" />
       </button>
@@ -219,7 +205,6 @@ export function SiteHeader() {
           <div className={`${WRAP} space-y-4 py-4`}>
             <div>
               <p className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-forest/50">
-                <Handshake className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                 Participer
               </p>
               <div className="mt-1">
@@ -231,7 +216,6 @@ export function SiteHeader() {
             {GROUPS.map((group) => (
               <div key={group.label}>
                 <p className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-forest/50">
-                  {group.icon}
                   {group.label}
                 </p>
                 <div className="mt-1">

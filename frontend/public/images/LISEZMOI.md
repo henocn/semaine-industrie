@@ -10,3 +10,4 @@
 
 Pour remplacer une photo, gardez le même nom de fichier.
 | hall.jpg       | Photo de fond de l’ouverture | 8.jpg | 2000 px (agrandie ×3) |
+| atelier-textile.jpg | Présentation (« Voir ce que le Togo fabrique ») | photo atelier textile | 1200 px (agrandie ×2, netteté renforcée) |
