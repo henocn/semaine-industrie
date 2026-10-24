@@ -71,7 +71,7 @@ export function ResourcesModal({ open, onClose }: Props) {
                 required
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="IN-2001"
+                placeholder="IN-K7P4"
                 className="mt-1 w-full border border-black px-3 py-2.5 font-mono text-[15px] tracking-wide focus:outline-none"
                 autoComplete="off"
               />

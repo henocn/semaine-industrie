@@ -617,9 +617,9 @@ function espaceMenuPayload(to) {
 /* Demande le code pour le label, l'e-mail pour les rencontres. */
 function askIdent(intent) {
   if (intent === 'b2b') {
-    return "Rencontres d'affaires\n\nEnvoyez l'e-mail d'inscription ou votre code (exemple : AF-2001).";
+    return "Rencontres d'affaires\n\nEnvoyez l'e-mail d'inscription ou votre code (exemple : AF-9TQB).";
   }
-  return 'Suivi de label\n\nEnvoyez votre code de suivi (exemple : IN-2001).';
+  return 'Suivi de label\n\nEnvoyez votre code de suivi (exemple : IN-K7P4).';
 }
 
 /* Envoie un menu liste WhatsApp. */
@@ -1318,7 +1318,7 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
       return replyAskCode(from, phoneNumberId);
     case 'suivi_autre':
     case 'b2b_autre':
-      return replyAskCode(from, phoneNumberId, 'Entrez le nouveau code de suivi (ex. IN-2001).');
+      return replyAskCode(from, phoneNumberId, 'Entrez le nouveau code de suivi (ex. IN-K7P4).');
     case 'suivi_recap':
     case 'suivi_qr':
     case 'suivi_programme':
@@ -1400,7 +1400,7 @@ async function resolveIdent(from, text, phoneNumberId, intent) {
   return replyAskCode(
     from,
     phoneNumberId,
-    'Code introuvable. Vérifiez-le et renvoyez-le (IN-2001, EC-2001, PA-2001 ou AF-2001).',
+    'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5, PA-3MXR ou AF-9TQB).',
   );
 }
 
@@ -1436,7 +1436,7 @@ async function handleText(from, text, phoneNumberId) {
     return replyAskCode(
       from,
       phoneNumberId,
-      'Code introuvable. Vérifiez-le et renvoyez-le (IN-2001, EC-2001, PA-2001 ou AF-2001).',
+      'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5, PA-3MXR ou AF-9TQB).',
     );
   }
 
