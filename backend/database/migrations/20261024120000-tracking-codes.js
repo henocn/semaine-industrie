@@ -69,6 +69,7 @@ module.exports = {
     const [participants] = await queryInterface.sequelize.query(`
       SELECT id, created_at
       FROM business_participants
+      WHERE status = 'approved'
       ORDER BY created_at ASC, id ASC
     `);
 

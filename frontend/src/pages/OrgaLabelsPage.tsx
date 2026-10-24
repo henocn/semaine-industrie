@@ -128,7 +128,7 @@ export default function OrgaLabelsPage() {
     if (!q) return items
     return items.filter((item) =>
       [
-        item.label_code,
+        item.status === 'approved' ? item.label_code : null,
         item.structure_name,
         item.contact_phone,
         item.contact_email,
@@ -342,7 +342,7 @@ export default function OrgaLabelsPage() {
         <table className="orga-table min-w-[640px]">
           <thead>
             <tr>
-              <th className="w-28">Code</th>
+              <th className="w-32">Code de suivi</th>
               <th>Structure</th>
               <th className="w-36">Contact</th>
               <th className="w-28">Type</th>
@@ -362,7 +362,7 @@ export default function OrgaLabelsPage() {
                 onClick={() => setSelectedId(item.id === selectedId ? null : item.id)}
               >
                 <td className="font-semibold text-forest">
-                  {item.label_code || (item.status === 'approved' ? '—' : '…')}
+                  {item.status === 'approved' && item.label_code ? item.label_code : '—'}
                 </td>
                 <td className="font-medium text-forest">{item.structure_name}</td>
                 <td>

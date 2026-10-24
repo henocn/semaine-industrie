@@ -93,7 +93,16 @@ export default function OrgaBusinessPage() {
     const q = query.trim().toLowerCase()
     if (!q) return participants
     return participants.filter((p) =>
-      [p.organization_name, p.contact_name, p.email, p.phone, p.sector, p.kind, p.country, p.tracking_code]
+      [
+        p.organization_name,
+        p.contact_name,
+        p.email,
+        p.phone,
+        p.sector,
+        p.kind,
+        p.country,
+        p.status === 'approved' ? p.tracking_code : null,
+      ]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     )
@@ -412,7 +421,7 @@ export default function OrgaBusinessPage() {
             <table className="orga-table min-w-[720px]">
               <thead>
                 <tr>
-                  <th className="w-12">#</th>
+                  <th className="w-32">Code de suivi</th>
                   <th>Personne</th>
                   <th>Contact</th>
                   <th className="w-28">Pays</th>
@@ -424,7 +433,7 @@ export default function OrgaBusinessPage() {
                 {filteredParticipants.length === 0 && (
                   <tr><td colSpan={6} className="py-10 text-ink/40">Aucune personne</td></tr>
                 )}
-                {filteredParticipants.map((p, i) => (
+                {filteredParticipants.map((p) => (
                   <tr
                     key={p.id}
                     className={`${participantRowClass(p.status)} cursor-pointer ${
@@ -432,7 +441,9 @@ export default function OrgaBusinessPage() {
                     }`}
                     onClick={() => selectParticipant(p.id)}
                   >
-                    <td className="text-ink/45">{i + 1}</td>
+                    <td className="font-semibold text-forest">
+                      {p.status === 'approved' && p.tracking_code ? p.tracking_code : '—'}
+                    </td>
                     <td className="font-semibold text-forest">{businessParticipantLabel(p)}</td>
                     <td>
                       {p.phone ? (

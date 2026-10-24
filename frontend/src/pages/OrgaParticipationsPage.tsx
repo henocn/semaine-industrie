@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import {
   approveParticipation,
   createParticipation,
@@ -122,6 +122,7 @@ export default function OrgaParticipationsPage() {
   const [detail, setDetail] = useState<Participation | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -246,13 +247,33 @@ export default function OrgaParticipationsPage() {
     }
   }
 
+  /* Filtre nom, contact et code de suivi. */
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return rows
+    return rows.filter((item) =>
+      [
+        item.name,
+        item.email,
+        item.phone,
+        item.city,
+        item.description,
+        item.status === 'approved' ? item.passport?.code : null,
+      ]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
+    )
+  }, [rows, query])
+
   const noun = tab === 'ecole'
-    ? (rows.length > 1 ? 'écoles' : 'école')
-    : (rows.length > 1 ? 'particuliers' : 'particulier')
+    ? (filtered.length > 1 ? 'écoles' : 'école')
+    : (filtered.length > 1 ? 'particuliers' : 'particulier')
 
   return (
     <OrgaShell
       title="Participations"
+      searchPlaceholder="Rechercher…"
+      onSearch={setQuery}
       actions={
         <button type="button" className="orga-btn" onClick={() => setShowAdd((v) => !v)}>
           {showAdd ? 'Fermer' : `Ajouter ${tab === 'ecole' ? 'une école' : 'un particulier'}`}
@@ -312,13 +333,14 @@ export default function OrgaParticipationsPage() {
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">
-            {rows.length} {noun}
+            {filtered.length} {noun}
           </h2>
           <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
         </div>
         <table className="orga-table min-w-[720px]">
           <thead>
             <tr>
+              <th className="w-32">Code de suivi</th>
               <th>Nom</th>
               <th className="w-40">Contact</th>
               <th className="w-28">Statut</th>
@@ -326,12 +348,12 @@ export default function OrgaParticipationsPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
-                <td colSpan={4}>Aucune participation</td>
+                <td colSpan={5}>Aucune participation</td>
               </tr>
             )}
-            {rows.map((item) => {
+            {filtered.map((item) => {
               const open = selectedId === item.id
               const shown = open && detail?.id === item.id ? detail : item
               return (
@@ -340,6 +362,9 @@ export default function OrgaParticipationsPage() {
                     className={`${rowClass(item.status)} cursor-pointer ${open ? 'bg-forest/10' : ''}`}
                     onClick={() => void openRow(item.id)}
                   >
+                    <td className="font-semibold text-forest">
+                      {item.status === 'approved' && item.passport?.code ? item.passport.code : '—'}
+                    </td>
                     <td className="font-medium text-forest">{item.name}</td>
                     <td>{item.phone || item.email || '…'}</td>
                     <td>{statusLabel(item.status)}</td>
@@ -374,7 +399,7 @@ export default function OrgaParticipationsPage() {
                   </tr>
                   {open && (
                     <tr>
-                      <td colSpan={4} className="bg-white">
+                      <td colSpan={5} className="bg-white">
                         {editingId === item.id ? (
                           <form onSubmit={(e) => void onUpdate(e, item.id)} className="grid gap-3 p-4 sm:grid-cols-2">
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">

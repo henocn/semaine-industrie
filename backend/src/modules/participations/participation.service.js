@@ -82,30 +82,41 @@ async function update(id, payload) {
   return present(row, { withImage: true });
 }
 
+/* Crée le passeport (code + QR) s'il manque encore. */
+async function ensurePassport(row) {
+  if (row.passport_id) {
+    const existing = await Passport.findByPk(row.passport_id);
+    if (existing) return existing;
+  }
+  const passport = row.kind === 'ecole'
+    ? await passportService.createGroup({
+      school_name: row.name,
+      holder_name: row.name,
+      headcount: row.headcount,
+    })
+    : await passportService.createIndividual({ holder_name: row.name });
+  row.passport_id = passport.id;
+  return passport;
+}
+
 /* Accepte et crée le QR du jour J (groupe pour une école, individuel sinon). */
 async function approve(id) {
   const row = await Participation.findByPk(id);
   if (!row) throw ApiError.notFound('Participation introuvable');
 
-  if (!row.passport_id) {
-    const passport = row.kind === 'ecole'
-      ? await passportService.createGroup({
-        school_name: row.name,
-        holder_name: row.name,
-        headcount: row.headcount,
-      })
-      : await passportService.createIndividual({ holder_name: row.name });
-    row.passport_id = passport.id;
-  }
-
+  const wasApproved = row.status === 'approved';
+  await ensurePassport(row);
   row.status = 'approved';
   await row.save();
-  const presented = await present(row, { withImage: false });
-  try {
-    const whatsappService = require('../whatsapp/whatsapp.service');
-    await whatsappService.notifyParticipationApproved(presented);
-  } catch (err) {
-    logger.warn('[participation] notify WhatsApp failed', err.message);
+
+  if (!wasApproved) {
+    const presented = await present(row, { withImage: false });
+    try {
+      const whatsappService = require('../whatsapp/whatsapp.service');
+      await whatsappService.notifyParticipationApproved(presented);
+    } catch (err) {
+      logger.warn('[participation] notify WhatsApp failed', err.message);
+    }
   }
   return present(row, { withImage: true });
 }
