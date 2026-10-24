@@ -431,9 +431,11 @@ function participateBody() {
   return [
     "*Participer à la Semaine de l'Industrie*",
     '',
-    `1️⃣ *Industrie* : demandez le label sur ${site}/label`,
-    `2️⃣ *École, centre de formation ou particulier* : inscrivez vos apprenants sur ${site}/inscription`,
-    `3️⃣ *Investisseur ou entreprise* : réservez une visite d'affaires avec l'API-ZF sur ${site}/affaires`,
+    `1. *Industrie* : demandez le label sur ${site}/label`,
+    '',
+    `2. *École, centre de formation ou particulier* : inscrivez-vous sur ${site}/inscription`,
+    '',
+    `3. *Investisseur ou entreprise* : réservez une visite d'affaires avec l'API-ZF sur ${site}/affaires`,
     '',
     '📩 Vous recevrez un *code de suivi* pour voir où en est votre participation dans « Mon espace ».',
   ].join('\n');
