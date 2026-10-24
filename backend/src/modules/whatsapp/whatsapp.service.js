@@ -1,6 +1,9 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const { Op } = require('sequelize');
+const QRCode = require('qrcode');
 const env = require('../../config/env');
 const logger = require('../../utils/logger');
 const {
@@ -8,8 +11,13 @@ const {
   VisitBooking,
   BusinessParticipant,
   BusinessMeeting,
+  Passport,
+  PassportVisit,
 } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
+
+const QR_DIR = path.join(__dirname, '../../../uploads/qr');
+const BTN_SUIVI = 'Suivi participation';
 
 const GRAPH_BASE = 'https://graph.facebook.com/v21.0';
 const SITE = () => String(env.PUBLIC_APP_URL || 'https://semaineindustrie.tg').replace(/\/$/, '');
@@ -28,8 +36,11 @@ function getSession(from) {
   if (!sessions.has(key)) {
     sessions.set(key, {
       mode: 'idle',
+      kind: null,
+      code: null,
       labelCode: null,
       orgId: null,
+      passportId: null,
       b2bId: null,
       updatedAt: Date.now(),
     });
@@ -107,7 +118,7 @@ async function sendWithNav({ to, body, phoneNumberId, header }) {
     header,
     body: String(body || '').slice(0, 1024),
     buttons: [
-      { id: 'menu_suivi', title: 'Suivi de participation' },
+      { id: 'menu_suivi', title: BTN_SUIVI },
       { id: 'menu_home', title: 'Menu' },
     ],
   });
@@ -125,7 +136,15 @@ async function sendWithMenu({ to, phoneNumberId, body }) {
 
 /* Invite à saisir un code de suivi. */
 async function replyAskCode(from, phoneNumberId, body) {
-  setSession(from, { mode: 'await_code', labelCode: null, orgId: null, b2bId: null });
+  setSession(from, {
+    mode: 'await_code',
+    kind: null,
+    code: null,
+    labelCode: null,
+    orgId: null,
+    passportId: null,
+    b2bId: null,
+  });
   return sendWithMenu({
     to: from,
     phoneNumberId,
@@ -214,6 +233,69 @@ function absUrl(pathOrUrl) {
   if (!pathOrUrl) return null;
   if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
   return `${SITE()}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+}
+
+/* Cible encodée dans le QR selon le groupe. */
+function qrPayloadUrl(linked) {
+  if (linked.organization?.slug) return `${SITE()}/o/${linked.organization.slug}`;
+  if (linked.passport?.code) return `${SITE()}/passeport/${linked.passport.code}`;
+  return String(linked.code || SITE());
+}
+
+/* Écrit le PNG du QR et renvoie l'URL publique HTTPS. */
+async function qrImageUrl(code, payloadUrl) {
+  const safe = String(code || 'suivi').replace(/[^A-Z0-9-]/gi, '');
+  if (!fs.existsSync(QR_DIR)) fs.mkdirSync(QR_DIR, { recursive: true });
+  const file = path.join(QR_DIR, `${safe}.png`);
+  await QRCode.toFile(file, payloadUrl, { width: 320, margin: 1 });
+  return absUrl(`/uploads/qr/${safe}.png`);
+}
+
+/* Envoie le QR en image WhatsApp. */
+async function sendTrackingQr(from, phoneNumberId, linked) {
+  const code = linked.code;
+  if (!code) return { ok: false, reason: 'no_code' };
+  const link = await qrImageUrl(code, qrPayloadUrl(linked));
+  return sendImage({
+    to: from,
+    phoneNumberId,
+    link,
+    caption: `Votre code de suivi : ${code}`,
+  });
+}
+
+/* Boutons du sous-menu selon le groupe (max 20 car.). */
+function suiviButtons(kind) {
+  const third = kind === 'in'
+    ? { id: 'suivi_programme', title: 'Programme' }
+    : kind === 'af'
+      ? { id: 'b2b_rdv', title: 'Mes rendez-vous' }
+      : { id: 'suivi_visites', title: 'Mes visites' };
+  return [
+    { id: 'suivi_recap', title: 'Récapitulatif' },
+    { id: 'suivi_qr', title: 'Mon QR' },
+    third,
+  ];
+}
+
+/* Sous-menu à 3 boutons, sans Menu. */
+async function sendSuiviButtons(from, phoneNumberId, body, kind) {
+  return sendButtons({
+    to: from,
+    phoneNumberId,
+    body: String(body || 'Que souhaitez-vous ?').slice(0, 1024),
+    buttons: suiviButtons(kind),
+  });
+}
+
+/* Récap / liste : un message avec les 3 boutons, ou texte puis boutons si trop long. */
+async function replyLinkedContent(from, phoneNumberId, kind, body) {
+  const text = String(body || '');
+  if (text.length <= 1024) {
+    return sendSuiviButtons(from, phoneNumberId, text, kind);
+  }
+  await sendText({ to: from, phoneNumberId, body: text });
+  return sendSuiviButtons(from, phoneNumberId, 'Que souhaitez-vous ?', kind);
 }
 
 /* Chemin PDF programme (pointeur ou défaut env). */
@@ -510,7 +592,7 @@ function suiviMenuPayload(to, org) {
   return {
     to,
     body: `${typeLabel} : ${org.name}\nQue souhaitez-vous ?`,
-    buttonLabel: 'Suivi de participation',
+    buttonLabel: BTN_SUIVI,
     header: 'Suivi de participation',
     sections: [
       {
@@ -554,7 +636,7 @@ function b2bMenuPayload(to, participant) {
       `${b2bDisplayName(participant)}\n` +
       `Statut : ${b2bStatusLabel(participant.status)}\n\n` +
       'Que souhaitez-vous ?',
-    buttonLabel: 'Suivi de participation',
+    buttonLabel: BTN_SUIVI,
     header: "Rencontres d'affaires",
     sections: [
       {
@@ -625,7 +707,7 @@ async function formatB2bMeetings(participant) {
     return 'Aucun rendez-vous pour le moment.\nL\'équipe vous préviendra dès qu\'un créneau est fixé.';
   }
 
-  const lines = ['Vos rendez-vous', ''];
+  const lines = ['Mes rendez-vous', ''];
   for (const m of rows) {
     lines.push(
       `Date : ${formatDayFr(m.slot_start)}`,
@@ -644,8 +726,20 @@ async function replyB2bMenu(from, participant, phoneNumberId) {
     participant.phone = waPhone.startsWith('228') ? waPhone : waPhone;
     await participant.save().catch(() => null);
   }
-  setSession(from, { mode: 'b2b_linked', b2bId: participant.id, labelCode: null, orgId: null });
-  return sendList({ ...b2bMenuPayload(from, participant), phoneNumberId });
+  const name = b2bDisplayName(participant);
+  return openLinkedSuivi(
+    from,
+    phoneNumberId,
+    {
+      kind: 'af',
+      code: participant.tracking_code,
+      labelCode: participant.tracking_code,
+      orgId: null,
+      passportId: null,
+      b2bId: participant.id,
+    },
+    { kind: 'af', code: participant.tracking_code, participant, name },
+  );
 }
 
 /* Extrait le message utile (texte, bouton ou liste) depuis Meta ou n8n. */
@@ -720,29 +814,116 @@ async function openByTrackingCode(from, raw, phoneNumberId) {
   return replyPassportRecap(from, found.passport, phoneNumberId);
 }
 
+/* Texte d'intro du sous-menu. */
+function suiviIntro(kind, name) {
+  const label = kind === 'in' ? 'Industrie' : kind === 'af' ? 'Affaires' : kind === 'pa' ? 'Particulier' : 'École';
+  return `${label} : ${name}\nQue souhaitez-vous ?`;
+}
+
+/* Ouvre le suivi : mémorise le code, envoie le QR, puis le sous-menu. */
+async function openLinkedSuivi(from, phoneNumberId, patch, linked) {
+  setSession(from, { mode: 'linked', ...patch });
+  try {
+    await sendTrackingQr(from, phoneNumberId, linked);
+  } catch (err) {
+    logger.warn('[whatsapp] QR image failed', err.message);
+  }
+  return sendSuiviButtons(from, phoneNumberId, suiviIntro(patch.kind, linked.name), patch.kind);
+}
+
 /* Récap passeport école / particulier. */
 async function replyPassportRecap(from, passport, phoneNumberId) {
-  const url = `${SITE()}/passeport/${passport.code}`;
-  const kind = passport.kind === 'group' ? 'École' : 'Particulier';
-  setSession(from, {
-    mode: 'linked',
-    labelCode: passport.code,
-    orgId: null,
-    b2bId: null,
-  });
-  return sendWithNav({
-    to: from,
+  const kind = passport.kind === 'group' ? 'ec' : 'pa';
+  const name = passport.holder_name || passport.school_name || 'Participant';
+  return openLinkedSuivi(
+    from,
     phoneNumberId,
-    body: [
-      'Récapitulatif',
-      '',
-      `${kind} : ${passport.holder_name || passport.school_name || 'Participant'}`,
-      `Code de suivi : ${passport.code}`,
-      `Passeport : ${url}`,
-      '',
-      'Conservez ce code de suivi.',
-    ].join('\n'),
-  });
+    {
+      kind,
+      code: passport.code,
+      labelCode: passport.code,
+      orgId: null,
+      passportId: passport.id,
+      b2bId: null,
+    },
+    { kind, code: passport.code, passport, name },
+  );
+}
+
+/* Formate le récap passeport. */
+function formatPassportRecap(passport) {
+  const kind = passport.kind === 'group' ? 'École' : 'Particulier';
+  const url = `${SITE()}/passeport/${passport.code}`;
+  return [
+    'Récapitulatif',
+    '',
+    `${kind} : ${passport.holder_name || passport.school_name || 'Participant'}`,
+    `Code de suivi : ${passport.code}`,
+    `Passeport : ${url}`,
+    '',
+    'Conservez ce code de suivi.',
+  ].join('\n');
+}
+
+/* Recharge la fiche liée depuis la session. */
+async function loadLinked(session) {
+  if (session.kind === 'af' && session.b2bId) {
+    const participant = await BusinessParticipant.findByPk(session.b2bId);
+    if (!participant) return null;
+    return {
+      kind: 'af',
+      code: participant.tracking_code,
+      participant,
+      name: b2bDisplayName(participant),
+    };
+  }
+  if (session.passportId) {
+    const passport = await Passport.findByPk(session.passportId);
+    if (!passport) return null;
+    return {
+      kind: session.kind === 'pa' ? 'pa' : 'ec',
+      code: passport.code,
+      passport,
+      name: passport.holder_name || passport.school_name || 'Participant',
+    };
+  }
+  if (session.orgId) {
+    const organization = await Organization.findByPk(session.orgId);
+    if (!organization) return null;
+    return {
+      kind: organization.type === 'ecole' ? 'ec' : 'in',
+      code: organization.label_code,
+      organization,
+      name: organization.name,
+    };
+  }
+  if (session.code || session.labelCode) {
+    const found = await trackingService.findByCode(session.code || session.labelCode);
+    if (!found) return null;
+    if (found.kind === 'organization') {
+      return {
+        kind: found.organization.type === 'ecole' ? 'ec' : 'in',
+        code: found.organization.label_code,
+        organization: found.organization,
+        name: found.organization.name,
+      };
+    }
+    if (found.kind === 'business') {
+      return {
+        kind: 'af',
+        code: found.participant.tracking_code,
+        participant: found.participant,
+        name: b2bDisplayName(found.participant),
+      };
+    }
+    return {
+      kind: found.passport.kind === 'group' ? 'ec' : 'pa',
+      code: found.passport.code,
+      passport: found.passport,
+      name: found.passport.holder_name || found.passport.school_name || 'Participant',
+    };
+  }
+  return null;
 }
 
 /* Formate le récap label. */
@@ -822,17 +1003,14 @@ function formatItineraire(org) {
   return lines.filter((l) => l !== undefined).join('\n');
 }
 
-/* Liste les prochaines visites liées à l'organisation (site ou école). */
-async function formatVisites(org) {
+/* Visites reçues par une industrie (date, horaire, groupe). */
+async function formatIncomingVisites(org) {
   const bookings = await VisitBooking.findAll({
     where: {
+      organization_id: org.id,
       status: { [Op.in]: ['pending', 'confirmed'] },
-      [Op.or]: [{ organization_id: org.id }, { school_organization_id: org.id }],
     },
-    include: [
-      { model: Organization, as: 'organization', attributes: ['name', 'city'] },
-      { model: Organization, as: 'school', attributes: ['name'] },
-    ],
+    include: [{ model: Organization, as: 'school', attributes: ['name'] }],
     order: [
       ['visit_day', 'ASC'],
       ['visit_start', 'ASC'],
@@ -841,29 +1019,85 @@ async function formatVisites(org) {
   });
 
   if (!bookings.length) {
-    return (
-      'Aucune visite programmée pour le moment.\n\n' +
-      `Carte des sites : ${SITE()}/carte\n` +
-      'Revenez avec votre code dès qu\'un arrangement est confirmé.'
-    );
+    return 'Aucune visite prévue sur votre site pour le moment.';
   }
 
-  const lines = ['Vos prochaines visites', ''];
+  const lines = ['Programme des visites', ''];
   for (const b of bookings) {
-    const siteName = b.organization?.name || 'Site';
-    const schoolName = b.school?.name || b.school_name;
-    const role =
-      b.organization_id === org.id
-        ? `Accueil de ${schoolName}`
-        : `Visite chez ${siteName}`;
+    const group = b.school?.name || b.school_name || 'Groupe';
     lines.push(
-      `• ${b.visit_day} ${b.visit_start}-${b.visit_end}`,
-      `  ${role}`,
-      `  ${b.headcount} participants · ${b.status}`,
+      `Date : ${b.visit_day}`,
+      `Horaire : ${b.visit_start} à ${b.visit_end}`,
+      `Groupe : ${group} (${b.headcount})`,
       '',
     );
   }
   return lines.join('\n').trim();
+}
+
+/* Visites d'une école (date, horaire, lieu). */
+async function formatOutgoingVisites(org) {
+  const bookings = await VisitBooking.findAll({
+    where: {
+      school_organization_id: org.id,
+      status: { [Op.in]: ['pending', 'confirmed'] },
+    },
+    include: [{ model: Organization, as: 'organization', attributes: ['name', 'city'] }],
+    order: [
+      ['visit_day', 'ASC'],
+      ['visit_start', 'ASC'],
+    ],
+    limit: 8,
+  });
+
+  if (!bookings.length) {
+    return 'Aucune visite programmée pour le moment.';
+  }
+
+  const lines = ['Mes visites', ''];
+  for (const b of bookings) {
+    const lieu = [b.organization?.name, b.organization?.city].filter(Boolean).join(', ') || 'Lieu à confirmer';
+    lines.push(
+      `Date : ${b.visit_day}`,
+      `Horaire : ${b.visit_start} à ${b.visit_end}`,
+      `Lieu : ${lieu}`,
+      '',
+    );
+  }
+  return lines.join('\n').trim();
+}
+
+/* Visites d'un passeport (arrangements école, sinon tampons). */
+async function formatPassportVisites(passport) {
+  if (passport.school_organization_id) {
+    const school = await Organization.findByPk(passport.school_organization_id);
+    if (school) {
+      const booked = await formatOutgoingVisites(school);
+      if (!booked.startsWith('Aucune')) return booked;
+    }
+  }
+
+  const visits = await PassportVisit.findAll({
+    where: { passport_id: passport.id },
+    include: [{ model: Organization, as: 'organization', attributes: ['name', 'city'] }],
+    order: [['scanned_at', 'ASC']],
+    limit: 8,
+  });
+  if (!visits.length) return 'Aucune visite enregistrée pour le moment.';
+
+  const lines = ['Mes visites', ''];
+  for (const v of visits) {
+    const when = v.scanned_at ? new Date(v.scanned_at).toLocaleDateString('fr-FR') : 'Date inconnue';
+    const lieu = [v.organization?.name, v.organization?.city].filter(Boolean).join(', ') || 'Lieu à confirmer';
+    lines.push(`Date : ${when}`, `Lieu : ${lieu}`, '');
+  }
+  return lines.join('\n').trim();
+}
+
+/* Liste les prochaines visites liées à l'organisation (site ou école). */
+async function formatVisites(org) {
+  if (org.type === 'entreprise') return formatIncomingVisites(org);
+  return formatOutgoingVisites(org);
 }
 
 /* Envoie le menu principal. */
@@ -874,8 +1108,20 @@ async function replyMainMenu(from, phoneNumberId) {
 
 /* Envoie le menu suivi pour une org déjà liée. */
 async function replySuiviMenu(from, org, phoneNumberId) {
-  setSession(from, { mode: 'linked', labelCode: org.label_code, orgId: org.id });
-  return sendList({ ...suiviMenuPayload(from, org), phoneNumberId });
+  const kind = org.type === 'ecole' ? 'ec' : 'in';
+  return openLinkedSuivi(
+    from,
+    phoneNumberId,
+    {
+      kind,
+      code: org.label_code,
+      labelCode: org.label_code,
+      orgId: org.id,
+      passportId: null,
+      b2bId: null,
+    },
+    { kind, code: org.label_code, organization: org, name: org.name },
+  );
 }
 
 /* Mappe un titre de bouton template vers un id interne. */
@@ -893,6 +1139,8 @@ function resolveActionId(id, title) {
     'prog_all',
     'suivi_autre',
     'suivi_recap',
+    'suivi_qr',
+    'suivi_programme',
     'suivi_label_pdf',
     'suivi_visites',
     'b2b_recap',
@@ -956,37 +1204,53 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
     case 'b2b_autre':
       return replyAskCode(from, phoneNumberId, 'Entrez le nouveau code de suivi (ex. IN-2001).');
     case 'suivi_recap':
+    case 'suivi_qr':
+    case 'suivi_programme':
     case 'suivi_label_pdf':
-    case 'suivi_visites': {
-      const org = session.labelCode
-        ? await findOrgByCode(session.labelCode)
-        : null;
-      if (!org) {
-        return replyAskCode(from, phoneNumberId, 'Session expirée. Entrez à nouveau votre code de suivi.');
-      }
-      if (action === 'suivi_label_pdf') {
-        await sendOrgDocuments(from, org, phoneNumberId, 'label');
-        return sendWithNav({
-          to: from,
-          phoneNumberId,
-          body: 'Document label envoyé. Que souhaitez-vous ensuite ?',
-        });
-      }
-      const body =
-        action === 'suivi_recap' ? formatRecap(org) : await formatVisites(org);
-      return sendWithNav({ to: from, phoneNumberId, body });
-    }
+    case 'suivi_visites':
     case 'b2b_recap':
     case 'b2b_rdv': {
-      const p = session.b2bId
-        ? await BusinessParticipant.findByPk(session.b2bId)
-        : null;
-      if (!p) {
+      const linked = await loadLinked(session);
+      if (!linked) {
         return replyAskCode(from, phoneNumberId, 'Session expirée. Entrez à nouveau votre code de suivi.');
       }
-      const body =
-        action === 'b2b_recap' ? formatB2bRecap(p) : await formatB2bMeetings(p);
-      return sendWithNav({ to: from, phoneNumberId, body });
+      if (action === 'suivi_qr') {
+        try {
+          await sendTrackingQr(from, phoneNumberId, linked);
+        } catch (err) {
+          logger.warn('[whatsapp] QR image failed', err.message);
+        }
+        return sendSuiviButtons(from, phoneNumberId, suiviIntro(linked.kind, linked.name), linked.kind);
+      }
+      if (action === 'suivi_recap' || action === 'b2b_recap') {
+        const recap = linked.organization
+          ? formatRecap(linked.organization)
+          : linked.passport
+            ? formatPassportRecap(linked.passport)
+            : formatB2bRecap(linked.participant);
+        return replyLinkedContent(from, phoneNumberId, linked.kind, recap);
+      }
+      if (action === 'suivi_programme' || action === 'suivi_label_pdf') {
+        if (!linked.organization) {
+          return replyLinkedContent(from, phoneNumberId, linked.kind, 'Aucune visite prévue sur votre site pour le moment.');
+        }
+        return replyLinkedContent(from, phoneNumberId, linked.kind, await formatIncomingVisites(linked.organization));
+      }
+      if (action === 'suivi_visites') {
+        const visits = linked.passport
+          ? await formatPassportVisites(linked.passport)
+          : linked.organization
+            ? await formatOutgoingVisites(linked.organization)
+            : 'Aucune visite enregistrée pour le moment.';
+        return replyLinkedContent(from, phoneNumberId, linked.kind, visits);
+      }
+      if (action === 'b2b_rdv') {
+        if (!linked.participant) {
+          return replyAskCode(from, phoneNumberId, 'Session expirée. Entrez à nouveau votre code de suivi.');
+        }
+        return replyLinkedContent(from, phoneNumberId, linked.kind, await formatB2bMeetings(linked.participant));
+      }
+      return sendSuiviButtons(from, phoneNumberId, suiviIntro(linked.kind, linked.name), linked.kind);
     }
     default:
       if (String(action).startsWith('prog_')) {
