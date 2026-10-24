@@ -19,6 +19,7 @@ async function create(req, res, next) {
     const data = await resourceService.createResource({
       title: req.body?.title,
       file: req.file,
+      isPrimary: req.body?.is_primary,
     });
     await audit(req, {
       action: 'create',
@@ -32,17 +33,19 @@ async function create(req, res, next) {
   }
 }
 
-/* Définit la ressource principale. */
+/* Définit ou retire le fichier programme. */
 async function setPrimary(req, res, next) {
   try {
-    const data = await resourceService.setPrimary(req.params.id);
+    const on = req.body?.is_primary === undefined
+      || resourceService.wantsProgramme(req.body?.is_primary);
+    const data = await resourceService.setPrimary(req.params.id, on);
     await audit(req, {
       action: 'update',
       entityType: 'global_resource',
       entityId: data.id,
-      summary: `Ressource principale : ${data.title}`,
+      summary: on ? `Programme : ${data.title}` : `Programme retiré : ${data.title}`,
     });
-    return ApiResponse.success(res, data, 'Ressource principale mise à jour');
+    return ApiResponse.success(res, data, on ? 'Programme mis à jour' : 'Programme retiré');
   } catch (err) {
     return next(err);
   }
