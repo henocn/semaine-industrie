@@ -1,6 +1,9 @@
 # Nginx — Semaine de l'industrie 2026
 # Cible : /etc/nginx/sites-available/semaineindustrie.tg
 # (installé par deploy/setup.sh — écrase l'ancienne conf)
+#
+# HTTPS / HSTS / 404 réel : appliquer à la main
+# deploy/nginx-https-hsts.conf (pas deploy.sh). Voir l’en-tête de ce fichier.
 
 upstream industrie_api {
     server 127.0.0.1:3005;

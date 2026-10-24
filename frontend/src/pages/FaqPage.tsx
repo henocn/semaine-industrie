@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { SectionHeader } from '../components/ui/SectionHeader'
-import { SITE_URL } from '../lib/seo'
+import { SITE_URL, publicSeo } from '../lib/seo'
 
 const FAQ = [
   {
@@ -79,11 +79,7 @@ export default function FaqPage() {
 
   return (
     <main className="py-16 sm:py-24">
-      <Seo
-        title="Questions fréquentes"
-        description="Dates, label, code de suivi, rencontres d'affaires, programme et vote de la Semaine de l'industrie 2026."
-        path="/faq"
-      />
+      <Seo {...publicSeo('/faq')} />
       <div className={`${WRAP} max-w-2xl`}>
         <div className="animate-rise">
           <SectionHeader

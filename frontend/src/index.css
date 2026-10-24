@@ -125,6 +125,18 @@ body {
 /* Photo du hero : léger zoom arrière à l'arrivée, une seule fois */
 .hero-photo { animation: hero-zoom 1.6s var(--ease-leaf) 1 both; }
 
+/* Contraste AA : voile sombre + ombre portée sur le texte du hero. */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(2, 77, 62, 0.96) 0%, rgba(2, 77, 62, 0.82) 42%, rgba(2, 77, 62, 0.58) 100%),
+    linear-gradient(180deg, rgba(2, 20, 16, 0.45) 0%, rgba(2, 20, 16, 0.2) 40%, rgba(2, 20, 16, 0.72) 100%);
+}
+.hero-copy {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 8px 28px rgba(2, 13, 10, 0.65);
+}
+
 /* Cartouche institutionnel : fond blanc, filet or en tête */
 .cartouche {
   background: #fff;

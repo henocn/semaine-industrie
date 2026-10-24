@@ -1,4 +1,5 @@
 import { Seo } from '../components/Seo'
+import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
 import { SectionHeader } from '../components/ui/SectionHeader'
 
@@ -6,11 +7,7 @@ import { SectionHeader } from '../components/ui/SectionHeader'
 export default function PrivacyPage() {
   return (
     <main className="py-16 sm:py-24">
-      <Seo
-        title="Confidentialité"
-        description="Politique de confidentialité et cookies, Semaine de l'industrie 2026."
-        path="/confidentialite"
-      />
+      <Seo {...publicSeo('/confidentialite')} />
       <div className={`${WRAP} max-w-2xl space-y-6 text-[15px] leading-relaxed text-ink/80`}>
         <div className="animate-rise">
           <SectionHeader level={1} eyebrow="Vos données" title="Confidentialité et cookies" />

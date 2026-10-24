@@ -7,6 +7,7 @@ import {
   type SurveyQuestion,
 } from '../api/surveys'
 import { Seo } from '../components/Seo'
+import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
@@ -98,11 +99,7 @@ export default function SurveyPage() {
 
   return (
     <main className="py-12 sm:py-16">
-      <Seo
-        title="Questionnaire"
-        description="Questionnaire avant ou après visite pour la Semaine de l'industrie 2026."
-        path="/questionnaire"
-      />
+      <Seo {...publicSeo('/questionnaire')} />
       <div className={`${WRAP} max-w-lg`}>
         <div className="animate-rise">
           <SectionHeader

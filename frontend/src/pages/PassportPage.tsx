@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getPassport, type Passport } from '../api/passports'
+import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { SectionHeader } from '../components/ui/SectionHeader'
 
@@ -21,6 +22,12 @@ export default function PassportPage() {
 
   return (
     <main className="py-16 sm:py-24">
+        <Seo
+          title="Passeport"
+          description="Passeport de visite de la Semaine de l’industrie 2026."
+          path={code ? `/passeport/${code}` : '/passeport'}
+          noIndex
+        />
         <div className={WRAP}>
           {error && <p role="alert" className="text-lg font-medium text-forest">{error}</p>}
           {!error && !passport && <p className="text-ink/70">Chargement…</p>}

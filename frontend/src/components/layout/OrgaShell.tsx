@@ -13,6 +13,7 @@ import { LABEL_PENDING_EVENT } from '../../lib/labelPending'
 import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
 import { joinRoom, onRealtime } from '../../lib/socket'
 import { isAdminRole, isStaffRole } from '../../lib/roles'
+import { Seo } from '../Seo'
 import { BrandLogo } from './Mark'
 
 type OrgaShellProps = {
@@ -234,6 +235,12 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
 
   return (
     <div className="h-svh overflow-hidden bg-white text-ink">
+      <Seo
+        title={title}
+        description="Espace organisation : labels, visites, rencontres et pilotage de la Semaine de l’industrie 2026."
+        path={location.pathname}
+        noIndex
+      />
       <div className="flex h-full">
         <div className="sticky top-0 hidden h-svh shrink-0 md:block">{sidebar}</div>
 

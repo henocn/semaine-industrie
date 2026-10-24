@@ -4,6 +4,7 @@ import { sendContactMessage } from '../api/contact'
 import { DAYS, SPEAKERS, PLACES, PARTNERS, YOUTH_PILLAR } from '../data'
 import { Seo } from '../components/Seo'
 import { CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
+import { publicSeo } from '../lib/seo'
 import { Button } from '../components/ui/Button'
 import { Field } from '../components/ui/Field'
 import { SectionHeader } from '../components/ui/SectionHeader'
@@ -69,28 +70,25 @@ function Photo({
   )
 }
 
-/* Hero : photo pleine, dégradé doux, infos sous le titre. */
+/* Hero : photo en fond, texte dans le flux (jamais recouvert), contraste AA. */
 function Hero() {
   return (
-    <section id="top" className="relative isolate bg-forest text-white">
-      <div className="relative min-h-[480px] overflow-hidden sm:min-h-[560px]">
-        <img
-          src="/images/hall.jpg"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-r from-forest via-forest/80 to-forest/30 sm:to-transparent"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-forest/70 via-transparent to-forest/30" aria-hidden="true" />
-        <div className={`${WRAP} relative flex min-h-[480px] flex-col justify-end py-14 sm:min-h-[560px] sm:py-16`}>
-          <h1 className="display max-w-2xl !text-white text-balance text-[clamp(2.5rem,1.6rem+3.5vw,4.75rem)] font-extrabold leading-[1.05]">
+    <section id="top" className="relative z-0 isolate bg-forest text-white">
+      <div className="relative">
+        <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+          <img
+            src="/images/hall.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+          <div className="hero-overlay" />
+        </div>
+        <div className={`${WRAP} relative z-10 flex min-h-[28rem] flex-col justify-end py-16 sm:min-h-[34rem] sm:py-20`}>
+          <h1 className="hero-copy display max-w-2xl !text-white text-balance text-[clamp(2.5rem,1.6rem+3.5vw,4.75rem)] font-extrabold leading-[1.05]">
             {CAMPAIGN_TAGLINE.replace(/\.$/, '')}
             <span className="text-leaf">.</span>
           </h1>
-          <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/90 sm:text-base">
+          <p className="hero-copy mt-4 max-w-md text-[15px] leading-relaxed text-white sm:text-base">
             Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public.
           </p>
           <div className="mt-6 flex flex-wrap gap-2.5">
@@ -101,15 +99,15 @@ function Hero() {
               Demander un label
             </Button>
           </div>
-          <p className="mt-8 text-[13px] text-white/75">16 au 22 novembre 2026 · Lomé et les régions</p>
+          <p className="hero-copy mt-8 text-[13px] text-white">16 au 22 novembre 2026 · Lomé et les régions</p>
         </div>
       </div>
-      <div className={`${WRAP} border-t border-white/15 py-6`}>
+      <div className={`relative z-10 ${WRAP} border-t border-white/15 py-6`}>
         <dl className="grid gap-5 sm:grid-cols-3 sm:gap-8">
           {KEY_FIGURES.map(([value, label]) => (
             <div key={value}>
               <dt className="text-[15px] font-semibold text-white">{value}</dt>
-              <dd className="mt-0.5 text-[13px] text-white/70">{label}</dd>
+              <dd className="mt-0.5 text-[13px] text-white/90">{label}</dd>
             </div>
           ))}
         </dl>
@@ -334,15 +332,17 @@ export default function HomePage() {
   const mainRef = useRevealInView<HTMLElement>()
   return (
     <>
-      <Seo path="/" />
+      <Seo {...publicSeo('/')} />
       <main ref={mainRef}>
         <Hero />
-        <Tools />
-        <About />
-        <ProgrammeStrip />
-        <Women />
-        <Places />
-        <Contact />
+        <div className="relative z-10 bg-white">
+          <Tools />
+          <About />
+          <ProgrammeStrip />
+          <Women />
+          <Places />
+          <Contact />
+        </div>
       </main>
     </>
   )

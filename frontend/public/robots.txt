@@ -1,7 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /orga
-Disallow: /login
-Disallow: /bilan
 
 Sitemap: https://semaineindustrie.tg/sitemap.xml

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { registerParticipation, type ParticipationKind } from '../api/participations'
 import { Seo } from '../components/Seo'
+import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { Field } from '../components/ui/Field'
@@ -44,11 +45,7 @@ export default function InscriptionPage() {
 
   return (
     <main className="py-14 sm:py-20">
-      <Seo
-        title="S'inscrire"
-        description="Écoles et personnes particulières : inscrivez-vous à la Semaine de l'industrie 2026."
-        path="/inscription"
-      />
+      <Seo {...publicSeo('/inscription')} />
       <div className={`${WRAP} grid gap-12 md:grid-cols-[1fr_1.15fr]`}>
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader

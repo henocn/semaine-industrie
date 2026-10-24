@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getDashboardStats, type DashboardStats } from '../api/dashboard'
 import { getStoredUser } from '../api/session'
+import { Seo } from '../components/Seo'
 import { OrgaShell } from '../components/layout/OrgaShell'
 
 /* Bilan réservé à l'organisation (pas d'accès public). */
@@ -32,6 +33,12 @@ export default function BilanPage() {
 
   return (
     <OrgaShell title="Bilan">
+      <Seo
+        title="Bilan"
+        description="Bilan interne de la Semaine de l’industrie 2026."
+        path="/bilan"
+        noIndex
+      />
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       {ind && (
