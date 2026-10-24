@@ -30,6 +30,7 @@ import ProgrammePage from './pages/ProgrammePage'
 import ResourcesPage from './pages/ResourcesPage'
 import SurveyPage from './pages/SurveyPage'
 import VotePage from './pages/VotePage'
+import VueParVousPage from './pages/VueParVousPage'
 
 /* Sur le sous-domaine backoffice, n'autorise que login + espace orga. */
 function BackofficeGate({ children }: { children: ReactNode }) {
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="/questions" element={<Navigate to="/" replace />} />
             <Route path="/vote" element={<VotePage />} />
             <Route path="/questionnaire" element={<SurveyPage />} />
+            <Route path="/vue-par-vous" element={<VueParVousPage />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/confidentialite" element={<PrivacyPage />} />
             <Route path="/o/:slug" element={<OrganizationPage />} />
