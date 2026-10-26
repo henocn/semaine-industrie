@@ -2,46 +2,12 @@ import { API_BASE } from '../config/api'
 import { apiFetch } from './client'
 import { getAccessToken } from './session'
 
-export type LiveQuestion = {
-  id: string
-  session_key: string
-  author_name: string | null
-  body: string
-  status: string
-  createdAt?: string
-}
-
 export type VoteOption = {
   id: string
   label: string
   description: string | null
   image_url: string | null
   votes: number
-}
-
-/* Envoie une question live. */
-export function askQuestion(payload: { body: string; author_name?: string; session_key?: string }) {
-  return apiFetch<LiveQuestion>('/engagement/questions', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
-}
-
-/* Liste les questions. */
-export function listQuestions(params?: { public?: boolean; status?: string }) {
-  const sp = new URLSearchParams()
-  if (params?.public) sp.set('public', '1')
-  if (params?.status) sp.set('status', params.status)
-  const q = sp.toString() ? `?${sp}` : ''
-  return apiFetch<LiveQuestion[]>(`/engagement/questions${q}`)
-}
-
-/* Modère une question. */
-export function reviewQuestion(id: string, status: 'approved' | 'done' | 'rejected') {
-  return apiFetch<LiveQuestion>(`/engagement/questions/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status }),
-  })
 }
 
 /* Résultats / options de vote. */

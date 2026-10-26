@@ -17,9 +17,4 @@ const voteSchema = Joi.object({
   voter_key: Joi.string().trim().min(8).max(80).required(),
 });
 
-const optionSchema = Joi.object({
-  label: Joi.string().trim().min(2).max(200).required(),
-  organization_id: Joi.string().uuid().allow(null),
-});
-
-module.exports = { askSchema, reviewQuestionSchema, voteSchema, optionSchema };
+module.exports = { askSchema, reviewQuestionSchema, voteSchema };

@@ -25,12 +25,6 @@ async function primaryResource() {
   });
 }
 
-/* Retourne l'URL de la ressource marquée programme. */
-async function primaryResourceUrl() {
-  const row = await primaryResource();
-  return row?.file_url || null;
-}
-
 /* Décoche les autres drapeaux programme. */
 async function clearPrimary(exceptId) {
   const where = exceptId ? { id: { [Op.ne]: exceptId } } : {};
@@ -90,7 +84,6 @@ async function removeResource(id) {
 module.exports = {
   listResources,
   primaryResource,
-  primaryResourceUrl,
   wantsProgramme,
   createResource,
   setPrimary,

@@ -88,7 +88,7 @@ export default function BusinessRegisterPage() {
             <Field label="Secteur" className="sm:col-span-2">
               <input name="sector" className={field} />
             </Field>
-            <Field label="Notes" className="sm:col-span-2">
+            <Field label="Motif de demande" className="sm:col-span-2">
               <textarea name="notes" rows={3} className={`${field} resize-none`} />
             </Field>
             <label className="flex items-start gap-3 text-[14px] text-ink/80 sm:col-span-2">

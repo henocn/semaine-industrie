@@ -264,11 +264,6 @@ async function countPassages(passports) {
   return new Map(list.map((p) => [p.id, Math.max(counts.get(p.id) || 0, p.passed_at ? 1 : 0)]));
 }
 
-/* Compte total des scans. */
-async function countScans() {
-  return PassportVisit.count();
-}
-
 module.exports = {
   createBatch,
   createIndividual,
@@ -278,6 +273,5 @@ module.exports = {
   recordPassage,
   scanVisit,
   ensureGroupStampForBooking,
-  countScans,
   countPassages,
 };

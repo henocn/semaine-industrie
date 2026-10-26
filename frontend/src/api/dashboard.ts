@@ -30,8 +30,3 @@ export type DashboardStats = {
 export function getDashboardStats() {
   return apiFetch<DashboardStats>('/dashboard/stats')
 }
-
-/* Bilan orga (auth requise). */
-export function getPublicBilan() {
-  return apiFetch<DashboardStats>('/dashboard/bilan')
-}

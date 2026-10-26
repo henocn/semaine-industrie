@@ -913,12 +913,6 @@ function extractLabelCode(text) {
   return trackingService.extractCode(text);
 }
 
-/* Charge une organisation labellisée par code actuel ou ancien. */
-async function findOrgByCode(code) {
-  const found = await trackingService.findByCode(code);
-  return found?.kind === 'organization' ? found.organization : null;
-}
-
 /* Ouvre le bon espace WhatsApp selon le type de code. */
 async function openByTrackingCode(from, raw, phoneNumberId) {
   const found = await trackingService.findByCode(raw);
@@ -1849,5 +1843,4 @@ module.exports = {
   notifyVisitScheduled,
   notifyBusinessMeeting,
   verifyChallenge,
-  findOrgByCode,
 };

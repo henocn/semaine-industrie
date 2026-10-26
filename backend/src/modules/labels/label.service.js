@@ -270,20 +270,6 @@ async function addKitFile(id, file, title) {
   return getEnrichedRequest(id);
 }
 
-/* Remplace / ajoute via l'ancien endpoint PDF (rétrocompat). */
-async function updateLabelDocument(id, label_document_url, fileMeta = null) {
-  const doc = String(label_document_url || '').trim();
-  if (!doc || !doc.startsWith('/uploads/docs/')) {
-    throw ApiError.badRequest('Fichier kit invalide');
-  }
-  return addKitFile(id, {
-    filename: path.basename(doc),
-    originalname: fileMeta?.originalname || path.basename(doc),
-    mimetype: fileMeta?.mimetype || 'application/pdf',
-    size: fileMeta?.size ?? null,
-  });
-}
-
 /* Supprime un fichier du kit. */
 async function removeKitFile(id, fileId) {
   const request = await getRequestById(id);
@@ -671,7 +657,6 @@ module.exports = {
   listRequests,
   getRequestById,
   updateRequest,
-  updateLabelDocument,
   addKitFile,
   removeKitFile,
   deleteRequest,
