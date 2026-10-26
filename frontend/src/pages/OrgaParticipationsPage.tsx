@@ -254,12 +254,12 @@ export default function OrgaParticipationsPage() {
           </label>
           {tab === 'ecole' && (
             <label className="text-[13px] font-medium text-forest">
-              Effectif de participation
+              Effectif souhaité
               <input name="headcount" type="number" min={1} className={field} />
             </label>
           )}
           <label className="text-[13px] font-medium text-forest sm:col-span-2">
-            {tab === 'ecole' ? 'Filière/Série' : 'Note'}
+            {tab === 'ecole' ? 'Spécialités / séries ou filières' : 'Note'}
             <textarea name="description" rows={3} className={`${field} resize-none`} />
           </label>
           <div className="sm:col-span-2">
@@ -360,12 +360,12 @@ export default function OrgaParticipationsPage() {
                             </label>
                             {tab === 'ecole' && (
                               <label className="text-[13px] font-medium text-forest">
-                                Effectif de participation
+                                Effectif souhaité
                                 <input name="headcount" type="number" min={1} defaultValue={shown.headcount ?? ''} className={field} />
                               </label>
                             )}
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                              {tab === 'ecole' ? 'Filière/Série' : 'Note'}
+                              {tab === 'ecole' ? 'Spécialités / séries ou filières' : 'Note'}
                               <textarea name="description" rows={3} defaultValue={shown.description || ''} className={`${field} resize-none`} />
                             </label>
                             <div className="sm:col-span-2 flex gap-2">
