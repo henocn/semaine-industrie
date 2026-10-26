@@ -13,6 +13,12 @@ const field =
 /* Profil choisi ; une université est enregistrée comme établissement (kind « ecole »). */
 type Profile = 'ecole' | 'universite' | 'particulier'
 
+const NAME_LABEL: Record<Profile, string> = {
+  ecole: "Nom de l'établissement",
+  universite: "Nom de l'université",
+  particulier: 'Nom et prénom',
+}
+
 const DESCRIPTION_LABEL: Record<Profile, string> = {
   ecole: 'Spécialités / séries',
   universite: 'Spécialités / filières',
@@ -84,7 +90,7 @@ export default function InscriptionPage() {
                 <option value="particulier">Particulier</option>
               </select>
             </Field>
-            <Field label={isSchool ? "Nom de l'établissement" : 'Nom et prénom'} className="sm:col-span-2">
+            <Field label={NAME_LABEL[profile]} className="sm:col-span-2">
               <input required name="name" minLength={2} className={field} />
             </Field>
             <Field label="E-mail">
