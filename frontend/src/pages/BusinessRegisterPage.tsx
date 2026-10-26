@@ -30,11 +30,11 @@ export default function BusinessRegisterPage() {
     try {
       await registerParticipant({
         kind: String(fd.get('kind') || 'pme'),
+        contact_name: String(fd.get('contact_name') || '').trim(),
         email: String(fd.get('email') || ''),
         phone: String(fd.get('phone') || '') || undefined,
         sector: String(fd.get('sector') || '') || undefined,
-        offers: String(fd.get('offers') || '') || undefined,
-        country: String(fd.get('country') || '') || undefined,
+        notes: String(fd.get('notes') || '') || undefined,
         contact_opt_in: true,
       })
       setSent(true)
@@ -78,8 +78,8 @@ export default function BusinessRegisterPage() {
                 <option value="acheteur">Acheteur</option>
               </select>
             </Field>
-            <Field label="Pays">
-              <input name="country" defaultValue="Togo" className={field} />
+            <Field label="Nom et prénom">
+              <input required name="contact_name" minLength={2} autoComplete="name" className={field} />
             </Field>
             <Field label="E-mail">
               <input required type="email" name="email" className={field} />
@@ -90,8 +90,8 @@ export default function BusinessRegisterPage() {
             <Field label="Secteur" className="sm:col-span-2">
               <input name="sector" className={field} />
             </Field>
-            <Field label="Ce que je fabrique / propose" className="sm:col-span-2">
-              <textarea name="offers" rows={3} className={`${field} resize-none`} />
+            <Field label="Notes" optional className="sm:col-span-2">
+              <textarea name="notes" rows={3} className={`${field} resize-none`} />
             </Field>
             <label className="flex items-start gap-3 text-[14px] text-ink/80 sm:col-span-2">
               <input required type="checkbox" name="contact_opt_in" className="mt-1 accent-forest" />

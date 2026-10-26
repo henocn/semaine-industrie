@@ -2,33 +2,38 @@
 
 const Joi = require('joi');
 
-const registerSchema = Joi.object({
-  kind: Joi.string().valid('investisseur', 'pme', 'acheteur').required(),
+/* Champs communs d'un participant ; offers / seeks / country restent acceptés pour les anciens formulaires. */
+const participantFields = {
+  kind: Joi.string().valid('investisseur', 'pme', 'acheteur'),
   organization_name: Joi.string().trim().min(2).max(200).allow('', null),
   contact_name: Joi.string().trim().min(2).max(160).allow('', null),
-  email: Joi.string().trim().email().max(180).required(),
+  email: Joi.string().trim().email().max(180),
   phone: Joi.string().trim().max(40).allow('', null),
   sector: Joi.string().trim().max(120).allow('', null),
+  notes: Joi.string().trim().allow('', null),
   offers: Joi.string().trim().allow('', null),
   seeks: Joi.string().trim().allow('', null),
   country: Joi.string().trim().max(80).allow('', null),
+};
+
+const registerSchema = Joi.object({
+  ...participantFields,
+  kind: participantFields.kind.required(),
+  email: participantFields.email.required(),
   contact_opt_in: Joi.boolean().valid(true).required(),
 });
 
 /* Ajout manuel orga (approuvé par défaut). */
 const createParticipantOrgaSchema = Joi.object({
-  kind: Joi.string().valid('investisseur', 'pme', 'acheteur').required(),
-  organization_name: Joi.string().trim().min(2).max(200).allow('', null),
-  contact_name: Joi.string().trim().min(2).max(160).allow('', null),
-  email: Joi.string().trim().email().max(180).required(),
-  phone: Joi.string().trim().max(40).allow('', null),
-  sector: Joi.string().trim().max(120).allow('', null),
-  offers: Joi.string().trim().allow('', null),
-  seeks: Joi.string().trim().allow('', null),
-  country: Joi.string().trim().max(80).allow('', null),
+  ...participantFields,
+  kind: participantFields.kind.required(),
+  email: participantFields.email.required(),
   contact_opt_in: Joi.boolean().default(true),
   status: Joi.string().valid('pending', 'approved').default('approved'),
 });
+
+/* Modification orga d'un participant. */
+const updateParticipantSchema = Joi.object(participantFields).min(1);
 
 const reviewParticipantSchema = Joi.object({
   status: Joi.string().valid('approved', 'rejected').required(),
@@ -58,6 +63,7 @@ const rescheduleMeetingSchema = Joi.object({
 module.exports = {
   registerSchema,
   createParticipantOrgaSchema,
+  updateParticipantSchema,
   reviewParticipantSchema,
   createMeetingSchema,
   contactNoteSchema,

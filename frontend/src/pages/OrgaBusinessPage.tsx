@@ -1,13 +1,15 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   businessParticipantLabel,
   createMeeting,
   createParticipantOrga,
+  deleteParticipant,
   listMeetings,
   listParticipants,
   rescheduleMeeting,
   reviewParticipant,
   saveContactNote,
+  updateParticipant,
   type BusinessMeeting,
   type BusinessParticipant,
 } from '../api/business'
@@ -22,11 +24,7 @@ function meetingAttendees(
   approvedPool: BusinessParticipant[],
   participants: BusinessParticipant[],
 ): BusinessParticipant[] {
-  const ids =
-    Array.isArray(m.attendee_ids) && m.attendee_ids.length
-      ? m.attendee_ids
-      : ([m.participantA?.id, m.participantB?.id].filter(Boolean) as string[])
-  return ids
+  return meetingParticipantIds(m)
     .map((id) => {
       return (
         approvedPool.find((x) => x.id === id) ||
@@ -49,6 +47,79 @@ function meetingNames(
   return names.join(' × ') || 'Participants'
 }
 
+/* Identifiants des participants d'un RDV (attendee_ids, sinon A / B). */
+function meetingParticipantIds(m: BusinessMeeting) {
+  return Array.isArray(m.attendee_ids) && m.attendee_ids.length
+    ? m.attendee_ids
+    : ([m.participantA?.id, m.participantB?.id].filter(Boolean) as string[])
+}
+
+/* Bouton action icône seule. */
+function IconButton({
+  label,
+  children,
+  onClick,
+  disabled,
+  variant,
+}: {
+  label: string
+  children: ReactNode
+  onClick: () => void
+  disabled?: boolean
+  variant?: 'ok' | 'danger'
+}) {
+  const extra = variant === 'ok' ? 'orga-icon-btn--ok' : variant === 'danger' ? 'orga-icon-btn--danger' : ''
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`orga-icon-btn ${extra}`}
+    >
+      {children}
+    </button>
+  )
+}
+
+/* Icône validation. */
+function IconCheck() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M5 12.5 9.5 17 19 7" />
+    </svg>
+  )
+}
+
+/* Icône refus. */
+function IconX() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  )
+}
+
+/* Icône crayon. */
+function IconEdit() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+      <path d="m13 7 4 4" />
+    </svg>
+  )
+}
+
+/* Icône poubelle. */
+function IconTrash() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M5 7h14M10 11v6M14 11v6M9 7V5h6v2M7 7l1 12h8l1-12" />
+    </svg>
+  )
+}
+
 /* Backoffice : participants B2B + rendez-vous. */
 export default function OrgaBusinessPage() {
   const [participants, setParticipants] = useState<BusinessParticipant[]>([])
@@ -65,6 +136,7 @@ export default function OrgaBusinessPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null)
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null)
+  const [editingParticipantId, setEditingParticipantId] = useState<string | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
 
   /* Recharge listes. */
@@ -100,13 +172,23 @@ export default function OrgaBusinessPage() {
         p.phone,
         p.sector,
         p.kind,
-        p.country,
         p.status === 'approved' ? p.tracking_code : null,
       ]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [participants, query])
+
+  /* Nombre de rendez-vous (hors annulés) par participant. */
+  const visitsByParticipant = useMemo(() => {
+    const counts = new Map<string, number>()
+    meetings
+      .filter((m) => m.status !== 'cancelled')
+      .forEach((m) => {
+        meetingParticipantIds(m).forEach((id) => counts.set(id, (counts.get(id) || 0) + 1))
+      })
+    return counts
+  }, [meetings])
 
   const filteredMeetings = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -167,6 +249,47 @@ export default function OrgaBusinessPage() {
     }
   }
 
+  /* Enregistre la fiche modifiée d'un participant. */
+  async function onUpdatePerson(e: FormEvent<HTMLFormElement>, id: string) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    setBusyId(id)
+    setError(null)
+    try {
+      await updateParticipant(id, {
+        kind: String(fd.get('kind') || 'pme') as BusinessParticipant['kind'],
+        contact_name: String(fd.get('contact_name') || ''),
+        organization_name: String(fd.get('organization_name') || ''),
+        email: String(fd.get('email') || ''),
+        phone: String(fd.get('phone') || ''),
+        sector: String(fd.get('sector') || ''),
+        notes: String(fd.get('notes') || ''),
+      })
+      setEditingParticipantId(null)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Modification impossible')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  /* Supprime un participant (refusé côté serveur s'il a des rendez-vous). */
+  async function onDeletePerson(p: BusinessParticipant) {
+    if (!window.confirm(`Supprimer ${businessParticipantLabel(p)} ?`)) return
+    setBusyId(p.id)
+    setError(null)
+    try {
+      await deleteParticipant(p.id)
+      if (selectedParticipantId === p.id) setSelectedParticipantId(null)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Suppression impossible')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   /* Ajoute une personne manuellement. */
   async function onCreatePerson(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -182,9 +305,7 @@ export default function OrgaBusinessPage() {
         email: String(fd.get('email') || ''),
         phone: String(fd.get('phone') || '') || undefined,
         sector: String(fd.get('sector') || '') || undefined,
-        offers: String(fd.get('offers') || '') || undefined,
-        seeks: String(fd.get('seeks') || '') || undefined,
-        country: String(fd.get('country') || '') || undefined,
+        notes: String(fd.get('notes') || '') || undefined,
         contact_opt_in: true,
         status: 'approved',
       })
@@ -279,7 +400,14 @@ export default function OrgaBusinessPage() {
 
   /* Sélectionne un participant (détail). */
   function selectParticipant(id: string) {
+    setEditingParticipantId(null)
     setSelectedParticipantId((prev) => (prev === id ? null : id))
+  }
+
+  /* Ouvre la fiche d'un participant en mode modification. */
+  function editParticipant(id: string) {
+    setSelectedParticipantId(id)
+    setEditingParticipantId(id)
   }
 
   /* Sélectionne un RDV (détail). */
@@ -292,6 +420,7 @@ export default function OrgaBusinessPage() {
     setTab(next)
     setSelectedParticipantId(null)
     setSelectedMeetingId(null)
+    setEditingParticipantId(null)
     setShowAddPerson(false)
     setShowAddMeeting(false)
   }
@@ -359,8 +488,8 @@ export default function OrgaBusinessPage() {
               </p>
               <form onSubmit={onCreatePerson} className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="text-[13px] font-medium text-forest">
-                  Personne
-                  <input name="contact_name" className={field} />
+                  Nom et prénom
+                  <input required minLength={2} name="contact_name" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest">
                   Organisation
@@ -375,8 +504,8 @@ export default function OrgaBusinessPage() {
                   </select>
                 </label>
                 <label className="text-[13px] font-medium text-forest">
-                  Pays
-                  <input name="country" defaultValue="Togo" className={field} />
+                  Secteur
+                  <input name="sector" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest">
                   E-mail
@@ -387,16 +516,8 @@ export default function OrgaBusinessPage() {
                   <input name="phone" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                  Secteur
-                  <input name="sector" className={field} />
-                </label>
-                <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                  Offre
-                  <textarea name="offers" rows={2} className={field} />
-                </label>
-                <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                  Cherche
-                  <textarea name="seeks" rows={2} className={field} />
+                  Notes
+                  <textarea name="notes" rows={3} className={field} />
                 </label>
                 <div className="sm:col-span-2">
                   <button
@@ -422,53 +543,69 @@ export default function OrgaBusinessPage() {
               <thead>
                 <tr>
                   <th className="w-32">Code de suivi</th>
-                  <th>Personne</th>
+                  <th>Nom et prénom</th>
                   <th>Contact</th>
-                  <th className="w-28">Pays</th>
+                  <th className="w-24">Visites</th>
                   <th className="w-28">Profil</th>
-                  <th className="w-28">Statut</th>
+                  <th className="w-40">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredParticipants.length === 0 && (
                   <tr><td colSpan={6} className="py-10 text-ink/40">Aucune personne</td></tr>
                 )}
-                {filteredParticipants.map((p) => (
-                  <tr
-                    key={p.id}
-                    className={`${participantRowClass(p.status)} cursor-pointer ${
-                      selectedParticipantId === p.id ? 'bg-forest/10' : ''
-                    }`}
-                    onClick={() => selectParticipant(p.id)}
-                  >
-                    <td className="font-semibold text-forest">
-                      {p.status === 'approved' && p.tracking_code ? p.tracking_code : '—'}
-                    </td>
-                    <td className="font-semibold text-forest">{businessParticipantLabel(p)}</td>
-                    <td>
-                      {p.phone ? (
-                        <a
-                          href={`tel:${p.phone}`}
-                          className="font-medium text-forest underline underline-offset-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {p.phone}
-                        </a>
-                      ) : (
-                        <a
-                          href={`mailto:${p.email}`}
-                          className="text-ink/60 underline underline-offset-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {p.email}
-                        </a>
-                      )}
-                    </td>
-                    <td>{p.country || '—'}</td>
-                    <td className="font-medium text-forest">{p.kind}</td>
-                    <td>{statusLabel(p.status)}</td>
-                  </tr>
-                ))}
+                {filteredParticipants.map((p) => {
+                  const busy = busyId === p.id
+                  return (
+                    <tr
+                      key={p.id}
+                      className={`${participantRowClass(p.status)} cursor-pointer ${
+                        selectedParticipantId === p.id ? 'bg-forest/10' : ''
+                      }`}
+                      onClick={() => selectParticipant(p.id)}
+                    >
+                      <td className="font-semibold text-forest">
+                        {p.status === 'approved' && p.tracking_code ? p.tracking_code : '—'}
+                      </td>
+                      <td className="font-semibold text-forest">{p.contact_name || p.organization_name || '—'}</td>
+                      <td>
+                        {p.phone ? (
+                          <a
+                            href={`tel:${p.phone}`}
+                            className="font-medium text-forest underline underline-offset-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {p.phone}
+                          </a>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td className="font-semibold text-forest">{visitsByParticipant.get(p.id) || 0}</td>
+                      <td className="font-medium text-forest">{p.kind}</td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <div className="flex gap-1">
+                          {p.status !== 'approved' && (
+                            <IconButton label="Accepter" variant="ok" disabled={busy} onClick={() => void onReview(p.id, 'approved')}>
+                              <IconCheck />
+                            </IconButton>
+                          )}
+                          {p.status !== 'rejected' && (
+                            <IconButton label="Refuser" variant="danger" disabled={busy} onClick={() => void onReview(p.id, 'rejected')}>
+                              <IconX />
+                            </IconButton>
+                          )}
+                          <IconButton label="Modifier" disabled={busy} onClick={() => editParticipant(p.id)}>
+                            <IconEdit />
+                          </IconButton>
+                          <IconButton label="Supprimer" variant="danger" disabled={busy} onClick={() => void onDeletePerson(p)}>
+                            <IconTrash />
+                          </IconButton>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </section>
@@ -496,7 +633,66 @@ export default function OrgaBusinessPage() {
                 </button>
               </div>
 
+              {editingParticipantId === selectedParticipant.id ? (
+                <form
+                  onSubmit={(e) => void onUpdatePerson(e, selectedParticipant.id)}
+                  className="mt-4 grid gap-4 sm:grid-cols-2"
+                >
+                  <label className="text-[13px] font-medium text-forest">
+                    Nom et prénom
+                    <input
+                      required
+                      minLength={2}
+                      name="contact_name"
+                      defaultValue={selectedParticipant.contact_name || ''}
+                      className={field}
+                    />
+                  </label>
+                  <label className="text-[13px] font-medium text-forest">
+                    Organisation
+                    <input name="organization_name" defaultValue={selectedParticipant.organization_name || ''} className={field} />
+                  </label>
+                  <label className="text-[13px] font-medium text-forest">
+                    Profil
+                    <select name="kind" className={field} defaultValue={selectedParticipant.kind}>
+                      <option value="pme">PME / industrie</option>
+                      <option value="investisseur">Investisseur</option>
+                      <option value="acheteur">Acheteur</option>
+                    </select>
+                  </label>
+                  <label className="text-[13px] font-medium text-forest">
+                    Secteur
+                    <input name="sector" defaultValue={selectedParticipant.sector || ''} className={field} />
+                  </label>
+                  <label className="text-[13px] font-medium text-forest">
+                    E-mail
+                    <input required type="email" name="email" defaultValue={selectedParticipant.email} className={field} />
+                  </label>
+                  <label className="text-[13px] font-medium text-forest">
+                    Téléphone
+                    <input name="phone" defaultValue={selectedParticipant.phone || ''} className={field} />
+                  </label>
+                  <label className="text-[13px] font-medium text-forest sm:col-span-2">
+                    Notes
+                    <textarea name="notes" rows={3} defaultValue={selectedParticipant.notes || ''} className={field} />
+                  </label>
+                  <div className="flex gap-2 sm:col-span-2">
+                    <button type="submit" disabled={busyId === selectedParticipant.id} className="orga-btn disabled:opacity-50">
+                      {busyId === selectedParticipant.id ? 'Enregistrement…' : 'Enregistrer'}
+                    </button>
+                    <button type="button" className="orga-btn-ghost" onClick={() => setEditingParticipantId(null)}>
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              ) : (
               <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
+                <p>
+                  <span className="text-ink/45">Date de demande · </span>
+                  {selectedParticipant.createdAt
+                    ? new Date(selectedParticipant.createdAt).toLocaleString('fr-FR')
+                    : '—'}
+                </p>
                 <p>
                   <span className="text-ink/45">Organisation · </span>
                   {selectedParticipant.organization_name || '—'}
@@ -528,42 +724,18 @@ export default function OrgaBusinessPage() {
                   {selectedParticipant.sector || '—'}
                 </p>
                 <p>
-                  <span className="text-ink/45">Pays · </span>
-                  {selectedParticipant.country || '—'}
+                  <span className="text-ink/45">Visites · </span>
+                  {visitsByParticipant.get(selectedParticipant.id) || 0}
                 </p>
                 <p>
                   <span className="text-ink/45">Opt-in contact · </span>
                   {selectedParticipant.contact_opt_in ? 'Oui' : 'Non'}
                 </p>
-                <p className="sm:col-span-2">
-                  <span className="text-ink/45">Offre · </span>
-                  {selectedParticipant.offers || '—'}
-                </p>
-                <p className="sm:col-span-2">
-                  <span className="text-ink/45">Cherche · </span>
-                  {selectedParticipant.seeks || '—'}
+                <p className="whitespace-pre-wrap sm:col-span-2">
+                  <span className="text-ink/45">Notes · </span>
+                  {selectedParticipant.notes || '—'}
                 </p>
               </div>
-
-              {selectedParticipant.status === 'pending' && (
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-black/10 pt-4">
-                  <button
-                    type="button"
-                    disabled={busyId === selectedParticipant.id}
-                    onClick={() => void onReview(selectedParticipant.id, 'approved')}
-                    className="orga-btn disabled:opacity-50"
-                  >
-                    Approuver
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busyId === selectedParticipant.id}
-                    onClick={() => void onReview(selectedParticipant.id, 'rejected')}
-                    className="orga-btn-ghost disabled:opacity-50"
-                  >
-                    Refuser
-                  </button>
-                </div>
               )}
             </section>
           )}

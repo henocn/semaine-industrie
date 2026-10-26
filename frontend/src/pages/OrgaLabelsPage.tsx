@@ -740,6 +740,12 @@ function LabelDetail({
           </div>
 
           <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
+            <p className="sm:col-span-2">
+              <span className="text-ink/45">Date de demande · </span>
+              {selected.created_at || selected.createdAt
+                ? new Date((selected.created_at || selected.createdAt) as string).toLocaleString('fr-FR')
+                : '—'}
+            </p>
             <p>
               <span className="text-ink/45">E-mail · </span>
               <a href={`mailto:${selected.contact_email}`} className="font-medium text-forest underline underline-offset-2">

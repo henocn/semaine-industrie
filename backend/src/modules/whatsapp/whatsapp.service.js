@@ -796,9 +796,7 @@ function formatB2bRecap(p) {
     `E-mail : ${p.email}`,
     p.phone ? `Téléphone : ${p.phone}` : null,
     p.sector ? `Secteur : ${p.sector}` : null,
-    p.country ? `Pays : ${p.country}` : null,
-    p.offers ? `Offre : ${p.offers}` : null,
-    p.seeks ? `Recherche : ${p.seeks}` : null,
+    p.notes ? `Notes : ${p.notes}` : null,
     p.tracking_code ? '' : null,
     p.tracking_code ? 'Conservez ce code de suivi.' : null,
   ]

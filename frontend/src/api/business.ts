@@ -8,17 +8,16 @@ export type BusinessParticipant = {
   email: string
   phone: string | null
   sector: string | null
-  offers: string | null
-  seeks: string | null
-  country: string | null
+  notes: string | null
   status: 'pending' | 'approved' | 'rejected'
   contact_opt_in?: boolean
   tracking_code?: string | null
+  createdAt?: string
 }
 
-/* Libellé affichable d'un participant B2B (champs org/contact optionnels). */
-export function businessParticipantLabel(p: Pick<BusinessParticipant, 'contact_name' | 'organization_name' | 'email'>) {
-  return p.contact_name || p.organization_name || p.email || 'Participant'
+/* Libellé affichable d'un participant B2B : nom et prénom, sinon organisation (jamais l'e-mail). */
+export function businessParticipantLabel(p: Pick<BusinessParticipant, 'contact_name' | 'organization_name'>) {
+  return p.contact_name || p.organization_name || 'Participant'
 }
 
 export type BusinessMeeting = {
@@ -43,9 +42,7 @@ export function registerParticipant(payload: {
   email: string
   phone?: string
   sector?: string
-  offers?: string
-  seeks?: string
-  country?: string
+  notes?: string
   contact_opt_in: boolean
 }) {
   return apiFetch<BusinessParticipant>('/business/participants', {
@@ -62,9 +59,7 @@ export function createParticipantOrga(payload: {
   email: string
   phone?: string
   sector?: string
-  offers?: string
-  seeks?: string
-  country?: string
+  notes?: string
   contact_opt_in?: boolean
   status?: 'pending' | 'approved'
 }) {
@@ -89,6 +84,24 @@ export function reviewParticipant(id: string, status: 'approved' | 'rejected') {
     method: 'PATCH',
     body: JSON.stringify({ status }),
   })
+}
+
+/* Modifie un participant (orga). */
+export function updateParticipant(
+  id: string,
+  payload: Partial<
+    Pick<BusinessParticipant, 'kind' | 'organization_name' | 'contact_name' | 'email' | 'phone' | 'sector' | 'notes'>
+  >,
+) {
+  return apiFetch<BusinessParticipant>(`/business/participants/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
+/* Supprime un participant sans rendez-vous (orga). */
+export function deleteParticipant(id: string) {
+  return apiFetch<{ id: string }>(`/business/participants/${id}`, { method: 'DELETE' })
 }
 
 /* Liste des rendez-vous. */

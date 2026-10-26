@@ -441,6 +441,11 @@ export default function OrgaParticipationsPage() {
                         ) : (
                           <div className="flex flex-wrap items-start gap-6 p-4">
                             <div className="min-w-0 flex-1 text-[14px] text-ink">
+                              {shown.createdAt && (
+                                <p className="mb-1 text-[13px] text-ink/60">
+                                  Date de demande · {new Date(shown.createdAt).toLocaleString('fr-FR')}
+                                </p>
+                              )}
                               {shown.city && <p>{shown.city}</p>}
                               {shown.email && <p>{shown.email}</p>}
                               {shown.phone && <p>{shown.phone}</p>}
