@@ -733,11 +733,10 @@ function b2bStatusLabel(status) {
   return 'En attente';
 }
 
-/* Libellé profil B2B. */
+/* Libellé profil B2B (les anciens profils pme / investisseur / acheteur comptent comme entreprise). */
 function b2bKindLabel(kind) {
-  if (kind === 'investisseur') return 'Investisseur';
-  if (kind === 'acheteur') return 'Acheteur';
-  return 'PME';
+  if (kind === 'particulier') return 'Particulier';
+  return 'Entreprise';
 }
 
 /* Libellé affichable d'un participant B2B. */
@@ -796,9 +795,7 @@ function formatB2bRecap(p) {
     `E-mail : ${p.email}`,
     p.phone ? `Téléphone : ${p.phone}` : null,
     p.sector ? `Secteur : ${p.sector}` : null,
-    p.country ? `Pays : ${p.country}` : null,
-    p.offers ? `Offre : ${p.offers}` : null,
-    p.seeks ? `Recherche : ${p.seeks}` : null,
+    p.notes ? `Notes : ${p.notes}` : null,
     p.tracking_code ? '' : null,
     p.tracking_code ? 'Conservez ce code de suivi.' : null,
   ]
@@ -914,12 +911,6 @@ function normalize(text) {
 /* Détecte un code de suivi actuel ou ancien. */
 function extractLabelCode(text) {
   return trackingService.extractCode(text);
-}
-
-/* Charge une organisation labellisée par code actuel ou ancien. */
-async function findOrgByCode(code) {
-  const found = await trackingService.findByCode(code);
-  return found?.kind === 'organization' ? found.organization : null;
 }
 
 /* Ouvre le bon espace WhatsApp selon le type de code. */
@@ -1852,5 +1843,4 @@ module.exports = {
   notifyVisitScheduled,
   notifyBusinessMeeting,
   verifyChallenge,
-  findOrgByCode,
 };

@@ -12,31 +12,13 @@ import {
 } from '../api/surveys'
 import { createVoteProduct, deleteVoteProduct, getVotes, updateVoteProduct, type VoteOption } from '../api/engagement'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { IconEdit, IconTrash } from '../components/ui/IconButton'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
 const iconBtn =
   'grid h-9 w-9 place-items-center border border-black bg-white text-forest hover:bg-forest hover:text-white disabled:opacity-40'
-
-/* Icône crayon. */
-function IconEdit() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M4 20h4L19 9l-4-4L4 16v4z" />
-      <path d="m13 7 4 4" />
-    </svg>
-  )
-}
-
-/* Icône poubelle. */
-function IconTrash() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M5 7h14M10 11v6M14 11v6M9 7V5h6v2M7 7l1 12h8l1-12" />
-    </svg>
-  )
-}
 
 /* Icône poignée drag. */
 function IconGrip() {

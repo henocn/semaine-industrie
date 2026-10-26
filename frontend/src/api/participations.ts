@@ -23,6 +23,7 @@ export type Participation = {
   headcount: number | null
   status: ParticipationStatus
   passport: ParticipationPassport | null
+  createdAt?: string
 }
 
 export type ParticipationInput = {

@@ -2,6 +2,7 @@
 
 const businessService = require('./business.service');
 const ApiResponse = require('../../utils/ApiResponse');
+const { audit } = require('../../utils/audit');
 
 /* Inscription publique. */
 async function register(req, res, next) {
@@ -38,7 +39,47 @@ async function listParticipants(req, res, next) {
 async function reviewParticipant(req, res, next) {
   try {
     const data = await businessService.reviewParticipant(req.params.id, req.body.status);
+    await audit(req, {
+      action: req.body.status === 'approved' ? 'approve' : 'reject',
+      entityType: 'business_participant',
+      entityId: data.id,
+      summary: `Participant B2B « ${data.contact_name || data.organization_name || data.id} » ${
+        req.body.status === 'approved' ? 'accepté' : 'refusé'
+      }`,
+    });
     return ApiResponse.success(res, data, 'Participant traité');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Modifie un participant. */
+async function updateParticipant(req, res, next) {
+  try {
+    const data = await businessService.updateParticipant(req.params.id, req.body);
+    await audit(req, {
+      action: 'update',
+      entityType: 'business_participant',
+      entityId: data.id,
+      summary: `Participant B2B « ${data.contact_name || data.organization_name || data.id} » mis à jour`,
+    });
+    return ApiResponse.success(res, data, 'Participant mis à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Supprime un participant (sans rendez-vous). */
+async function removeParticipant(req, res, next) {
+  try {
+    const data = await businessService.removeParticipant(req.params.id);
+    await audit(req, {
+      action: 'delete',
+      entityType: 'business_participant',
+      entityId: data.id,
+      summary: `Participant B2B « ${data.label} » supprimé`,
+    });
+    return ApiResponse.success(res, { id: data.id }, 'Participant supprimé');
   } catch (err) {
     return next(err);
   }
@@ -85,6 +126,8 @@ module.exports = {
   register,
   createParticipant,
   listParticipants,
+  updateParticipant,
+  removeParticipant,
   reviewParticipant,
   createMeeting,
   rescheduleMeeting,

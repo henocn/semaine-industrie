@@ -63,12 +63,6 @@ const createRequestSchema = Joi.object({
   }),
 });
 
-/* Schéma de revue (validation / rejet) d'une demande. */
-const reviewSchema = Joi.object({
-  status: Joi.string().valid('approved', 'rejected').required(),
-  review_note: Joi.string().trim().allow('', null),
-});
-
 /* Schéma de modification orga d'une demande (avant acceptation). */
 const updateRequestSchema = Joi.object({
   structure_name: Joi.string().trim().min(2).max(200),
@@ -110,6 +104,5 @@ const createOrgaRequestSchema = Joi.object({
 module.exports = {
   createRequestSchema,
   createOrgaRequestSchema,
-  reviewSchema,
   updateRequestSchema,
 };

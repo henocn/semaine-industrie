@@ -63,6 +63,7 @@ export type TrackingResources = {
   organization_name: string
   type: string
   label_pdf_url: string
+  kit_files?: { id: string; name: string; url: string; mime: string | null }[]
   programme_pdf_url: string
 }
 
@@ -229,27 +230,6 @@ export function verifyTrackingCode(code: string) {
   })
 }
 
-/* Upload du PDF programme officiel (orga). */
-export async function uploadProgrammePdf(file: File) {
-  const token = getAccessToken()
-  const body = new FormData()
-  body.append('programme_pdf', file)
-  const res = await fetch(`${API_BASE}/labels/programme-pdf`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body,
-  })
-  const json = (await res.json()) as {
-    success: boolean
-    data?: { programme_pdf_url: string; path: string }
-    error?: { message: string }
-  }
-  if (!res.ok || !json.success || !json.data) {
-    throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
-  }
-  return json.data
-}
-
 /* Modifie une demande, y compris après acceptation. */
 export function updateLabelRequest(id: string, payload: Partial<LabelRequestPayload> & { structure_type?: 'entreprise' | 'ecole'; address?: string }) {
   return apiFetch<LabelRequest>(`/labels/requests/${id}`, {
@@ -294,11 +274,6 @@ export async function addKitFile(id: string, file: File, title?: string) {
   return json.data
 }
 
-/* Alias rétrocompat (ajoute au kit). */
-export async function updateLabelPdf(id: string, file: File) {
-  return addKitFile(id, file)
-}
-
 /* Supprime un fichier du kit. */
 export function deleteKitFile(requestId: string, fileId: string) {
   return apiFetch<LabelRequest>(`/labels/requests/${requestId}/kit/${encodeURIComponent(fileId)}`, {
@@ -333,11 +308,6 @@ export type QrBatchItem = {
   region: string | null
   fiche_url: string
   qr_data_url: string
-}
-
-/* Lot de QR pour impression (orga). */
-export function listQrBatch() {
-  return apiFetch<{ count: number; items: QrBatchItem[] }>('/labels/qr-batch')
 }
 
 /* QR d'une demande acceptée. */

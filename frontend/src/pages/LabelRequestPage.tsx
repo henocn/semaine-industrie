@@ -100,9 +100,6 @@ export default function LabelRequestPage() {
             title="Demander le label"
             lead="Industries : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent."
           />
-          <p className="mt-4 max-w-md text-[15px] text-ink/70">
-            3 photos (JPEG, PNG ou WebP, max 10 Mo) : elles sont compressées si besoin.
-          </p>
         </div>
 
         {sent ? (
@@ -119,10 +116,10 @@ export default function LabelRequestPage() {
           </div>
         ) : (
           <form onSubmit={onSubmit} className="grid gap-6 sm:grid-cols-2">
-            <Field label="Nom de la structure" className="sm:col-span-2">
+            <Field label="Nom de l'industrie" className="sm:col-span-2">
               <input required name="structure_name" className={field} />
             </Field>
-            <Field label="Secteur" className="sm:col-span-2">
+            <Field label="Secteur d'activité" className="sm:col-span-2">
               <input name="sector" className={field} />
             </Field>
             <Field label="Adresse" className="sm:col-span-2">
@@ -143,7 +140,7 @@ export default function LabelRequestPage() {
             </div>
 
             <div className="sm:col-span-2">
-              <p className="text-sm font-semibold text-forest">3 photos (usine, produits, équipe…)</p>
+              <p className="text-sm font-semibold text-forest">Au moins 3 photos en bonne qualité de votre installation ou produits.</p>
               <div className="mt-1.5">
                 <input
                   id={galleryInputId}
@@ -168,9 +165,6 @@ export default function LabelRequestPage() {
                       ? `1 fichier : ${fileNames[0]}`
                       : `${fileNames.length} fichiers : ${fileNames.join(', ')}`}
                 </p>
-                <p className="mt-1.5 text-xs text-muted">
-                  Exactement 3 fichiers, JPEG/PNG/WebP, max 10 Mo chacun (compression automatique)
-                </p>
               </div>
               {previews.length > 0 && (
                 <div className="mt-4 grid grid-cols-3 gap-2">
@@ -186,7 +180,7 @@ export default function LabelRequestPage() {
             <Field label="E-mail">
               <input required type="email" name="contact_email" className={field} />
             </Field>
-            <Field label="Téléphone" optional hint="De préférence un numéro WhatsApp.">
+            <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <input name="contact_phone" type="tel" autoComplete="tel" className={field} />
             </Field>
             <Field label="Capacité max. visiteurs par créneau" className="sm:col-span-2">

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   approveParticipation,
   createParticipation,
@@ -11,6 +11,7 @@ import {
   type ParticipationKind,
 } from '../api/participations'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
 
 const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
@@ -31,72 +32,6 @@ function rowClass(status: Participation['status']) {
   if (status === 'approved') return 'orga-row-approved'
   if (status === 'rejected') return 'orga-row-rejected'
   return 'orga-row-pending'
-}
-
-/* Bouton action icône seule. */
-function IconButton({
-  label,
-  children,
-  onClick,
-  disabled,
-  variant,
-}: {
-  label: string
-  children: ReactNode
-  onClick: () => void
-  disabled?: boolean
-  variant?: 'ok' | 'danger'
-}) {
-  const extra = variant === 'ok' ? 'orga-icon-btn--ok' : variant === 'danger' ? 'orga-icon-btn--danger' : ''
-  return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      className={`orga-icon-btn ${extra}`}
-    >
-      {children}
-    </button>
-  )
-}
-
-/* Icône validation. */
-function IconCheck() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M5 12.5 9.5 17 19 7" />
-    </svg>
-  )
-}
-
-/* Icône refus. */
-function IconX() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M6 6l12 12M18 6 6 18" />
-    </svg>
-  )
-}
-
-/* Icône crayon. */
-function IconEdit() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M4 20h4L19 9l-4-4L4 16v4z" />
-      <path d="m13 7 4 4" />
-    </svg>
-  )
-}
-
-/* Icône poubelle. */
-function IconTrash() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M5 7h14M10 11v6M14 11v6M9 7V5h6v2M7 7l1 12h8l1-12" />
-    </svg>
-  )
 }
 
 /* Télécharge l'image du QR. */
@@ -441,6 +376,11 @@ export default function OrgaParticipationsPage() {
                         ) : (
                           <div className="flex flex-wrap items-start gap-6 p-4">
                             <div className="min-w-0 flex-1 text-[14px] text-ink">
+                              {shown.createdAt && (
+                                <p className="mb-1 text-[13px] text-ink/60">
+                                  Date de demande · {new Date(shown.createdAt).toLocaleString('fr-FR')}
+                                </p>
+                              )}
                               {shown.city && <p>{shown.city}</p>}
                               {shown.email && <p>{shown.email}</p>}
                               {shown.phone && <p>{shown.phone}</p>}

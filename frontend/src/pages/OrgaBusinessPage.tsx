@@ -1,17 +1,21 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
+  businessKindLabel,
   businessParticipantLabel,
   createMeeting,
   createParticipantOrga,
+  deleteParticipant,
   listMeetings,
   listParticipants,
   rescheduleMeeting,
   reviewParticipant,
   saveContactNote,
+  updateParticipant,
   type BusinessMeeting,
   type BusinessParticipant,
 } from '../api/business'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -22,11 +26,7 @@ function meetingAttendees(
   approvedPool: BusinessParticipant[],
   participants: BusinessParticipant[],
 ): BusinessParticipant[] {
-  const ids =
-    Array.isArray(m.attendee_ids) && m.attendee_ids.length
-      ? m.attendee_ids
-      : ([m.participantA?.id, m.participantB?.id].filter(Boolean) as string[])
-  return ids
+  return meetingParticipantIds(m)
     .map((id) => {
       return (
         approvedPool.find((x) => x.id === id) ||
@@ -49,6 +49,13 @@ function meetingNames(
   return names.join(' × ') || 'Participants'
 }
 
+/* Identifiants des participants d'un RDV (attendee_ids, sinon A / B). */
+function meetingParticipantIds(m: BusinessMeeting) {
+  return Array.isArray(m.attendee_ids) && m.attendee_ids.length
+    ? m.attendee_ids
+    : ([m.participantA?.id, m.participantB?.id].filter(Boolean) as string[])
+}
+
 /* Backoffice : participants B2B + rendez-vous. */
 export default function OrgaBusinessPage() {
   const [participants, setParticipants] = useState<BusinessParticipant[]>([])
@@ -62,10 +69,11 @@ export default function OrgaBusinessPage() {
   const [showAddMeeting, setShowAddMeeting] = useState(false)
   const [showAddPerson, setShowAddPerson] = useState(false)
   const [pickQuery, setPickQuery] = useState('')
+  const [pickOpen, setPickOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null)
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null)
-  const detailRef = useRef<HTMLElement | null>(null)
+  const [editingParticipantId, setEditingParticipantId] = useState<string | null>(null)
 
   /* Recharge listes. */
   async function load() {
@@ -99,14 +107,24 @@ export default function OrgaBusinessPage() {
         p.email,
         p.phone,
         p.sector,
-        p.kind,
-        p.country,
+        businessKindLabel(p.kind),
         p.status === 'approved' ? p.tracking_code : null,
       ]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [participants, query])
+
+  /* Nombre de rendez-vous (hors annulés) par participant. */
+  const visitsByParticipant = useMemo(() => {
+    const counts = new Map<string, number>()
+    meetings
+      .filter((m) => m.status !== 'cancelled')
+      .forEach((m) => {
+        meetingParticipantIds(m).forEach((id) => counts.set(id, (counts.get(id) || 0) + 1))
+      })
+    return counts
+  }, [meetings])
 
   const filteredMeetings = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -137,18 +155,12 @@ export default function OrgaBusinessPage() {
     [filteredMeetings, meetings, selectedMeetingId],
   )
 
-  /* Scrolle jusqu'au panneau détail après sélection. */
-  useEffect(() => {
-    if (!selectedParticipantId && !selectedMeetingId) return
-    detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [selectedParticipantId, selectedMeetingId])
-
   const pickList = useMemo(() => {
     const q = pickQuery.trim().toLowerCase()
     return approvedPool.filter((p) => {
       if (selectedIds.includes(p.id)) return false
       if (!q) return true
-      return [p.organization_name, p.contact_name, p.email, p.kind]
+      return [p.organization_name, p.contact_name, p.email, businessKindLabel(p.kind)]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
     })
@@ -167,6 +179,46 @@ export default function OrgaBusinessPage() {
     }
   }
 
+  /* Enregistre la fiche modifiée d'un participant. */
+  async function onUpdatePerson(e: FormEvent<HTMLFormElement>, id: string) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    setBusyId(id)
+    setError(null)
+    try {
+      await updateParticipant(id, {
+        kind: String(fd.get('kind') || 'entreprise') as BusinessParticipant['kind'],
+        contact_name: String(fd.get('contact_name') || ''),
+        email: String(fd.get('email') || ''),
+        phone: String(fd.get('phone') || ''),
+        sector: String(fd.get('sector') || ''),
+        notes: String(fd.get('notes') || ''),
+      })
+      setEditingParticipantId(null)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Modification impossible')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  /* Supprime un participant (refusé côté serveur s'il a des rendez-vous). */
+  async function onDeletePerson(p: BusinessParticipant) {
+    if (!window.confirm(`Supprimer ${businessParticipantLabel(p)} ?`)) return
+    setBusyId(p.id)
+    setError(null)
+    try {
+      await deleteParticipant(p.id)
+      if (selectedParticipantId === p.id) setSelectedParticipantId(null)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Suppression impossible')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   /* Ajoute une personne manuellement. */
   async function onCreatePerson(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -176,15 +228,12 @@ export default function OrgaBusinessPage() {
     setError(null)
     try {
       await createParticipantOrga({
-        kind: String(fd.get('kind') || 'pme'),
-        organization_name: String(fd.get('organization_name') || ''),
+        kind: String(fd.get('kind') || 'entreprise'),
         contact_name: String(fd.get('contact_name') || ''),
         email: String(fd.get('email') || ''),
         phone: String(fd.get('phone') || '') || undefined,
         sector: String(fd.get('sector') || '') || undefined,
-        offers: String(fd.get('offers') || '') || undefined,
-        seeks: String(fd.get('seeks') || '') || undefined,
-        country: String(fd.get('country') || '') || undefined,
+        notes: String(fd.get('notes') || '') || undefined,
         contact_opt_in: true,
         status: 'approved',
       })
@@ -279,7 +328,14 @@ export default function OrgaBusinessPage() {
 
   /* Sélectionne un participant (détail). */
   function selectParticipant(id: string) {
+    setEditingParticipantId(null)
     setSelectedParticipantId((prev) => (prev === id ? null : id))
+  }
+
+  /* Ouvre la fiche d'un participant en mode modification. */
+  function editParticipant(id: string) {
+    setSelectedParticipantId(id)
+    setEditingParticipantId(id)
   }
 
   /* Sélectionne un RDV (détail). */
@@ -292,6 +348,7 @@ export default function OrgaBusinessPage() {
     setTab(next)
     setSelectedParticipantId(null)
     setSelectedMeetingId(null)
+    setEditingParticipantId(null)
     setShowAddPerson(false)
     setShowAddMeeting(false)
   }
@@ -359,24 +416,19 @@ export default function OrgaBusinessPage() {
               </p>
               <form onSubmit={onCreatePerson} className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="text-[13px] font-medium text-forest">
-                  Personne
-                  <input name="contact_name" className={field} />
-                </label>
-                <label className="text-[13px] font-medium text-forest">
-                  Organisation
-                  <input name="organization_name" className={field} />
+                  Nom et prénom
+                  <input required minLength={2} name="contact_name" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest">
                   Profil
-                  <select name="kind" className={field} defaultValue="pme">
-                    <option value="pme">PME / industrie</option>
-                    <option value="investisseur">Investisseur</option>
-                    <option value="acheteur">Acheteur</option>
+                  <select name="kind" className={field} defaultValue="entreprise">
+                    <option value="entreprise">Entreprise</option>
+                    <option value="particulier">Particulier</option>
                   </select>
                 </label>
                 <label className="text-[13px] font-medium text-forest">
-                  Pays
-                  <input name="country" defaultValue="Togo" className={field} />
+                  Secteur
+                  <input name="sector" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest">
                   E-mail
@@ -387,16 +439,8 @@ export default function OrgaBusinessPage() {
                   <input name="phone" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                  Secteur
-                  <input name="sector" className={field} />
-                </label>
-                <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                  Offre
-                  <textarea name="offers" rows={2} className={field} />
-                </label>
-                <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                  Cherche
-                  <textarea name="seeks" rows={2} className={field} />
+                  Notes
+                  <textarea name="notes" rows={3} className={field} />
                 </label>
                 <div className="sm:col-span-2">
                   <button
@@ -422,151 +466,194 @@ export default function OrgaBusinessPage() {
               <thead>
                 <tr>
                   <th className="w-32">Code de suivi</th>
-                  <th>Personne</th>
+                  <th>Nom et prénom</th>
                   <th>Contact</th>
-                  <th className="w-28">Pays</th>
+                  <th className="w-28">Rendez-vous</th>
                   <th className="w-28">Profil</th>
-                  <th className="w-28">Statut</th>
+                  <th className="w-40">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredParticipants.length === 0 && (
                   <tr><td colSpan={6} className="py-10 text-ink/40">Aucune personne</td></tr>
                 )}
-                {filteredParticipants.map((p) => (
-                  <tr
-                    key={p.id}
-                    className={`${participantRowClass(p.status)} cursor-pointer ${
-                      selectedParticipantId === p.id ? 'bg-forest/10' : ''
-                    }`}
-                    onClick={() => selectParticipant(p.id)}
-                  >
-                    <td className="font-semibold text-forest">
-                      {p.status === 'approved' && p.tracking_code ? p.tracking_code : '—'}
-                    </td>
-                    <td className="font-semibold text-forest">{businessParticipantLabel(p)}</td>
-                    <td>
-                      {p.phone ? (
-                        <a
-                          href={`tel:${p.phone}`}
-                          className="font-medium text-forest underline underline-offset-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {p.phone}
-                        </a>
-                      ) : (
-                        <a
-                          href={`mailto:${p.email}`}
-                          className="text-ink/60 underline underline-offset-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {p.email}
-                        </a>
+                {filteredParticipants.map((p) => {
+                  const busy = busyId === p.id
+                  return (
+                    <Fragment key={p.id}>
+                      <tr
+                        className={`${participantRowClass(p.status)} cursor-pointer ${
+                          selectedParticipantId === p.id ? 'bg-forest/10' : ''
+                        }`}
+                        onClick={() => selectParticipant(p.id)}
+                      >
+                        <td className="font-semibold text-forest">
+                          {p.status === 'approved' && p.tracking_code ? p.tracking_code : '—'}
+                        </td>
+                        <td className="font-semibold text-forest">{p.contact_name || p.organization_name || '—'}</td>
+                        <td>
+                          {p.phone ? (
+                            <a
+                              href={`tel:${p.phone}`}
+                              className="font-medium text-forest underline underline-offset-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {p.phone}
+                            </a>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                        <td className="font-semibold text-forest">{visitsByParticipant.get(p.id) || 0}</td>
+                        <td className="font-medium text-forest">{businessKindLabel(p.kind)}</td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-1">
+                            {p.status === 'pending' && (
+                              <>
+                                <IconButton label="Accepter" variant="ok" disabled={busy} onClick={() => void onReview(p.id, 'approved')}>
+                                  <IconCheck />
+                                </IconButton>
+                                <IconButton label="Refuser" variant="danger" disabled={busy} onClick={() => void onReview(p.id, 'rejected')}>
+                                  <IconX />
+                                </IconButton>
+                              </>
+                            )}
+                            <IconButton label="Modifier" disabled={busy} onClick={() => editParticipant(p.id)}>
+                              <IconEdit />
+                            </IconButton>
+                            <IconButton label="Supprimer" variant="danger" disabled={busy} onClick={() => void onDeletePerson(p)}>
+                              <IconTrash />
+                            </IconButton>
+                          </div>
+                        </td>
+                      </tr>
+                      {selectedParticipantId === p.id && selectedParticipant && (
+                        <tr>
+                          <td colSpan={6} className="bg-white">
+                            <div className="p-4">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                  <h2 className="text-[16px] font-semibold text-forest">
+                                    {businessParticipantLabel(selectedParticipant)}
+                                  </h2>
+                                  <p className="mt-1 text-[13px] text-ink/50">
+                                    {businessKindLabel(selectedParticipant.kind)}
+                                    {' · '}
+                                    {statusLabel(selectedParticipant.status)}
+                                    {selectedParticipant.tracking_code ? ` · ${selectedParticipant.tracking_code}` : ''}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="orga-btn-ghost px-3 py-1.5 text-[13px]"
+                                  onClick={() => setSelectedParticipantId(null)}
+                                >
+                                  Fermer
+                                </button>
+                              </div>
+
+                              {editingParticipantId === selectedParticipant.id ? (
+                                <form
+                                  onSubmit={(e) => void onUpdatePerson(e, selectedParticipant.id)}
+                                  className="mt-4 grid gap-4 sm:grid-cols-2"
+                                >
+                                  <label className="text-[13px] font-medium text-forest">
+                                    Nom et prénom
+                                    <input
+                                      required
+                                      minLength={2}
+                                      name="contact_name"
+                                      defaultValue={selectedParticipant.contact_name || ''}
+                                      className={field}
+                                    />
+                                  </label>
+                                  <label className="text-[13px] font-medium text-forest">
+                                    Profil
+                                    <select name="kind" className={field} defaultValue={selectedParticipant.kind === 'particulier' ? 'particulier' : 'entreprise'}>
+                                      <option value="entreprise">Entreprise</option>
+                                      <option value="particulier">Particulier</option>
+                                    </select>
+                                  </label>
+                                  <label className="text-[13px] font-medium text-forest">
+                                    Secteur
+                                    <input name="sector" defaultValue={selectedParticipant.sector || ''} className={field} />
+                                  </label>
+                                  <label className="text-[13px] font-medium text-forest">
+                                    E-mail
+                                    <input required type="email" name="email" defaultValue={selectedParticipant.email} className={field} />
+                                  </label>
+                                  <label className="text-[13px] font-medium text-forest">
+                                    Téléphone
+                                    <input name="phone" defaultValue={selectedParticipant.phone || ''} className={field} />
+                                  </label>
+                                  <label className="text-[13px] font-medium text-forest sm:col-span-2">
+                                    Notes
+                                    <textarea name="notes" rows={3} defaultValue={selectedParticipant.notes || ''} className={field} />
+                                  </label>
+                                  <div className="flex gap-2 sm:col-span-2">
+                                    <button type="submit" disabled={busyId === selectedParticipant.id} className="orga-btn disabled:opacity-50">
+                                      {busyId === selectedParticipant.id ? 'Enregistrement…' : 'Enregistrer'}
+                                    </button>
+                                    <button type="button" className="orga-btn-ghost" onClick={() => setEditingParticipantId(null)}>
+                                      Annuler
+                                    </button>
+                                  </div>
+                                </form>
+                              ) : (
+                              <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
+                                <p>
+                                  <span className="text-ink/45">Date de demande · </span>
+                                  {selectedParticipant.createdAt
+                                    ? new Date(selectedParticipant.createdAt).toLocaleString('fr-FR')
+                                    : '—'}
+                                </p>
+                                <p>
+                                  <span className="text-ink/45">E-mail · </span>
+                                  <a
+                                    href={`mailto:${selectedParticipant.email}`}
+                                    className="font-medium text-forest underline underline-offset-2"
+                                  >
+                                    {selectedParticipant.email}
+                                  </a>
+                                </p>
+                                <p>
+                                  <span className="text-ink/45">Téléphone · </span>
+                                  {selectedParticipant.phone ? (
+                                    <a
+                                      href={`tel:${selectedParticipant.phone}`}
+                                      className="font-medium text-forest underline underline-offset-2"
+                                    >
+                                      {selectedParticipant.phone}
+                                    </a>
+                                  ) : (
+                                    '—'
+                                  )}
+                                </p>
+                                <p>
+                                  <span className="text-ink/45">Secteur · </span>
+                                  {selectedParticipant.sector || '—'}
+                                </p>
+                                <p>
+                                  <span className="text-ink/45">Rendez-vous · </span>
+                                  {visitsByParticipant.get(selectedParticipant.id) || 0}
+                                </p>
+                                <p className="whitespace-pre-wrap sm:col-span-2">
+                                  <span className="text-ink/45">Notes · </span>
+                                  {selectedParticipant.notes || '—'}
+                                </p>
+                              </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td>{p.country || '—'}</td>
-                    <td className="font-medium text-forest">{p.kind}</td>
-                    <td>{statusLabel(p.status)}</td>
-                  </tr>
-                ))}
+                    </Fragment>
+                  )
+                })}
               </tbody>
             </table>
           </section>
 
-          {selectedParticipant && (
-            <section ref={detailRef} className="orga-panel mt-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-[16px] font-semibold text-forest">
-                    {businessParticipantLabel(selectedParticipant)}
-                  </h2>
-                  <p className="mt-1 text-[13px] text-ink/50">
-                    {selectedParticipant.kind}
-                    {' · '}
-                    {statusLabel(selectedParticipant.status)}
-                    {selectedParticipant.tracking_code ? ` · ${selectedParticipant.tracking_code}` : ''}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="orga-btn-ghost px-3 py-1.5 text-[13px]"
-                  onClick={() => setSelectedParticipantId(null)}
-                >
-                  Fermer
-                </button>
-              </div>
-
-              <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
-                <p>
-                  <span className="text-ink/45">Organisation · </span>
-                  {selectedParticipant.organization_name || '—'}
-                </p>
-                <p>
-                  <span className="text-ink/45">E-mail · </span>
-                  <a
-                    href={`mailto:${selectedParticipant.email}`}
-                    className="font-medium text-forest underline underline-offset-2"
-                  >
-                    {selectedParticipant.email}
-                  </a>
-                </p>
-                <p>
-                  <span className="text-ink/45">Téléphone · </span>
-                  {selectedParticipant.phone ? (
-                    <a
-                      href={`tel:${selectedParticipant.phone}`}
-                      className="font-medium text-forest underline underline-offset-2"
-                    >
-                      {selectedParticipant.phone}
-                    </a>
-                  ) : (
-                    '—'
-                  )}
-                </p>
-                <p>
-                  <span className="text-ink/45">Secteur · </span>
-                  {selectedParticipant.sector || '—'}
-                </p>
-                <p>
-                  <span className="text-ink/45">Pays · </span>
-                  {selectedParticipant.country || '—'}
-                </p>
-                <p>
-                  <span className="text-ink/45">Opt-in contact · </span>
-                  {selectedParticipant.contact_opt_in ? 'Oui' : 'Non'}
-                </p>
-                <p className="sm:col-span-2">
-                  <span className="text-ink/45">Offre · </span>
-                  {selectedParticipant.offers || '—'}
-                </p>
-                <p className="sm:col-span-2">
-                  <span className="text-ink/45">Cherche · </span>
-                  {selectedParticipant.seeks || '—'}
-                </p>
-              </div>
-
-              {selectedParticipant.status === 'pending' && (
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-black/10 pt-4">
-                  <button
-                    type="button"
-                    disabled={busyId === selectedParticipant.id}
-                    onClick={() => void onReview(selectedParticipant.id, 'approved')}
-                    className="orga-btn disabled:opacity-50"
-                  >
-                    Approuver
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busyId === selectedParticipant.id}
-                    onClick={() => void onReview(selectedParticipant.id, 'rejected')}
-                    className="orga-btn-ghost disabled:opacity-50"
-                  >
-                    Refuser
-                  </button>
-                </div>
-              )}
-            </section>
-          )}
         </>
       )}
 
@@ -619,24 +706,36 @@ export default function OrgaBusinessPage() {
                   </div>
                   <input
                     value={pickQuery}
-                    onChange={(e) => setPickQuery(e.target.value)}
-                    placeholder="Rechercher une organisation ou un contact…"
+                    onChange={(e) => {
+                      setPickQuery(e.target.value)
+                      setPickOpen(true)
+                    }}
+                    onFocus={() => setPickOpen(true)}
+                    onBlur={() => setPickOpen(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setPickOpen(false)
+                    }}
+                    placeholder="Cliquez pour choisir, ou tapez pour filtrer…"
                     className={`${field} mt-2`}
                   />
-                  {pickQuery.trim() && (
-                    <ul className="mt-1 max-h-48 overflow-y-auto border border-black bg-white">
+                  {pickOpen && (
+                    <ul className="mt-1 max-h-60 overflow-y-auto border border-black bg-white">
                       {pickList.length === 0 && (
-                        <li className="px-3 py-2 text-[13px] text-ink/40">Aucun résultat</li>
+                        <li className="px-3 py-2 text-[13px] text-ink/40">
+                          {pickQuery.trim() ? 'Aucun résultat' : 'Aucune personne approuvée à ajouter'}
+                        </li>
                       )}
-                      {pickList.slice(0, 12).map((p) => (
+                      {pickList.map((p) => (
                         <li key={p.id}>
                           <button
                             type="button"
                             className="block w-full px-3 py-2 text-left text-[13px] hover:bg-forest/5"
+                            /* Garde le focus dans le champ : la liste reste ouverte pour en ajouter d'autres. */
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => addPerson(p.id)}
                           >
                             <span className="font-semibold text-forest">{businessParticipantLabel(p)}</span>
-                            <span className="text-ink/50"> · {p.kind}</span>
+                            <span className="text-ink/50"> · {businessKindLabel(p.kind)}</span>
                           </button>
                         </li>
                       ))}
@@ -685,197 +784,199 @@ export default function OrgaBusinessPage() {
                 {filteredMeetings.map((m, i) => {
                   const names = meetingNames(m, approvedPool, participants)
                   return (
-                    <tr
-                      key={m.id}
-                      className={`cursor-pointer ${selectedMeetingId === m.id ? 'bg-forest/10' : ''}`}
-                      onClick={() => selectMeeting(m.id)}
-                    >
-                      <td className="text-ink/45">{i + 1}</td>
-                      <td className="whitespace-nowrap font-medium text-forest">
-                        {new Date(m.slot_start).toLocaleDateString('fr-FR')}
-                      </td>
-                      <td className="whitespace-nowrap">
-                        {new Date(m.slot_start).toLocaleTimeString('fr-FR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                        {' à '}
-                        {new Date(m.slot_end).toLocaleTimeString('fr-FR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </td>
-                      <td>{m.location || '—'}</td>
-                      <td className="font-medium text-ink">{names}</td>
-                    </tr>
+                    <Fragment key={m.id}>
+                      <tr
+                        className={`cursor-pointer ${selectedMeetingId === m.id ? 'bg-forest/10' : ''}`}
+                        onClick={() => selectMeeting(m.id)}
+                      >
+                        <td className="text-ink/45">{i + 1}</td>
+                        <td className="whitespace-nowrap font-medium text-forest">
+                          {new Date(m.slot_start).toLocaleDateString('fr-FR')}
+                        </td>
+                        <td className="whitespace-nowrap">
+                          {new Date(m.slot_start).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                          {' à '}
+                          {new Date(m.slot_end).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </td>
+                        <td>{m.location || '—'}</td>
+                        <td className="font-medium text-ink">{names}</td>
+                      </tr>
+                      {selectedMeetingId === m.id && selectedMeeting && (
+                        <tr>
+                          <td colSpan={5} className="bg-white">
+                            <div className="p-4">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                  <h2 className="text-[16px] font-semibold text-forest">
+                                    {meetingNames(selectedMeeting, approvedPool, participants)}
+                                  </h2>
+                                  <p className="mt-1 text-[13px] text-ink/50">
+                                    {selectedMeeting.status === 'done' ? 'Terminé' : 'Confirmé'}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="orga-btn-ghost px-3 py-1.5 text-[13px]"
+                                  onClick={() => setSelectedMeetingId(null)}
+                                >
+                                  Fermer
+                                </button>
+                              </div>
+
+                              <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
+                                <p>
+                                  <span className="text-ink/45">Date · </span>
+                                  {new Date(selectedMeeting.slot_start).toLocaleDateString('fr-FR')}
+                                </p>
+                                <p>
+                                  <span className="text-ink/45">Horaire · </span>
+                                  {new Date(selectedMeeting.slot_start).toLocaleTimeString('fr-FR', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                  {' à '}
+                                  {new Date(selectedMeeting.slot_end).toLocaleTimeString('fr-FR', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                                <p className="sm:col-span-2">
+                                  <span className="text-ink/45">Lieu · </span>
+                                  {selectedMeeting.location || '—'}
+                                </p>
+                                {selectedMeeting.follow_up_at && (
+                                  <p>
+                                    <span className="text-ink/45">Relance · </span>
+                                    {new Date(selectedMeeting.follow_up_at).toLocaleDateString('fr-FR')}
+                                  </p>
+                                )}
+                                {selectedMeeting.contact_note && (
+                                  <p className="sm:col-span-2">
+                                    <span className="text-ink/45">Note · </span>
+                                    {selectedMeeting.contact_note}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="mt-4 border-t border-black/10 pt-4">
+                                <h3 className="text-[13px] font-semibold text-forest">Personnes</h3>
+                                <ul className="mt-2 space-y-2">
+                                  {meetingAttendees(selectedMeeting, approvedPool, participants).map((p) => (
+                                    <li key={p.id} className="border border-black/10 px-3 py-2 text-[13px]">
+                                      <p className="font-semibold text-forest">{businessParticipantLabel(p)}</p>
+                                      <p className="mt-0.5 text-ink/55">{businessKindLabel(p.kind)}</p>
+                                      <p className="mt-0.5">
+                                        <a
+                                          href={`mailto:${p.email}`}
+                                          className="text-forest underline underline-offset-2"
+                                        >
+                                          {p.email}
+                                        </a>
+                                        {p.phone ? (
+                                          <>
+                                            {' · '}
+                                            <a
+                                              href={`tel:${p.phone}`}
+                                              className="text-forest underline underline-offset-2"
+                                            >
+                                              {p.phone}
+                                            </a>
+                                          </>
+                                        ) : null}
+                                      </p>
+                                    </li>
+                                  ))}
+                                  {meetingAttendees(selectedMeeting, approvedPool, participants).length === 0 && (
+                                    <li className="text-ink/40">Aucun participant résolu</li>
+                                  )}
+                                </ul>
+                              </div>
+
+                              {selectedMeeting.status !== 'done' && (
+                                <div className="mt-4 space-y-4 border-t border-black/10 pt-4">
+                                  <form
+                                    key={`reschedule-${selectedMeeting.id}`}
+                                    className="grid gap-2 md:grid-cols-4"
+                                    onSubmit={(e) => void onReschedule(e, selectedMeeting.id)}
+                                  >
+                                    <label className="text-[12px] font-medium text-ink/50">
+                                      Nouveau début
+                                      <input
+                                        required
+                                        type="datetime-local"
+                                        name="slot_start"
+                                        defaultValue={toLocalInput(selectedMeeting.slot_start)}
+                                        className="mt-1 w-full orga-input"
+                                      />
+                                    </label>
+                                    <label className="text-[12px] font-medium text-ink/50">
+                                      Nouvelle fin
+                                      <input
+                                        required
+                                        type="datetime-local"
+                                        name="slot_end"
+                                        defaultValue={toLocalInput(selectedMeeting.slot_end)}
+                                        className="mt-1 w-full orga-input"
+                                      />
+                                    </label>
+                                    <label className="text-[12px] font-medium text-ink/50">
+                                      Lieu
+                                      <input
+                                        name="location"
+                                        defaultValue={selectedMeeting.location || ''}
+                                        className="mt-1 w-full orga-input"
+                                      />
+                                    </label>
+                                    <div className="flex items-end">
+                                      <button
+                                        type="submit"
+                                        disabled={busyId === selectedMeeting.id}
+                                        className="orga-btn-ghost w-full px-3 py-2.5 text-[12px] disabled:opacity-50"
+                                      >
+                                        Reporter + notifier
+                                      </button>
+                                    </div>
+                                  </form>
+                                  <form
+                                    className="flex flex-col gap-2 sm:flex-row"
+                                    onSubmit={(e) => {
+                                      e.preventDefault()
+                                      const note = String(new FormData(e.currentTarget).get('note') || '')
+                                      void onNote(selectedMeeting.id, note)
+                                    }}
+                                  >
+                                    <input
+                                      name="note"
+                                      placeholder="Fiche contact (30 sec)…"
+                                      className="flex-1 border border-black bg-white px-3 py-2.5 text-[13px]"
+                                    />
+                                    <button
+                                      type="submit"
+                                      disabled={busyId === selectedMeeting.id}
+                                      className="border border-black bg-forest px-4 py-2.5 text-[12px] font-semibold text-white disabled:opacity-50"
+                                    >
+                                      Clôturer + relance 3 mois
+                                    </button>
+                                  </form>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   )
                 })}
               </tbody>
             </table>
           </section>
 
-          {selectedMeeting && (
-            <section ref={detailRef} className="orga-panel mt-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-[16px] font-semibold text-forest">
-                    {meetingNames(selectedMeeting, approvedPool, participants)}
-                  </h2>
-                  <p className="mt-1 text-[13px] text-ink/50">
-                    {selectedMeeting.status === 'done' ? 'Terminé' : 'Confirmé'}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="orga-btn-ghost px-3 py-1.5 text-[13px]"
-                  onClick={() => setSelectedMeetingId(null)}
-                >
-                  Fermer
-                </button>
-              </div>
-
-              <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
-                <p>
-                  <span className="text-ink/45">Date · </span>
-                  {new Date(selectedMeeting.slot_start).toLocaleDateString('fr-FR')}
-                </p>
-                <p>
-                  <span className="text-ink/45">Horaire · </span>
-                  {new Date(selectedMeeting.slot_start).toLocaleTimeString('fr-FR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                  {' à '}
-                  {new Date(selectedMeeting.slot_end).toLocaleTimeString('fr-FR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-                <p className="sm:col-span-2">
-                  <span className="text-ink/45">Lieu · </span>
-                  {selectedMeeting.location || '—'}
-                </p>
-                {selectedMeeting.follow_up_at && (
-                  <p>
-                    <span className="text-ink/45">Relance · </span>
-                    {new Date(selectedMeeting.follow_up_at).toLocaleDateString('fr-FR')}
-                  </p>
-                )}
-                {selectedMeeting.contact_note && (
-                  <p className="sm:col-span-2">
-                    <span className="text-ink/45">Note · </span>
-                    {selectedMeeting.contact_note}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-4 border-t border-black/10 pt-4">
-                <h3 className="text-[13px] font-semibold text-forest">Personnes</h3>
-                <ul className="mt-2 space-y-2">
-                  {meetingAttendees(selectedMeeting, approvedPool, participants).map((p) => (
-                    <li key={p.id} className="border border-black/10 px-3 py-2 text-[13px]">
-                      <p className="font-semibold text-forest">{businessParticipantLabel(p)}</p>
-                      <p className="mt-0.5 text-ink/55">
-                        {[p.organization_name, p.contact_name].filter(Boolean).join(' · ') || '—'}
-                        {p.kind ? ` · ${p.kind}` : ''}
-                      </p>
-                      <p className="mt-0.5">
-                        <a
-                          href={`mailto:${p.email}`}
-                          className="text-forest underline underline-offset-2"
-                        >
-                          {p.email}
-                        </a>
-                        {p.phone ? (
-                          <>
-                            {' · '}
-                            <a
-                              href={`tel:${p.phone}`}
-                              className="text-forest underline underline-offset-2"
-                            >
-                              {p.phone}
-                            </a>
-                          </>
-                        ) : null}
-                      </p>
-                    </li>
-                  ))}
-                  {meetingAttendees(selectedMeeting, approvedPool, participants).length === 0 && (
-                    <li className="text-ink/40">Aucun participant résolu</li>
-                  )}
-                </ul>
-              </div>
-
-              {selectedMeeting.status !== 'done' && (
-                <div className="mt-4 space-y-4 border-t border-black/10 pt-4">
-                  <form
-                    key={`reschedule-${selectedMeeting.id}`}
-                    className="grid gap-2 md:grid-cols-4"
-                    onSubmit={(e) => void onReschedule(e, selectedMeeting.id)}
-                  >
-                    <label className="text-[12px] font-medium text-ink/50">
-                      Nouveau début
-                      <input
-                        required
-                        type="datetime-local"
-                        name="slot_start"
-                        defaultValue={toLocalInput(selectedMeeting.slot_start)}
-                        className="mt-1 w-full orga-input"
-                      />
-                    </label>
-                    <label className="text-[12px] font-medium text-ink/50">
-                      Nouvelle fin
-                      <input
-                        required
-                        type="datetime-local"
-                        name="slot_end"
-                        defaultValue={toLocalInput(selectedMeeting.slot_end)}
-                        className="mt-1 w-full orga-input"
-                      />
-                    </label>
-                    <label className="text-[12px] font-medium text-ink/50">
-                      Lieu
-                      <input
-                        name="location"
-                        defaultValue={selectedMeeting.location || ''}
-                        className="mt-1 w-full orga-input"
-                      />
-                    </label>
-                    <div className="flex items-end">
-                      <button
-                        type="submit"
-                        disabled={busyId === selectedMeeting.id}
-                        className="orga-btn-ghost w-full px-3 py-2.5 text-[12px] disabled:opacity-50"
-                      >
-                        Reporter + notifier
-                      </button>
-                    </div>
-                  </form>
-                  <form
-                    className="flex flex-col gap-2 sm:flex-row"
-                    onSubmit={(e) => {
-                      e.preventDefault()
-                      const note = String(new FormData(e.currentTarget).get('note') || '')
-                      void onNote(selectedMeeting.id, note)
-                    }}
-                  >
-                    <input
-                      name="note"
-                      placeholder="Fiche contact (30 sec)…"
-                      className="flex-1 border border-black bg-white px-3 py-2.5 text-[13px]"
-                    />
-                    <button
-                      type="submit"
-                      disabled={busyId === selectedMeeting.id}
-                      className="border border-black bg-forest px-4 py-2.5 text-[12px] font-semibold text-white disabled:opacity-50"
-                    >
-                      Clôturer + relance 3 mois
-                    </button>
-                  </form>
-                </div>
-              )}
-            </section>
-          )}
         </div>
       )}
     </OrgaShell>

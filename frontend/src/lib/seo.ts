@@ -1,7 +1,6 @@
 import publicSeoCatalog from './publicSeo.json' with { type: 'json' }
 
 export const SITE_URL = 'https://semaineindustrie.tg'
-export const BACKOFFICE_URL = 'https://backoffice.semaineindustrie.tg'
 export const SITE_NAME = 'Semaine de l’industrie 2026'
 
 export type SeoInput = {

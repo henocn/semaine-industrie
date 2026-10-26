@@ -89,8 +89,3 @@ export async function prepareGalleryFiles(files: File[]) {
   }
   return out
 }
-
-/* Alias rétrocompat pour les appels existants. */
-export async function assertGalleryFiles(files: File[]) {
-  return prepareGalleryFiles(files)
-}

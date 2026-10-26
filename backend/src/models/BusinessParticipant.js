@@ -13,7 +13,8 @@ module.exports = (sequelize) => {
         primaryKey: true,
       },
       kind: {
-        type: DataTypes.ENUM('investisseur', 'pme', 'acheteur'),
+        /* entreprise / particulier ; pme, investisseur, acheteur = anciens profils (affichés « Entreprise »). */
+        type: DataTypes.ENUM('investisseur', 'pme', 'acheteur', 'entreprise', 'particulier'),
         allowNull: false,
       },
       organization_name: {
@@ -36,14 +37,18 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(120),
         allowNull: true,
       },
-      offers: {
+      /* Notes libres (colonne historique « offers »). */
+      notes: {
         type: DataTypes.TEXT,
         allowNull: true,
+        field: 'offers',
       },
+      /* Ancien champ « cherche », conservé mais plus saisi. */
       seeks: {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      /* Ancien champ pays, conservé mais plus saisi. */
       country: {
         type: DataTypes.STRING(80),
         allowNull: true,

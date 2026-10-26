@@ -14,6 +14,11 @@ function emptyToNull(value) {
   return text || null;
 }
 
+/* Notes saisies (repli sur l'ancien champ « offers »). */
+function notesFrom(payload) {
+  return emptyToNull('notes' in payload ? payload.notes : payload.offers);
+}
+
 /* Inscription publique d'un participant B2B. */
 async function register(payload) {
   if (!payload.contact_opt_in) {
@@ -26,7 +31,7 @@ async function register(payload) {
     email: payload.email,
     phone: emptyToNull(payload.phone),
     sector: emptyToNull(payload.sector),
-    offers: emptyToNull(payload.offers),
+    notes: notesFrom(payload),
     seeks: emptyToNull(payload.seeks),
     country: emptyToNull(payload.country),
     contact_opt_in: true,
@@ -50,7 +55,7 @@ async function createByOrga(payload) {
     email: payload.email,
     phone: emptyToNull(payload.phone),
     sector: emptyToNull(payload.sector),
-    offers: emptyToNull(payload.offers),
+    notes: notesFrom(payload),
     seeks: emptyToNull(payload.seeks),
     country: emptyToNull(payload.country),
     contact_opt_in: payload.contact_opt_in !== false,
@@ -75,7 +80,47 @@ async function listParticipants({ status, kind } = {}) {
   return BusinessParticipant.findAll({ where, order: [['created_at', 'DESC']] });
 }
 
-/* Approuve ou refuse un participant. */
+/* Modifie la fiche d'un participant (statut et code de suivi inchangés). */
+async function updateParticipant(id, payload) {
+  const row = await BusinessParticipant.findByPk(id);
+  if (!row) throw ApiError.notFound('Participant introuvable');
+  const data = {};
+  if (payload.kind) data.kind = payload.kind;
+  if (payload.email) data.email = payload.email;
+  for (const key of ['organization_name', 'contact_name', 'phone', 'sector']) {
+    if (key in payload) data[key] = emptyToNull(payload[key]);
+  }
+  if ('notes' in payload || 'offers' in payload) data.notes = notesFrom(payload);
+  await row.update(data);
+  return row;
+}
+
+/* Vrai si le participant figure dans au moins un rendez-vous. */
+async function hasMeetings(id) {
+  const count = await BusinessMeeting.count({
+    where: {
+      [Op.or]: [
+        { participant_a_id: id },
+        { participant_b_id: id },
+        { attendee_ids: { [Op.contains]: [id] } },
+      ],
+    },
+  });
+  return count > 0;
+}
+
+/* Supprime un participant sans rendez-vous (les rendez-vous seraient supprimés avec lui). */
+async function removeParticipant(id) {
+  const row = await BusinessParticipant.findByPk(id);
+  if (!row) throw ApiError.notFound('Participant introuvable');
+  if (await hasMeetings(id)) {
+    throw ApiError.conflict('Ce participant a des rendez-vous : refusez-le plutôt que de le supprimer.');
+  }
+  await row.destroy();
+  return { id, label: row.contact_name || row.organization_name || 'Participant' };
+}
+
+/* Accepte ou refuse un participant en attente. */
 async function reviewParticipant(id, status) {
   const row = await BusinessParticipant.findByPk(id);
   if (!row) throw ApiError.notFound('Participant introuvable');
@@ -284,6 +329,8 @@ module.exports = {
   register,
   createByOrga,
   listParticipants,
+  updateParticipant,
+  removeParticipant,
   reviewParticipant,
   createMeeting,
   rescheduleMeeting,

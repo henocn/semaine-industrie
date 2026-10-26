@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   addKitFile,
   createLabelRequestOrga,
@@ -18,6 +18,7 @@ import { OrgaShell } from '../components/layout/OrgaShell'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { notifyLabelPendingChanged } from '../lib/labelPending'
 import { joinRoom, onRealtime } from '../lib/socket'
+import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
 
 const KIT_ACCEPT =
   '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
@@ -627,75 +628,6 @@ function rowClass(status: LabelRequest['status']) {
   return 'orga-row-pending'
 }
 
-/* Bouton action icône seule. */
-function IconButton({
-  label,
-  children,
-  onClick,
-  disabled,
-  variant,
-}: {
-  label: string
-  children: ReactNode
-  onClick: () => void
-  disabled?: boolean
-  variant?: 'ok' | 'danger'
-}) {
-  const extra = variant === 'ok' ? 'orga-icon-btn--ok' : variant === 'danger' ? 'orga-icon-btn--danger' : ''
-  return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      className={`orga-icon-btn ${extra}`}
-    >
-      {children}
-    </button>
-  )
-}
-
-/* Icône crayon. */
-function IconEdit() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M12 20h9" />
-      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-    </svg>
-  )
-}
-
-/* Icône validation. */
-function IconCheck() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  )
-}
-
-/* Icône fermer / refuser. */
-function IconX() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-      <path d="M18 6 6 18M6 6l12 12" />
-    </svg>
-  )
-}
-
-/* Icône corbeille. */
-function IconTrash() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M3 6h18" />
-      <path d="M8 6V4h8v2" />
-      <path d="M19 6l-1 14H6L5 6" />
-      <path d="M10 11v6M14 11v6" />
-    </svg>
-  )
-}
-
 /* Détail affiché juste sous la ligne cliquée. */
 function LabelDetail({
   selected,
@@ -740,6 +672,12 @@ function LabelDetail({
           </div>
 
           <div className="mt-4 grid gap-3 text-[13px] sm:grid-cols-2">
+            <p className="sm:col-span-2">
+              <span className="text-ink/45">Date de demande · </span>
+              {selected.created_at || selected.createdAt
+                ? new Date((selected.created_at || selected.createdAt) as string).toLocaleString('fr-FR')
+                : '—'}
+            </p>
             <p>
               <span className="text-ink/45">E-mail · </span>
               <a href={`mailto:${selected.contact_email}`} className="font-medium text-forest underline underline-offset-2">

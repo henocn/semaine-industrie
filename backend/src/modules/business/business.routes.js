@@ -8,6 +8,7 @@ const { authenticate, authorize } = require('../../middlewares/auth.middleware')
 const {
   registerSchema,
   createParticipantOrgaSchema,
+  updateParticipantSchema,
   reviewParticipantSchema,
   createMeetingSchema,
   contactNoteSchema,
@@ -26,6 +27,14 @@ router.post(
 );
 
 router.get('/participants', authenticate, authorize('orga'), controller.listParticipants);
+router.patch(
+  '/participants/:id',
+  authenticate,
+  authorize('orga'),
+  validate(updateParticipantSchema),
+  controller.updateParticipant,
+);
+router.delete('/participants/:id', authenticate, authorize('orga'), controller.removeParticipant);
 router.patch(
   '/participants/:id/review',
   authenticate,
