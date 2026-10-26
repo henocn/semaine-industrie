@@ -4,7 +4,7 @@ const Joi = require('joi');
 
 /* Champs communs d'un participant ; offers / seeks / country restent acceptés pour les anciens formulaires. */
 const participantFields = {
-  kind: Joi.string().valid('investisseur', 'pme', 'acheteur'),
+  kind: Joi.string().valid('entreprise', 'particulier'),
   organization_name: Joi.string().trim().min(2).max(200).allow('', null),
   contact_name: Joi.string().trim().min(2).max(160).allow('', null),
   email: Joi.string().trim().email().max(180),

@@ -13,7 +13,8 @@ module.exports = (sequelize) => {
         primaryKey: true,
       },
       kind: {
-        type: DataTypes.ENUM('investisseur', 'pme', 'acheteur'),
+        /* entreprise / particulier ; pme, investisseur, acheteur = anciens profils (affichés « Entreprise »). */
+        type: DataTypes.ENUM('investisseur', 'pme', 'acheteur', 'entreprise', 'particulier'),
         allowNull: false,
       },
       organization_name: {

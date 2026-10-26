@@ -29,7 +29,7 @@ export default function BusinessRegisterPage() {
     }
     try {
       await registerParticipant({
-        kind: String(fd.get('kind') || 'pme'),
+        kind: String(fd.get('kind') || 'entreprise'),
         contact_name: String(fd.get('contact_name') || '').trim(),
         email: String(fd.get('email') || ''),
         phone: String(fd.get('phone') || '') || undefined,
@@ -52,9 +52,8 @@ export default function BusinessRegisterPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            eyebrow="Vendredi 20 novembre"
             title="Rencontres d’affaires"
-            lead="Investisseurs, acheteurs et PME : déposez un profil court. L’équipe prépare les rendez-vous du vendredi."
+            lead="Particuliers ou entreprises : déposez un profil court. L’équipe prépare les rendez-vous d'affaire."
           />
         </div>
 
@@ -72,10 +71,9 @@ export default function BusinessRegisterPage() {
         ) : (
           <form onSubmit={onSubmit} className="grid gap-6 sm:grid-cols-2">
             <Field label="Profil">
-              <select name="kind" className={field} defaultValue="pme">
-                <option value="pme">PME / industrie</option>
-                <option value="investisseur">Investisseur</option>
-                <option value="acheteur">Acheteur</option>
+              <select name="kind" className={field} defaultValue="entreprise">
+                <option value="entreprise">Entreprise</option>
+                <option value="particulier">Particulier</option>
               </select>
             </Field>
             <Field label="Nom et prénom">
@@ -84,13 +82,13 @@ export default function BusinessRegisterPage() {
             <Field label="E-mail">
               <input required type="email" name="email" className={field} />
             </Field>
-            <Field label="Téléphone" optional hint="De préférence un numéro WhatsApp.">
+            <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <input name="phone" type="tel" autoComplete="tel" className={field} />
             </Field>
             <Field label="Secteur" className="sm:col-span-2">
               <input name="sector" className={field} />
             </Field>
-            <Field label="Notes" optional className="sm:col-span-2">
+            <Field label="Notes" className="sm:col-span-2">
               <textarea name="notes" rows={3} className={`${field} resize-none`} />
             </Field>
             <label className="flex items-start gap-3 text-[14px] text-ink/80 sm:col-span-2">

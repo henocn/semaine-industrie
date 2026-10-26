@@ -733,11 +733,10 @@ function b2bStatusLabel(status) {
   return 'En attente';
 }
 
-/* Libellé profil B2B. */
+/* Libellé profil B2B (les anciens profils pme / investisseur / acheteur comptent comme entreprise). */
 function b2bKindLabel(kind) {
-  if (kind === 'investisseur') return 'Investisseur';
-  if (kind === 'acheteur') return 'Acheteur';
-  return 'PME';
+  if (kind === 'particulier') return 'Particulier';
+  return 'Entreprise';
 }
 
 /* Libellé affichable d'un participant B2B. */

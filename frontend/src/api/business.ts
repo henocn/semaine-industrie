@@ -2,7 +2,8 @@ import { apiFetch } from './client'
 
 export type BusinessParticipant = {
   id: string
-  kind: 'investisseur' | 'pme' | 'acheteur'
+  /* pme / investisseur / acheteur : anciens profils, affichés « Entreprise ». */
+  kind: 'entreprise' | 'particulier' | 'investisseur' | 'pme' | 'acheteur'
   organization_name: string | null
   contact_name: string | null
   email: string
@@ -13,6 +14,11 @@ export type BusinessParticipant = {
   contact_opt_in?: boolean
   tracking_code?: string | null
   createdAt?: string
+}
+
+/* Libellé du profil : Particulier, sinon Entreprise (anciens profils compris). */
+export function businessKindLabel(kind: BusinessParticipant['kind']) {
+  return kind === 'particulier' ? 'Particulier' : 'Entreprise'
 }
 
 /* Libellé affichable d'un participant B2B : nom et prénom, sinon organisation (jamais l'e-mail). */
@@ -54,7 +60,6 @@ export function registerParticipant(payload: {
 /* Ajout manuel orga (approuvé par défaut). */
 export function createParticipantOrga(payload: {
   kind: string
-  organization_name: string
   contact_name: string
   email: string
   phone?: string

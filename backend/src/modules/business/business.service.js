@@ -120,11 +120,11 @@ async function removeParticipant(id) {
   return { id, label: row.contact_name || row.organization_name || 'Participant' };
 }
 
-/* Accepte ou refuse un participant (une décision peut être changée). */
+/* Accepte ou refuse un participant en attente. */
 async function reviewParticipant(id, status) {
   const row = await BusinessParticipant.findByPk(id);
   if (!row) throw ApiError.notFound('Participant introuvable');
-  if (row.status === status) throw ApiError.conflict('Déjà traité');
+  if (row.status !== 'pending') throw ApiError.conflict('Déjà traité');
   row.status = status;
   if (status === 'approved' && !row.tracking_code) {
     row.tracking_code = await trackingService.nextCode('AF');

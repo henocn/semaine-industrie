@@ -52,18 +52,13 @@ export default function InscriptionPage() {
             level={1}
             eyebrow="Semaine 2026"
             title="S'inscrire"
-            lead="Écoles et personnes particulières : indiquez qui vous êtes. Après validation, le QR du jour J suit."
+            lead="Écoles/centres de formation ou personnes particulières : indiquez qui vous êtes. Après validation, le QR du jour J suit."
           />
         </div>
 
         {sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
             <p className="text-xl text-forest">Merci. Votre inscription est enregistrée.</p>
-            <div className="mt-6">
-              <Button to="/programme" variant="link">
-                Voir le programme
-              </Button>
-            </div>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="grid gap-6 sm:grid-cols-2">
@@ -74,8 +69,8 @@ export default function InscriptionPage() {
                 value={kind}
                 onChange={(e) => setKind(e.target.value as ParticipationKind)}
               >
-                <option value="ecole">École</option>
-                <option value="particulier">Personne particulière</option>
+                <option value="ecole">École / centre de formation</option>
+                <option value="particulier">Particulier</option>
               </select>
             </Field>
             <Field label={isSchool ? "Nom de l'établissement" : 'Nom et prénom'} className="sm:col-span-2">
