@@ -25,6 +25,11 @@ const createSchema = Joi.object({
   headcount: fields.headcount,
 });
 
+/* Inscription publique : téléphone obligatoire. */
+const publicSchema = createSchema.keys({
+  phone: Joi.string().trim().min(6).max(40).required(),
+});
+
 /* Mise à jour d'une participation. */
 const updateSchema = Joi.object({
   name: fields.name,
@@ -43,6 +48,7 @@ const listSchema = Joi.object({
 
 module.exports = {
   createSchema,
+  publicSchema,
   updateSchema,
   listSchema,
 };

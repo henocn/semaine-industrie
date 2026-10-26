@@ -4,7 +4,7 @@ const { Router } = require('express');
 const controller = require('./participation.controller');
 const validate = require('../../middlewares/validate.middleware');
 const { authenticate, authorize } = require('../../middlewares/auth.middleware');
-const { createSchema, updateSchema } = require('./participation.validation');
+const { createSchema, publicSchema, updateSchema } = require('./participation.validation');
 const ApiError = require('../../utils/ApiError');
 
 const router = Router();
@@ -23,7 +23,7 @@ function limitPublic(req, res, next) {
   return next();
 }
 
-router.post('/public', limitPublic, validate(createSchema), controller.create);
+router.post('/public', limitPublic, validate(publicSchema), controller.create);
 
 router.use(authenticate, authorize('orga'));
 
