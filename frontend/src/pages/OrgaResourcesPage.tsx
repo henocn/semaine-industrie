@@ -7,6 +7,7 @@ import {
   type GlobalResource,
 } from '../api/resources'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -33,6 +34,8 @@ export default function OrgaResourcesPage() {
   useEffect(() => {
     void load()
   }, [])
+
+  useOrgaRealtime(['resource:changed'], () => void load())
 
   /* Ajoute un fichier, éventuellement comme programme. */
   async function onAdd(e: FormEvent) {

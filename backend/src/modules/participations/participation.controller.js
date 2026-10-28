@@ -5,6 +5,22 @@ const { listSchema } = require('./participation.validation');
 const ApiResponse = require('../../utils/ApiResponse');
 const ApiError = require('../../utils/ApiError');
 const { audit } = require('../../utils/audit');
+const { emitRealtime } = require('../../realtime/io');
+
+/* Diffuse un changement de participation au backoffice. */
+function emitParticipation(action, data) {
+  emitRealtime(
+    'participation:changed',
+    {
+      action,
+      id: data?.id,
+      name: data?.name,
+      status: data?.status,
+      kind: data?.kind,
+    },
+    'orga',
+  );
+}
 
 /* Liste les participations. */
 async function list(req, res, next) {
@@ -36,6 +52,7 @@ async function create(req, res, next) {
       entityId: data.id,
       summary: `Participation ${data.kind} « ${data.name} »`,
     });
+    emitParticipation('create', data);
     return ApiResponse.created(res, data, 'Participation enregistrée');
   } catch (err) {
     return next(err);
@@ -52,6 +69,7 @@ async function update(req, res, next) {
       entityId: data.id,
       summary: `Participation « ${data.name} » mise à jour`,
     });
+    emitParticipation('update', data);
     return ApiResponse.success(res, data, 'Participation mise à jour');
   } catch (err) {
     return next(err);
@@ -68,6 +86,7 @@ async function approve(req, res, next) {
       entityId: data.id,
       summary: `QR participation « ${data.name} »`,
     });
+    emitParticipation('approve', data);
     return ApiResponse.success(res, data, 'Participation acceptée');
   } catch (err) {
     return next(err);
@@ -84,6 +103,7 @@ async function reject(req, res, next) {
       entityId: data.id,
       summary: `Participation « ${data.name} » refusée`,
     });
+    emitParticipation('reject', data);
     return ApiResponse.success(res, data, 'Participation refusée');
   } catch (err) {
     return next(err);
@@ -100,6 +120,7 @@ async function remove(req, res, next) {
       entityId: data.id,
       summary: 'Participation supprimée',
     });
+    emitParticipation('delete', data);
     return ApiResponse.success(res, data, 'Participation supprimée');
   } catch (err) {
     return next(err);

@@ -33,6 +33,7 @@ async function createQuestion(req, res, next) {
       entityId: data.id,
       summary: `Création question sondage « ${data.label} »`,
     });
+    emitRealtime('survey:changed', { action: 'create', id: data.id }, 'orga');
     return ApiResponse.created(res, data, 'Question créée');
   } catch (err) {
     return next(err);
@@ -49,6 +50,7 @@ async function updateQuestion(req, res, next) {
       entityId: data.id,
       summary: `Modification question sondage « ${data.label} »`,
     });
+    emitRealtime('survey:changed', { action: 'update', id: data.id }, 'orga');
     return ApiResponse.success(res, data, 'Question mise à jour');
   } catch (err) {
     return next(err);
@@ -65,6 +67,7 @@ async function deleteQuestion(req, res, next) {
       entityId: req.params.id,
       summary: `Suppression question sondage`,
     });
+    emitRealtime('survey:changed', { action: 'delete', id: req.params.id }, 'orga');
     return ApiResponse.success(res, data, 'Question supprimée');
   } catch (err) {
     return next(err);
@@ -81,6 +84,7 @@ async function reorderQuestions(req, res, next) {
       entityId: null,
       summary: 'Réordonnancement des questions du sondage',
     });
+    emitRealtime('survey:changed', { action: 'reorder' }, 'orga');
     return ApiResponse.success(res, data, 'Ordre mis à jour');
   } catch (err) {
     return next(err);
@@ -93,6 +97,7 @@ async function submit(req, res, next) {
     const data = await surveyService.submit(req.body);
     const stats = await surveyService.getStats();
     emitRealtime('survey:updated', stats, 'live');
+    emitRealtime('survey:updated', stats, 'orga');
     return ApiResponse.created(res, data, 'Réponses enregistrées');
   } catch (err) {
     return next(err);

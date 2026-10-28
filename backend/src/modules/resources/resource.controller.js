@@ -3,6 +3,12 @@
 const resourceService = require('./resource.service');
 const ApiResponse = require('../../utils/ApiResponse');
 const { audit } = require('../../utils/audit');
+const { emitRealtime } = require('../../realtime/io');
+
+/* Diffuse un changement de ressource au backoffice. */
+function emitResource(action, data) {
+  emitRealtime('resource:changed', { action, id: data?.id }, 'orga');
+}
 
 /* Liste publique des ressources globales. */
 async function listPublic(req, res, next) {
@@ -27,6 +33,7 @@ async function create(req, res, next) {
       entityId: data.id,
       summary: `Ressource « ${data.title} »`,
     });
+    emitResource('create', data);
     return ApiResponse.created(res, data, 'Ressource ajoutée');
   } catch (err) {
     return next(err);
@@ -45,6 +52,7 @@ async function setPrimary(req, res, next) {
       entityId: data.id,
       summary: on ? `Programme : ${data.title}` : `Programme retiré : ${data.title}`,
     });
+    emitResource('update', data);
     return ApiResponse.success(res, data, on ? 'Programme mis à jour' : 'Programme retiré');
   } catch (err) {
     return next(err);
@@ -61,6 +69,7 @@ async function remove(req, res, next) {
       entityId: data.id,
       summary: 'Suppression d’une ressource',
     });
+    emitResource('delete', data);
     return ApiResponse.success(res, data, 'Ressource supprimée');
   } catch (err) {
     return next(err);

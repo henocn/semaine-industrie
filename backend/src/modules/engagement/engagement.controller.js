@@ -53,6 +53,7 @@ async function castVote(req, res, next) {
     const data = await engagementService.castVote(req.body);
     emitRealtime('vote:updated', data, 'votes');
     emitRealtime('vote:updated', data, 'live');
+    emitRealtime('vote:updated', data, 'orga');
     return ApiResponse.success(res, data, 'Vote enregistré');
   } catch (err) {
     return next(err);
@@ -70,6 +71,7 @@ async function createOption(req, res, next) {
     const results = await engagementService.listVoteResults();
     emitRealtime('vote:updated', results, 'votes');
     emitRealtime('vote:updated', results, 'live');
+    emitRealtime('vote:updated', results, 'orga');
     return ApiResponse.created(res, data, 'Produit ajouté');
   } catch (err) {
     return next(err);
@@ -87,6 +89,7 @@ async function updateOption(req, res, next) {
     const results = await engagementService.listVoteResults();
     emitRealtime('vote:updated', results, 'votes');
     emitRealtime('vote:updated', results, 'live');
+    emitRealtime('vote:updated', results, 'orga');
     return ApiResponse.success(res, data, 'Produit mis à jour');
   } catch (err) {
     return next(err);
@@ -100,6 +103,7 @@ async function removeOption(req, res, next) {
     const results = await engagementService.listVoteResults();
     emitRealtime('vote:updated', results, 'votes');
     emitRealtime('vote:updated', results, 'live');
+    emitRealtime('vote:updated', results, 'orga');
     return ApiResponse.success(res, data, 'Produit retiré');
   } catch (err) {
     return next(err);

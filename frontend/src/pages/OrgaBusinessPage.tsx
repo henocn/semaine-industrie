@@ -16,6 +16,7 @@ import {
 } from '../api/business'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
+import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -96,6 +97,8 @@ export default function OrgaBusinessPage() {
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter])
+
+  useOrgaRealtime(['business:changed'], () => void load())
 
   const filteredParticipants = useMemo(() => {
     const q = query.trim().toLowerCase()

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import {
   changePassword,
@@ -37,12 +37,18 @@ const field =
 /* Shell backoffice : sidebar nette + contenu sans coins IA. */
 export function OrgaShell({ title, children, actions, searchPlaceholder, onSearch }: OrgaShellProps) {
   const location = useLocation()
+  const mainRef = useRef<HTMLElement>(null)
   const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
   const [open, setOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
   const [participationCount, setParticipationCount] = useState(0)
   const [banner, setBanner] = useState<string | null>(null)
+
+  /* Dans le backoffice le scroll est sur <main>, pas sur la fenêtre. */
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [location.pathname])
   const [accountError, setAccountError] = useState<string | null>(null)
   const [accountInfo, setAccountInfo] = useState<string | null>(null)
   const [savingProfile, setSavingProfile] = useState(false)
@@ -87,7 +93,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
 
     void ensureNotifyPermission()
     joinRoom('orga')
-    const offCreated = onRealtime<LabelRequest>('label:created', (row) => {
+    const offLabelCreated = onRealtime<LabelRequest>('label:created', (row) => {
       const kind = row.structure_type === 'ecole' ? 'École' : 'Industrie'
       const msg = `${row.structure_name} · ${row.contact_phone || 'sans tél.'}`
       setBanner(`Nouvelle demande (${kind}) : ${msg}`)
@@ -97,16 +103,50 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         href: '/orga/labels',
       })
     })
-    const offUpdated = onRealtime<LabelRequest>('label:updated', () => {
+    const offLabelUpdated = onRealtime<LabelRequest>('label:updated', () => {
       void refreshPending()
+    })
+    const offParticipation = onRealtime<{
+      id: string
+      name?: string
+      status?: string
+      action?: string
+    }>('participation:changed', (row) => {
+      void refreshPending()
+      if (row.action === 'create' && row.status === 'pending') {
+        const msg = row.name || 'Nouvelle inscription'
+        setBanner(`Nouvelle inscription école : ${msg}`)
+        pushNotify('Nouvelle inscription', msg, {
+          tag: `participation-${row.id}`,
+          href: '/orga/participations',
+        })
+      }
+    })
+    const offBusiness = onRealtime<{
+      id?: string
+      action?: string
+      status?: string
+      label?: string
+    }>('business:changed', (row) => {
+      void refreshPending()
+      if (row.action === 'create' && row.status === 'pending') {
+        const msg = row.label || 'Nouveau profil'
+        setBanner(`Nouvelle rencontre d'affaires : ${msg}`)
+        pushNotify("Nouvelle inscription d'affaires", msg, {
+          tag: `business-${row.id || 'new'}`,
+          href: '/orga/affaires',
+        })
+      }
     })
 
     return () => {
       window.removeEventListener(LABEL_PENDING_EVENT, onLocal)
       window.removeEventListener('focus', onVisible)
       document.removeEventListener('visibilitychange', onVisible)
-      offCreated()
-      offUpdated()
+      offLabelCreated()
+      offLabelUpdated()
+      offParticipation()
+      offBusiness()
     }
   }, [user?.id, user?.role, location.pathname])
 
@@ -294,7 +334,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
             </div>
           )}
 
-          <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">{children}</main>
+          <main ref={mainRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">{children}</main>
         </div>
       </div>
 

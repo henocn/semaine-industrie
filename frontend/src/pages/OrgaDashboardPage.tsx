@@ -5,6 +5,7 @@ import { getSurveyStats, type SurveyStats } from '../api/surveys'
 import { getStoredUser } from '../api/auth'
 import { isAdminRole } from '../lib/roles'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 
 type Card = {
   label: string
@@ -19,20 +20,35 @@ export default function OrgaDashboardPage() {
   const [survey, setSurvey] = useState<SurveyStats | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    /* Charge stats dashboard + enquête. */
-    async function load() {
-      try {
-        setError(null)
-        const [dash, enquete] = await Promise.all([getDashboardStats(), getSurveyStats()])
-        setStats(dash)
-        setSurvey(enquete)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Impossible de charger le tableau')
-      }
+  /* Charge stats dashboard + enquête. */
+  async function load() {
+    try {
+      setError(null)
+      const [dash, enquete] = await Promise.all([getDashboardStats(), getSurveyStats()])
+      setStats(dash)
+      setSurvey(enquete)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Impossible de charger le tableau')
     }
+  }
+
+  useEffect(() => {
     void load()
   }, [])
+
+  useOrgaRealtime(
+    [
+      'label:created',
+      'label:updated',
+      'label:deleted',
+      'participation:changed',
+      'business:changed',
+      'booking:changed',
+      'survey:updated',
+      'vote:updated',
+    ],
+    () => void load(),
+  )
 
   const ind = stats?.indicators
   const industries = stats?.by_type.find((t) => t.name === 'entreprise')?.count ?? 0

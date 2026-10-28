@@ -12,6 +12,7 @@ import {
 } from '../api/participations'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
+import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 
 const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
@@ -81,6 +82,11 @@ export default function OrgaParticipationsPage() {
     setError(null)
     void load().catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
   }, [])
+
+  useOrgaRealtime(
+    ['participation:changed'],
+    () => load().catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible')),
+  )
 
   /* Ouvre le détail juste sous la ligne, avec le QR s'il existe. */
   async function openRow(id: string) {

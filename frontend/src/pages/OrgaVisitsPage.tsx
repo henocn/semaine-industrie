@@ -12,6 +12,7 @@ import { listMapPoints, type MapPoint } from '../api/labels'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { SitesMap } from '../components/map/SitesMap'
 import { IconEdit, IconTrash } from '../components/ui/IconButton'
+import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -111,6 +112,8 @@ export default function OrgaVisitsPage() {
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useOrgaRealtime(['booking:changed', 'label:updated', 'label:created'], () => void load())
 
   /* Charge les points carte (sites avec visites) pour la vue Carte. */
   useEffect(() => {

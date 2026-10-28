@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { RequireAdmin } from './components/auth/RequireAdmin'
 import { RequireOrga } from './components/auth/RequireOrga'
+import { ScrollToTop } from './components/ScrollToTop'
 import { PublicLayout } from './components/layout/PublicLayout'
 import { isBackofficeHost } from './lib/seo'
 import { peekOrgaUser } from './api/auth'
@@ -48,6 +49,7 @@ function BackofficeGate({ children }: { children: ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <BackofficeGate>
         <Routes>
           <Route element={<PublicLayout />}>

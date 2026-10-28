@@ -2,11 +2,18 @@
 
 const bookingService = require('./booking.service');
 const ApiResponse = require('../../utils/ApiResponse');
+const { emitRealtime } = require('../../realtime/io');
+
+/* Diffuse un changement de visite au backoffice. */
+function emitBooking(action, data) {
+  emitRealtime('booking:changed', { action, id: data?.id }, 'orga');
+}
 
 /* POST arrangement de visite (orga uniquement). */
 async function create(req, res, next) {
   try {
     const data = await bookingService.createBooking(req.body);
+    emitBooking('create', data);
     return ApiResponse.created(res, data, 'Visite arrangée');
   } catch (err) {
     return next(err);
@@ -17,6 +24,7 @@ async function create(req, res, next) {
 async function update(req, res, next) {
   try {
     const data = await bookingService.updateBooking(req.params.id, req.body);
+    emitBooking('update', data);
     return ApiResponse.success(res, data, 'Visite mise à jour');
   } catch (err) {
     return next(err);
@@ -27,6 +35,7 @@ async function update(req, res, next) {
 async function remove(req, res, next) {
   try {
     const data = await bookingService.deleteBooking(req.params.id);
+    emitBooking('delete', data);
     return ApiResponse.success(res, data, 'Visite supprimée');
   } catch (err) {
     return next(err);
