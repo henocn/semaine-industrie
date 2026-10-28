@@ -2,7 +2,10 @@
 
 const Joi = require('joi');
 
+/* Lecture seule : l'enum DB garde encore « particulier » pour l'historique. */
 const kind = Joi.string().valid('ecole', 'particulier');
+/* Nouvelles inscriptions : écoles / centres / univ uniquement. */
+const kindCreate = Joi.string().valid('ecole');
 const status = Joi.string().valid('pending', 'approved', 'rejected');
 
 const fields = {
@@ -14,9 +17,9 @@ const fields = {
   headcount: Joi.number().integer().min(1).max(5000).allow(null),
 };
 
-/* Création d'une participation depuis le backoffice. */
+/* Création d'une participation depuis le backoffice (écoles uniquement). */
 const createSchema = Joi.object({
-  kind: kind.required(),
+  kind: kindCreate.required(),
   name: fields.name.required(),
   email: fields.email,
   phone: fields.phone,
@@ -25,7 +28,7 @@ const createSchema = Joi.object({
   headcount: fields.headcount,
 });
 
-/* Inscription publique : téléphone obligatoire. */
+/* Inscription publique : téléphone obligatoire, écoles uniquement. */
 const publicSchema = createSchema.keys({
   phone: Joi.string().trim().min(6).max(40).required(),
 });

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { registerParticipation, type ParticipationKind } from '../api/participations'
+import { registerParticipation } from '../api/participations'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
@@ -11,28 +11,24 @@ const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
 
 /* Profil choisi ; une université est enregistrée comme établissement (kind « ecole »). */
-type Profile = 'ecole' | 'universite' | 'particulier'
+type Profile = 'ecole' | 'universite'
 
 const NAME_LABEL: Record<Profile, string> = {
   ecole: "Nom de l'établissement",
   universite: "Nom de l'université",
-  particulier: 'Nom et prénom',
 }
 
 const DESCRIPTION_LABEL: Record<Profile, string> = {
   ecole: 'Spécialités / séries',
   universite: 'Spécialités / filières',
-  particulier: 'Note',
 }
 
-/* Inscription publique : école / centre de formation, université ou particulier. */
+/* Inscription publique : école / centre de formation ou université. */
 export default function InscriptionPage() {
   const [profile, setProfile] = useState<Profile>('ecole')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const kind: ParticipationKind = profile === 'particulier' ? 'particulier' : 'ecole'
-  const isSchool = kind === 'ecole'
 
   /* Envoie l'inscription (téléphone obligatoire). */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -44,12 +40,12 @@ export default function InscriptionPage() {
     const headcountRaw = String(fd.get('headcount') || '').trim()
     try {
       await registerParticipation({
-        kind,
+        kind: 'ecole',
         name: String(fd.get('name') || '').trim(),
         email: String(fd.get('email') || '').trim() || null,
         phone: String(fd.get('phone') || '').trim() || null,
         description: String(fd.get('description') || '').trim() || null,
-        headcount: isSchool && headcountRaw ? Number(headcountRaw) : null,
+        headcount: headcountRaw ? Number(headcountRaw) : null,
       })
       setSent(true)
     } catch (err) {
@@ -68,7 +64,7 @@ export default function InscriptionPage() {
             level={1}
             eyebrow="Semaine 2026"
             title="S'inscrire"
-            lead="Écoles, centres de formation, universités ou particuliers : indiquez qui vous êtes. Après validation, le QR du jour J suit."
+            lead="Écoles, centres de formation et universités : indiquez qui vous êtes. Après validation, le QR du jour J suit."
           />
         </div>
 
@@ -87,7 +83,6 @@ export default function InscriptionPage() {
               >
                 <option value="ecole">École / centre de formation</option>
                 <option value="universite">Université</option>
-                <option value="particulier">Particulier</option>
               </select>
             </Field>
             <Field label={NAME_LABEL[profile]} className="sm:col-span-2">
@@ -99,15 +94,13 @@ export default function InscriptionPage() {
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <input required name="phone" type="tel" minLength={6} autoComplete="tel" className={field} />
             </Field>
-            {isSchool && (
-              <Field
-                label="Effectif souhaité"
-                hint="Le nombre de participants sera confirmé par l'organisation, sous réserve des places disponibles."
-                className="sm:col-span-2"
-              >
-                <input name="headcount" type="number" min={1} className={field} />
-              </Field>
-            )}
+            <Field
+              label="Effectif souhaité"
+              hint="Le nombre de participants sera confirmé par l'organisation, sous réserve des places disponibles."
+              className="sm:col-span-2"
+            >
+              <input name="headcount" type="number" min={1} className={field} />
+            </Field>
             <Field label={DESCRIPTION_LABEL[profile]} className="sm:col-span-2">
               <textarea name="description" rows={3} className={`${field} resize-none`} />
             </Field>

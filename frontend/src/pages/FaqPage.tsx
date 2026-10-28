@@ -14,8 +14,8 @@ const FAQ = [
     a: 'Les entreprises, les écoles, les jeunes, les familles et les acteurs économiques. Certaines visites se font sur inscription.',
   },
   {
-    q: "Comment s'inscrire, école ou particulier ?",
-    a: "Depuis Participer, puis S'inscrire. Choisissez École ou Personne particulière. Après validation, un QR est remis pour le jour J.",
+    q: "Comment s'inscrire, école, centre ou université ?",
+    a: "Depuis Participer, puis S'inscrire. Choisissez École / centre ou Université. Après validation, un QR est remis pour le jour J. Les particuliers ne s'inscrivent plus : les rencontres d'affaires restent sur la page Affaires.",
   },
   {
     q: 'Comment demander le label ?',

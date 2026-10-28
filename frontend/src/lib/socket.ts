@@ -18,9 +18,9 @@ function announcePresence(s: Socket) {
 /* Rejoint toutes les salles mémorisées (après connect / reconnect). */
 function rejoinAll(s: Socket) {
   for (const room of joinedRooms) {
-    s.emit('join', room)
+    if (room === 'orga') announcePresence(s)
+    else s.emit('join', room)
   }
-  if (joinedRooms.has('orga')) announcePresence(s)
 }
 
 /* Singleton client Socket.IO (connexion paresseuse). */
@@ -42,15 +42,13 @@ export function getSocket(): Socket {
   return socket
 }
 
-/* Rejoint une salle métier (live / votes / orga). */
+/* Rejoint une salle métier (live / votes publics ; orga via JWT staff). */
 export function joinRoom(room: 'live' | 'votes' | 'orga') {
   joinedRooms.add(room)
   const s = getSocket()
   if (!s.connected) s.connect()
-  else {
-    s.emit('join', room)
-    if (room === 'orga') announcePresence(s)
-  }
+  else if (room === 'orga') announcePresence(s)
+  else s.emit('join', room)
 }
 
 /* Écoute un événement et renvoie une fonction de nettoyage. */

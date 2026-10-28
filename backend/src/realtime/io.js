@@ -21,7 +21,8 @@ function initRealtime(httpServer) {
   io.on('connection', (socket) => {
     logger.debug(`socket connected ${socket.id}`);
     socket.on('join', (room) => {
-      if (room === 'live' || room === 'votes' || room === 'orga') {
+      /* live / votes : publics. orga : uniquement via presence:auth (JWT staff). */
+      if (room === 'live' || room === 'votes') {
         socket.join(room);
       }
     });

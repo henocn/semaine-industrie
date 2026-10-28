@@ -54,9 +54,9 @@ function readForm(fd: FormData, kind: ParticipationKind) {
   }
 }
 
-/* Backoffice : écoles et particuliers, avec QR à l'acceptation. */
+/* Backoffice : écoles / centres / univ, avec QR à l'acceptation. */
 export default function OrgaParticipationsPage() {
-  const [tab, setTab] = useState<ParticipationKind>('ecole')
+  const kind: ParticipationKind = 'ecole'
   const [rows, setRows] = useState<Participation[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<Participation | null>(null)
@@ -66,8 +66,8 @@ export default function OrgaParticipationsPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  /* Recharge l'onglet courant. */
-  async function load(kind = tab) {
+  /* Recharge la liste des écoles. */
+  async function load() {
     const data = await listParticipations({ kind })
     setRows(data)
   }
@@ -79,8 +79,8 @@ export default function OrgaParticipationsPage() {
     setEditingId(null)
     setShowAdd(false)
     setError(null)
-    void load(tab).catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
-  }, [tab])
+    void load().catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
+  }, [])
 
   /* Ouvre le détail juste sous la ligne, avec le QR s'il existe. */
   async function openRow(id: string) {
@@ -108,7 +108,7 @@ export default function OrgaParticipationsPage() {
     setBusy(true)
     setError(null)
     try {
-      await createParticipation({ kind: tab, ...readForm(new FormData(form), tab) })
+      await createParticipation({ kind, ...readForm(new FormData(form), kind) })
       form.reset()
       setShowAdd(false)
       await load()
@@ -126,7 +126,7 @@ export default function OrgaParticipationsPage() {
     setBusy(true)
     setError(null)
     try {
-      const updated = await updateParticipation(id, readForm(new FormData(form), tab))
+      const updated = await updateParticipation(id, readForm(new FormData(form), kind))
       setDetail(updated)
       setEditingId(null)
       await load()
@@ -205,9 +205,7 @@ export default function OrgaParticipationsPage() {
     )
   }, [rows, query])
 
-  const noun = tab === 'ecole'
-    ? (filtered.length > 1 ? 'écoles' : 'école')
-    : (filtered.length > 1 ? 'particuliers' : 'particulier')
+  const noun = filtered.length > 1 ? 'écoles' : 'école'
 
   return (
     <OrgaShell
@@ -216,26 +214,11 @@ export default function OrgaParticipationsPage() {
       onSearch={setQuery}
       actions={
         <button type="button" className="orga-btn" onClick={() => setShowAdd((v) => !v)}>
-          {showAdd ? 'Fermer' : `Ajouter ${tab === 'ecole' ? 'une école' : 'un particulier'}`}
+          {showAdd ? 'Fermer' : 'Ajouter une école'}
         </button>
       }
     >
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
-
-      <div className="mb-4 flex gap-0 border border-black">
-        {(['ecole', 'particulier'] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setTab(key)}
-            className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
-              tab === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
-            } ${key === 'particulier' ? 'border-l border-black' : ''}`}
-          >
-            {key === 'ecole' ? 'Écoles' : 'Particuliers'}
-          </button>
-        ))}
-      </div>
 
       {showAdd && (
         <form onSubmit={(e) => void onCreate(e)} className="orga-panel mb-4 grid gap-3 sm:grid-cols-2">
@@ -252,14 +235,12 @@ export default function OrgaParticipationsPage() {
             <input name="phone" type="tel" className={field} />
             <span className="mt-1 block text-[12px] font-normal text-ink/50">De préférence un numéro WhatsApp.</span>
           </label>
-          {tab === 'ecole' && (
-            <label className="text-[13px] font-medium text-forest">
-              Effectif souhaité
-              <input name="headcount" type="number" min={1} className={field} />
-            </label>
-          )}
+          <label className="text-[13px] font-medium text-forest">
+            Effectif souhaité
+            <input name="headcount" type="number" min={1} className={field} />
+          </label>
           <label className="text-[13px] font-medium text-forest sm:col-span-2">
-            {tab === 'ecole' ? 'Spécialités / séries ou filières' : 'Note'}
+            Spécialités / séries ou filières
             <textarea name="description" rows={3} className={`${field} resize-none`} />
           </label>
           <div className="sm:col-span-2">
@@ -358,14 +339,12 @@ export default function OrgaParticipationsPage() {
                               Téléphone
                               <input name="phone" defaultValue={shown.phone || ''} className={field} />
                             </label>
-                            {tab === 'ecole' && (
-                              <label className="text-[13px] font-medium text-forest">
-                                Effectif souhaité
-                                <input name="headcount" type="number" min={1} defaultValue={shown.headcount ?? ''} className={field} />
-                              </label>
-                            )}
+                            <label className="text-[13px] font-medium text-forest">
+                              Effectif souhaité
+                              <input name="headcount" type="number" min={1} defaultValue={shown.headcount ?? ''} className={field} />
+                            </label>
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                              {tab === 'ecole' ? 'Spécialités / séries ou filières' : 'Note'}
+                              Spécialités / séries ou filières
                               <textarea name="description" rows={3} defaultValue={shown.description || ''} className={`${field} resize-none`} />
                             </label>
                             <div className="sm:col-span-2 flex gap-2">

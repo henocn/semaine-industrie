@@ -151,7 +151,7 @@ async function replyAskCode(from, phoneNumberId, body) {
     phoneNumberId,
     body:
       body
-      || "Espace de suivi pour les industries, groupe (écoles/universités) ou particulier. Entrez le code de suivi envoyé à l'inscription.",
+      || "Espace de suivi pour les industries, écoles / universités et rencontres d'affaires. Entrez le code de suivi envoyé à l'inscription.",
   });
 }
 
@@ -645,7 +645,7 @@ async function sendList({ to, body, buttonLabel, sections, phoneNumberId, header
   return graphSend(phoneNumberId, { to, type: 'interactive', interactive });
 }
 
-/* Message Participer : les trois parcours publics + code de suivi. */
+/* Message Participer : parcours publics + code de suivi. */
 function participateBody() {
   const site = SITE();
   return [
@@ -653,9 +653,9 @@ function participateBody() {
     '',
     `1. *Industrie* : demandez le label sur ${site}/label`,
     '',
-    `2. *École, centre de formation ou particulier* : inscrivez-vous sur ${site}/inscription`,
+    `2. *École, centre de formation ou université* : inscrivez-vous sur ${site}/inscription`,
     '',
-    `3. *Investisseur ou entreprise* : réservez une visite d'affaires avec l'API-ZF sur ${site}/affaires`,
+    `3. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
     '',
     '📩 Vous recevrez un *code de suivi* pour voir où en est votre participation dans « Suivi de participation ».',
   ].join('\n');
@@ -919,12 +919,20 @@ async function openByTrackingCode(from, raw, phoneNumberId) {
   if (!found) return null;
   if (found.kind === 'organization') return replySuiviMenu(from, found.organization, phoneNumberId);
   if (found.kind === 'business') return replyB2bMenu(from, found.participant, phoneNumberId);
+  /* Passeports individuels (ex-particuliers) : plus de suivi bot. */
+  if (found.passport?.kind === 'individual') {
+    return replyAskCode(
+      from,
+      phoneNumberId,
+      "Le suivi individuel n'est plus proposé. Les inscriptions concernent les écoles, centres et universités (code EC-…). Pour une rencontre d'affaires, utilisez votre code AF-… ou votre e-mail.",
+    );
+  }
   return replyPassportRecap(from, found.passport, phoneNumberId);
 }
 
 /* Texte d'intro du sous-menu. */
 function suiviIntro(kind, name) {
-  const label = kind === 'in' ? 'Industrie' : kind === 'af' ? 'Affaires' : kind === 'pa' ? 'Particulier' : 'École';
+  const label = kind === 'in' ? 'Industrie' : kind === 'af' ? 'Affaires' : 'École';
   return `${label} : ${name}\nQue souhaitez-vous ?`;
 }
 
@@ -940,9 +948,9 @@ async function openLinkedSuivi(from, phoneNumberId, patch, linked) {
   );
 }
 
-/* Récap passeport école / particulier. */
+/* Récap passeport école / groupe. */
 async function replyPassportRecap(from, passport, phoneNumberId) {
-  const kind = passport.kind === 'group' ? 'ec' : 'pa';
+  const kind = 'ec';
   const name = passport.holder_name || passport.school_name || 'Participant';
   return openLinkedSuivi(
     from,
@@ -959,14 +967,13 @@ async function replyPassportRecap(from, passport, phoneNumberId) {
   );
 }
 
-/* Formate le récap passeport. */
+/* Formate le récap passeport école. */
 function formatPassportRecap(passport) {
-  const kind = passport.kind === 'group' ? 'École' : 'Particulier';
   const url = `${SITE()}/passeport/${passport.code}`;
   return [
     'Récapitulatif',
     '',
-    `${kind} : ${passport.holder_name || passport.school_name || 'Participant'}`,
+    `École : ${passport.holder_name || passport.school_name || 'Participant'}`,
     `Code de suivi : ${passport.code}`,
     `Passeport : ${url}`,
     '',
@@ -989,8 +996,9 @@ async function loadLinked(session) {
   if (session.passportId) {
     const passport = await Passport.findByPk(session.passportId);
     if (!passport) return null;
+    if (passport.kind === 'individual') return null;
     return {
-      kind: session.kind === 'pa' ? 'pa' : 'ec',
+      kind: 'ec',
       code: passport.code,
       passport,
       name: passport.holder_name || passport.school_name || 'Participant',
@@ -1025,8 +1033,9 @@ async function loadLinked(session) {
         name: b2bDisplayName(found.participant),
       };
     }
+    if (found.passport.kind === 'individual') return null;
     return {
-      kind: found.passport.kind === 'group' ? 'ec' : 'pa',
+      kind: 'ec',
       code: found.passport.code,
       passport: found.passport,
       name: found.passport.holder_name || found.passport.school_name || 'Participant',
@@ -1400,7 +1409,7 @@ async function resolveIdent(from, text, phoneNumberId, intent) {
   return replyAskCode(
     from,
     phoneNumberId,
-    'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5, PA-3MXR ou AF-9TQB).',
+    'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5 ou AF-9TQB).',
   );
 }
 
@@ -1436,7 +1445,7 @@ async function handleText(from, text, phoneNumberId) {
     return replyAskCode(
       from,
       phoneNumberId,
-      'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5, PA-3MXR ou AF-9TQB).',
+      'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5 ou AF-9TQB).',
     );
   }
 
@@ -1572,7 +1581,7 @@ function buildParticipationApprovalBody(participation, code) {
   ].join('\n');
 }
 
-/* Confirme l'inscription d'une école ou d'un particulier. */
+/* Confirme l'inscription d'une école / centre / université. */
 async function notifyParticipationApproved(participation) {
   const to = toWaRecipient(participation?.phone);
   const code = participation?.passport?.code;
