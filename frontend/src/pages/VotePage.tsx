@@ -55,7 +55,6 @@ export default function VotePage() {
         <div className="animate-rise">
           <SectionHeader
             level={1}
-            eyebrow="Exposition du samedi"
             title="Produit coup de cœur"
             lead="Un vote par personne. Le classement se met à jour au fil des voix."
           />

@@ -52,7 +52,6 @@ export default function IndustriesPage() {
         <div className="animate-rise">
           <SectionHeader
             level={1}
-            eyebrow="Annuaire"
             title="Industrie"
             lead="Les entreprises labellisées de la Semaine. Ouvrez une fiche pour découvrir le site et les produits."
           />

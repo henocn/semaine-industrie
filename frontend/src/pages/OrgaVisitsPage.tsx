@@ -482,7 +482,7 @@ export default function OrgaVisitsPage() {
             className={`flex-1 px-4 py-2.5 text-[14px] font-semibold transition-colors ${
               i > 0 ? 'border-l border-black' : ''
             } ${
-              view === tab.id ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
+              view === tab.id ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
             }`}
           >
             {tab.label}

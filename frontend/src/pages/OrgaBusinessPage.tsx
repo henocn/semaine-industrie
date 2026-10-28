@@ -401,7 +401,7 @@ export default function OrgaBusinessPage() {
             type="button"
             onClick={() => switchTab(t)}
             className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
-              tab === t ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
+              tab === t ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
             } ${t === 'meetings' ? 'border-l border-black' : ''}`}
           >
             {t === 'participants' ? 'Participants' : 'Rendez-vous'}

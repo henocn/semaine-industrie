@@ -47,7 +47,6 @@ export default function ResourcesPage() {
       <div className="animate-rise max-w-3xl">
         <SectionHeader
           level={1}
-          eyebrow="Ressources"
           title="Ressources de la semaine"
           lead="Les documents de la semaine sont ouverts à tous. Avec votre code de suivi, retrouvez aussi vos propres ressources."
         />

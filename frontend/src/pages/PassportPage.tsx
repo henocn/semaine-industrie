@@ -36,18 +36,22 @@ export default function PassportPage() {
               <div className="animate-rise">
                 <SectionHeader
                   level={1}
-                  eyebrow={`${isGroup ? 'Passeport de groupe' : 'Passeport'} ${passport.code}`}
                   title={isGroup
                     ? (passport.school_name || passport.holder_name || 'Parcours commun')
                     : (passport.holder_name || 'Parcours industrie')}
-                  lead={isGroup
-                    ? [
-                        passport.class_label,
-                        passport.headcount ? `${passport.headcount} élèves` : null,
-                        'un tampon par site pour toute la classe',
-                      ].filter(Boolean).join(' · ')
-                    : ([passport.school_name, passport.class_label].filter(Boolean).join(' · ')
-                      || 'Visites tamponnées ci-dessous')}
+                  lead={[
+                    passport.code,
+                    ...(isGroup
+                      ? [
+                          passport.class_label,
+                          passport.headcount ? `${passport.headcount} élèves` : null,
+                          'un tampon par site pour toute la classe',
+                        ]
+                      : [
+                          passport.school_name,
+                          passport.class_label,
+                        ]),
+                  ].filter(Boolean).join(' · ') || 'Visites tamponnées ci-dessous'}
                 />
               </div>
 

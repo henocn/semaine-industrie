@@ -28,7 +28,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center border-l-2 px-3 py-2 text-[14px] font-medium transition-colors ${
     isActive
       ? 'border-forest bg-forest/5 text-forest'
-      : 'border-transparent text-ink/65 hover:bg-black/[0.03] hover:text-forest'
+      : 'border-transparent text-ink/65 hover:bg-forest/10 hover:text-forest'
   }`
 
 const field =
@@ -257,7 +257,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
             setAccountInfo(null)
             setAccountOpen(true)
           }}
-          className="flex w-full items-center gap-3 px-2 py-2 text-left transition-colors hover:bg-black/[0.03]"
+          className="flex w-full items-center gap-3 px-2 py-2 text-left transition-colors hover:bg-forest/10"
         >
           <div className="grid h-9 w-9 shrink-0 place-items-center border border-black bg-forest text-[12px] font-semibold text-white">
             {(user?.first_name?.[0] || 'O').toUpperCase()}
@@ -397,7 +397,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
             <button
               type="button"
               onClick={() => void onLogout()}
-              className="mt-6 w-full border border-black px-4 py-2.5 text-[13px] font-medium text-forest hover:bg-black/[0.03]"
+              className="mt-6 w-full border border-black px-4 py-2.5 text-[13px] font-medium text-forest hover:bg-forest/10"
             >
               Se déconnecter
             </button>

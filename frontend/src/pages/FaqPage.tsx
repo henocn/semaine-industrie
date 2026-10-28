@@ -84,7 +84,6 @@ export default function FaqPage() {
         <div className="animate-rise">
           <SectionHeader
             level={1}
-            eyebrow="À propos"
             title="Questions fréquentes"
             lead="Les réponses courtes. Le détail de chaque journée est sur la page Programme."
           />

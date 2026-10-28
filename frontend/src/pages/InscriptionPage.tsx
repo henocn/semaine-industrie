@@ -62,7 +62,6 @@ export default function InscriptionPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            eyebrow="Semaine 2026"
             title="S'inscrire"
             lead="Écoles, centres de formation et universités : indiquez qui vous êtes. Après validation, le QR du jour J suit."
           />

@@ -42,7 +42,6 @@ export default function MapPage() {
         <div className="animate-rise flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader
             level={1}
-            eyebrow="Sur le terrain"
             title="Carte des visites"
             lead="Sites industriels qui accueillent déjà des établissements pendant la semaine."
           />
@@ -71,10 +70,7 @@ export default function MapPage() {
 
               {active && (
                 <>
-                  <p className="text-[13px] font-semibold uppercase tracking-wide text-leaf">
-                    Site labellisé
-                  </p>
-                  <h2 className="display mt-2 text-3xl text-forest">{active.name}</h2>
+                  <h2 className="display text-3xl text-forest">{active.name}</h2>
                   <p className="mt-2 text-[15px] text-ink/60">
                     {[active.city, active.region, active.sector].filter(Boolean).join(' · ')}
                   </p>

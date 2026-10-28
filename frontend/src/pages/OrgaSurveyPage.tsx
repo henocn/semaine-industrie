@@ -245,7 +245,7 @@ export default function OrgaSurveyPage() {
             type="button"
             onClick={() => setTab(key)}
             className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
-              tab === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-black/[0.03]'
+              tab === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
             } ${key === 'coeur' ? 'border-l border-black' : ''}`}
           >
             {key === 'sondage' ? 'Sondage' : 'Coup de cœur'}

@@ -244,7 +244,6 @@ function SurveyFlow({
         <div className="animate-rise">
           <SectionHeader
             level={1}
-            eyebrow="Enquête visiteurs"
             title={screen === 'intro' ? 'Votre avis compte' : phaseInfo.title}
             lead={
               screen === 'intro'

@@ -96,7 +96,6 @@ export default function LabelRequestPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            eyebrow="Label 2026"
             title="Demander le label"
             lead="Industries : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent."
           />

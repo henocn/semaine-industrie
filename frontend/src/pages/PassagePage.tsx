@@ -84,7 +84,6 @@ export default function PassagePage() {
       <div className={`${WRAP} max-w-lg`}>
         <SectionHeader
           level={1}
-          eyebrow="Passage"
           title="Valider le passage"
           lead="L'industrie saisit son code de suivi, puis OK."
         />
@@ -103,8 +102,7 @@ export default function PassagePage() {
         {!done && (
           <form onSubmit={(e) => void onConfirm(e)} className="mt-10 space-y-5">
             <div>
-              <p className="text-[13px] font-semibold uppercase tracking-wide text-ink/45">Visiteur</p>
-              <p className="mt-1 text-[18px] font-semibold text-forest">{visitorName}</p>
+              <p className="text-[18px] font-semibold text-forest">{visitorName}</p>
               <p className="mt-0.5 text-[14px] text-ink/55">{visitorCode}</p>
             </div>
 

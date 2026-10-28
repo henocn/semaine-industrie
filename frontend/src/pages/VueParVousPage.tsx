@@ -193,8 +193,7 @@ function QuizGame() {
     <div className="mt-8">
       <div className="bg-forest px-5 py-8 text-center text-white">
         <Award className="mx-auto h-10 w-10 text-sun" strokeWidth={1.75} aria-hidden />
-        <p className="mt-3 text-[12px] font-semibold uppercase tracking-wide text-white/70">Votre résultat</p>
-        <p className="mt-2 text-4xl font-bold">
+        <p className="mt-3 text-4xl font-bold">
           {score} / {QUIZ.length}
         </p>
         <p className="mt-3 text-[18px] font-semibold">{quizMessage(score)}</p>
@@ -295,8 +294,7 @@ function TalentGame() {
 
   return (
     <div className="mt-8">
-      <p className="text-[12px] font-semibold uppercase tracking-wide text-energy">Votre profil de découverte</p>
-      <h2 className="mt-2 text-2xl font-bold text-forest">
+      <h2 className="text-2xl font-bold text-forest">
         {result.tie ? 'Vous avez deux univers de prédilection !' : result.profiles[0].name}
       </h2>
 
@@ -315,11 +313,7 @@ function TalentGame() {
       {/* Carte de résultat à partager (capture d'écran ou partage du lien). */}
       <div className="mt-8 bg-forest px-6 py-7 text-white">
         <BrandLogoWhite className="h-8 w-auto" />
-        <p className="mt-5 text-[13px] font-semibold uppercase tracking-wide text-sun">{VUE_PAR_VOUS_TITLE}</p>
-        <p className="mt-1 text-[13px] text-white/70">
-          {result.tie ? 'Mes univers de prédilection' : 'Mon profil de découverte'}
-        </p>
-        <p className="mt-3 text-2xl font-bold leading-tight">{names}</p>
+        <p className="mt-5 text-2xl font-bold leading-tight">{names}</p>
         <p className="mt-5 text-[13px] text-white/70">Faites le test : {shareUrl.replace(/^https:\/\//, '')}</p>
       </div>
 
@@ -374,13 +368,12 @@ export default function VueParVousPage() {
                 ← Toutes les expériences
               </Link>
               <div className="mt-4">
-                <SectionHeader level={1} eyebrow={VUE_PAR_VOUS_TITLE} title={current.title} lead={current.lead} />
+                <SectionHeader level={1} title={current.title} lead={current.lead} />
               </div>
             </>
           ) : (
             <SectionHeader
               level={1}
-              eyebrow="Défis"
               title={VUE_PAR_VOUS_TITLE}
               lead="Trois expériences pour tester ses connaissances, explorer ses intérêts et partager sa vision de l'industrie togolaise."
             />
@@ -392,7 +385,7 @@ export default function VueParVousPage() {
 
         {!current && (
           <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {GAMES.map((g, i) => {
+            {GAMES.map((g) => {
               const Icon = g.icon
               return (
                 <Link
@@ -401,8 +394,7 @@ export default function VueParVousPage() {
                   className="group flex flex-col border border-forest/30 bg-white p-6 transition-colors hover:bg-sage"
                 >
                   <Icon className="h-8 w-8 text-energy" strokeWidth={1.75} aria-hidden />
-                  <p className="mt-4 text-[12px] font-semibold uppercase tracking-wide text-ink/60">Expérience {i + 1}</p>
-                  <p className="mt-1 text-[18px] font-semibold text-forest">{g.title}</p>
+                  <p className="mt-4 text-[18px] font-semibold text-forest">{g.title}</p>
                   <p className="mt-2 flex-1 text-[15px] text-ink/70">{g.lead}</p>
                   <p className="mt-5 text-[14px] font-semibold text-forest underline underline-offset-4">Commencer</p>
                 </Link>
@@ -410,8 +402,7 @@ export default function VueParVousPage() {
             })}
             <div className="flex flex-col border border-dashed border-forest/30 p-6">
               <MessageCircle className="h-8 w-8 text-ink/40" strokeWidth={1.75} aria-hidden />
-              <p className="mt-4 text-[12px] font-semibold uppercase tracking-wide text-ink/60">Expérience 3</p>
-              <p className="mt-1 text-[18px] font-semibold text-forest">Votre vision de l&apos;industrie</p>
+              <p className="mt-4 text-[18px] font-semibold text-forest">Votre vision de l&apos;industrie</p>
               <p className="mt-2 flex-1 text-[15px] text-ink/70">Partagez votre regard sur l&apos;industrie togolaise.</p>
               <p className="mt-5 text-[14px] font-semibold text-ink/50">Bientôt disponible</p>
             </div>

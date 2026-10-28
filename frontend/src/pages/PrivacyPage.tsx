@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <Seo {...publicSeo('/confidentialite')} />
       <div className={`${WRAP} max-w-2xl space-y-6 text-[15px] leading-relaxed text-ink/80`}>
         <div className="animate-rise">
-          <SectionHeader level={1} eyebrow="Vos données" title="Confidentialité et cookies" />
+          <SectionHeader level={1} title="Confidentialité et cookies" />
         </div>
         <p>
           Les données collectées via les formulaires (label, rencontres d&apos;affaires, contact)

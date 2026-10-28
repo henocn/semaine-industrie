@@ -87,8 +87,7 @@ export default function OrganizationPage() {
               />
               <div className="hero-overlay" />
               <div className={`absolute inset-x-0 bottom-0 ${WRAP} animate-rise pb-10 pt-24`}>
-                <p className="hero-copy ui-eyebrow !text-sun">Industrie labellisée</p>
-                <h1 className="hero-copy display mt-4 max-w-3xl text-4xl text-white sm:text-5xl md:text-6xl">
+                <h1 className="hero-copy display max-w-3xl text-4xl text-white sm:text-5xl md:text-6xl">
                   {org.name}
                 </h1>
                 <p className="hero-copy mt-3 text-lg text-white">
@@ -100,7 +99,6 @@ export default function OrganizationPage() {
             <div className={`${WRAP} animate-rise pt-16 sm:pt-24`}>
               <SectionHeader
                 level={1}
-                eyebrow="Structure labellisée"
                 title={org.name}
                 lead={[org.type === 'ecole' ? 'École' : 'Entreprise', org.sector, org.city, org.region]
                   .filter(Boolean)

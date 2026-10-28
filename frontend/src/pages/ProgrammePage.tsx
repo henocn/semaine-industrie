@@ -19,7 +19,6 @@ export default function ProgrammePage() {
         <div className={WRAP}>
           <SectionHeader
             level={1}
-            eyebrow="16 au 22 novembre 2026"
             title="Le programme"
             lead={`Un thème par jour. Fil conducteur : « ${CAMPAIGN_TAGLINE.replace(/\.$/, '')} ». Lieu principal à confirmer (Palais des congrès ou Hôtel Sarakawa).`}
           />

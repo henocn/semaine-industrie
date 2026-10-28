@@ -84,7 +84,7 @@ function DesktopGroup({
       <button
         type="button"
         className={`relative z-10 flex h-full w-28 items-center justify-center px-2 text-[15px] font-medium transition-colors ${
-          open ? 'bg-sage text-forest' : 'text-ink/70 hover:bg-sage hover:text-forest'
+          open ? 'bg-forest text-white' : 'text-ink/70 hover:bg-forest hover:text-white'
         }`}
         aria-expanded={open}
         aria-haspopup="true"
