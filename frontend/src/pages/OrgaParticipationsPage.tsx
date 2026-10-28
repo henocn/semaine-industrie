@@ -56,7 +56,7 @@ function readForm(fd: FormData, kind: ParticipationKind) {
 
 /* Backoffice : écoles / centres / univ, avec QR à l'acceptation. */
 export default function OrgaParticipationsPage() {
-  const kind: ParticipationKind = 'ecole'
+  const kind = 'ecole' as const
   const [rows, setRows] = useState<Participation[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<Participation | null>(null)
