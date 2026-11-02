@@ -13,7 +13,7 @@ import {
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
 import { useOrgaRealtime } from '../lib/useOrgaRealtime'
-import { phoneInputProps } from '../lib/phone'
+import { PhoneField } from '../components/ui/PhoneField'
 
 const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
@@ -239,8 +239,8 @@ export default function OrgaParticipationsPage() {
           </label>
           <label className="text-[13px] font-medium text-forest">
             Téléphone
-            <input name="phone" {...phoneInputProps} className={field} />
-            <span className="mt-1 block text-[12px] font-normal text-ink/50">Avec l'indicatif (+228…), de préférence un numéro WhatsApp.</span>
+            <PhoneField name="phone" className={field} />
+            <span className="mt-1 block text-[12px] font-normal text-ink/50">De préférence un numéro WhatsApp.</span>
           </label>
           <label className="text-[13px] font-medium text-forest">
             Effectif souhaité
@@ -344,7 +344,7 @@ export default function OrgaParticipationsPage() {
                             </label>
                             <label className="text-[13px] font-medium text-forest">
                               Téléphone
-                              <input name="phone" {...phoneInputProps} defaultValue={shown.phone || ''} className={field} />
+                              <PhoneField name="phone" defaultValue={shown.phone || ''} className={field} />
                             </label>
                             <label className="text-[13px] font-medium text-forest">
                               Effectif souhaité

@@ -9,7 +9,7 @@ import { Field } from '../components/ui/Field'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { prepareGalleryFiles } from '../lib/imageQuality'
 import { scrollToTopNow } from '../lib/scroll'
-import { phoneInputProps } from '../lib/phone'
+import { PhoneField } from '../components/ui/PhoneField'
 
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
@@ -182,8 +182,8 @@ export default function LabelRequestPage() {
             <Field label="E-mail">
               <input required type="email" name="contact_email" className={field} />
             </Field>
-            <Field label="Téléphone" hint="Avec l'indicatif (+228…), de préférence un numéro WhatsApp.">
-              <input name="contact_phone" {...phoneInputProps} className={field} />
+            <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
+              <PhoneField name="contact_phone" className={field} />
             </Field>
             <Field label="Capacité max. visiteurs par créneau" className="sm:col-span-2">
               <input type="number" min={1} name="max_visitors" className={field} />
