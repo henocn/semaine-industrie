@@ -6,6 +6,7 @@ import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { Field } from '../components/ui/Field'
 import { SectionHeader } from '../components/ui/SectionHeader'
+import { scrollToTopNow } from '../lib/scroll'
 
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
@@ -38,6 +39,7 @@ export default function BusinessRegisterPage() {
         contact_opt_in: true,
       })
       setSent(true)
+      scrollToTopNow()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Inscription impossible')
     } finally {

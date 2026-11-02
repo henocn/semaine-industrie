@@ -299,6 +299,8 @@ function Contact() {
         message: String(fd.get('message') || ''),
       })
       setSent(true)
+      /* Le formulaire laisse place à une ligne : on garde la section en vue au lieu de tomber sur le pied de page. */
+      document.getElementById('contact')?.scrollIntoView({ block: 'start', behavior: 'instant' })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Envoi impossible')
     } finally {

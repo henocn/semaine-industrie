@@ -6,6 +6,7 @@ import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { joinRoom, onRealtime } from '../lib/socket'
+import { scrollToTopNow } from '../lib/scroll'
 
 /* Clé locale pour un seul vote par navigateur. */
 function voterKey() {
@@ -37,6 +38,7 @@ export default function VotePage() {
       const data = await castVote(id, voterKey())
       setOptions(data)
       setDone(true)
+      scrollToTopNow()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Vote impossible')
     }
