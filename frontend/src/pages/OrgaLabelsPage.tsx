@@ -20,6 +20,24 @@ import { notifyLabelPendingChanged } from '../lib/labelPending'
 import { joinRoom, onRealtime } from '../lib/socket'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
 import { PhoneField } from '../components/ui/PhoneField'
+import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSelection'
+import { useRowSelection } from '../lib/useRowSelection'
+import { excelDate, statusLabel, type ExcelColumn } from '../lib/excel'
+
+/* Colonnes de l'export Excel des demandes de label. */
+const EXPORT_COLUMNS: ExcelColumn<LabelRequest>[] = [
+  { header: 'Code de suivi', width: 14, value: (r) => (r.status === 'approved' ? r.label_code : '') },
+  { header: 'Structure', width: 32, value: (r) => r.structure_name },
+  { header: 'Type', width: 14, value: (r) => formatStructureType(r.structure_type) },
+  { header: 'Statut', width: 12, value: (r) => statusLabel(r.status) },
+  { header: 'Contact', width: 24, value: (r) => r.contact_name },
+  { header: 'Téléphone', width: 18, value: (r) => r.contact_phone },
+  { header: 'E-mail', width: 28, value: (r) => r.contact_email },
+  { header: 'Secteur', width: 20, value: (r) => r.sector },
+  { header: 'Adresse', width: 32, value: (r) => r.address || [r.city, r.region].filter(Boolean).join(', ') },
+  { header: 'Visiteurs max.', width: 14, value: (r) => r.max_visitors },
+  { header: 'Date de demande', width: 18, value: (r) => excelDate(r.createdAt || r.created_at) },
+]
 
 const KIT_ACCEPT =
   '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
@@ -141,6 +159,7 @@ export default function OrgaLabelsPage() {
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [items, query])
+  const picked = useRowSelection(filtered)
 
   const selected = useMemo(
     () => filtered.find((x) => x.id === selectedId) || items.find((x) => x.id === selectedId) || null,
@@ -331,6 +350,7 @@ export default function OrgaLabelsPage() {
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
       {info && <p className="mb-4 text-[14px] text-forest">{info}</p>}
 
+      <ExportBar selection={picked} filename="labels" sheet="Demandes de label" columns={EXPORT_COLUMNS} />
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">
@@ -342,6 +362,7 @@ export default function OrgaLabelsPage() {
         <table className="orga-table min-w-[640px]">
           <thead>
             <tr>
+              <SelectAllHeader selection={picked} />
               <th className="w-32">Code de suivi</th>
               <th>Structure</th>
               <th className="w-36">Contact</th>
@@ -351,7 +372,7 @@ export default function OrgaLabelsPage() {
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={5}>Aucune demande pour ce filtre</td></tr>
+              <tr><td colSpan={6}>Aucune demande pour ce filtre</td></tr>
             )}
             {filtered.map((item) => (
               <Fragment key={item.id}>
@@ -361,6 +382,7 @@ export default function OrgaLabelsPage() {
                 }`}
                 onClick={() => setSelectedId(item.id === selectedId ? null : item.id)}
               >
+                <SelectCell selection={picked} id={item.id} />
                 <td className="font-semibold text-forest">
                   {item.status === 'approved' && item.label_code ? item.label_code : '—'}
                 </td>
@@ -417,7 +439,7 @@ export default function OrgaLabelsPage() {
               </tr>
               {selectedId === item.id && selected && (
                 <tr>
-                  <td colSpan={5} className="bg-white">
+                  <td colSpan={6} className="bg-white">
                     <LabelDetail
                       selected={selected}
                       selectedQr={selectedQr}
