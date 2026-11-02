@@ -82,6 +82,9 @@ async function createRequest(payload) {
     contact_opt_in: true,
     status: 'pending',
   });
+  whatsappService.notifyLabelReceived(row).catch((err) => {
+    logger.warn('[label] notify WhatsApp failed', err.message);
+  });
   return row;
 }
 
@@ -421,6 +424,10 @@ async function reviewRequest(id, { status, review_note, label_document_url, kit_
   /* WhatsApp : récap + code de suivi (hors transaction). */
   if (result.organization) {
     whatsappService.notifyLabelApproved(result.organization).catch((err) => {
+      logger.warn('[label] notify WhatsApp failed', err.message);
+    });
+  } else if (status === 'rejected') {
+    whatsappService.notifyLabelRejected(result.request).catch((err) => {
       logger.warn('[label] notify WhatsApp failed', err.message);
     });
   }

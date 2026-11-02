@@ -1,85 +1,145 @@
 {
   "templates": [
     {
-      "name": "si26_label_industrie",
+      "name": "si26_label_encours",
       "language": "fr",
       "category": "UTILITY",
       "allow_category_change": false,
       "components": [
         {
           "type": "BODY",
-          "text": "Bonjour {{1}}, votre demande de label pour {{2}} est acceptée. Votre code de suivi est {{3}}. Conservez ce code pour retrouver votre dossier.",
+          "text": "Bonjour, votre demande de label a été reçue pour le compte de *{{1}}* et est *en cours d'examen*. Vous aurez bientôt une confirmation.",
           "example": {
-            "body_text": [["Henoc Ngasama", "Industrie Demo", "IN-2001"]]
+            "body_text": [
+              [
+                "Industrie Demo"
+              ]
+            ]
           }
         },
         {
           "type": "BUTTONS",
           "buttons": [
-            { "type": "QUICK_REPLY", "text": "Mon espace" }
+            {
+              "type": "QUICK_REPLY",
+              "text": "Informations"
+            }
           ]
         }
       ]
     },
     {
-      "name": "si26_dossier_maj",
-      "language": "fr",
-      "category": "MARKETING",
-      "allow_category_change": false,
-      "components": [
-        {
-          "type": "BODY",
-          "text": "Bonjour {{1}}, votre dossier pour {{2}} est accepté. Votre code de suivi est {{3}}. Conservez ce code pour retrouver votre dossier.",
-          "example": {
-            "body_text": [["Afi Mensah", "Lycee technique de Lome", "EC-2001"]]
-          }
-        },
-        {
-          "type": "BUTTONS",
-          "buttons": [
-            { "type": "QUICK_REPLY", "text": "Mon espace" }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "si26_rdv_fixe",
+      "name": "si26_label_valide2",
       "language": "fr",
       "category": "UTILITY",
       "allow_category_change": false,
       "components": [
         {
           "type": "BODY",
-          "text": "Bonjour {{1}}, votre rendez-vous du {{2}} est confirmé. Horaire {{3}}, avec {{4}}, lieu {{5}}. Ce créneau est enregistré.",
+          "text": "Bonjour, votre demande de label pour *{{1}}* a été acceptée. Votre code de suivi est : *{{2}}*. Vous serez prévenu quand une visite sera programmée.",
           "example": {
-            "body_text": [["Jean Koffi", "20/11/2026", "14:00 à 14:20", "PME Demo", "Table T12"]]
+            "body_text": [
+              [
+                "Industrie Demo",
+                "IN-K7P4"
+              ]
+            ]
           }
-        },
-        {
-          "type": "BUTTONS",
-          "buttons": [
-            { "type": "QUICK_REPLY", "text": "Menu" }
-          ]
         }
       ]
     },
     {
-      "name": "si26_rdv_reporte2",
+      "name": "si26_label_refuse",
       "language": "fr",
       "category": "UTILITY",
       "allow_category_change": false,
       "components": [
         {
           "type": "BODY",
-          "text": "Bonjour {{1}}, votre rendez-vous est reporté au {{2}}, de {{3}}, lieu {{4}}. Merci pour votre disponibilité.",
+          "text": "Bonjour, votre demande de label a été reçue pour le compte de *{{1}}* n'a *pas été acceptée*. Pour en savoir plus sur le motif de refus, veuillez contacter l'équipe d'organisation via ce bouton.",
           "example": {
-            "body_text": [["Jean Koffi", "20/11/2026", "15:00 à 15:20", "Hotel 2 Fév"]]
+            "body_text": [
+              [
+                "Industrie Demo"
+              ]
+            ]
           }
         },
         {
           "type": "BUTTONS",
           "buttons": [
-            { "type": "QUICK_REPLY", "text": "Menu" }
+            {
+              "type": "QUICK_REPLY",
+              "text": "Informations"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_inscription_encours",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour, la participation pour le compte de *{{1}}* à la Semaine de l'industrie 2026 est *en cours de validation*.\nVous recevrez bientôt une confirmation.",
+          "example": {
+            "body_text": [
+              [
+                "Lycee technique de Lome"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "si26_inscription_acceptee",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour, la participation pour le compte de *{{1}}* à la Semaine de l'industrie 2026 a été *acceptée*.\nNombre de places accordées : *{{2}}*.\nCode de suivi : *{{3}}*.\nVous serez prévenu dès qu'une visite sera arrangée.",
+          "example": {
+            "body_text": [
+              [
+                "Lycee technique de Lome",
+                "40",
+                "EC-G7H5"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "si26_inscription_refusee",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour, la participation pour le compte de *{{1}}* à la Semaine de l'industrie 2026 *n'a pas été acceptée*.\nVous pouvez contacter l'équipe d'organisation via ce bouton pour obtenir plus de détails.",
+          "example": {
+            "body_text": [
+              [
+                "Lycee technique de Lome"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            {
+              "type": "QUICK_REPLY",
+              "text": "Informations"
+            }
           ]
         }
       ]
@@ -94,14 +154,47 @@
           "type": "BODY",
           "text": "Bonjour {{1}}, votre visite du {{2}} est confirmée. Horaire {{3}}, lieu {{4}}. Ce créneau est enregistré.",
           "example": {
-            "body_text": [["Afi Mensah", "18/11/2026", "09:00 à 11:00", "Usine Demo Lome"]]
+            "body_text": [
+              [
+                "Afi Mensah",
+                "18/11/2026",
+                "09:00 à 11:00",
+                "Usine Demo Lome"
+              ]
+            ]
           }
         },
         {
           "type": "BUTTONS",
           "buttons": [
-            { "type": "QUICK_REPLY", "text": "Menu" }
+            {
+              "type": "QUICK_REPLY",
+              "text": "Menu"
+            }
           ]
+        }
+      ]
+    },
+    {
+      "name": "si26_visite_accueil_",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, l'établissement {{2}} visitera votre site le {{3}}. Horaire {{4}}, effectif prévu {{5}} personnes. Ce créneau est enregistré.",
+          "example": {
+            "body_text": [
+              [
+                "Kossi Amegah",
+                "Lycee technique de Lome",
+                "18/11/2026",
+                "09:00 à 11:00",
+                "40"
+              ]
+            ]
+          }
         }
       ]
     },
@@ -115,14 +208,78 @@
           "type": "BODY",
           "text": "Bonjour {{1}}, rappel pour votre {{2}} du {{3}}. Horaire {{4}}, lieu {{5}}. Merci de vous présenter à l'heure indiquée.",
           "example": {
-            "body_text": [["Afi Mensah", "visite", "18/11/2026", "09:00 à 11:00", "Usine Demo Lome"]]
+            "body_text": [
+              [
+                "Afi Mensah",
+                "visite",
+                "18/11/2026",
+                "09:00 à 11:00",
+                "Usine Demo Lome"
+              ]
+            ]
           }
         },
         {
           "type": "BUTTONS",
           "buttons": [
-            { "type": "QUICK_REPLY", "text": "Menu" }
+            {
+              "type": "QUICK_REPLY",
+              "text": "Menu"
+            }
           ]
+        }
+      ]
+    },
+    {
+      "name": "si26_rdv_fixe",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, votre rendez-vous du {{2}} est confirmé. Horaire {{3}}, lieu {{4}}. Ce créneau est enregistré.",
+          "example": {
+            "body_text": [
+              [
+                "Jean Koffi",
+                "20/11/2026",
+                "14:00 à 14:20",
+                "Table T12"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            {
+              "type": "QUICK_REPLY",
+              "text": "Menu"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_rdv_reporte2",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour {{1}}, votre rendez-vous est reporté au {{2}}, de {{3}}, lieu {{4}}. Merci pour votre disponibilité.",
+          "example": {
+            "body_text": [
+              [
+                "Jean Koffi",
+                "20/11/2026",
+                "15:00 à 15:20",
+                "Hotel 2 Fév"
+              ]
+            ]
+          }
         }
       ]
     }

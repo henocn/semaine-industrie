@@ -170,6 +170,7 @@ async function createSingleBooking(payload) {
       visitDay: booking.visit_day,
       visitStart: booking.visit_start,
       visitEnd: booking.visit_end,
+      headcount: booking.headcount,
     });
   } catch {
     /* notification non bloquante */

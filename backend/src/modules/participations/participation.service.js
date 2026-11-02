@@ -69,6 +69,12 @@ async function create(payload) {
     status: 'pending',
     ...pickFields(payload),
   });
+  try {
+    const whatsappService = require('../whatsapp/whatsapp.service');
+    await whatsappService.notifyParticipationReceived(row);
+  } catch (err) {
+    logger.warn('[participation] notify WhatsApp failed', err.message);
+  }
   return present(row);
 }
 
@@ -135,8 +141,17 @@ async function approve(id) {
 async function reject(id) {
   const row = await Participation.findByPk(id);
   if (!row) throw ApiError.notFound('Participation introuvable');
+  const wasRejected = row.status === 'rejected';
   row.status = 'rejected';
   await row.save();
+  if (!wasRejected) {
+    try {
+      const whatsappService = require('../whatsapp/whatsapp.service');
+      await whatsappService.notifyParticipationRejected(row);
+    } catch (err) {
+      logger.warn('[participation] notify WhatsApp failed', err.message);
+    }
+  }
   return present(row);
 }
 

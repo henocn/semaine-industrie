@@ -1537,13 +1537,8 @@ async function notifyLabelApproved(organization) {
     return { ok: false, reason: 'no_phone' };
   }
 
-  const templateName =
-    organization.type === 'ecole' ? 'si26_dossier_maj' : 'si26_label_industrie';
-  const bodyParams = [
-    organization.contact_name || 'partenaire',
-    organization.name,
-    organization.label_code,
-  ];
+  const templateName = 'si26_label_valide2';
+  const bodyParams = [organization.name, organization.label_code];
 
   let sent = await sendTemplate({
     to,
@@ -1569,39 +1564,86 @@ async function notifyLabelApproved(organization) {
   return sent;
 }
 
-/* Corps session si si26_dossier_maj n'est pas encore approuvé. */
-function buildParticipationApprovalBody(participation, code) {
-  return [
-    `Bonjour ${participation.name},`,
-    '',
-    'Votre inscription est acceptée.',
-    `Votre code de suivi est ${code}.`,
-    '',
-    'Présentez ce code le jour J.',
-  ].join('\n');
-}
-
-/* Confirme l'inscription d'une école / centre / université. */
-async function notifyParticipationApproved(participation) {
-  const to = toWaRecipient(participation?.phone);
-  const code = participation?.passport?.code;
+/* Envoie un template ; message de session en secours (template pas encore approuvé). */
+async function sendTemplateOrText({ phone, name, bodyParams, fallback }) {
+  const to = toWaRecipient(phone);
   if (!to) return { ok: false, reason: 'no_phone' };
-  if (!code) return { ok: false, reason: 'no_code' };
-
-  let sent = await sendTemplate({
-    to,
-    name: 'si26_dossier_maj',
-    bodyParams: [participation.name, participation.name, code],
-  });
-
+  let sent = await sendTemplate({ to, name, bodyParams });
   if (!sent.ok) {
-    logger.warn('[whatsapp] template acceptation indisponible, secours session', 'si26_dossier_maj');
-    sent = await sendWithNav({
-      to,
-      body: buildParticipationApprovalBody(participation, code),
-    });
+    logger.warn('[whatsapp] template indisponible, secours session', name);
+    sent = await sendWithNav({ to, body: fallback.join('\n') });
   }
   return sent;
+}
+
+/* Accusé de réception d'une demande de label. */
+async function notifyLabelReceived(request) {
+  return sendTemplateOrText({
+    phone: request?.contact_phone,
+    name: 'si26_label_encours',
+    bodyParams: [request.structure_name],
+    fallback: [
+      `Bonjour, votre demande de label pour ${request.structure_name} est en cours d'examen.`,
+      'Vous aurez bientôt une confirmation.',
+    ],
+  });
+}
+
+/* Refus d'une demande de label. */
+async function notifyLabelRejected(request) {
+  return sendTemplateOrText({
+    phone: request?.contact_phone,
+    name: 'si26_label_refuse',
+    bodyParams: [request.structure_name],
+    fallback: [
+      `Bonjour, votre demande de label pour ${request.structure_name} n'a pas été acceptée.`,
+      "Pour en savoir plus, contactez l'équipe d'organisation (menu Informations).",
+    ],
+  });
+}
+
+/* Accusé de réception d'une inscription école / centre / université. */
+async function notifyParticipationReceived(participation) {
+  return sendTemplateOrText({
+    phone: participation?.phone,
+    name: 'si26_inscription_encours',
+    bodyParams: [participation.name],
+    fallback: [
+      `Bonjour, la participation pour le compte de ${participation.name} est en cours de validation.`,
+      'Vous recevrez bientôt une confirmation.',
+    ],
+  });
+}
+
+/* Confirme l'inscription : places accordées + code de suivi. */
+async function notifyParticipationApproved(participation) {
+  const code = participation?.passport?.code;
+  if (!code) return { ok: false, reason: 'no_code' };
+  const places = participation.headcount || '-';
+  return sendTemplateOrText({
+    phone: participation?.phone,
+    name: 'si26_inscription_acceptee',
+    bodyParams: [participation.name, places, code],
+    fallback: [
+      `Bonjour, la participation pour le compte de ${participation.name} est acceptée.`,
+      `Nombre de places accordées : ${places}.`,
+      `Code de suivi : ${code}.`,
+      "Vous serez prévenu dès qu'une visite sera arrangée.",
+    ],
+  });
+}
+
+/* Refus d'une inscription. */
+async function notifyParticipationRejected(participation) {
+  return sendTemplateOrText({
+    phone: participation?.phone,
+    name: 'si26_inscription_refusee',
+    bodyParams: [participation.name],
+    fallback: [
+      `Bonjour, la participation pour le compte de ${participation.name} n'a pas été acceptée.`,
+      "Pour en savoir plus, contactez l'équipe d'organisation (menu Informations).",
+    ],
+  });
 }
 
 /* Rappel du code de suivi, en message de session. */
@@ -1628,7 +1670,7 @@ async function notifyVisitReminder({ organization, visitDay, visitSlot, place, r
   if (!to) return { ok: false, reason: 'no_phone' };
 
   const bodyParams = [
-    organization.contact_name || 'partenaire',
+    organization.contact_name || organization.name,
     'visite',
     visitDay || '-',
     visitSlot || '-',
@@ -1686,23 +1728,28 @@ function formatVisitHours(start, end) {
   return from || to || '-';
 }
 
-/* Notifie école + site quand une visite est programmée (label accepté). */
-async function notifyVisitScheduled({ school, site, visitDay, visitStart, visitEnd }) {
+/* Notifie école (visite) + site (accueil) quand une visite est programmée. */
+async function notifyVisitScheduled({ school, site, visitDay, visitStart, visitEnd, headcount }) {
   const day =
     typeof visitDay === 'string' && visitDay.includes('-')
       ? visitDay.split('-').reverse().join('/')
       : String(visitDay || '-');
   const slot = formatVisitHours(visitStart, visitEnd);
+  const greet = (org) => org?.contact_name || org?.name || '-';
   const targets = [
     {
       org: school,
       roleName: school?.name,
       place: site?.name,
+      template: 'si26_visite_fixee',
+      bodyParams: [greet(school), day, slot, site?.name || '-'],
     },
     {
       org: site,
       roleName: school?.name,
       place: site?.name,
+      template: 'si26_visite_accueil_',
+      bodyParams: [greet(site), school?.name || '-', day, slot, headcount || '-'],
     },
   ];
 
@@ -1717,16 +1764,10 @@ async function notifyVisitScheduled({ school, site, visitDay, visitStart, visitE
       results.push({ ok: false, reason: 'no_phone' });
       continue;
     }
-    const bodyParams = [
-      t.org.contact_name || 'partenaire',
-      day,
-      slot,
-      t.place || '-',
-    ];
     let sent = await sendTemplate({
       to,
-      name: 'si26_visite_fixee',
-      bodyParams,
+      name: t.template,
+      bodyParams: t.bodyParams,
     });
     if (!sent.ok) {
       sent = await sendWithNav({
@@ -1779,15 +1820,7 @@ async function notifyBusinessMeeting({
       results.push({ ok: false, reason: 'no_phone', email: self.email });
       continue;
     }
-    const bodyParams = rescheduled
-      ? [b2bDisplayName(self), day, slot, lieu.slice(0, 60)]
-      : [
-        b2bDisplayName(self),
-        day,
-        slot,
-        others.slice(0, 60) || 'partenaire',
-        lieu.slice(0, 60),
-      ];
+    const bodyParams = [b2bDisplayName(self), day, slot, lieu.slice(0, 60)];
     let sent = await sendTemplate({ to, name: templateName, bodyParams });
     if (!sent.ok) {
       const fallback = rescheduled
@@ -1846,7 +1879,11 @@ module.exports = {
   processInbound,
   handleWebhook,
   notifyLabelApproved,
+  notifyLabelReceived,
+  notifyLabelRejected,
+  notifyParticipationReceived,
   notifyParticipationApproved,
+  notifyParticipationRejected,
   notifyLabelReminder,
   notifyVisitReminder,
   notifyVisitScheduled,
