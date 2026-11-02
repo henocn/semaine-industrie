@@ -7,7 +7,7 @@ import { Button } from '../components/ui/Button'
 import { Field } from '../components/ui/Field'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { scrollToTopNow } from '../lib/scroll'
-import { phoneInputProps } from '../lib/phone'
+import { PhoneField } from '../components/ui/PhoneField'
 
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
@@ -85,8 +85,8 @@ export default function BusinessRegisterPage() {
             <Field label="E-mail">
               <input required type="email" name="email" className={field} />
             </Field>
-            <Field label="Téléphone" hint="Avec l'indicatif (+228…), de préférence un numéro WhatsApp.">
-              <input name="phone" {...phoneInputProps} className={field} />
+            <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
+              <PhoneField name="phone" className={field} />
             </Field>
             <Field label="Secteur" className="sm:col-span-2">
               <input name="sector" className={field} />

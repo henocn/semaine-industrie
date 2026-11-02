@@ -1,18 +1,24 @@
 'use strict';
 
 const Joi = require('joi');
+const { parsePhoneNumberFromString } = require('libphonenumber-js');
 
-/* « + » + indicatif + numéro : 8 à 15 chiffres, séparés ou non par espace, point ou tiret. */
-const PHONE_RE = /^\+(?:[ .-]*\d){8,15}$/;
+/* Sans indicatif, le numéro est lu comme togolais. */
+const DEFAULT_COUNTRY = 'TG';
 
-/* Téléphone international (ex. +228 90 12 34 56). */
+/* Téléphone valide pour son pays, enregistré au format international (+22890123456). */
 const phone = () =>
   Joi.string()
     .trim()
     .max(40)
-    .pattern(PHONE_RE)
+    .custom((value, helpers) => {
+      if (!value) return value;
+      const parsed = parsePhoneNumberFromString(value, DEFAULT_COUNTRY);
+      if (!parsed || !parsed.isValid()) return helpers.error('phone.invalid');
+      return parsed.number;
+    })
     .messages({
-      'string.pattern.base': 'Téléphone au format +indicatif puis le numéro, ex. +228 90 12 34 56',
+      'phone.invalid': 'Numéro de téléphone invalide pour le pays choisi',
     });
 
-module.exports = { PHONE_RE, phone };
+module.exports = { phone };

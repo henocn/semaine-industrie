@@ -19,7 +19,7 @@ import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { notifyLabelPendingChanged } from '../lib/labelPending'
 import { joinRoom, onRealtime } from '../lib/socket'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
-import { phoneInputProps } from '../lib/phone'
+import { PhoneField } from '../components/ui/PhoneField'
 
 const KIT_ACCEPT =
   '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
@@ -511,13 +511,7 @@ export default function OrgaLabelsPage() {
               </div>
               <label className="text-[13px] font-medium text-forest">
                 Téléphone
-                <input
-                  required
-                  name="contact_phone"
-                  {...phoneInputProps}
-                  defaultValue={editing?.contact_phone || ''}
-                  className={field}
-                />
+                <PhoneField required name="contact_phone" defaultValue={editing?.contact_phone || ''} className={field} />
               </label>
               <label className="text-[13px] font-medium text-forest">
                 E-mail
