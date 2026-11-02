@@ -86,7 +86,7 @@ export default function BusinessRegisterPage() {
               <input required type="email" name="email" className={field} />
             </Field>
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
-              <PhoneField name="phone" className={field} />
+              <PhoneField required name="phone" className={field} />
             </Field>
             <Field label="Secteur" className="sm:col-span-2">
               <input name="sector" className={field} />

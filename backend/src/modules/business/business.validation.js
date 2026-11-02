@@ -21,6 +21,7 @@ const registerSchema = Joi.object({
   ...participantFields,
   kind: participantFields.kind.required(),
   email: participantFields.email.required(),
+  phone: phone().required(),
   contact_opt_in: Joi.boolean().valid(true).required(),
 });
 
