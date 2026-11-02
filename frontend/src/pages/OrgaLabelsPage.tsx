@@ -19,6 +19,7 @@ import { LocationPickerMap } from '../components/map/LocationPickerMap'
 import { notifyLabelPendingChanged } from '../lib/labelPending'
 import { joinRoom, onRealtime } from '../lib/socket'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
+import { phoneInputProps } from '../lib/phone'
 
 const KIT_ACCEPT =
   '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
@@ -513,6 +514,7 @@ export default function OrgaLabelsPage() {
                 <input
                   required
                   name="contact_phone"
+                  {...phoneInputProps}
                   defaultValue={editing?.contact_phone || ''}
                   className={field}
                 />

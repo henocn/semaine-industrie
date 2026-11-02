@@ -17,6 +17,7 @@ import {
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
 import { useOrgaRealtime } from '../lib/useOrgaRealtime'
+import { phoneInputProps } from '../lib/phone'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -439,7 +440,7 @@ export default function OrgaBusinessPage() {
                 </label>
                 <label className="text-[13px] font-medium text-forest">
                   Téléphone
-                  <input name="phone" className={field} />
+                  <input name="phone" {...phoneInputProps} className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest sm:col-span-2">
                   Notes
@@ -587,7 +588,7 @@ export default function OrgaBusinessPage() {
                                   </label>
                                   <label className="text-[13px] font-medium text-forest">
                                     Téléphone
-                                    <input name="phone" defaultValue={selectedParticipant.phone || ''} className={field} />
+                                    <input name="phone" {...phoneInputProps} defaultValue={selectedParticipant.phone || ''} className={field} />
                                   </label>
                                   <label className="text-[13px] font-medium text-forest sm:col-span-2">
                                     Notes

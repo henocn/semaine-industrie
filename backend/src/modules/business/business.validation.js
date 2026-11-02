@@ -1,6 +1,7 @@
 'use strict';
 
 const Joi = require('joi');
+const { phone } = require('../../utils/phone');
 
 /* Champs communs d'un participant ; offers / seeks / country restent acceptés pour les anciens formulaires. */
 const participantFields = {
@@ -8,7 +9,7 @@ const participantFields = {
   organization_name: Joi.string().trim().min(2).max(200).allow('', null),
   contact_name: Joi.string().trim().min(2).max(160).allow('', null),
   email: Joi.string().trim().email().max(180),
-  phone: Joi.string().trim().max(40).allow('', null),
+  phone: phone().allow('', null),
   sector: Joi.string().trim().max(120).allow('', null),
   notes: Joi.string().trim().allow('', null),
   offers: Joi.string().trim().allow('', null),

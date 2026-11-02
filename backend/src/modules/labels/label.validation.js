@@ -1,6 +1,7 @@
 'use strict';
 
 const Joi = require('joi');
+const { phone } = require('../../utils/phone');
 
 const visitSlotSchema = Joi.object({
   day: Joi.string().max(40).required(),
@@ -35,7 +36,7 @@ const createRequestSchema = Joi.object({
   contact_name: Joi.string().trim().max(160).allow('', null),
   contact_email: Joi.string().trim().email().max(180).required(),
   /* Téléphone = plus, jamais une condition d'accès. */
-  contact_phone: Joi.string().trim().min(6).max(40).allow('', null),
+  contact_phone: phone().allow('', null),
   contact_opt_in: Joi.boolean().valid(true).required(),
   description: Joi.string().trim().allow('', null),
   photo_url: Joi.string().trim().max(500).allow('', null),
@@ -71,7 +72,7 @@ const updateRequestSchema = Joi.object({
   city: Joi.string().trim().max(120).allow('', null),
   address: Joi.string().trim().max(500).allow('', null),
   contact_email: Joi.string().trim().email().max(180),
-  contact_phone: Joi.string().trim().min(6).max(40),
+  contact_phone: phone(),
   description: Joi.string().trim().allow('', null),
   max_visitors: Joi.number().integer().min(1).max(5000).allow(null),
   sector: Joi.string().trim().max(120).allow('', null),
@@ -92,7 +93,7 @@ const createOrgaRequestSchema = Joi.object({
   lng: Joi.number().min(-180).max(180).allow(null),
   contact_name: Joi.string().trim().max(160).allow('', null),
   contact_email: Joi.string().trim().email().max(180).required(),
-  contact_phone: Joi.string().trim().min(6).max(40).required(),
+  contact_phone: phone().required(),
   contact_opt_in: Joi.boolean().valid(true).required(),
   description: Joi.string().trim().allow('', null),
   max_visitors: Joi.number().integer().min(1).max(5000).allow(null),
