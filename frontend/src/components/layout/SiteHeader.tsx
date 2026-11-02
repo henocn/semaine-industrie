@@ -29,7 +29,6 @@ const GROUPS: NavGroup[] = [
     items: [
       { label: 'L’industrie, vue par vous', to: '/vue-par-vous' },
       { label: 'Vote coup de cœur', to: '/vote' },
-      { label: 'Questionnaire', to: '/questionnaire' },
     ],
   },
   {

@@ -13,6 +13,22 @@ import { OrgaShell } from '../components/layout/OrgaShell'
 import { SitesMap } from '../components/map/SitesMap'
 import { IconEdit, IconTrash } from '../components/ui/IconButton'
 import { useOrgaRealtime } from '../lib/useOrgaRealtime'
+import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSelection'
+import { useRowSelection } from '../lib/useRowSelection'
+import type { ExcelColumn } from '../lib/excel'
+
+/* Colonnes de l'export Excel des visites. */
+const EXPORT_COLUMNS: ExcelColumn<VisitBooking>[] = [
+  { header: 'Établissement', width: 30, value: (b) => b.school_name },
+  { header: 'Site visité', width: 30, value: (b) => b.organization?.name },
+  { header: 'Jour', width: 12, value: (b) => (b.visit_day || '').split('-').reverse().join('/') },
+  { header: 'Horaire', width: 14, value: (b) => `${b.visit_start} à ${b.visit_end}` },
+  { header: 'Effectif', width: 10, value: (b) => b.headcount },
+  { header: 'Passages', width: 10, value: (b) => b.passage ?? 0 },
+  { header: 'Contact', width: 24, value: (b) => b.teacher_name },
+  { header: 'Téléphone', width: 18, value: (b) => b.teacher_phone },
+  { header: 'E-mail', width: 28, value: (b) => b.teacher_email },
+]
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -153,6 +169,7 @@ export default function OrgaVisitsPage() {
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [items, query])
+  const picked = useRowSelection(filtered)
 
   const byDay = useMemo(() => {
     const map = new Map<string, VisitBooking[]>()
@@ -491,6 +508,8 @@ export default function OrgaVisitsPage() {
       </div>
 
       {view === 'table' && (
+        <>
+        <ExportBar selection={picked} filename="visites" sheet="Visites" columns={EXPORT_COLUMNS} />
         <section className="orga-panel !p-0 overflow-x-auto">
           <div className="border-b border-black px-4 py-3">
             <h2 className="text-[15px] font-semibold text-forest">
@@ -500,6 +519,7 @@ export default function OrgaVisitsPage() {
           <table className="orga-table min-w-[780px]">
             <thead>
               <tr>
+                <SelectAllHeader selection={picked} />
                 <th>#</th>
                 <th>Établissement</th>
                 <th>Site</th>
@@ -512,12 +532,13 @@ export default function OrgaVisitsPage() {
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={8}>Aucune visite</td></tr>
+                <tr><td colSpan={9}>Aucune visite</td></tr>
               )}
               {filtered.map((b, i) => {
                 const onMap = isOnMap(b)
                 return (
                   <tr key={b.id} className={onMap ? undefined : 'orga-row-pending'}>
+                    <SelectCell selection={picked} id={b.id} />
                     <td className="font-semibold text-forest">{i + 1}</td>
                     <td className="font-medium text-forest">{b.school_name}</td>
                     <td>
@@ -575,6 +596,7 @@ export default function OrgaVisitsPage() {
             </tbody>
           </table>
         </section>
+        </>
       )}
 
       {view === 'calendar' && (

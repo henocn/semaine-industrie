@@ -18,6 +18,9 @@ import { OrgaShell } from '../components/layout/OrgaShell'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
 import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 import { PhoneField } from '../components/ui/PhoneField'
+import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSelection'
+import { useRowSelection } from '../lib/useRowSelection'
+import { excelDate, type ExcelColumn } from '../lib/excel'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
@@ -142,6 +145,36 @@ export default function OrgaBusinessPage() {
       )
     })
   }, [meetings, query, approvedPool, participants])
+
+  const pickedPeople = useRowSelection(filteredParticipants)
+  const pickedMeetings = useRowSelection(filteredMeetings)
+
+  /* Colonnes des exports Excel (personnes, rendez-vous). */
+  const peopleColumns = useMemo<ExcelColumn<BusinessParticipant>[]>(
+    () => [
+      { header: 'Code de suivi', width: 14, value: (p) => (p.status === 'approved' ? p.tracking_code : '') },
+      { header: 'Nom et prénom', width: 28, value: (p) => p.contact_name || p.organization_name },
+      { header: 'Profil', width: 14, value: (p) => businessKindLabel(p.kind) },
+      { header: 'Statut', width: 12, value: (p) => statusLabel(p.status) },
+      { header: 'Téléphone', width: 18, value: (p) => p.phone },
+      { header: 'E-mail', width: 28, value: (p) => p.email },
+      { header: 'Secteur', width: 20, value: (p) => p.sector },
+      { header: 'Rendez-vous', width: 12, value: (p) => visitsByParticipant.get(p.id) || 0 },
+      { header: 'Motif de demande', width: 40, value: (p) => p.notes },
+      { header: 'Date de demande', width: 18, value: (p) => excelDate(p.createdAt) },
+    ],
+    [visitsByParticipant],
+  )
+  const meetingColumns = useMemo<ExcelColumn<BusinessMeeting>[]>(
+    () => [
+      { header: 'Début', width: 18, value: (m) => excelDate(m.slot_start) },
+      { header: 'Fin', width: 18, value: (m) => excelDate(m.slot_end) },
+      { header: 'Lieu', width: 24, value: (m) => m.location },
+      { header: 'Participants', width: 44, value: (m) => meetingNames(m, approvedPool, participants) },
+      { header: 'Note', width: 32, value: (m) => m.contact_note },
+    ],
+    [approvedPool, participants],
+  )
 
   const selectedParticipant = useMemo(
     () =>
@@ -459,6 +492,7 @@ export default function OrgaBusinessPage() {
             </section>
           )}
 
+          <ExportBar selection={pickedPeople} filename="rencontres-personnes" sheet="Personnes" columns={peopleColumns} />
           <section className="orga-panel !p-0 overflow-x-auto">
             <div className="flex items-center justify-between border-b border-black px-4 py-3">
               <h2 className="text-[15px] font-semibold text-forest">
@@ -469,6 +503,7 @@ export default function OrgaBusinessPage() {
             <table className="orga-table min-w-[720px]">
               <thead>
                 <tr>
+                  <SelectAllHeader selection={pickedPeople} />
                   <th className="w-32">Code de suivi</th>
                   <th>Nom et prénom</th>
                   <th>Contact</th>
@@ -479,7 +514,7 @@ export default function OrgaBusinessPage() {
               </thead>
               <tbody>
                 {filteredParticipants.length === 0 && (
-                  <tr><td colSpan={6} className="py-10 text-ink/40">Aucune personne</td></tr>
+                  <tr><td colSpan={7} className="py-10 text-ink/40">Aucune personne</td></tr>
                 )}
                 {filteredParticipants.map((p) => {
                   const busy = busyId === p.id
@@ -491,6 +526,7 @@ export default function OrgaBusinessPage() {
                         }`}
                         onClick={() => selectParticipant(p.id)}
                       >
+                        <SelectCell selection={pickedPeople} id={p.id} />
                         <td className="font-semibold text-forest">
                           {p.status === 'approved' && p.tracking_code ? p.tracking_code : '—'}
                         </td>
@@ -533,7 +569,7 @@ export default function OrgaBusinessPage() {
                       </tr>
                       {selectedParticipantId === p.id && selectedParticipant && (
                         <tr>
-                          <td colSpan={6} className="bg-white">
+                          <td colSpan={7} className="bg-white">
                             <div className="p-4">
                               <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div>
@@ -760,6 +796,7 @@ export default function OrgaBusinessPage() {
             </section>
           )}
 
+          <ExportBar selection={pickedMeetings} filename="rencontres-rendez-vous" sheet="Rendez-vous" columns={meetingColumns} />
           <section className="orga-panel !p-0 overflow-x-auto">
             <div className="flex items-center justify-between border-b border-black px-4 py-3">
               <h2 className="text-[15px] font-semibold text-forest">
@@ -770,6 +807,7 @@ export default function OrgaBusinessPage() {
             <table className="orga-table min-w-[640px]">
               <thead>
                 <tr>
+                  <SelectAllHeader selection={pickedMeetings} />
                   <th className="w-12">#</th>
                   <th>Date</th>
                   <th>Horaire</th>
@@ -780,7 +818,7 @@ export default function OrgaBusinessPage() {
               <tbody>
                 {filteredMeetings.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-10 text-ink/40">
+                    <td colSpan={6} className="py-10 text-ink/40">
                       Aucun rendez-vous
                     </td>
                   </tr>
@@ -793,6 +831,7 @@ export default function OrgaBusinessPage() {
                         className={`cursor-pointer ${selectedMeetingId === m.id ? 'bg-forest/10' : ''}`}
                         onClick={() => selectMeeting(m.id)}
                       >
+                        <SelectCell selection={pickedMeetings} id={m.id} />
                         <td className="text-ink/45">{i + 1}</td>
                         <td className="whitespace-nowrap font-medium text-forest">
                           {new Date(m.slot_start).toLocaleDateString('fr-FR')}
@@ -813,7 +852,7 @@ export default function OrgaBusinessPage() {
                       </tr>
                       {selectedMeetingId === m.id && selectedMeeting && (
                         <tr>
-                          <td colSpan={5} className="bg-white">
+                          <td colSpan={6} className="bg-white">
                             <div className="p-4">
                               <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div>

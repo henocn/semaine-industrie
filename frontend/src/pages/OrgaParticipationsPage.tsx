@@ -14,6 +14,9 @@ import { OrgaShell } from '../components/layout/OrgaShell'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
 import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 import { PhoneField } from '../components/ui/PhoneField'
+import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSelection'
+import { useRowSelection } from '../lib/useRowSelection'
+import { excelDate, type ExcelColumn } from '../lib/excel'
 
 const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
@@ -25,6 +28,20 @@ function statusLabel(status: Participation['status']) {
 }
 
 /* Nombre de passages (0 tant qu'aucun scan). */
+/* Colonnes de l'export Excel des inscriptions. */
+const EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
+  { header: 'Code de suivi', width: 14, value: (r) => (r.status === 'approved' ? r.passport?.code : '') },
+  { header: 'Nom', width: 32, value: (r) => r.name },
+  { header: 'Statut', width: 12, value: (r) => statusLabel(r.status) },
+  { header: 'Téléphone', width: 18, value: (r) => r.phone },
+  { header: 'E-mail', width: 28, value: (r) => r.email },
+  { header: 'Ville', width: 16, value: (r) => r.city },
+  { header: 'Effectif', width: 10, value: (r) => r.headcount },
+  { header: 'Passages', width: 10, value: (r) => passageCount(r) },
+  { header: 'Spécialités / filières', width: 36, value: (r) => r.description },
+  { header: 'Date de demande', width: 18, value: (r) => excelDate(r.createdAt) },
+]
+
 function passageCount(item: Participation) {
   return item.passport?.passages ?? 0
 }
@@ -211,6 +228,7 @@ export default function OrgaParticipationsPage() {
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [rows, query])
+  const picked = useRowSelection(filtered)
 
   const noun = filtered.length > 1 ? 'écoles' : 'école'
 
@@ -258,6 +276,7 @@ export default function OrgaParticipationsPage() {
         </form>
       )}
 
+      <ExportBar selection={picked} filename="inscriptions" sheet="Inscriptions" columns={EXPORT_COLUMNS} />
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">
@@ -268,6 +287,7 @@ export default function OrgaParticipationsPage() {
         <table className="orga-table min-w-[720px]">
           <thead>
             <tr>
+              <SelectAllHeader selection={picked} />
               <th className="w-32">Code de suivi</th>
               <th>Nom</th>
               <th className="w-40">Contact</th>
@@ -279,7 +299,7 @@ export default function OrgaParticipationsPage() {
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6}>Aucune participation</td>
+                <td colSpan={7}>Aucune participation</td>
               </tr>
             )}
             {filtered.map((item) => {
@@ -291,6 +311,7 @@ export default function OrgaParticipationsPage() {
                     className={`${rowClass(item.status)} cursor-pointer ${open ? 'bg-forest/10' : ''}`}
                     onClick={() => void openRow(item.id)}
                   >
+                    <SelectCell selection={picked} id={item.id} />
                     <td className="font-semibold text-forest">
                       {item.status === 'approved' && item.passport?.code ? item.passport.code : '—'}
                     </td>
@@ -331,7 +352,7 @@ export default function OrgaParticipationsPage() {
                   </tr>
                   {open && (
                     <tr>
-                      <td colSpan={6} className="bg-white">
+                      <td colSpan={7} className="bg-white">
                         {editingId === item.id ? (
                           <form onSubmit={(e) => void onUpdate(e, item.id)} className="grid gap-3 p-4 sm:grid-cols-2">
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">

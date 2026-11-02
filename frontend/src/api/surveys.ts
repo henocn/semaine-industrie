@@ -50,6 +50,25 @@ export function submitSurvey(payload: {
   return apiFetch('/surveys', { method: 'POST', body: JSON.stringify(payload) })
 }
 
+export type GameResultPayload =
+  | { game: 'quiz'; answers: number[]; score: number }
+  | { game: 'talents'; answers: number[]; profiles: string[] }
+
+export type GameStats = {
+  quiz: { count: number; average: number | null; scores: Record<string, number> }
+  talents: { count: number; ties: number; profiles: Record<string, number> }
+}
+
+/* Enregistre une partie terminée (quiz ou talents). */
+export function submitGameResult(payload: GameResultPayload) {
+  return apiFetch('/surveys/games', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+/* Stats des jeux (orga). */
+export function getGameStats() {
+  return apiFetch<GameStats>('/surveys/games/stats')
+}
+
 /* Stats orga. */
 export function getSurveyStats() {
   return apiFetch<SurveyStats>('/surveys/stats')

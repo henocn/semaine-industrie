@@ -33,8 +33,25 @@ const reorderSchema = Joi.object({
   ordered_ids: Joi.array().items(Joi.string().uuid()).min(1).required(),
 });
 
+/* Partie terminée : 5 réponses (index 0 à 3) ; score pour le quiz, profil(s) pour les talents. */
+const gameResultSchema = Joi.object({
+  game: Joi.string().valid('quiz', 'talents').required(),
+  answers: Joi.array().items(Joi.number().integer().min(0).max(3)).length(5).required(),
+  score: Joi.when('game', {
+    is: 'quiz',
+    then: Joi.number().integer().min(0).max(5).required(),
+    otherwise: Joi.forbidden(),
+  }),
+  profiles: Joi.when('game', {
+    is: 'talents',
+    then: Joi.array().items(Joi.string().valid('P1', 'P2', 'P3', 'P4')).min(1).max(4).unique().required(),
+    otherwise: Joi.forbidden(),
+  }),
+});
+
 module.exports = {
   submitSchema,
+  gameResultSchema,
   createQuestionSchema,
   updateQuestionSchema,
   reorderSchema,

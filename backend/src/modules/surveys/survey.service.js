@@ -1,6 +1,6 @@
 'use strict';
 
-const { SurveyResponse, SurveyQuestion, Passport } = require('../../models');
+const { SurveyResponse, SurveyQuestion, Passport, GameResult } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
 const ApiError = require('../../utils/ApiError');
 
@@ -287,7 +287,44 @@ async function listRecentResponses(limit = 30) {
   });
 }
 
+/* Enregistre une partie terminée d'un jeu « vue par vous ». */
+async function submitGameResult({ game, answers, score = null, profiles = [] }) {
+  return GameResult.create({
+    game,
+    answers,
+    score: game === 'quiz' ? score : null,
+    profiles: game === 'talents' ? profiles : [],
+  });
+}
+
+/* Agrégats des jeux : répartition des scores du quiz et des profils de talents. */
+async function getGameStats() {
+  const rows = await GameResult.findAll({ attributes: ['game', 'score', 'profiles'], raw: true });
+  const quiz = { count: 0, average: null, scores: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };
+  const talents = { count: 0, ties: 0, profiles: { P1: 0, P2: 0, P3: 0, P4: 0 } };
+  let scoreSum = 0;
+
+  for (const row of rows) {
+    if (row.game === 'quiz') {
+      quiz.count += 1;
+      scoreSum += row.score || 0;
+      quiz.scores[row.score] = (quiz.scores[row.score] || 0) + 1;
+    } else if (row.game === 'talents') {
+      const codes = Array.isArray(row.profiles) ? row.profiles : [];
+      talents.count += 1;
+      if (codes.length > 1) talents.ties += 1;
+      codes.forEach((code) => {
+        if (code in talents.profiles) talents.profiles[code] += 1;
+      });
+    }
+  }
+  if (quiz.count) quiz.average = +(scoreSum / quiz.count).toFixed(2);
+  return { quiz, talents };
+}
+
 module.exports = {
+  submitGameResult,
+  getGameStats,
   getQuestions,
   listQuestionsAdmin,
   createQuestion,

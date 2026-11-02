@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Award, Check, Compass, Lightbulb, MessageCircle, RotateCcw, Share2, X } from 'lucide-react'
+import { Award, Check, ClipboardList, Compass, Lightbulb, Share2, X } from 'lucide-react'
 import { Seo } from '../components/Seo'
 import { publicSeo, SITE_URL } from '../lib/seo'
 import { BrandLogoWhite, WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
+import SurveyGame from '../components/SurveyGame'
+import { DAY_MS, hasStoreKey, readStore, writeStore } from '../lib/localStore'
+import { submitGameResult, type GameResultPayload } from '../api/surveys'
 import {
   computeProfiles,
   LETTERS,
@@ -18,9 +21,43 @@ import {
   type Letter,
 } from '../lib/vueParVous'
 
-type Game = 'quiz' | 'talents'
+type Game = 'sondage' | 'quiz' | 'talents'
 
 const PAGE_URL = `${SITE_URL}/vue-par-vous`
+
+/* Réponses d'une partie terminée, gardées 24 h : une seule partie par jour et par appareil. */
+const doneKey = (game: Game) => `vue-par-vous-done:${game}`
+
+/* Réponses enregistrées d'un jeu, ou null s'il n'a pas été joué (ou si la donnée est invalide). */
+function savedAnswers(game: Game) {
+  const saved = readStore<unknown>(doneKey(game))
+  const valid = Array.isArray(saved) && saved.length === 5 && saved.every((a) => Number.isInteger(a) && a >= 0 && a <= 3)
+  return valid ? (saved as number[]) : null
+}
+
+/* Garde la partie sur l'appareil et l'envoie au serveur (échec silencieux : le résultat reste affiché). */
+function recordGame(payload: GameResultPayload) {
+  writeStore(doneKey(payload.game), payload.answers, DAY_MS)
+  submitGameResult(payload).catch(() => {})
+}
+
+/* Sondage fini = volet « après » envoyé (il n'est ouvert qu'après « avant »). */
+function isDone(game: Game) {
+  return game === 'sondage' ? hasStoreKey('survey-done:after:') : savedAnswers(game) != null
+}
+
+/* Partage natif (mobile) ; sinon copie texte + lien et renvoie true pour l'afficher. */
+async function shareResult(text: string, url: string) {
+  if (typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ title: VUE_PAR_VOUS_TITLE, text, url })
+    } catch {
+      /* partage annulé : rien à faire */
+    }
+    return false
+  }
+  return copyText(`${text} ${url}`)
+}
 
 /* Copie un texte (presse-papiers, sinon zone de texte temporaire). */
 async function copyText(text: string) {
@@ -149,25 +186,15 @@ function Stepper({
 
 /* Jeu 1 : quiz de connaissances, score sur 5 puis corrigé commenté. */
 function QuizGame() {
-  const [answers, setAnswers] = useState<(number | null)[]>(() => QUIZ.map(() => null))
-  const [done, setDone] = useState(false)
+  const [answers, setAnswers] = useState<(number | null)[]>(() => savedAnswers('quiz') || QUIZ.map(() => null))
+  const [done, setDone] = useState(() => savedAnswers('quiz') != null)
   const [copied, setCopied] = useState(false)
-  const [round, setRound] = useState(0)
   const score = quizScore(answers)
 
-  /* Repart de zéro. */
-  function replay() {
-    setAnswers(QUIZ.map(() => null))
-    setDone(false)
-    setCopied(false)
-    setRound((r) => r + 1)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  /* Copie le résultat avec le lien du jeu. */
+  /* Partage le score avec le lien du jeu. */
   async function share() {
-    const text = `J'ai obtenu ${score}/5 au défi « Curieux de l'industrie » de la Semaine de l'industrie 2026. À vous de jouer : ${PAGE_URL}?jeu=quiz`
-    if (await copyText(text)) {
+    const text = `J'ai obtenu ${score}/5 au défi « Curieux de l'industrie » de la Semaine de l'industrie 2026. À vous de jouer !`
+    if (await shareResult(text, `${PAGE_URL}?jeu=quiz`)) {
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     }
@@ -176,11 +203,11 @@ function QuizGame() {
   if (!done) {
     return (
       <Stepper
-        key={round}
         questions={QUIZ}
         answers={answers}
         onAnswer={(step, choice) => setAnswers((prev) => prev.map((a, i) => (i === step ? choice : a)))}
         onFinish={() => {
+          recordGame({ game: 'quiz', answers: answers as number[], score: quizScore(answers) })
           setDone(true)
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }}
@@ -229,10 +256,7 @@ function QuizGame() {
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Button onClick={() => void share()}>
-          <Share2 className="h-4 w-4" aria-hidden /> {copied ? 'Résultat copié' : 'Copier mon résultat à partager'}
-        </Button>
-        <Button variant="outline" onClick={replay}>
-          <RotateCcw className="h-4 w-4" aria-hidden /> Rejouer
+          <Share2 className="h-4 w-4" aria-hidden /> {copied ? 'Lien copié' : 'Partager'}
         </Button>
       </div>
     </div>
@@ -241,36 +265,18 @@ function QuizGame() {
 
 /* Jeu 2 : explorateur de talents, profil(s) en tête selon la grille. */
 function TalentGame() {
-  const [answers, setAnswers] = useState<(number | null)[]>(() => TALENT_QUESTIONS.map(() => null))
-  const [done, setDone] = useState(false)
+  const [answers, setAnswers] = useState<(number | null)[]>(
+    () => savedAnswers('talents') || TALENT_QUESTIONS.map(() => null),
+  )
+  const [done, setDone] = useState(() => savedAnswers('talents') != null)
   const [copied, setCopied] = useState(false)
-  const [round, setRound] = useState(0)
   const result = done ? computeProfiles(answers.map((a) => (a == null ? null : LETTERS[a])) as (Letter | null)[]) : null
   const names = result ? result.profiles.map((p) => p.name).join(' + ') : ''
-  const shareUrl = `${PAGE_URL}?jeu=talents`
-  const shareText = `Mon profil de découverte « ${VUE_PAR_VOUS_TITLE} » : ${names}. Semaine de l'industrie 2026. Et vous ?`
 
-  /* Repart de zéro. */
-  function replay() {
-    setAnswers(TALENT_QUESTIONS.map(() => null))
-    setDone(false)
-    setCopied(false)
-    setRound((r) => r + 1)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  /* Partage natif (mobile), sinon copie du texte et du lien. */
+  /* Partage le profil avec le lien du jeu. */
   async function share() {
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({ title: VUE_PAR_VOUS_TITLE, text: shareText, url: shareUrl })
-        return
-      } catch {
-        /* partage annulé : rien à faire */
-        return
-      }
-    }
-    if (await copyText(`${shareText} ${shareUrl}`)) {
+    const text = `Mon profil de découverte « ${VUE_PAR_VOUS_TITLE} » : ${names}. Semaine de l'industrie 2026. Et vous ?`
+    if (await shareResult(text, `${PAGE_URL}?jeu=talents`)) {
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     }
@@ -279,11 +285,12 @@ function TalentGame() {
   if (!result) {
     return (
       <Stepper
-        key={round}
         questions={TALENT_QUESTIONS}
         answers={answers}
         onAnswer={(step, choice) => setAnswers((prev) => prev.map((a, i) => (i === step ? choice : a)))}
         onFinish={() => {
+          const picked = computeProfiles(answers.map((a) => LETTERS[a as number]))
+          recordGame({ game: 'talents', answers: answers as number[], profiles: picked.profiles.map((p) => p.code) })
           setDone(true)
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }}
@@ -294,48 +301,38 @@ function TalentGame() {
 
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold text-forest">
-        {result.tie ? 'Vous avez deux univers de prédilection !' : result.profiles[0].name}
-      </h2>
-
-      <div className="mt-6 space-y-4">
-        {result.profiles.map((p) => (
-          <div key={p.code} className="border-2 border-sun bg-sage px-5 py-5">
-            <p className="text-[18px] font-semibold text-forest">{p.name}</p>
-            <p className="mt-1 text-[13px] font-medium uppercase tracking-wide text-ink/60">{p.orientation}</p>
-            <p className="mt-3 text-[15px] text-ink/80">{p.description}</p>
+      {/* Une seule carte résultat (à capturer ou partager) ; titre seulement en cas d'égalité. */}
+      <div className="bg-forest px-6 py-8 text-white sm:px-8">
+        <BrandLogoWhite className="h-8 w-auto" />
+        {result.tie && <p className="mt-6 text-[15px] text-white/75">Vos réponses se partagent entre deux univers.</p>}
+        {result.profiles.map((p, i) => (
+          <div key={p.code} className={i > 0 ? 'mt-6 border-t border-white/20 pt-6' : 'mt-6'}>
+            <p className="text-2xl font-bold">{p.name}</p>
+            <p className="mt-1 text-[15px] text-sun">{p.orientation}</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-white/85">{p.description}</p>
           </div>
         ))}
       </div>
 
       <p className="mt-5 text-[13px] italic text-ink/60">{TALENT_DISCLAIMER}</p>
 
-      {/* Carte de résultat à partager (capture d'écran ou partage du lien). */}
-      <div className="mt-8 bg-forest px-6 py-7 text-white">
-        <BrandLogoWhite className="h-8 w-auto" />
-        <p className="mt-5 text-2xl font-bold leading-tight">{names}</p>
-        <p className="mt-5 text-[13px] text-white/70">Faites le test : {shareUrl.replace(/^https:\/\//, '')}</p>
-      </div>
-
       <div className="mt-6 flex flex-wrap gap-3">
         <Button onClick={() => void share()}>
-          <Share2 className="h-4 w-4" aria-hidden /> {copied ? 'Lien copié' : 'Partager mon profil'}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`, '_blank', 'noopener')}
-        >
-          <MessageCircle className="h-4 w-4" aria-hidden /> WhatsApp
-        </Button>
-        <Button variant="outline" onClick={replay}>
-          <RotateCcw className="h-4 w-4" aria-hidden /> Rejouer
+          <Share2 className="h-4 w-4" aria-hidden /> {copied ? 'Lien copié' : 'Partager'}
         </Button>
       </div>
     </div>
   )
 }
 
-const GAMES: { key: Game; title: string; lead: string; icon: typeof Award }[] = [
+const GAMES: { key: Game; title: string; lead: string; card?: string; icon: typeof Award }[] = [
+  {
+    key: 'sondage',
+    title: 'Votre avis compte',
+    lead: "Quelques questions rapides pour mesurer ce que les visites d'usines apportent aux jeunes et au public.",
+    card: "Répondez au questionnaire avant puis après votre visite d'usine.",
+    icon: ClipboardList,
+  },
   {
     key: 'quiz',
     title: "Curieux de l'industrie",
@@ -354,60 +351,83 @@ const GAMES: { key: Game; title: string; lead: string; icon: typeof Award }[] = 
 export default function VueParVousPage() {
   const [params] = useSearchParams()
   const raw = params.get('jeu')
-  const game: Game | null = raw === 'quiz' || raw === 'talents' ? raw : null
-  const current = GAMES.find((g) => g.key === game) || null
+  const current = GAMES.find((g) => g.key === raw) || null
+  const game = current?.key ?? null
 
   return (
     <main className="py-12 sm:py-16">
       <Seo {...publicSeo('/vue-par-vous')} />
-      <div className={`${WRAP} ${current ? 'max-w-2xl' : ''}`}>
-        <div className="animate-rise">
-          {current ? (
-            <>
-              <Link to="/vue-par-vous" className="text-[14px] font-semibold text-forest underline underline-offset-4">
-                ← Toutes les expériences
-              </Link>
-              <div className="mt-4">
-                <SectionHeader level={1} title={current.title} lead={current.lead} />
-              </div>
-            </>
-          ) : (
-            <SectionHeader
-              level={1}
-              title={VUE_PAR_VOUS_TITLE}
-              lead="Trois expériences pour tester ses connaissances, explorer ses intérêts et partager sa vision de l'industrie togolaise."
-            />
+      <div className={WRAP}>
+        {/* Jeu ouvert : colonne centrée, chapeau sur toute la largeur de la colonne. */}
+        <div className={current ? 'mx-auto max-w-3xl' : ''}>
+          <div className="animate-rise">
+            {current ? (
+              <SectionHeader level={1} title={current.title} lead={current.lead} className="[&_p]:max-w-none" />
+            ) : (
+              <SectionHeader
+                level={1}
+                title={VUE_PAR_VOUS_TITLE}
+                lead="Un questionnaire pour donner son avis, et deux défis pour tester ses connaissances et explorer ses intérêts."
+              />
+            )}
+          </div>
+
+          {game === 'sondage' && <SurveyGame />}
+          {game === 'quiz' && <QuizGame />}
+          {game === 'talents' && <TalentGame />}
+
+          {!current && (
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {GAMES.map((g) => {
+                const Icon = g.icon
+                /* Le sondage n'est pas un jeu : carte marquée, et fermée une fois fini (réponse unique). */
+                const survey = g.key === 'sondage'
+                const done = isDone(g.key)
+                const closed = survey && done
+                const body = (
+                  <>
+                    {done && (
+                      <span
+                        role="img"
+                        aria-label="Terminé"
+                        title="Terminé"
+                        className="absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full bg-forest text-white"
+                      >
+                        <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                      </span>
+                    )}
+                    <Icon className={`h-8 w-8 ${survey ? 'text-forest' : 'text-energy'}`} strokeWidth={1.75} aria-hidden />
+                    <p className="mt-4 text-[18px] font-semibold text-forest">{g.title}</p>
+                    <p className="mt-2 flex-1 text-[15px] text-ink/70">
+                      {closed ? 'Merci, vos réponses avant et après la visite sont enregistrées.' : g.card || g.lead}
+                    </p>
+                    {!closed && (
+                      <p className="mt-5 text-[14px] font-semibold text-forest underline underline-offset-4">
+                        {survey ? 'Répondre' : done ? 'Voir mon résultat' : 'Commencer'}
+                      </p>
+                    )}
+                  </>
+                )
+                const frame = `relative flex flex-col p-6 transition-colors ${
+                  survey ? 'border-2 border-sun bg-sage' : 'border border-forest/30 bg-white hover:bg-sage'
+                }`
+                return closed ? (
+                  <div key={g.key} className={frame}>
+                    {body}
+                  </div>
+                ) : (
+                  <Link
+                    key={g.key}
+                    to={`/vue-par-vous?jeu=${g.key}`}
+                    className={`group ${frame} ${survey ? 'hover:bg-sun/25' : ''}`}
+                  >
+                    {body}
+                  </Link>
+                )
+              })}
+            </div>
           )}
         </div>
-
-        {game === 'quiz' && <QuizGame />}
-        {game === 'talents' && <TalentGame />}
-
-        {!current && (
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {GAMES.map((g) => {
-              const Icon = g.icon
-              return (
-                <Link
-                  key={g.key}
-                  to={`/vue-par-vous?jeu=${g.key}`}
-                  className="group flex flex-col border border-forest/30 bg-white p-6 transition-colors hover:bg-sage"
-                >
-                  <Icon className="h-8 w-8 text-energy" strokeWidth={1.75} aria-hidden />
-                  <p className="mt-4 text-[18px] font-semibold text-forest">{g.title}</p>
-                  <p className="mt-2 flex-1 text-[15px] text-ink/70">{g.lead}</p>
-                  <p className="mt-5 text-[14px] font-semibold text-forest underline underline-offset-4">Commencer</p>
-                </Link>
-              )
-            })}
-            <div className="flex flex-col border border-dashed border-forest/30 p-6">
-              <MessageCircle className="h-8 w-8 text-ink/40" strokeWidth={1.75} aria-hidden />
-              <p className="mt-4 text-[18px] font-semibold text-forest">Votre vision de l&apos;industrie</p>
-              <p className="mt-2 flex-1 text-[15px] text-ink/70">Partagez votre regard sur l&apos;industrie togolaise.</p>
-              <p className="mt-5 text-[14px] font-semibold text-ink/50">Bientôt disponible</p>
-            </div>
-          </div>
-        )}
       </div>
     </main>
   )
