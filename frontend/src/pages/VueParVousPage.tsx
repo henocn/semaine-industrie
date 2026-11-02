@@ -309,7 +309,7 @@ function TalentGame() {
           <div key={p.code} className={i > 0 ? 'mt-6 border-t border-white/20 pt-6' : 'mt-6'}>
             <p className="text-2xl font-bold">{p.name}</p>
             <p className="mt-1 text-[15px] text-sun">{p.orientation}</p>
-            <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/85">{p.description}</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-white/85">{p.description}</p>
           </div>
         ))}
       </div>
@@ -358,75 +358,76 @@ export default function VueParVousPage() {
     <main className="py-12 sm:py-16">
       <Seo {...publicSeo('/vue-par-vous')} />
       <div className={WRAP}>
-      {/* Jeu ouvert : colonne centrée, chapeau sur toute la largeur de la colonne. */}
-      <div className={current ? 'mx-auto max-w-3xl' : ''}>
-        <div className="animate-rise">
-          {current ? (
-            <SectionHeader level={1} title={current.title} lead={current.lead} className="[&_p]:max-w-none" />
-          ) : (
-            <SectionHeader
-              level={1}
-              title={VUE_PAR_VOUS_TITLE}
-              lead="Un questionnaire pour donner son avis, et deux défis pour tester ses connaissances et explorer ses intérêts."
-            />
+        {/* Jeu ouvert : colonne centrée, chapeau sur toute la largeur de la colonne. */}
+        <div className={current ? 'mx-auto max-w-3xl' : ''}>
+          <div className="animate-rise">
+            {current ? (
+              <SectionHeader level={1} title={current.title} lead={current.lead} className="[&_p]:max-w-none" />
+            ) : (
+              <SectionHeader
+                level={1}
+                title={VUE_PAR_VOUS_TITLE}
+                lead="Un questionnaire pour donner son avis, et deux défis pour tester ses connaissances et explorer ses intérêts."
+              />
+            )}
+          </div>
+
+          {game === 'sondage' && <SurveyGame />}
+          {game === 'quiz' && <QuizGame />}
+          {game === 'talents' && <TalentGame />}
+
+          {!current && (
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {GAMES.map((g) => {
+                const Icon = g.icon
+                /* Le sondage n'est pas un jeu : carte marquée, et fermée une fois fini (réponse unique). */
+                const survey = g.key === 'sondage'
+                const done = isDone(g.key)
+                const closed = survey && done
+                const body = (
+                  <>
+                    {done && (
+                      <span
+                        role="img"
+                        aria-label="Terminé"
+                        title="Terminé"
+                        className="absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full bg-forest text-white"
+                      >
+                        <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                      </span>
+                    )}
+                    <Icon className={`h-8 w-8 ${survey ? 'text-forest' : 'text-energy'}`} strokeWidth={1.75} aria-hidden />
+                    <p className="mt-4 text-[18px] font-semibold text-forest">{g.title}</p>
+                    <p className="mt-2 flex-1 text-[15px] text-ink/70">
+                      {closed ? 'Merci, vos réponses avant et après la visite sont enregistrées.' : g.card || g.lead}
+                    </p>
+                    {!closed && (
+                      <p className="mt-5 text-[14px] font-semibold text-forest underline underline-offset-4">
+                        {survey ? 'Répondre' : done ? 'Voir mon résultat' : 'Commencer'}
+                      </p>
+                    )}
+                  </>
+                )
+                const frame = `relative flex flex-col p-6 transition-colors ${
+                  survey ? 'border-2 border-sun bg-sage' : 'border border-forest/30 bg-white hover:bg-sage'
+                }`
+                return closed ? (
+                  <div key={g.key} className={frame}>
+                    {body}
+                  </div>
+                ) : (
+                  <Link
+                    key={g.key}
+                    to={`/vue-par-vous?jeu=${g.key}`}
+                    className={`group ${frame} ${survey ? 'hover:bg-sun/25' : ''}`}
+                  >
+                    {body}
+                  </Link>
+                )
+              })}
+            </div>
           )}
         </div>
-
-        {game === 'sondage' && <SurveyGame />}
-        {game === 'quiz' && <QuizGame />}
-        {game === 'talents' && <TalentGame />}
-
-        {!current && (
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {GAMES.map((g) => {
-              const Icon = g.icon
-              /* Le sondage n'est pas un jeu : carte marquée, et fermée une fois fini (réponse unique). */
-              const survey = g.key === 'sondage'
-              const done = isDone(g.key)
-              const closed = survey && done
-              const body = (
-                <>
-                  {done && (
-                    <span
-                      role="img"
-                      aria-label="Terminé"
-                      title="Terminé"
-                      className="absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full bg-forest text-white"
-                    >
-                      <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
-                    </span>
-                  )}
-                  <Icon className={`h-8 w-8 ${survey ? 'text-forest' : 'text-energy'}`} strokeWidth={1.75} aria-hidden />
-                  <p className="mt-4 text-[18px] font-semibold text-forest">{g.title}</p>
-                  <p className="mt-2 flex-1 text-[15px] text-ink/70">
-                    {closed ? 'Merci, vos réponses avant et après la visite sont enregistrées.' : g.card || g.lead}
-                  </p>
-                  {!closed && (
-                    <p className="mt-5 text-[14px] font-semibold text-forest underline underline-offset-4">
-                      {survey ? 'Répondre' : done ? 'Voir mon résultat' : 'Commencer'}
-                    </p>
-                  )}
-                </>
-              )
-              const frame = `relative flex flex-col p-6 transition-colors ${
-                survey ? 'border-2 border-sun bg-sage' : 'border border-forest/30 bg-white hover:bg-sage'
-              }`
-              return closed ? (
-                <div key={g.key} className={frame}>
-                  {body}
-                </div>
-              ) : (
-                <Link
-                  key={g.key}
-                  to={`/vue-par-vous?jeu=${g.key}`}
-                  className={`group ${frame} ${survey ? 'hover:bg-sun/25' : ''}`}
-                >
-                  {body}
-                </Link>
-              )
-            })}
-          </div>
-        )}
       </div>
     </main>
   )

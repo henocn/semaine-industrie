@@ -221,7 +221,7 @@ function SurveyFlow({
   const afterHref = `/vue-par-vous?jeu=sondage&phase=after${code ? `&code=${encodeURIComponent(code)}` : ''}`
 
   return (
-    <div className="max-w-xl">
+    <div>
       {screen !== 'intro' && total > 0 && (
         <p className="mt-8 text-[13px] font-semibold uppercase tracking-wide text-energy">{phaseInfo.title}</p>
       )}
