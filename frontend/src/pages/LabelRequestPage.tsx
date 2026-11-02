@@ -183,7 +183,7 @@ export default function LabelRequestPage() {
               <input required type="email" name="contact_email" className={field} />
             </Field>
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
-              <PhoneField name="contact_phone" className={field} />
+              <PhoneField required name="contact_phone" className={field} />
             </Field>
             <Field label="Capacité max. visiteurs par créneau" className="sm:col-span-2">
               <input type="number" min={1} name="max_visitors" className={field} />
