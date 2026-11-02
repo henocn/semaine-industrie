@@ -29,9 +29,15 @@ import PassportPage from './pages/PassportPage'
 import PrivacyPage from './pages/PrivacyPage'
 import ProgrammePage from './pages/ProgrammePage'
 import ResourcesPage from './pages/ResourcesPage'
-import SurveyPage from './pages/SurveyPage'
 import VotePage from './pages/VotePage'
 import VueParVousPage from './pages/VueParVousPage'
+
+/* Ancienne adresse du questionnaire (liens, QR) : garde phase / code. */
+function SurveyRedirect() {
+  const { search } = useLocation()
+  const extra = search.replace(/^\?/, '')
+  return <Navigate to={`/vue-par-vous?jeu=sondage${extra ? `&${extra}` : ''}`} replace />
+}
 
 /* Sur le sous-domaine backoffice, n'autorise que login + espace orga. */
 function BackofficeGate({ children }: { children: ReactNode }) {
@@ -65,7 +71,7 @@ export default function App() {
             <Route path="/passage/:code" element={<PassagePage />} />
             <Route path="/questions" element={<Navigate to="/" replace />} />
             <Route path="/vote" element={<VotePage />} />
-            <Route path="/questionnaire" element={<SurveyPage />} />
+            <Route path="/questionnaire" element={<SurveyRedirect />} />
             <Route path="/vue-par-vous" element={<VueParVousPage />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/confidentialite" element={<PrivacyPage />} />

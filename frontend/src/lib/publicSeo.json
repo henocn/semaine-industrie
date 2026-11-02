@@ -44,14 +44,9 @@
     "description": "Votez pour le produit coup de cœur de l’exposition « Fabriqué au Togo » pendant la Semaine de l’industrie 2026."
   },
   {
-    "path": "/questionnaire",
-    "title": "Questionnaire",
-    "description": "Répondez au questionnaire avant ou après votre visite d’usine, Semaine de l’industrie 2026 au Togo."
-  },
-  {
     "path": "/vue-par-vous",
     "title": "L’industrie, vue par vous !",
-    "description": "Testez vos connaissances sur l’industrie et découvrez votre profil de talents en cinq questions, Semaine de l’industrie 2026 au Togo."
+    "description": "Donnez votre avis sur les visites d’usines, testez vos connaissances sur l’industrie et découvrez votre profil de talents, Semaine de l’industrie 2026 au Togo."
   },
   {
     "path": "/faq",

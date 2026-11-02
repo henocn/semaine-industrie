@@ -104,6 +104,26 @@ async function submit(req, res, next) {
   }
 }
 
+/* Enregistre une partie de jeu (public). */
+async function submitGame(req, res, next) {
+  try {
+    const data = await surveyService.submitGameResult(req.body);
+    emitRealtime('survey:updated', { game: data.game }, 'orga');
+    return ApiResponse.created(res, { id: data.id }, 'Résultat enregistré');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Stats des jeux (orga). */
+async function gameStats(req, res, next) {
+  try {
+    return ApiResponse.success(res, await surveyService.getGameStats());
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Stats orga. */
 async function stats(req, res, next) {
   try {
@@ -132,6 +152,8 @@ module.exports = {
   deleteQuestion,
   reorderQuestions,
   submit,
+  submitGame,
+  gameStats,
   stats,
   recent,
 };

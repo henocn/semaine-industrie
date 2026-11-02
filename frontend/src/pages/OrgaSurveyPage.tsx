@@ -2,14 +2,17 @@ import { useEffect, useState, type DragEvent, type FormEvent } from 'react'
 import {
   createSurveyQuestion,
   deleteSurveyQuestion,
+  getGameStats,
   getSurveyStats,
   listSurveyQuestionsAdmin,
   reorderSurveyQuestions,
   updateSurveyQuestion,
   type SurveyQuestion,
   type SurveyQuestionKind,
+  type GameStats,
   type SurveyStats,
 } from '../api/surveys'
+import { PROFILES, type ProfileCode } from '../lib/vueParVous'
 import { createVoteProduct, deleteVoteProduct, getVotes, updateVoteProduct, type VoteOption } from '../api/engagement'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { IconEdit, IconTrash } from '../components/ui/IconButton'
@@ -39,6 +42,7 @@ function IconGrip() {
 export default function OrgaSurveyPage() {
   const [questions, setQuestions] = useState<SurveyQuestion[]>([])
   const [stats, setStats] = useState<SurveyStats | null>(null)
+  const [gameStats, setGameStats] = useState<GameStats | null>(null)
   const [label, setLabel] = useState('')
   const [kind, setKind] = useState<SurveyQuestionKind>('scale')
   const [optionsText, setOptionsText] = useState('Oui\nNon')
@@ -49,7 +53,7 @@ export default function OrgaSurveyPage() {
   const [editKind, setEditKind] = useState<SurveyQuestionKind>('scale')
   const [editOptionsText, setEditOptionsText] = useState('')
   const [dragId, setDragId] = useState<string | null>(null)
-  const [tab, setTab] = useState<'sondage' | 'coeur'>('sondage')
+  const [tab, setTab] = useState<'sondage' | 'jeux' | 'coeur'>('sondage')
   const [editorOpen, setEditorOpen] = useState(false)
   const [votes, setVotes] = useState<VoteOption[]>([])
   const [productId, setProductId] = useState<string | null>(null)
@@ -68,9 +72,10 @@ export default function OrgaSurveyPage() {
   async function load() {
     try {
       setError(null)
-      const [q, s, v] = await Promise.all([listSurveyQuestionsAdmin(), getSurveyStats(), getVotes()])
+      const [q, s, g, v] = await Promise.all([listSurveyQuestionsAdmin(), getSurveyStats(), getGameStats(), getVotes()])
       setQuestions(q)
       setStats(s)
+      setGameStats(g)
       setVotes(v)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur')
@@ -239,16 +244,16 @@ export default function OrgaSurveyPage() {
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <div className="mb-4 flex gap-0 border border-black">
-        {(['sondage', 'coeur'] as const).map((key) => (
+        {(['sondage', 'jeux', 'coeur'] as const).map((key) => (
           <button
             key={key}
             type="button"
             onClick={() => setTab(key)}
             className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
               tab === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
-            } ${key === 'coeur' ? 'border-l border-black' : ''}`}
+            } ${key !== 'sondage' ? 'border-l border-black' : ''}`}
           >
-            {key === 'sondage' ? 'Sondage' : 'Coup de cœur'}
+            {key === 'sondage' ? 'Sondage' : key === 'jeux' ? 'Jeux' : 'Coup de cœur'}
           </button>
         ))}
       </div>
@@ -324,6 +329,69 @@ export default function OrgaSurveyPage() {
               </ul>
             )}
           </section>
+        </section>
+      )}
+
+      {tab === 'jeux' && (
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="orga-panel">
+            <h2 className="text-[15px] font-semibold text-forest">Curieux de l&apos;industrie</h2>
+            {gameStats ? (
+              <>
+                <p className="mt-2 text-[13px] text-ink/55">
+                  {gameStats.quiz.count} partie{gameStats.quiz.count > 1 ? 's' : ''}
+                  {gameStats.quiz.average != null && <> · score moyen {gameStats.quiz.average} / 5</>}
+                </p>
+                <table className="orga-table mt-4">
+                  <thead>
+                    <tr>
+                      <th>Score</th>
+                      <th>Parties</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[5, 4, 3, 2, 1, 0].map((n) => (
+                      <tr key={n}>
+                        <td className="font-medium text-forest">{n} / 5</td>
+                        <td>{gameStats.quiz.scores[n] || 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            ) : (
+              <p className="mt-2 text-[13px] text-ink/40">Chargement…</p>
+            )}
+          </div>
+          <div className="orga-panel">
+            <h2 className="text-[15px] font-semibold text-forest">Explorateur de talents</h2>
+            {gameStats ? (
+              <>
+                <p className="mt-2 text-[13px] text-ink/55">
+                  {gameStats.talents.count} partie{gameStats.talents.count > 1 ? 's' : ''} · {gameStats.talents.ties} à
+                  égalité (deux profils)
+                </p>
+                <table className="orga-table mt-4">
+                  <thead>
+                    <tr>
+                      <th>Profil</th>
+                      <th>Fois en tête</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(Object.keys(PROFILES) as ProfileCode[]).map((code) => (
+                      <tr key={code}>
+                        <td className="font-medium text-forest">{PROFILES[code].name}</td>
+                        <td>{gameStats.talents.profiles[code] || 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            ) : (
+              <p className="mt-2 text-[13px] text-ink/40">Chargement…</p>
+            )}
+          </div>
         </section>
       )}
 
