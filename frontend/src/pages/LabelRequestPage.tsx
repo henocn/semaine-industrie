@@ -117,7 +117,7 @@ export default function LabelRequestPage() {
             </div>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="grid gap-6 sm:grid-cols-2">
+          <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">
             <Field label="Nom de l'industrie" className="sm:col-span-2">
               <input required name="structure_name" className={field} />
             </Field>

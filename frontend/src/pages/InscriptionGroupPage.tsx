@@ -83,7 +83,7 @@ export default function InscriptionGroupPage() {
             <p className="text-xl text-forest">Merci. Votre inscription est enregistrée.</p>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="grid gap-6 sm:grid-cols-2">
+          <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">
             <Field label="Vous êtes" className="sm:col-span-2">
               <select
                 name="kind"
