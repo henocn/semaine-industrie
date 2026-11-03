@@ -34,7 +34,7 @@ export function SiteFooter() {
         <div>
           <p className="font-semibold text-white">La semaine</p>
           <ul className="mt-4 space-y-2.5">
-            <li><Link to="/inscription-particulier" className={LINK}>Inscription particulier</Link></li>
+            <li><Link to="/inscription-particulier" className={LINK}>Participer en tant que particulier</Link></li>
             <li><Link to="/inscription-groupe" className={LINK}>Inscription écoles / universités</Link></li>
             <li><Link to="/programme" className={LINK}>Programme</Link></li>
             <li><Link to="/carte" className={LINK}>Carte des usines</Link></li>
