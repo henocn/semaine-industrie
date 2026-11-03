@@ -59,13 +59,10 @@ async function getById(id) {
   return present(row, { withImage: true });
 }
 
-/* Crée une participation en attente (écoles / centres / univ uniquement). */
+/* Crée une participation en attente (école / centre / université, ou particulier). */
 async function create(payload) {
-  if (payload.kind !== 'ecole') {
-    throw ApiError.badRequest('Les inscriptions sont réservées aux écoles, centres et universités');
-  }
   const row = await Participation.create({
-    kind: 'ecole',
+    kind: payload.kind === 'particulier' ? 'particulier' : 'ecole',
     status: 'pending',
     ...pickFields(payload),
   });
@@ -112,13 +109,10 @@ async function ensurePassport(row) {
   return passport;
 }
 
-/* Accepte et crée le QR du jour J (groupe école uniquement). */
+/* Accepte et crée le QR du jour J (groupe pour une école, individuel pour un particulier). */
 async function approve(id) {
   const row = await Participation.findByPk(id);
   if (!row) throw ApiError.notFound('Participation introuvable');
-  if (row.kind !== 'ecole') {
-    throw ApiError.badRequest('Les inscriptions individuelles ne sont plus acceptées');
-  }
 
   const wasApproved = row.status === 'approved';
   await ensurePassport(row);

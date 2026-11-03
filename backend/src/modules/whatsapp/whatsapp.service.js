@@ -151,7 +151,7 @@ async function replyAskCode(from, phoneNumberId, body) {
     phoneNumberId,
     body:
       body
-      || "Espace de suivi pour les industries, écoles / universités et rencontres d'affaires. Entrez le code de suivi envoyé à l'inscription.",
+      || "Espace de suivi pour les industries, écoles / universités, particuliers et rencontres d'affaires. Entrez le code de suivi envoyé à l'inscription.",
   });
 }
 
@@ -653,7 +653,7 @@ function participateBody() {
     '',
     `1. *Industrie* : demandez le label sur ${site}/label`,
     '',
-    `2. *École, centre de formation ou université* : inscrivez-vous sur ${site}/inscription`,
+    `2. *École, centre de formation, université ou particulier* : inscrivez-vous sur ${site}/inscription`,
     '',
     `3. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
     '',
@@ -919,20 +919,12 @@ async function openByTrackingCode(from, raw, phoneNumberId) {
   if (!found) return null;
   if (found.kind === 'organization') return replySuiviMenu(from, found.organization, phoneNumberId);
   if (found.kind === 'business') return replyB2bMenu(from, found.participant, phoneNumberId);
-  /* Passeports individuels (ex-particuliers) : plus de suivi bot. */
-  if (found.passport?.kind === 'individual') {
-    return replyAskCode(
-      from,
-      phoneNumberId,
-      "Le suivi individuel n'est plus proposé. Les inscriptions concernent les écoles, centres et universités (code EC-…). Pour une rencontre d'affaires, utilisez votre code AF-… ou votre e-mail.",
-    );
-  }
   return replyPassportRecap(from, found.passport, phoneNumberId);
 }
 
 /* Texte d'intro du sous-menu. */
 function suiviIntro(kind, name) {
-  const label = kind === 'in' ? 'Industrie' : kind === 'af' ? 'Affaires' : 'École';
+  const label = kind === 'in' ? 'Industrie' : kind === 'af' ? 'Affaires' : kind === 'pa' ? 'Particulier' : 'École';
   return `${label} : ${name}\nQue souhaitez-vous ?`;
 }
 
@@ -948,9 +940,9 @@ async function openLinkedSuivi(from, phoneNumberId, patch, linked) {
   );
 }
 
-/* Récap passeport école / groupe. */
+/* Récap passeport école (groupe) ou particulier (individuel). */
 async function replyPassportRecap(from, passport, phoneNumberId) {
-  const kind = 'ec';
+  const kind = passport.kind === 'group' ? 'ec' : 'pa';
   const name = passport.holder_name || passport.school_name || 'Participant';
   return openLinkedSuivi(
     from,
@@ -967,13 +959,14 @@ async function replyPassportRecap(from, passport, phoneNumberId) {
   );
 }
 
-/* Formate le récap passeport école. */
+/* Formate le récap passeport école ou particulier. */
 function formatPassportRecap(passport) {
+  const kind = passport.kind === 'group' ? 'École' : 'Particulier';
   const url = `${SITE()}/passeport/${passport.code}`;
   return [
     'Récapitulatif',
     '',
-    `École : ${passport.holder_name || passport.school_name || 'Participant'}`,
+    `${kind} : ${passport.holder_name || passport.school_name || 'Participant'}`,
     `Code de suivi : ${passport.code}`,
     `Passeport : ${url}`,
     '',
@@ -996,9 +989,8 @@ async function loadLinked(session) {
   if (session.passportId) {
     const passport = await Passport.findByPk(session.passportId);
     if (!passport) return null;
-    if (passport.kind === 'individual') return null;
     return {
-      kind: 'ec',
+      kind: passport.kind === 'group' ? 'ec' : 'pa',
       code: passport.code,
       passport,
       name: passport.holder_name || passport.school_name || 'Participant',
@@ -1033,9 +1025,8 @@ async function loadLinked(session) {
         name: b2bDisplayName(found.participant),
       };
     }
-    if (found.passport.kind === 'individual') return null;
     return {
-      kind: 'ec',
+      kind: found.passport.kind === 'group' ? 'ec' : 'pa',
       code: found.passport.code,
       passport: found.passport,
       name: found.passport.holder_name || found.passport.school_name || 'Participant',
@@ -1409,7 +1400,7 @@ async function resolveIdent(from, text, phoneNumberId, intent) {
   return replyAskCode(
     from,
     phoneNumberId,
-    'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5 ou AF-9TQB).',
+    'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5, PA-3MXR ou AF-9TQB).',
   );
 }
 
@@ -1445,7 +1436,7 @@ async function handleText(from, text, phoneNumberId) {
     return replyAskCode(
       from,
       phoneNumberId,
-      'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5 ou AF-9TQB).',
+      'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5, PA-3MXR ou AF-9TQB).',
     );
   }
 
@@ -1619,7 +1610,7 @@ async function notifyParticipationReceived(participation) {
 async function notifyParticipationApproved(participation) {
   const code = participation?.passport?.code;
   if (!code) return { ok: false, reason: 'no_code' };
-  const places = participation.headcount || '-';
+  const places = participation.kind === 'particulier' ? 1 : participation.headcount || '-';
   return sendTemplateOrText({
     phone: participation?.phone,
     name: 'si26_inscription_acceptee',

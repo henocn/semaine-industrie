@@ -38,7 +38,7 @@ const EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
   { header: 'Ville', width: 16, value: (r) => r.city },
   { header: 'Effectif', width: 10, value: (r) => r.headcount },
   { header: 'Passages', width: 10, value: (r) => passageCount(r) },
-  { header: 'Spécialités / filières', width: 36, value: (r) => r.description },
+  { header: 'Spécialités / note', width: 36, value: (r) => r.description },
   { header: 'Date de demande', width: 18, value: (r) => excelDate(r.createdAt) },
 ]
 
@@ -73,9 +73,9 @@ function readForm(fd: FormData, kind: ParticipationKind) {
   }
 }
 
-/* Backoffice : écoles / centres / univ, avec QR à l'acceptation. */
+/* Backoffice : écoles (centres, univ) et particuliers, avec QR à l'acceptation. */
 export default function OrgaParticipationsPage() {
-  const kind = 'ecole' as const
+  const [kind, setKind] = useState<ParticipationKind>('ecole')
   const [rows, setRows] = useState<Participation[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<Participation | null>(null)
@@ -85,7 +85,7 @@ export default function OrgaParticipationsPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  /* Recharge la liste des écoles. */
+  /* Recharge l'onglet courant. */
   async function load() {
     const data = await listParticipations({ kind })
     setRows(data)
@@ -98,8 +98,10 @@ export default function OrgaParticipationsPage() {
     setEditingId(null)
     setShowAdd(false)
     setError(null)
-    void load().catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
-  }, [])
+    listParticipations({ kind })
+      .then(setRows)
+      .catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
+  }, [kind])
 
   useOrgaRealtime(
     ['participation:changed'],
@@ -230,7 +232,10 @@ export default function OrgaParticipationsPage() {
   }, [rows, query])
   const picked = useRowSelection(filtered)
 
-  const noun = filtered.length > 1 ? 'écoles' : 'école'
+  const isSchool = kind === 'ecole'
+  const noun = isSchool
+    ? (filtered.length > 1 ? 'écoles' : 'école')
+    : (filtered.length > 1 ? 'particuliers' : 'particulier')
 
   return (
     <OrgaShell
@@ -239,11 +244,26 @@ export default function OrgaParticipationsPage() {
       onSearch={setQuery}
       actions={
         <button type="button" className="orga-btn" onClick={() => setShowAdd((v) => !v)}>
-          {showAdd ? 'Fermer' : 'Ajouter une école'}
+          {showAdd ? 'Fermer' : `Ajouter ${isSchool ? 'une école' : 'un particulier'}`}
         </button>
       }
     >
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
+
+      <div className="mb-4 flex gap-0 border border-black">
+        {(['ecole', 'particulier'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setKind(key)}
+            className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
+              kind === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
+            } ${key === 'particulier' ? 'border-l border-black' : ''}`}
+          >
+            {key === 'ecole' ? 'Écoles' : 'Particuliers'}
+          </button>
+        ))}
+      </div>
 
       {showAdd && (
         <form onSubmit={(e) => void onCreate(e)} className="orga-panel mb-4 grid gap-3 sm:grid-cols-2">
@@ -260,12 +280,14 @@ export default function OrgaParticipationsPage() {
             <PhoneField name="phone" className={field} />
             <span className="mt-1 block text-[12px] font-normal text-ink/50">De préférence un numéro WhatsApp.</span>
           </label>
-          <label className="text-[13px] font-medium text-forest">
-            Effectif souhaité
-            <input name="headcount" type="number" min={1} className={field} />
-          </label>
+          {isSchool && (
+            <label className="text-[13px] font-medium text-forest">
+              Effectif souhaité
+              <input name="headcount" type="number" min={1} className={field} />
+            </label>
+          )}
           <label className="text-[13px] font-medium text-forest sm:col-span-2">
-            Spécialités / séries ou filières
+            {isSchool ? 'Spécialités / séries ou filières' : 'Note'}
             <textarea name="description" rows={3} className={`${field} resize-none`} />
           </label>
           <div className="sm:col-span-2">
@@ -276,7 +298,8 @@ export default function OrgaParticipationsPage() {
         </form>
       )}
 
-      <ExportBar selection={picked} filename="inscriptions" sheet="Inscriptions" columns={EXPORT_COLUMNS} />
+      <ExportBar selection={picked} filename={isSchool ? 'inscriptions-ecoles' : 'inscriptions-particuliers'}
+        sheet={isSchool ? 'Écoles' : 'Particuliers'} columns={EXPORT_COLUMNS} />
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">
@@ -367,12 +390,14 @@ export default function OrgaParticipationsPage() {
                               Téléphone
                               <PhoneField name="phone" defaultValue={shown.phone || ''} className={field} />
                             </label>
-                            <label className="text-[13px] font-medium text-forest">
-                              Effectif souhaité
-                              <input name="headcount" type="number" min={1} defaultValue={shown.headcount ?? ''} className={field} />
-                            </label>
+                            {isSchool && (
+                              <label className="text-[13px] font-medium text-forest">
+                                Effectif souhaité
+                                <input name="headcount" type="number" min={1} defaultValue={shown.headcount ?? ''} className={field} />
+                              </label>
+                            )}
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                              Spécialités / séries ou filières
+                              {isSchool ? 'Spécialités / séries ou filières' : 'Note'}
                               <textarea name="description" rows={3} defaultValue={shown.description || ''} className={`${field} resize-none`} />
                             </label>
                             <div className="sm:col-span-2 flex gap-2">

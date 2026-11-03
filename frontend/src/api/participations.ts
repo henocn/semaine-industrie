@@ -36,7 +36,7 @@ export type ParticipationInput = {
   headcount?: number | null
 }
 
-/* Liste les participations (écoles ; l'historique « particulier » reste lisible). */
+/* Liste les participations (école ou particulier). */
 export function listParticipations(params?: { kind?: ParticipationKind; status?: ParticipationStatus }) {
   const q = new URLSearchParams()
   if (params?.kind) q.set('kind', params.kind)
@@ -50,16 +50,16 @@ export function getParticipation(id: string) {
   return apiFetch<Participation>(`/participations/${id}`)
 }
 
-/* Inscription publique (école / centre / univ), sans compte. */
-export function registerParticipation(body: ParticipationInput & { kind: 'ecole' }) {
+/* Inscription publique (école / centre / univ, ou particulier), sans compte. */
+export function registerParticipation(body: ParticipationInput & { kind: ParticipationKind }) {
   return apiFetch<Participation>('/participations/public', {
     method: 'POST',
     body: JSON.stringify(body),
   })
 }
 
-/* Enregistre une participation école en attente. */
-export function createParticipation(body: ParticipationInput & { kind: 'ecole' }) {
+/* Enregistre une participation en attente. */
+export function createParticipation(body: ParticipationInput & { kind: ParticipationKind }) {
   return apiFetch<Participation>('/participations', {
     method: 'POST',
     body: JSON.stringify(body),
