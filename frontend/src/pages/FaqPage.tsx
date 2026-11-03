@@ -15,7 +15,7 @@ const FAQ = [
   },
   {
     q: "Comment s'inscrire, école, université ou particulier ?",
-    a: "Depuis Participer : Particulier pour une inscription personnelle, ou Écoles / universités pour un groupe. Après validation, un QR est remis pour le jour J.",
+    a: "Depuis Participer : Participer en tant que particulier pour une inscription personnelle, ou Écoles / universités pour un groupe. Après validation, un QR est remis pour le jour J.",
   },
   {
     q: 'Comment demander le label ?',

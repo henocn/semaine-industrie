@@ -50,8 +50,8 @@ export default function InscriptionParticulierPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            title="Particulier"
-            lead="Vous venez seul ou en famille ? Inscrivez-vous à titre personnel. Après validation, votre QR du jour J suit sur WhatsApp."
+            title="Participer en tant que particulier"
+            lead="Vous êtes particulier, étudiant, parent, jeune diplômé ou simplement curieux de l'industrie ? Inscrivez-vous à titre personnel. Après validation, votre QR du jour J suit sur WhatsApp."
           />
         </div>
 
