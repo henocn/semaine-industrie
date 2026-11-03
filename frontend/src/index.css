@@ -72,7 +72,7 @@ body {
   z-index: 0;
   background-size: cover;
   background-position: center;
-  opacity: 0.09;
+  opacity: 0.05;
   filter: grayscale(25%);
   pointer-events: none;
   animation: bg-breathe 36s ease-in-out infinite;
@@ -80,7 +80,7 @@ body {
 .section-soft-bg + * { position: relative; z-index: 1; }
 /* Sur fond forest (footer) : un peu plus présent, teinté clair */
 .section-soft-bg--on-dark {
-  opacity: 0.13;
+  opacity: 0.08;
   filter: grayscale(40%) brightness(1.15);
 }
 
@@ -92,7 +92,7 @@ body {
   background-image: url(/images/bg-industrie.png);
   background-size: cover;
   background-position: center;
-  opacity: 0.065;
+  opacity: 0.035;
   filter: grayscale(35%);
   pointer-events: none;
   animation: bg-breathe 36s ease-in-out infinite;
