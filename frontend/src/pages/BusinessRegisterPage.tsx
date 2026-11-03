@@ -72,7 +72,7 @@ export default function BusinessRegisterPage() {
             </div>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="grid gap-6 sm:grid-cols-2">
+          <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">
             <Field label="Profil">
               <select name="kind" className={field} defaultValue="entreprise">
                 <option value="entreprise">Entreprise</option>

@@ -50,8 +50,8 @@ export default function InscriptionParticulierPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            title="Participer en tant que particulier"
-            lead="Vous êtes particulier, étudiant, parent, jeune diplômé ou simplement curieux de l'industrie ? Inscrivez-vous à titre personnel. Après validation, votre QR du jour J suit sur WhatsApp."
+            title="Participer"
+            lead="Étudiant, parent, jeune diplômé ou curieux de l'industrie : inscrivez-vous. Votre QR arrive sur WhatsApp après validation."
           />
           <img
             src="/images/inscription-particulier.jpg"
@@ -68,7 +68,7 @@ export default function InscriptionParticulierPage() {
             <p className="text-xl text-forest">Merci. Votre inscription est enregistrée.</p>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="grid gap-6 sm:grid-cols-2">
+          <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">
             <Field label="Nom et prénom" className="sm:col-span-2">
               <input required name="name" minLength={2} autoComplete="name" className={field} />
             </Field>
