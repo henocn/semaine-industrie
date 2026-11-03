@@ -653,9 +653,11 @@ function participateBody() {
     '',
     `1. *Industrie* : demandez le label sur ${site}/label`,
     '',
-    `2. *École, centre de formation, université ou particulier* : inscrivez-vous sur ${site}/inscription`,
+    `2. *École, centre de formation ou université* : inscrivez le groupe sur ${site}/inscription-groupe`,
     '',
-    `3. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
+    `3. *Particulier* : inscrivez-vous sur ${site}/inscription-particulier`,
+    '',
+    `4. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
     '',
     '📩 Vous recevrez un *code de suivi* pour voir où en est votre participation dans « Suivi de participation ».',
   ].join('\n');

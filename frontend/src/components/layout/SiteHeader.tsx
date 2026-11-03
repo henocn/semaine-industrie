@@ -11,7 +11,8 @@ type NavGroup = {
 }
 
 const PARTICIPER_ITEMS: NavItem[] = [
-  { label: "S'inscrire", to: '/inscription' },
+  { label: 'Particulier', to: '/inscription-particulier' },
+  { label: 'Écoles / universités', to: '/inscription-groupe' },
   { label: 'Demander le label', to: '/label' },
   { label: 'Rencontres d’affaires', to: '/affaires' },
 ]
