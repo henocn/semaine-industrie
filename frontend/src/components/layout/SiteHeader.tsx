@@ -11,9 +11,9 @@ type NavGroup = {
 }
 
 const PARTICIPER_ITEMS: NavItem[] = [
-  { label: 'Participer en tant que particulier', to: '/inscription-particulier' },
-  { label: 'Écoles / universités', to: '/inscription-groupe' },
-  { label: 'Demander le label', to: '/label' },
+  { label: 'En tant que particulier', to: '/inscription-particulier' },
+  { label: 'En tant qu’école / université', to: '/inscription-groupe' },
+  { label: 'Demande de label : industries', to: '/label' },
   { label: 'Rencontres d’affaires', to: '/affaires' },
 ]
 

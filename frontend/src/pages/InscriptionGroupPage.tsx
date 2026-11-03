@@ -65,8 +65,16 @@ export default function InscriptionGroupPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            title="Écoles et universités"
+            title="Participer en tant qu’école / université"
             lead="Écoles, centres de formation et universités : inscrivez votre groupe. Après validation, le QR du jour J suit."
+          />
+          <img
+            src="/images/inscription-groupe.jpg"
+            alt="Élèves en uniforme prenant un selfie avec la silhouette d’un technicien, dans une exposition sur les métiers de l’industrie"
+            loading="lazy"
+            width={1344}
+            height={752}
+            className="mt-8 aspect-[16/10] w-full rounded-sm object-cover"
           />
         </div>
 
