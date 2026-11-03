@@ -25,8 +25,14 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://semaineindustrie.tg/inscription</loc>
-    <lastmod>2026-10-22</lastmod>
+    <loc>https://semaineindustrie.tg/inscription-groupe</loc>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://semaineindustrie.tg/inscription-particulier</loc>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

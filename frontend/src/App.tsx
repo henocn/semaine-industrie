@@ -10,7 +10,8 @@ import BusinessRegisterPage from './pages/BusinessRegisterPage'
 import FaqPage from './pages/FaqPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
-import InscriptionPage from './pages/InscriptionPage'
+import InscriptionGroupPage from './pages/InscriptionGroupPage'
+import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
 import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
@@ -62,7 +63,9 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/programme" element={<ProgrammePage />} />
             <Route path="/label" element={<LabelRequestPage />} />
-            <Route path="/inscription" element={<InscriptionPage />} />
+            <Route path="/inscription" element={<Navigate to="/inscription-groupe" replace />} />
+            <Route path="/inscription-groupe" element={<InscriptionGroupPage />} />
+            <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
             <Route path="/ressources" element={<ResourcesPage />} />
             <Route path="/affaires" element={<BusinessRegisterPage />} />
             <Route path="/carte" element={<MapPage />} />
