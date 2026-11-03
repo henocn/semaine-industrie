@@ -1,18 +1,53 @@
 # Semaine de l'industrie 2026
 
-Monorepo : site public + API. Hébergement VPS (Postgres, n8n, PM2) — pas de Docker ni Supabase pour front/API.
+Monorepo : site public, backoffice orga, API et bot WhatsApp.
 
 Site : [semaineindustrie.tg](https://semaineindustrie.tg/)
 
 ## Structure
 
 ```
-frontend/     React + Vite + TypeScript
-backend/      Express + Sequelize + PostgreSQL
-deploy/       setup, deploy, Nginx, PM2
-ressources/   notes locales (gitignored)
-.cursor/      skills & rules locales (gitignored)
+frontend/     React 19 + Vite + TypeScript + Tailwind v4 (lint : oxlint)
+backend/      Express + Sequelize + PostgreSQL (validation Joi)
+deploy/       scripts de déploiement, Nginx, PM2, modèles WhatsApp
+docs/         documentation de déploiement
 ```
+
+## Fonctionnalités
+
+### Site public
+
+| Route | Rôle |
+|---|---|
+| `/programme` | Programme du 16 au 22 novembre |
+| `/label` | Demande de label (industries) |
+| `/inscription-groupe` | Inscription écoles, centres de formation, universités (`/inscription` y redirige) |
+| `/inscription-particulier` | Participer en tant que particulier |
+| `/affaires` | Rencontres d'affaires (entreprise ou particulier) |
+| `/industrie`, `/carte`, `/o/:slug` | Industries labellisées, carte des visites, fiche publique |
+| `/vue-par-vous` | Défis : sondage avant / après visite (`?jeu=sondage`), quiz (`?jeu=quiz`), explorateur de talents (`?jeu=talents`). `/questionnaire` y redirige |
+| `/vote` | Vote coup de cœur |
+| `/ressources`, `/faq` | Documents, questions fréquentes |
+
+Téléphone obligatoire sur les formulaires publics : saisie internationale avec drapeau (`react-phone-number-input`), revalidée et stockée en E.164 côté API (`libphonenumber-js`, Togo par défaut).
+
+### Backoffice (`/orga`)
+
+Demandes de labels, Participations (onglets Écoles / Particuliers), Planning visites, Rencontres d'affaires, Sondage (onglets Sondage, Jeux, Coup de cœur), Ressources, Audit et Utilisateurs (admin).
+
+- Tables : détail sous la ligne cliquée, actions en icônes, statut porté par la couleur de ligne.
+- Export Excel : première colonne à cocher, puis Exporter en Excel (`write-excel-file`, chargé à la demande).
+- Mise à jour en temps réel (Socket.IO).
+
+### Codes de suivi
+
+`IN-XXXX` industrie, `EC-XXXX` école / université, `PA-XXXX` particulier, `AF-XXXX` rencontres d'affaires. Donnés à l'acceptation.
+
+### WhatsApp
+
+Bot (menu, programme, suivi par code ou e-mail) et notifications par modèles Meta : label reçu / accepté / refusé, inscription en attente / acceptée / refusée, visite fixée (école) et accueil (industrie), rendez-vous fixé ou reporté. Sans modèle approuvé, repli sur un message de session.
+
+Les modèles sont décrits dans `deploy/whatsapp-templates.json` et créés avec `deploy/create-wa-templates.sh`. Un modèle approuvé qu'on modifie repasse en validation : changer de nom si les variables changent.
 
 ## Démarrage local
 
@@ -24,43 +59,19 @@ npm run dev
 
 # Backend
 cd backend
-cp .env.example .env
+cp .env.example .env   # puis renseigner les valeurs
 npm install
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Healthcheck API : `GET http://localhost:3005/api/v1/health`
+Healthcheck API : `GET /api/v1/health`
 
-Compte orga démo (après seed local) : `orga@semaine-industrie.tg` / `Orga2026!`
+Les variables attendues sont listées dans `backend/.env.example` (base de données, JWT, URL publique, WhatsApp, SMTP). Ne jamais versionner `.env`.
 
-## Déploiement VPS
+Avant une contribution : `npm run lint` et `npm run build` dans `frontend/`.
 
-- Domaine : `https://semaineindustrie.tg`
-- Front Nginx : `/var/www/semaine-industrie/frontend/dist`
-- API PM2 : **`industrie-api`** sur le port **3005**
-- CI : push `main` → self-hosted runner (`docs/DEPLOY.md`)
+## Déploiement
 
-```bash
-# 1) Clone
-sudo mkdir -p /var/www/semaine-industrie
-sudo chown "$USER:$USER" /var/www/semaine-industrie
-git clone <url-du-repo> /var/www/semaine-industrie
-cd /var/www/semaine-industrie
-
-# 2) Setup (une fois) — uploads, .env exemple, PM2, Nginx écrasé
-sudo bash deploy/setup.sh
-
-# 3) Créer la BDD + user Postgres, puis éditer backend/.env
-#    (DB_*, JWT_ACCESS_SECRET, SUPERADMIN_PASSWORD, …)
-
-# 4) Premier déploiement + chaque mise à jour ensuite
-bash deploy/deploy.sh
-```
-
-`deploy/deploy.sh` : `flock`, log `/home/webuser/deploy.log`, `reset --hard origin/main`, rebuild, migrations, seed superadmin, PM2, healthcheck (15×2s), `sudo -n` nginx test/reload. En échec : rollback git + rebuild (migrations **non** annulées). Runner CI sous **webuser**.
-
-Backup Postgres : cron sur `deploy/postgres-backup.sh`.
-
-Espace orga : `/orga` + `/login`.
+Voir [docs/DEPLOY.md](docs/DEPLOY.md) et les scripts du dossier `deploy/`.

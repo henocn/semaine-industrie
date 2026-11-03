@@ -53,6 +53,14 @@ export default function InscriptionParticulierPage() {
             title="Participer en tant que particulier"
             lead="Vous êtes particulier, étudiant, parent, jeune diplômé ou simplement curieux de l'industrie ? Inscrivez-vous à titre personnel. Après validation, votre QR du jour J suit sur WhatsApp."
           />
+          <img
+            src="/images/inscription-particulier.jpg"
+            alt="Silhouette d’une technicienne en bleu de travail et casque, clé en main, dans une exposition sur les métiers de l’industrie"
+            loading="lazy"
+            width={880}
+            height={1168}
+            className="mt-8 aspect-[4/3] w-full rounded-sm object-cover object-top md:aspect-[3/4] md:max-w-sm"
+          />
         </div>
 
         {sent ? (
