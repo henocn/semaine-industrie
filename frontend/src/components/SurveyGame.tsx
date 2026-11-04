@@ -282,7 +282,7 @@ function SurveyFlow({
             </li>
             {code ? (
               <li className="flex items-center gap-2">
-                <Ticket className="h-4 w-4 text-energy" aria-hidden /> Réponses liées au passeport {code}
+                <Ticket className="h-4 w-4 text-energy" aria-hidden /> Réponses liées au code {code}
               </li>
             ) : (
               <li className="flex items-center gap-2">

@@ -5,6 +5,7 @@ const path = require('path');
 const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
+const { renderQrCardDataUrl } = require('../../utils/qrCard');
 const { LabelRequest, Organization, VisitBooking, sequelize } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
 const engagementService = require('../engagement/engagement.service');
@@ -639,10 +640,11 @@ async function getQrForRequest(requestId) {
 
   const base = env.PUBLIC_APP_URL.replace(/\/$/, '');
   const fiche_url = `${base}/o/${org.slug}`;
-  const qr_data_url = await QRCode.toDataURL(fiche_url, {
-    errorCorrectionLevel: 'M',
-    margin: 1,
-    width: 320,
+  /* Le code d'une industrie valide les passages : il ne figure jamais sur sa carte. */
+  const qr_data_url = await renderQrCardDataUrl({
+    payload: fiche_url,
+    name: org.name,
+    code: org.type === 'ecole' ? org.label_code : null,
   });
 
   return {
@@ -674,6 +676,7 @@ module.exports = {
   listQrBatch,
   getQrForRequest,
   verifyTrackingCode,
+  normalizeKitFiles,
   setProgrammePdfUrl,
   getProgrammePdfPath,
   absolutePublicUrl,

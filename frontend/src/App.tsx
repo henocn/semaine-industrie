@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { RequireAdmin } from './components/auth/RequireAdmin'
 import { RequireOrga } from './components/auth/RequireOrga'
 import { ScrollToTop } from './components/ScrollToTop'
@@ -15,6 +15,7 @@ import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
 import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
+import MonEspacePage from './pages/MonEspacePage'
 import OrganizationPage from './pages/OrganizationPage'
 import OrgaAuditPage from './pages/OrgaAuditPage'
 import OrgaBusinessPage from './pages/OrgaBusinessPage'
@@ -26,10 +27,8 @@ import OrgaSurveyPage from './pages/OrgaSurveyPage'
 import OrgaUsersPage from './pages/OrgaUsersPage'
 import OrgaVisitsPage from './pages/OrgaVisitsPage'
 import PassagePage from './pages/PassagePage'
-import PassportPage from './pages/PassportPage'
 import PrivacyPage from './pages/PrivacyPage'
 import ProgrammePage from './pages/ProgrammePage'
-import ResourcesPage from './pages/ResourcesPage'
 import VotePage from './pages/VotePage'
 import VueParVousPage from './pages/VueParVousPage'
 
@@ -38,6 +37,12 @@ function SurveyRedirect() {
   const { search } = useLocation()
   const extra = search.replace(/^\?/, '')
   return <Navigate to={`/vue-par-vous?jeu=sondage${extra ? `&${extra}` : ''}`} replace />
+}
+
+/* Ancien lien du passeport (messages déjà envoyés) : ouvre le même dossier dans Mon espace. */
+function PassportRedirect() {
+  const { code = '' } = useParams()
+  return <Navigate to={`/mon-espace?code=${encodeURIComponent(code)}`} replace />
 }
 
 /* Sur le sous-domaine backoffice, n'autorise que login + espace orga. */
@@ -66,11 +71,12 @@ export default function App() {
             <Route path="/inscription" element={<Navigate to="/inscription-groupe" replace />} />
             <Route path="/inscription-groupe" element={<InscriptionGroupPage />} />
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
-            <Route path="/ressources" element={<ResourcesPage />} />
+            <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />
+            <Route path="/mon-espace" element={<MonEspacePage />} />
             <Route path="/affaires" element={<BusinessRegisterPage />} />
             <Route path="/carte" element={<MapPage />} />
             <Route path="/industrie" element={<IndustriesPage />} />
-            <Route path="/passeport/:code" element={<PassportPage />} />
+            <Route path="/passeport/:code" element={<PassportRedirect />} />
             <Route path="/passage/:code" element={<PassagePage />} />
             <Route path="/questions" element={<Navigate to="/" replace />} />
             <Route path="/vote" element={<VotePage />} />

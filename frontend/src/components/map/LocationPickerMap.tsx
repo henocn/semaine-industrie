@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { createTogoMap, isInTogo } from './togoMap'
 
 type Props = {
   lat: number | null
@@ -8,6 +8,8 @@ type Props = {
   onPick: (lat: number, lng: number) => void
   className?: string
 }
+
+const OUTSIDE_TOGO = 'Choisissez un emplacement à l’intérieur du Togo.'
 
 /* Marqueur brand pour le point choisi. */
 function pinIcon() {
@@ -19,7 +21,7 @@ function pinIcon() {
   })
 }
 
-/* Carte cliquable : pose / déplace le marqueur (lat/lng auto). */
+/* Carte du Togo cliquable : pose / déplace le marqueur (lat/lng auto). */
 export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -27,25 +29,36 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
   const onPickRef = useRef(onPick)
   onPickRef.current = onPick
   const focusRef = useRef(false)
+  const lastPosRef = useRef<L.LatLngTuple | null>(null)
   const [locating, setLocating] = useState(false)
-  const [locError, setLocError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+
+  /* Retient le point s'il est au Togo, sinon le signale ; indique si le point est accepté. */
+  const pickRef = useRef((pickedLat: number, pickedLng: number) => {
+    if (!isInTogo(pickedLat, pickedLng)) {
+      setMessage(OUTSIDE_TOGO)
+      return false
+    }
+    setMessage(null)
+    onPickRef.current(pickedLat, pickedLng)
+    return true
+  })
 
   /* Place le point sur la position de l'appareil. */
   function locateMe() {
     if (!navigator.geolocation) {
-      setLocError('Position indisponible sur cet appareil.')
+      setMessage('Position indisponible sur cet appareil.')
       return
     }
     setLocating(true)
-    setLocError(null)
+    setMessage(null)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        focusRef.current = true
-        onPickRef.current(pos.coords.latitude, pos.coords.longitude)
+        focusRef.current = pickRef.current(pos.coords.latitude, pos.coords.longitude)
         setLocating(false)
       },
       () => {
-        setLocError('Position refusée ou indisponible.')
+        setMessage('Position refusée ou indisponible.')
         setLocating(false)
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 },
@@ -55,20 +68,10 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
-    const map = L.map(containerRef.current, {
-      scrollWheelZoom: true,
-      zoomControl: true,
-    }).setView([8.6, 1.2], 7)
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap',
-      maxZoom: 18,
-    }).addTo(map)
-
+    const map = createTogoMap(containerRef.current)
     map.on('click', (e) => {
-      onPickRef.current(e.latlng.lat, e.latlng.lng)
+      pickRef.current(e.latlng.lat, e.latlng.lng)
     })
-
     mapRef.current = map
 
     return () => {
@@ -83,6 +86,7 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
     if (!map) return
 
     if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+      lastPosRef.current = null
       if (markerRef.current) {
         markerRef.current.remove()
         markerRef.current = null
@@ -90,13 +94,16 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
       return
     }
 
-    const pos: L.LatLngExpression = [lat, lng]
+    const pos: L.LatLngTuple = [lat, lng]
+    lastPosRef.current = pos
     if (!markerRef.current) {
       markerRef.current = L.marker(pos, { icon: pinIcon(), draggable: true })
         .addTo(map)
         .on('dragend', () => {
           const p = markerRef.current?.getLatLng()
-          if (p) onPickRef.current(p.lat, p.lng)
+          if (!p || pickRef.current(p.lat, p.lng)) return
+          /* Déposé hors du Togo : le marqueur revient à sa dernière position. */
+          if (lastPosRef.current) markerRef.current?.setLatLng(lastPosRef.current)
         })
     } else {
       markerRef.current.setLatLng(pos)
@@ -106,9 +113,16 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
   }, [lat, lng])
 
   return (
-    <div className={className}>
-      <div ref={containerRef} className="h-56 w-full border border-forest/20 sm:h-64" />
-      <div className="mt-2 flex flex-wrap items-center gap-3">
+    <div className={`${className ?? ''} flex flex-col gap-4 sm:flex-row sm:items-start`}>
+      <div
+        ref={containerRef}
+        className="mx-auto h-[576px] w-[240px] shrink-0 border border-forest/20 sm:mx-0"
+        style={{ background: '#fff' }}
+      />
+      <div className="flex flex-col items-start gap-3">
+        <p className="text-[14px] leading-relaxed text-ink/70">
+          Cliquez sur votre région pour zoomer, puis ajustez le point sur votre site.
+        </p>
         <button
           type="button"
           onClick={locateMe}
@@ -122,7 +136,7 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
             {lat.toFixed(5)}, {lng.toFixed(5)}
           </span>
         )}
-        {locError && <span className="text-[13px] text-red-700">{locError}</span>}
+        {message && <span role="alert" className="text-[13px] text-red-700">{message}</span>}
       </div>
     </div>
   )

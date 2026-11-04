@@ -4,6 +4,7 @@ const { Participation, Passport } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const passportService = require('../passports/passport.service');
 const logger = require('../../utils/logger');
+const { renderQrCardDataUrl } = require('../../utils/qrCard');
 
 /* Vide une chaîne optionnelle. */
 function emptyToNull(value) {
@@ -37,7 +38,12 @@ async function present(row, { withImage = false } = {}) {
       passport: { id: passport.id, code: passport.code, passed_at: passport.passed_at || null, passages },
     };
   }
-  return { ...json, passport: { ...(await passportService.withQr(passport)), passages } };
+  const qr_data_url = await renderQrCardDataUrl({
+    payload: passportService.passageQrPayload(passport.code),
+    name: row.name,
+    code: passport.code,
+  });
+  return { ...json, passport: { ...(await passportService.withQr(passport)), qr_data_url, passages } };
 }
 
 /* Liste les participations, filtrables par type et statut. */

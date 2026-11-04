@@ -725,8 +725,8 @@ export default function OrgaVisitsPage() {
           )}
 
           {mapPoints.length > 0 && (
-            <div className="grid gap-4 lg:h-[min(68vh,680px)] lg:grid-cols-[minmax(0,1.7fr)_minmax(240px,0.9fr)] lg:items-stretch lg:overflow-hidden">
-              <div className="min-h-[320px] min-w-0 overflow-hidden border border-black sm:min-h-[400px] lg:min-h-0 lg:h-full">
+            <div className="grid gap-4 lg:h-[680px] lg:grid-cols-[284px_minmax(0,1fr)] lg:items-stretch lg:overflow-hidden">
+              <div className="mx-auto h-[624px] w-[260px] overflow-hidden border border-black lg:h-full lg:w-full">
                 <SitesMap
                   points={mapPoints}
                   selectedId={mapSelected}

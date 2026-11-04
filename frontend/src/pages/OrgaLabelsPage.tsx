@@ -824,13 +824,13 @@ function LabelDetail({
 
           {selected.status === 'approved' && (
             <div className="mt-5 border-t border-black pt-4">
-              <h3 className="text-[14px] font-semibold text-forest">QR code</h3>
+              <h3 className="text-[14px] font-semibold text-forest">Carte QR</h3>
               {selectedQr ? (
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <img
                     src={selectedQr.qr_data_url}
-                    alt={`QR ${selectedQr.name}`}
-                    className="h-36 w-36 border border-black bg-white p-2"
+                    alt={`Carte QR ${selectedQr.name}`}
+                    className="h-auto w-44 border border-black bg-white"
                   />
                   <div>
                     <p className="text-[13px] text-ink/55">Fiche publique</p>
@@ -856,12 +856,12 @@ function LabelDetail({
                         link.remove()
                       }}
                     >
-                      Télécharger le QR
+                      Télécharger la carte
                     </button>
                   </div>
                 </div>
               ) : (
-                <p className="mt-2 text-[13px] text-ink/50">Chargement du QR…</p>
+                <p className="mt-2 text-[13px] text-ink/50">Chargement de la carte…</p>
               )}
             </div>
           )}

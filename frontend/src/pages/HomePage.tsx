@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { sendContactMessage } from '../api/contact'
+import { listResources, type GlobalResource } from '../api/resources'
+import { ResourceCard } from '../components/ResourceCard'
 import { DAYS, SPEAKERS, PLACES, PARTNERS, YOUTH_PILLAR } from '../data'
 import { Seo } from '../components/Seo'
 import { CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
@@ -19,7 +21,7 @@ const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to
   },
   Comprendre: {
     text: 'Des ressources labellisées pour saisir comment on fabrique, et pourquoi ici.',
-    to: '/ressources',
+    to: '/#ressources',
     cta: 'Ressources',
   },
   Commencer: {
@@ -280,6 +282,30 @@ function Places() {
   )
 }
 
+/* Documents publics à télécharger ; la section disparaît s'il n'y en a aucun. */
+function Resources() {
+  const [docs, setDocs] = useState<GlobalResource[] | null>(null)
+
+  useEffect(() => {
+    listResources().then(setDocs).catch(() => setDocs([]))
+  }, [])
+
+  if (docs?.length === 0) return null
+
+  return (
+    <section id="ressources" className="py-12 sm:py-16">
+      <div className={`${WRAP} reveal`}>
+        <SectionHeader title="Quelques ressources" />
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {docs?.map((doc) => (
+            <ResourceCard key={doc.id} title={doc.title} url={doc.file_url} />
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
 /* Formulaire contact. */
 function Contact() {
   const [sent, setSent] = useState(false)
@@ -364,6 +390,7 @@ export default function HomePage() {
           <ProgrammeStrip />
           <Women />
           <Places />
+          <Resources />
           <Contact />
         </div>
       </main>

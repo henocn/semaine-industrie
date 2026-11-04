@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { WRAP, BrandLogo } from './Mark'
 
-type NavItem = { label: string; href?: string; to?: string }
+type NavItem = { label: string; href?: string; to?: string; red?: boolean }
 
 type NavGroup = {
   label: string
@@ -15,6 +15,7 @@ const PARTICIPER_ITEMS: NavItem[] = [
   { label: 'En tant qu’école / université', to: '/inscription-groupe' },
   { label: 'Demande de label : industries', to: '/label' },
   { label: 'Rencontres d’affaires', to: '/affaires' },
+  { label: 'Mon espace', to: '/mon-espace', red: true },
 ]
 
 const GROUPS: NavGroup[] = [
@@ -35,17 +36,18 @@ const GROUPS: NavGroup[] = [
   {
     label: 'À propos',
     items: [
-      { label: 'Ressources', to: '/ressources' },
       { label: 'Questions fréquentes', to: '/faq' },
       { label: 'Contact', to: '/#contact' },
     ],
   },
 ]
 
-/* Lien de sous-menu : fond vert au survol. */
+/* Lien de sous-menu : fond vert au survol, ou fond rouge permanent. */
 function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
-  const className =
-    'block px-4 py-2.5 text-[14px] text-ink/80 transition-colors hover:bg-forest hover:text-white'
+  const tone = item.red
+    ? 'bg-flag font-semibold text-white hover:bg-flag/90'
+    : 'text-ink/80 hover:bg-forest hover:text-white'
+  const className = `block px-4 py-2.5 text-[14px] transition-colors ${tone}`
   if (item.to) {
     return (
       <Link to={item.to} className={className} onClick={onNavigate}>
@@ -133,7 +135,7 @@ function ParticiperMenu({
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-30 w-56 border border-forest/10 bg-white py-1 shadow-lg shadow-forest/10">
+        <div className="absolute right-0 top-full z-30 w-56 border border-forest/10 bg-white pt-1 shadow-lg shadow-forest/10">
           {PARTICIPER_ITEMS.map((item) => (
             <NavLink key={item.label} item={item} onNavigate={onClose} />
           ))}

@@ -59,14 +59,6 @@ export type IndustryCard = {
   gallery_urls: string[]
 }
 
-export type TrackingResources = {
-  organization_name: string
-  type: string
-  label_pdf_url: string
-  kit_files?: { id: string; name: string; url: string; mime: string | null }[]
-  programme_pdf_url: string
-}
-
 /* Upload les 3 images galerie (multipart). */
 export async function uploadLabelGallery(files: File[]) {
   const body = new FormData()
@@ -220,14 +212,6 @@ export async function reviewLabelRequest(
     throw new Error(json.error?.message || `Erreur HTTP ${res.status}`)
   }
   return json.data
-}
-
-/* Vérifie un code de suivi et renvoie les URLs de téléchargement. */
-export function verifyTrackingCode(code: string) {
-  return apiFetch<TrackingResources>('/labels/verify-code', {
-    method: 'POST',
-    body: JSON.stringify({ code: code.trim().toUpperCase() }),
-  })
 }
 
 /* Modifie une demande, y compris après acceptation. */

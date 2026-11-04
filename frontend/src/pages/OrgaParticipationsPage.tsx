@@ -424,14 +424,14 @@ export default function OrgaParticipationsPage() {
                             </div>
                             {shown.status === 'approved' && shown.passport?.qr_data_url && (
                               <div className="text-center">
-                                <img src={shown.passport.qr_data_url} alt="" className="h-36 w-36 border border-black bg-white" />
+                                <img src={shown.passport.qr_data_url} alt={`Carte QR ${shown.name}`} className="h-auto w-44 border border-black bg-white" />
                                 <p className="mt-2 text-[13px] font-semibold text-forest">{shown.passport.code}</p>
                                 <button
                                   type="button"
                                   className="mt-2 text-[13px] font-semibold text-forest underline"
                                   onClick={() => downloadQr(shown.passport!.qr_data_url!, shown.passport!.code)}
                                 >
-                                  Télécharger le QR
+                                  Télécharger la carte
                                 </button>
                               </div>
                             )}
