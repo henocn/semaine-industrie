@@ -110,22 +110,25 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
 
   return (
     <div className={className}>
-      <div ref={containerRef} className="h-[55vh] max-h-[480px] min-h-[280px] w-full border border-forest/20" />
-      <div className="mt-2 flex flex-wrap items-center gap-3">
+      <div className="mb-3 flex justify-end">
         <button
           type="button"
           onClick={locateMe}
           disabled={locating}
-          className="border border-forest bg-white px-3 py-1.5 text-[13px] font-semibold text-forest disabled:opacity-50"
+          className="bg-forest px-4 py-2 text-[14px] font-semibold text-white disabled:opacity-50"
         >
           {locating ? 'Localisation…' : 'Ma position'}
         </button>
+      </div>
+      <div ref={containerRef} className="h-[55vh] max-h-[480px] min-h-[280px] w-full border border-forest/20" />
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-[13px]">
+        <span className="text-ink/70">Cliquez sur la carte pour placer le point.</span>
         {lat != null && lng != null && (
-          <span className="text-[13px] font-medium text-forest">
+          <span className="font-medium text-forest">
             {lat.toFixed(5)}, {lng.toFixed(5)}
           </span>
         )}
-        {locError && <span role="alert" className="text-[13px] text-red-700">{locError}</span>}
+        {locError && <span role="alert" className="text-red-700">{locError}</span>}
       </div>
     </div>
   )
