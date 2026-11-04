@@ -20,17 +20,12 @@ function notesFrom(payload) {
   return emptyToNull('notes' in payload ? payload.notes : payload.offers);
 }
 
-/* Nom qui identifie un participant dans sa section. */
-function identityName(values) {
-  return emptyToNull(values.organization_name) || emptyToNull(values.contact_name);
-}
-
 /* Inscription publique d'un participant B2B. */
 async function register(payload) {
   if (!payload.contact_opt_in) {
     throw ApiError.badRequest('Vous devez accepter d\'être contacté par e-mail / WhatsApp');
   }
-  await assertAvailable('business', { email: payload.email, phone: payload.phone, name: identityName(payload) });
+  await assertAvailable('business', { email: payload.email, phone: payload.phone });
   const row = await BusinessParticipant.create({
     kind: payload.kind,
     organization_name: emptyToNull(payload.organization_name),
@@ -57,7 +52,7 @@ async function register(payload) {
 
 /* Ajout manuel d'un participant (backoffice). */
 async function createByOrga(payload) {
-  await assertAvailable('business', { email: payload.email, phone: payload.phone, name: identityName(payload) });
+  await assertAvailable('business', { email: payload.email, phone: payload.phone });
   const row = await BusinessParticipant.create({
     kind: payload.kind,
     organization_name: emptyToNull(payload.organization_name),
@@ -101,14 +96,7 @@ async function updateParticipant(id, payload) {
     if (key in payload) data[key] = emptyToNull(payload[key]);
   }
   if ('notes' in payload || 'offers' in payload) data.notes = notesFrom(payload);
-  await assertAvailable('business', {
-    excludeId: row.id,
-    email: data.email,
-    phone: data.phone,
-    name: 'organization_name' in data || 'contact_name' in data
-      ? identityName({ organization_name: row.organization_name, contact_name: row.contact_name, ...data })
-      : null,
-  });
+  await assertAvailable('business', { excludeId: row.id, email: data.email, phone: data.phone });
   await row.update(data).catch((err) => { throw duplicateError(err); });
   return row;
 }

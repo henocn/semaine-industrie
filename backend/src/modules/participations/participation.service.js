@@ -75,7 +75,7 @@ async function getById(id) {
 async function create(payload) {
   const kind = payload.kind === 'particulier' ? 'particulier' : 'ecole';
   const fields = pickFields(payload);
-  await assertAvailable('participations', { kind, email: fields.email, phone: fields.phone, name: fields.name });
+  await assertAvailable('participations', { kind, email: fields.email, phone: fields.phone });
   const row = await Participation.create({
     kind,
     status: 'pending',
@@ -98,7 +98,7 @@ async function update(id, payload) {
   if (!row) throw ApiError.notFound('Participation introuvable');
   const fields = pickFields(payload);
   await assertAvailable('participations', {
-    kind: row.kind, excludeId: row.id, email: fields.email, phone: fields.phone, name: fields.name,
+    kind: row.kind, excludeId: row.id, email: fields.email, phone: fields.phone,
   });
   await row.update(fields).catch((err) => { throw duplicateError(err); });
   if (row.passport_id && payload.name) {

@@ -1,22 +1,18 @@
 'use strict';
 
-/* Mêmes clés que src/utils/uniqueContact.js : un e-mail sans casse, un numéro en chiffres,
-   un nom sans casse, sans accents et sans espaces en trop. */
+/* Mêmes clés que src/utils/uniqueContact.js : un e-mail sans casse, un numéro en chiffres. */
 const emailKey = (x) => `lower(trim(${x}))`;
 const digits = (x) => `regexp_replace(${x}, '\\D', '', 'g')`;
 const phoneKey = (x) => `(CASE WHEN ${digits(x)} ~ '^[0-9]{8}$' THEN '228' || ${digits(x)} ELSE ${digits(x)} END)`;
-const nameKey = (x) => `regexp_replace(trim(translate(lower(${x}), 'àâäáãéèêëíìîïóòôöõúùûüçñ’', 'aaaaaeeeeiiiiooooouuuucn''')), '\\s+', ' ', 'g')`;
-
-const BUSINESS_NAME = "COALESCE(NULLIF(trim(organization_name), ''), contact_name)";
 
 /* Une ligne par règle d'unicité. Une école et un particulier sont deux sections distinctes. */
 const RULES = [
   { index: 'participations_unique_email', table: 'participations', scope: 'kind', key: emailKey('email'), filled: "email IS NOT NULL AND trim(email) <> ''" },
   { index: 'participations_unique_phone', table: 'participations', scope: 'kind', key: phoneKey('phone'), filled: "phone IS NOT NULL AND trim(phone) <> ''" },
-  { index: 'participations_unique_name', table: 'participations', scope: 'kind', key: nameKey('name'), filled: "trim(name) <> ''" },
   { index: 'business_participants_unique_email', table: 'business_participants', key: emailKey('email'), filled: "trim(email) <> ''" },
   { index: 'business_participants_unique_phone', table: 'business_participants', key: phoneKey('phone'), filled: "phone IS NOT NULL AND trim(phone) <> ''" },
-  { index: 'business_participants_unique_name', table: 'business_participants', key: nameKey(BUSINESS_NAME), filled: `${BUSINESS_NAME} IS NOT NULL` },
+  { index: 'label_requests_unique_email', table: 'label_requests', key: emailKey('contact_email'), filled: "trim(contact_email) <> ''" },
+  { index: 'label_requests_unique_phone', table: 'label_requests', key: phoneKey('contact_phone'), filled: "contact_phone IS NOT NULL AND trim(contact_phone) <> ''" },
 ];
 
 module.exports = {
