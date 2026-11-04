@@ -5,6 +5,7 @@ const { VisitBooking, Organization, Passport, PassportVisit, Participation } = r
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const passportService = require('../passports/passport.service');
+const mailService = require('../notifications/mail.service');
 
 /* Effectif de l'école (fiche, sinon inscription), 0 si rien n'est renseigné. */
 function schoolHeadcount(school, participation) {
@@ -160,6 +161,15 @@ async function createSingleBooking(payload) {
     visit_start: booking.visit_start,
     visit_end: booking.visit_end,
     site: site.name,
+  });
+
+  mailService.visitScheduled({
+    school,
+    site,
+    visitDay: booking.visit_day,
+    visitStart: booking.visit_start,
+    visitEnd: booking.visit_end,
+    headcount: booking.headcount,
   });
 
   try {

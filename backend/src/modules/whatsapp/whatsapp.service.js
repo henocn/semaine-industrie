@@ -675,7 +675,7 @@ function participateBody() {
 function infosBody() {
   return [
     '*Informations*',
-    "La Semaine de l'Industrie 2026 est portée par le Ministère délégué chargé de l'Industrie, de la Promotion des investissements et de la Souveraineté économique.",
+    "La Semaine de l’Industrie 2026 est portée par le Ministère délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique.",
     "Thème : « L'industrie à portée de main »",
     '📞 71 53 53 58',
     '✉️ infos@semaineindustrie.tg',
@@ -923,10 +923,28 @@ function extractLabelCode(text) {
   return trackingService.extractCode(text);
 }
 
+/* Répond à un code dont le dossier n'est pas encore accepté (aucun QR ni menu de suivi). */
+function replyRequestStatus(from, found, phoneNumberId) {
+  const item = found.participation || found.request;
+  return sendWithNav({
+    to: from,
+    phoneNumberId,
+    body: [
+      `Dossier : ${item.name || item.structure_name}`,
+      `Statut : ${item.status === 'pending' ? 'En cours de validation' : 'Non retenu'}`,
+      `Code de suivi : ${item.tracking_code}`,
+      `Mon espace : ${SITE()}/mon-espace?code=${item.tracking_code}`,
+    ].join('\n'),
+  });
+}
+
 /* Ouvre le bon espace WhatsApp selon le type de code. */
 async function openByTrackingCode(from, raw, phoneNumberId) {
   const found = await trackingService.findByCode(raw);
-  if (!found) return null;
+  if (!found) {
+    const pending = await trackingService.findRequestByCode(raw);
+    return pending ? replyRequestStatus(from, pending, phoneNumberId) : null;
+  }
   if (found.kind === 'organization') return replySuiviMenu(from, found.organization, phoneNumberId);
   if (found.kind === 'business') return replyB2bMenu(from, found.participant, phoneNumberId);
   return replyPassportRecap(from, found.passport, phoneNumberId);
@@ -1565,26 +1583,34 @@ async function notifyLabelApproved(organization) {
   return sent;
 }
 
-/* Envoie un template ; message de session en secours (template pas encore approuvé). */
-async function sendTemplateOrText({ phone, name, bodyParams, fallback }) {
+/* Essaie les modèles dans l'ordre (un modèle pas encore approuvé passe au suivant), puis un message de session. */
+async function sendTemplateOrText({ phone, templates, fallback }) {
   const to = toWaRecipient(phone);
   if (!to) return { ok: false, reason: 'no_phone' };
-  let sent = await sendTemplate({ to, name, bodyParams });
-  if (!sent.ok) {
-    logger.warn('[whatsapp] template indisponible, secours session', name);
-    sent = await sendWithNav({ to, body: fallback.join('\n') });
+  for (const template of templates) {
+    const sent = await sendTemplate({ to, ...template });
+    if (sent.ok) return sent;
+    logger.warn('[whatsapp] template indisponible', template.name);
   }
-  return sent;
+  return sendWithNav({ to, body: fallback.join('\n') });
+}
+
+/* Modèle avec bouton Mon espace : son URL contient le code ou reste fixe selon sa création chez Meta. */
+function withSpaceButton(name, bodyParams, code) {
+  return [{ name, bodyParams, buttonParams: [code] }, { name, bodyParams }];
 }
 
 /* Accusé de réception d'une demande de label. */
 async function notifyLabelReceived(request) {
   return sendTemplateOrText({
     phone: request?.contact_phone,
-    name: 'si26_label_encours',
-    bodyParams: [request.structure_name],
+    templates: [
+      ...withSpaceButton('si26_label_encours2', [request.structure_name, request.tracking_code], request.tracking_code),
+      { name: 'si26_label_encours', bodyParams: [request.structure_name] },
+    ],
     fallback: [
       `Bonjour, votre demande de label pour ${request.structure_name} est en cours d'examen.`,
+      `Code de suivi : ${request.tracking_code}.`,
       'Vous aurez bientôt une confirmation.',
     ],
   });
@@ -1594,8 +1620,7 @@ async function notifyLabelReceived(request) {
 async function notifyLabelRejected(request) {
   return sendTemplateOrText({
     phone: request?.contact_phone,
-    name: 'si26_label_refuse',
-    bodyParams: [request.structure_name],
+    templates: [{ name: 'si26_label_refuse', bodyParams: [request.structure_name] }],
     fallback: [
       `Bonjour, votre demande de label pour ${request.structure_name} n'a pas été acceptée.`,
       "Pour en savoir plus, contactez l'équipe d'organisation (menu Informations).",
@@ -1605,12 +1630,20 @@ async function notifyLabelRejected(request) {
 
 /* Accusé de réception d'une inscription école / centre / université. */
 async function notifyParticipationReceived(participation) {
+  const { name, tracking_code: code } = participation;
   return sendTemplateOrText({
     phone: participation?.phone,
-    name: 'si26_inscription_encours',
-    bodyParams: [participation.name],
+    templates: [
+      ...withSpaceButton(
+        participation.kind === 'particulier' ? 'si26_particulier_encours' : 'si26_inscription_encours2',
+        [name, code],
+        code,
+      ),
+      { name: 'si26_inscription_encours', bodyParams: [name] },
+    ],
     fallback: [
-      `Bonjour, la participation pour le compte de ${participation.name} est en cours de validation.`,
+      `Bonjour, la participation pour le compte de ${name} est en cours de validation.`,
+      `Code de suivi : ${code}.`,
       'Vous recevrez bientôt une confirmation.',
     ],
   });
@@ -1620,16 +1653,19 @@ async function notifyParticipationReceived(participation) {
 async function notifyParticipationApproved(participation) {
   const code = participation?.passport?.code;
   if (!code) return { ok: false, reason: 'no_code' };
-  const places = participation.kind === 'particulier' ? 1 : participation.headcount || '-';
+  const individual = participation.kind === 'particulier';
+  const places = individual ? 1 : participation.headcount || '-';
   return sendTemplateOrText({
     phone: participation?.phone,
-    name: 'si26_inscription_acceptee',
-    bodyParams: [participation.name, places, code],
+    templates: [
+      ...(individual ? withSpaceButton('si26_particulier_acceptee', [participation.name, code], code) : []),
+      { name: 'si26_inscription_acceptee', bodyParams: [participation.name, places, code] },
+    ],
     fallback: [
       `Bonjour, la participation pour le compte de ${participation.name} est acceptée.`,
-      `Nombre de places accordées : ${places}.`,
+      ...(individual ? [] : [`Nombre de places accordées : ${places}.`]),
       `Code de suivi : ${code}.`,
-      "Vous serez prévenu dès qu'une visite sera arrangée.",
+      ...(individual ? [] : ["Vous serez prévenu dès qu'une visite sera arrangée."]),
     ],
   });
 }
@@ -1638,8 +1674,10 @@ async function notifyParticipationApproved(participation) {
 async function notifyParticipationRejected(participation) {
   return sendTemplateOrText({
     phone: participation?.phone,
-    name: 'si26_inscription_refusee',
-    bodyParams: [participation.name],
+    templates: [
+      ...(participation.kind === 'particulier' ? [{ name: 'si26_particulier_refusee', bodyParams: [participation.name] }] : []),
+      { name: 'si26_inscription_refusee', bodyParams: [participation.name] },
+    ],
     fallback: [
       `Bonjour, la participation pour le compte de ${participation.name} n'a pas été acceptée.`,
       "Pour en savoir plus, contactez l'équipe d'organisation (menu Informations).",

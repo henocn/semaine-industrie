@@ -25,7 +25,7 @@ export function SiteFooter() {
           <div className="inline-block bg-white p-3">
             <img
               src="/brand/bloc-ministere-mdpise.png"
-              alt="République togolaise, Ministère de la Promotion des investissements et de l’Industrie"
+              alt="République togolaise, Ministère délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique"
               className="h-24 w-auto max-w-full"
             />
           </div>

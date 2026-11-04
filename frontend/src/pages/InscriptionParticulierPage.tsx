@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { registerParticipation } from '../api/participations'
+import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
@@ -15,6 +16,7 @@ const field =
 /* Inscription individuelle : une personne, un QR personnel pour le jour J. */
 export default function InscriptionParticulierPage() {
   const [sent, setSent] = useState(false)
+  const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -25,7 +27,7 @@ export default function InscriptionParticulierPage() {
     setLoading(true)
     const fd = new FormData(e.currentTarget)
     try {
-      await registerParticipation({
+      const created = await registerParticipation({
         kind: 'particulier',
         name: String(fd.get('name') || '').trim(),
         email: String(fd.get('email') || '').trim() || null,
@@ -34,6 +36,7 @@ export default function InscriptionParticulierPage() {
         description: String(fd.get('description') || '').trim() || null,
         headcount: null,
       })
+      setTrackingCode(created.tracking_code ?? null)
       setSent(true)
       scrollToTopNow()
     } catch (err) {
@@ -51,7 +54,7 @@ export default function InscriptionParticulierPage() {
           <SectionHeader
             level={1}
             title="Participer"
-            lead="Étudiant, parent, jeune diplômé ou curieux de l'industrie : inscrivez-vous. Votre QR arrive sur WhatsApp après validation."
+            lead="Étudiant, parent, jeune diplômé ou curieux de l'industrie : inscrivez-vous. Votre QR arrive par e-mail et sur WhatsApp après validation."
           />
           <img
             src="/images/inscription-particulier.jpg"
@@ -66,6 +69,7 @@ export default function InscriptionParticulierPage() {
         {sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
             <p className="text-xl text-forest">Merci. Votre inscription est enregistrée.</p>
+            <TrackingCodeNotice code={trackingCode} />
           </div>
         ) : (
           <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">

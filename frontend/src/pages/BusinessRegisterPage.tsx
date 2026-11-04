@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { registerParticipant } from '../api/business'
+import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
@@ -15,6 +16,7 @@ const field =
 /* Inscription publique aux rencontres d'affaires. */
 export default function BusinessRegisterPage() {
   const [sent, setSent] = useState(false)
+  const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -30,7 +32,7 @@ export default function BusinessRegisterPage() {
       return
     }
     try {
-      await registerParticipant({
+      const created = await registerParticipant({
         kind: String(fd.get('kind') || 'entreprise'),
         contact_name: String(fd.get('contact_name') || '').trim(),
         email: String(fd.get('email') || ''),
@@ -39,6 +41,7 @@ export default function BusinessRegisterPage() {
         notes: String(fd.get('notes') || '') || undefined,
         contact_opt_in: true,
       })
+      setTrackingCode(created.tracking_code ?? null)
       setSent(true)
       scrollToTopNow()
     } catch (err) {
@@ -65,6 +68,7 @@ export default function BusinessRegisterPage() {
             <p className="text-xl text-forest">
               Merci. Votre profil est enregistré. Vous recevrez le planning après validation.
             </p>
+            <TrackingCodeNotice code={trackingCode} />
             <div className="mt-6">
               <Button to="/programme#vendredi" variant="link">
                 Voir la journée phare

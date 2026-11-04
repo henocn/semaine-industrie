@@ -257,6 +257,7 @@ async function seedOrganizations(transaction) {
     const [city, lat, lng] = pick(REGIONS[region]);
     const createdAt = signupDate();
     await LabelRequest.create({
+      tracking_code: `IN-Q${pad(i + 1)}`,
       structure_name: name,
       structure_type: 'entreprise',
       sector,
@@ -427,6 +428,7 @@ async function seedSchools({ industries, schools }, transaction) {
       headcount,
       description: 'Découverte de l’industrie pour nos classes de seconde.',
       status,
+      tracking_code: status === 'approved' ? null : `EC-Q${pad(i + 1)}`,
       passport_id: passport?.id || null,
       createdAt,
     }, { transaction });
@@ -454,6 +456,7 @@ async function seedIndividuals({ industries }, transaction) {
       city: pick(['Lomé', 'Kara', 'Sokodé', 'Atakpamé', 'Kpalimé', 'Dapaong', 'Tsévié']),
       description: pick(INTERESTS),
       status,
+      tracking_code: status === 'approved' ? null : `PA-Q${pad(i + 1)}`,
       passport_id: passport?.id || null,
       createdAt,
     }, { transaction });
@@ -509,7 +512,7 @@ async function seedBusiness(transaction) {
       notes: pick(['Recherche des fournisseurs locaux.', 'Ouvert aux partenariats.', 'Finance des projets de transformation.', null]),
       status,
       contact_opt_in: true,
-      tracking_code: status === 'pending' ? null : `AF-D${pad(i + 1)}`,
+      tracking_code: `AF-D${pad(i + 1)}`,
       createdAt: signupDate(),
     }, { transaction });
     participants += 1;

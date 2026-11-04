@@ -13,6 +13,7 @@ const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
 const whatsappService = require('../whatsapp/whatsapp.service');
+const mailService = require('../notifications/mail.service');
 const logger = require('../../utils/logger');
 const { DOCS_DIR } = require('../../middlewares/upload.middleware');
 
@@ -82,7 +83,9 @@ async function createRequest(payload) {
     ...data,
     contact_opt_in: true,
     status: 'pending',
+    tracking_code: await uniqueLabelCode(data.structure_type),
   });
+  mailService.labelReceived(row);
   whatsappService.notifyLabelReceived(row).catch((err) => {
     logger.warn('[label] notify WhatsApp failed', err.message);
   });
@@ -100,6 +103,7 @@ async function createRequestByOrga(payload) {
   const row = await LabelRequest.create({
     ...data,
     status: 'pending',
+    tracking_code: await uniqueLabelCode(data.structure_type),
   });
   return row;
 }
@@ -372,7 +376,9 @@ async function reviewRequest(id, { status, review_note, label_document_url, kit_
     }
 
     const slug = await uniqueSlug(request.structure_name, transaction);
-    const label_code = await uniqueLabelCode(request.structure_type, transaction);
+    /* Le code remis à l'inscription reste le même après l'acceptation. */
+    const label_code = request.tracking_code || await uniqueLabelCode(request.structure_type, transaction);
+    request.tracking_code = label_code;
 
     const organization = await Organization.create(
       {
@@ -424,10 +430,12 @@ async function reviewRequest(id, { status, review_note, label_document_url, kit_
 
   /* WhatsApp : récap + code de suivi (hors transaction). */
   if (result.organization) {
+    mailService.labelApproved(result.organization);
     whatsappService.notifyLabelApproved(result.organization).catch((err) => {
       logger.warn('[label] notify WhatsApp failed', err.message);
     });
   } else if (status === 'rejected') {
+    mailService.labelRejected(result.request);
     whatsappService.notifyLabelRejected(result.request).catch((err) => {
       logger.warn('[label] notify WhatsApp failed', err.message);
     });

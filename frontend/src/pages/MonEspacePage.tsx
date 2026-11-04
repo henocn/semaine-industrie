@@ -20,6 +20,12 @@ const STATUS_LABEL: Record<Espace['status'], string> = {
   rejected: 'Dossier non retenu',
 }
 
+/* Explication d'un dossier sans bilan. */
+const STATUS_NOTICE: Partial<Record<Espace['status'], string>> = {
+  pending: 'Votre dossier est en cours d’examen par l’équipe d’organisation. Vous recevrez bientôt la réponse.',
+  rejected: 'Ce dossier n’a pas été retenu. Pour en savoir plus, écrivez à infos@semaineindustrie.tg.',
+}
+
 /* Titres et message vide des listes, selon le dossier. */
 const LISTS: Record<EspaceType, { done: string; next: string; empty: string }> = {
   ecole: { done: 'Sites visités', next: 'Visites à venir', empty: 'Aucun passage enregistré pour le moment.' },
@@ -54,6 +60,9 @@ function EspaceView({ space }: { space: Espace }) {
           <p className="mt-2 text-[15px] text-ink/70">
             {TYPE_LABEL[space.type]} · {STATUS_LABEL[space.status]} · <span className="font-mono">{space.code}</span>
           </p>
+          {STATUS_NOTICE[space.status] && (
+            <p className="mt-4 text-[15px] text-ink">{STATUS_NOTICE[space.status]}</p>
+          )}
           {space.facts.length > 0 && (
             <dl className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
               {space.facts.map((fact) => (
@@ -78,32 +87,34 @@ function EspaceView({ space }: { space: Espace }) {
         )}
       </section>
 
-      <section aria-labelledby="bilan">
-        <h2 id="bilan" className="display h3">Mon bilan</h2>
-        <dl className="mt-4 flex flex-wrap gap-px border border-forest/15 bg-forest/15">
-          {space.stats.map((stat) => (
-            <div key={stat.label} className="flex min-w-[45%] flex-1 flex-col-reverse bg-white px-4 py-5 sm:min-w-0">
-              <dt className="mt-1 text-[14px] text-ink/65">{stat.label}</dt>
-              <dd className="display text-4xl">{stat.value}</dd>
-            </div>
-          ))}
-        </dl>
+      {space.status === 'approved' && (
+        <section aria-labelledby="bilan">
+          <h2 id="bilan" className="display h3">Mon bilan</h2>
+          <dl className="mt-4 flex flex-wrap gap-px border border-forest/15 bg-forest/15">
+            {space.stats.map((stat) => (
+              <div key={stat.label} className="flex min-w-[45%] flex-1 flex-col-reverse bg-white px-4 py-5 sm:min-w-0">
+                <dt className="mt-1 text-[14px] text-ink/65">{stat.label}</dt>
+                <dd className="display text-4xl">{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-2">
-          <div>
-            <h3 className="font-semibold text-ink">{lists.done}</h3>
-            {space.passages.length > 0
-              ? <RowList rows={space.passages} />
-              : <p className="mt-3 text-[15px] text-ink/60">{lists.empty}</p>}
-          </div>
-          {space.planned.length > 0 && (
+          <div className="mt-8 grid gap-10 lg:grid-cols-2">
             <div>
-              <h3 className="font-semibold text-ink">{lists.next}</h3>
-              <RowList rows={space.planned} />
+              <h3 className="font-semibold text-ink">{lists.done}</h3>
+              {space.passages.length > 0
+                ? <RowList rows={space.passages} />
+                : <p className="mt-3 text-[15px] text-ink/60">{lists.empty}</p>}
             </div>
-          )}
-        </div>
-      </section>
+            {space.planned.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-ink">{lists.next}</h3>
+                <RowList rows={space.planned} />
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {space.documents.length > 0 && (
         <section aria-labelledby="documents">

@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import { createLabelRequest, uploadLabelGallery } from '../api/labels'
+import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { LocationPickerMap } from '../components/map/LocationPickerMap'
@@ -17,6 +18,7 @@ const field =
 /* Page publique de demande de label. Le téléphone est un plus, jamais une condition. */
 export default function LabelRequestPage() {
   const [sent, setSent] = useState(false)
+  const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [lat, setLat] = useState<number | null>(null)
@@ -67,7 +69,7 @@ export default function LabelRequestPage() {
       const prepared = await prepareGalleryFiles(files)
       const gallery_urls = await uploadLabelGallery(prepared)
 
-      await createLabelRequest({
+      const created = await createLabelRequest({
         structure_name: String(fd.get('structure_name') || ''),
         structure_type: 'entreprise',
         sector: String(fd.get('sector') || '') || undefined,
@@ -83,6 +85,7 @@ export default function LabelRequestPage() {
         lng,
         gallery_urls,
       })
+      setTrackingCode(created.tracking_code ?? null)
       setSent(true)
       scrollToTopNow()
     } catch (err) {
@@ -107,9 +110,9 @@ export default function LabelRequestPage() {
         {sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
             <p className="text-xl text-forest">
-              Merci. Votre demande est enregistrée. Après acceptation, vous recevrez un code de
-              suivi privé pour télécharger votre label et le programme.
+              Merci. Votre demande est enregistrée. Vous recevrez la réponse par e-mail et sur WhatsApp.
             </p>
+            <TrackingCodeNotice code={trackingCode} />
             <div className="mt-6">
               <Button to="/programme" variant="link">
                 Voir le programme

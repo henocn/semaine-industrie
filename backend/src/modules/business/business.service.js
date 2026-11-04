@@ -5,7 +5,7 @@ const { BusinessParticipant, BusinessMeeting } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
-const { sendNotifyMail } = require('../../utils/mailer');
+const mailService = require('../notifications/mail.service');
 
 /* Vide une chaîne optionnelle. */
 function emptyToNull(value) {
@@ -36,6 +36,7 @@ async function register(payload) {
     country: emptyToNull(payload.country),
     contact_opt_in: true,
     status: 'pending',
+    tracking_code: await trackingService.nextCode('AF'),
   });
   await notifyN8n('business.participant_registered', {
     id: row.id,
@@ -43,6 +44,7 @@ async function register(payload) {
     organization_name: row.organization_name,
     email: row.email,
   });
+  mailService.businessReceived(row);
   return row;
 }
 
@@ -60,7 +62,7 @@ async function createByOrga(payload) {
     country: emptyToNull(payload.country),
     contact_opt_in: payload.contact_opt_in !== false,
     status: payload.status === 'pending' ? 'pending' : 'approved',
-    tracking_code: payload.status === 'pending' ? null : await trackingService.nextCode('AF'),
+    tracking_code: await trackingService.nextCode('AF'),
   });
   await notifyN8n('business.participant_registered', {
     id: row.id,
@@ -136,6 +138,8 @@ async function reviewParticipant(id, status) {
     email: row.email,
     organization_name: row.organization_name,
   });
+  if (status === 'approved') mailService.businessApproved(row);
+  else mailService.businessRejected(row);
   return row;
 }
 
@@ -173,21 +177,9 @@ async function notifyAttendees(meeting, attendees, { rescheduled = false } = {})
       .join(', ') || 'l\'équipe';
 
   for (const p of attendees) {
-    if (!p.contact_opt_in) continue;
-    const withLabel = others(p);
-    const subject = rescheduled
-      ? `RDV reporté : ${day} (${slot})`
-      : `RDV confirmé : ${day} (${slot})`;
-    const text = [
-      `Bonjour ${displayName(p)},`,
-      '',
-      rescheduled ? 'Rendez-vous reporté' : 'Rendez-vous confirmé',
-      `Date : ${day}`,
-      `Horaire : ${slot}`,
-      `Lieu : ${lieu}`,
-      `Avec : ${withLabel}`,
-    ].join('\n');
-    await sendNotifyMail({ to: p.email, subject, text });
+    await mailService.businessMeeting(p, {
+      day, slot, place: lieu, others: others(p), rescheduled,
+    });
   }
 
   try {

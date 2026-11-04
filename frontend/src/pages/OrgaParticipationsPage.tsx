@@ -30,7 +30,7 @@ function statusLabel(status: Participation['status']) {
 /* Nombre de passages (0 tant qu'aucun scan). */
 /* Colonnes de l'export Excel des inscriptions. */
 const EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
-  { header: 'Code de suivi', width: 14, value: (r) => (r.status === 'approved' ? r.passport?.code : '') },
+  { header: 'Code de suivi', width: 14, value: (r) => r.passport?.code || r.tracking_code || '' },
   { header: 'Nom', width: 32, value: (r) => r.name },
   { header: 'Statut', width: 12, value: (r) => statusLabel(r.status) },
   { header: 'Téléphone', width: 18, value: (r) => r.phone },
@@ -224,7 +224,7 @@ export default function OrgaParticipationsPage() {
         item.phone,
         item.city,
         item.description,
-        item.status === 'approved' ? item.passport?.code : null,
+        item.passport?.code || item.tracking_code,
       ]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
@@ -336,7 +336,7 @@ export default function OrgaParticipationsPage() {
                   >
                     <SelectCell selection={picked} id={item.id} />
                     <td className="font-semibold text-forest">
-                      {item.status === 'approved' && item.passport?.code ? item.passport.code : '—'}
+                      {item.passport?.code || item.tracking_code || '—'}
                     </td>
                     <td className="font-medium text-forest">{item.name}</td>
                     <td>{item.phone || item.email || '…'}</td>

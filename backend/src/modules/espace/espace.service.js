@@ -317,6 +317,59 @@ async function businessSpace(participant) {
   };
 }
 
+/* Dossier pas encore accepté ou refusé : aucune fiche définitive, donc ni QR ni bilan. */
+function requestSpace({
+  code, type, name, status, rows,
+}) {
+  return {
+    code,
+    type,
+    name,
+    status,
+    qr_data_url: null,
+    page_url: null,
+    facts: facts(rows),
+    documents: [],
+    stats: [],
+    passages: [],
+    planned: [],
+  };
+}
+
+/* Espace d'une inscription école ou particulier en attente ou refusée. */
+function participationSpace(row) {
+  return requestSpace({
+    code: row.tracking_code,
+    type: row.kind,
+    name: row.name,
+    status: row.status,
+    rows: [
+      ['Ville', row.city],
+      ['Effectif déclaré', row.headcount ? `${row.headcount} personnes` : null],
+      ['E-mail', maskEmail(row.email)],
+      ['Téléphone', maskPhone(row.phone)],
+      ['Inscription', formatDay(row.createdAt)],
+    ],
+  });
+}
+
+/* Espace d'une demande de label en attente ou refusée. */
+function labelRequestSpace(row) {
+  return requestSpace({
+    code: row.tracking_code,
+    type: 'industrie',
+    name: row.structure_name,
+    status: row.status,
+    rows: [
+      ['Secteur', row.sector],
+      ['Lieu', place(row)],
+      ['E-mail', maskEmail(row.contact_email)],
+      ['Téléphone', maskPhone(row.contact_phone)],
+      ['Demande déposée', formatDay(row.createdAt)],
+    ],
+  });
+}
+
 /* Construit Mon espace à partir d'un code de suivi. */
 async function getByCode(rawCode) {
   const code = trackingService.normalizeCode(rawCode);
@@ -331,6 +384,9 @@ async function getByCode(rawCode) {
       ? schoolSpace(found.organization)
       : industrySpace(found.organization);
   }
+  const request = await trackingService.findRequestByCode(code);
+  if (request?.kind === 'participation') return participationSpace(request.participation);
+  if (request?.kind === 'label') return labelRequestSpace(request.request);
   throw ApiError.notFound('Aucun dossier ne correspond à ce code');
 }
 
