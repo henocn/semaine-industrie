@@ -3,7 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 const { Op, fn, col, where } = require('sequelize');
-const QRCode = require('qrcode');
+const { renderQrCard } = require('../../utils/qrCard');
+const { passageQrPayload } = require('../passports/passport.service');
 const env = require('../../config/env');
 const logger = require('../../utils/logger');
 const {
@@ -332,9 +333,11 @@ async function replyGlobalResources(from, phoneNumberId) {
   });
 }
 
-/* Cible encodée dans le QR : lien de validation de passage. */
-async function qrPayloadUrl(linked) {
-  if (linked.passport?.code) return `${SITE()}/passage/${linked.passport.code}`;
+/* Contenu de la carte QR : ce que le QR encode et le code affiché (jamais pour une industrie). */
+async function qrCardContent(linked) {
+  if (linked.passport?.code) {
+    return { payload: passageQrPayload(linked.passport.code), code: linked.passport.code };
+  }
   if (linked.organization?.type === 'ecole' && linked.organization.id) {
     const group = await Passport.findOne({
       where: {
@@ -344,26 +347,31 @@ async function qrPayloadUrl(linked) {
       },
       order: [['created_at', 'DESC']],
     });
-    if (group?.code) return `${SITE()}/passage/${group.code}`;
+    if (group?.code) return { payload: passageQrPayload(group.code), code: group.code };
   }
-  if (linked.organization?.slug) return `${SITE()}/o/${linked.organization.slug}`;
-  return String(linked.code || SITE());
+  if (linked.organization?.slug) {
+    return {
+      payload: `${SITE()}/o/${linked.organization.slug}`,
+      code: linked.organization.type === 'ecole' ? linked.code : null,
+    };
+  }
+  return { payload: String(linked.code || SITE()), code: linked.code || null };
 }
 
-/* Écrit le PNG du QR et renvoie l'URL publique HTTPS. */
-async function qrImageUrl(code, payloadUrl) {
+/* Écrit la carte QR et renvoie son URL publique HTTPS (nom propre aux cartes : WhatsApp peut garder une image en cache). */
+async function qrImageUrl(code, card) {
   const safe = String(code || 'suivi').replace(/[^A-Z0-9-]/gi, '');
   if (!fs.existsSync(QR_DIR)) fs.mkdirSync(QR_DIR, { recursive: true });
-  const file = path.join(QR_DIR, `${safe}.png`);
-  await QRCode.toFile(file, payloadUrl, { width: 320, margin: 1 });
-  return absUrl(`/uploads/qr/${safe}.png`);
+  const filename = `${safe}-carte.png`;
+  fs.writeFileSync(path.join(QR_DIR, filename), await renderQrCard(card));
+  return absUrl(`/uploads/qr/${filename}`);
 }
 
-/* Envoie le QR en image WhatsApp. */
+/* Envoie la carte QR en image WhatsApp. */
 async function sendTrackingQr(from, phoneNumberId, linked) {
   const code = linked.code;
   if (!code) return { ok: false, reason: 'no_code' };
-  const link = await qrImageUrl(code, await qrPayloadUrl(linked));
+  const link = await qrImageUrl(code, { ...(await qrCardContent(linked)), name: linked.name });
   return sendImage({
     to: from,
     phoneNumberId,

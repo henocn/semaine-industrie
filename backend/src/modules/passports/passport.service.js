@@ -16,10 +16,14 @@ async function uniqueCode(kind, transaction) {
   return trackingService.nextCode(prefix, transaction);
 }
 
+/* Contenu du QR d'un participant : passera au code seul avec la page de scan. */
+function passageQrPayload(code) {
+  return `${env.PUBLIC_APP_URL.replace(/\/$/, '')}/passage/${code}`;
+}
+
 /* Enrichit un passeport avec URL publique + QR. */
 async function withQr(passport) {
-  const base = env.PUBLIC_APP_URL.replace(/\/$/, '');
-  const url = `${base}/passage/${passport.code}`;
+  const url = passageQrPayload(passport.code);
   const qr_data_url = await QRCode.toDataURL(url, { width: 280, margin: 1 });
   return { ...passport.toJSON(), url, qr_data_url };
 }
@@ -266,6 +270,7 @@ async function countPassages(passports) {
 
 module.exports = {
   ARRANGEMENT_STAMP,
+  passageQrPayload,
   createBatch,
   createIndividual,
   createGroup,

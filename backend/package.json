@@ -19,6 +19,7 @@
     "bcrypt": true
   },
   "dependencies": {
+    "@napi-rs/canvas": "^1.1.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.3.1",
