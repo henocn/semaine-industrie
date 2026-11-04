@@ -679,7 +679,6 @@ function infosBody() {
     '*Informations*',
     "La Semaine de l’Industrie 2026 est portée par le Ministère délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique.",
     "Thème : « L'industrie à portée de main »",
-    '📞 71 53 53 58',
     '✉️ infos@semaineindustrie.tg',
     `🌐 ${SITE()}`,
   ].join('\n');

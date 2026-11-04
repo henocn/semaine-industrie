@@ -45,7 +45,7 @@ const GROUPS: NavGroup[] = [
 /* Lien de sous-menu : fond vert au survol, ou fond rouge permanent. */
 function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
   const tone = item.red
-    ? 'bg-flag font-semibold text-white hover:bg-flag/90'
+    ? 'bg-flag/80 font-semibold text-white hover:bg-flag'
     : 'text-ink/80 hover:bg-forest hover:text-white'
   const className = `block px-4 py-2.5 text-[14px] transition-colors ${tone}`
   if (item.to) {
@@ -135,7 +135,7 @@ function ParticiperMenu({
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-30 w-56 border border-forest/10 bg-white pt-1 shadow-lg shadow-forest/10">
+        <div className="absolute right-0 top-full z-30 w-max border border-forest/10 bg-white pt-1 shadow-lg shadow-forest/10">
           {PARTICIPER_ITEMS.map((item) => (
             <NavLink key={item.label} item={item} onNavigate={onClose} />
           ))}
