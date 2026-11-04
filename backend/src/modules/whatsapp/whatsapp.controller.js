@@ -2,6 +2,7 @@
 
 const env = require('../../config/env');
 const whatsappService = require('./whatsapp.service');
+const conversationService = require('./conversation.service');
 const mailService = require('../notifications/mail.service');
 const logger = require('../../utils/logger');
 const ApiResponse = require('../../utils/ApiResponse');
@@ -141,6 +142,24 @@ async function remindVisit(req, res, next) {
   }
 }
 
+/* Liste les numéros ayant échangé avec le bot (backoffice). */
+async function listConversations(req, res, next) {
+  try {
+    return ApiResponse.success(res, await conversationService.listConversations());
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Lit la conversation d'un numéro (backoffice). */
+async function getConversation(req, res, next) {
+  try {
+    return ApiResponse.success(res, await conversationService.getConversation(req.params.phone));
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   verify,
   webhook,
@@ -148,4 +167,6 @@ module.exports = {
   send,
   remindLabel,
   remindVisit,
+  listConversations,
+  getConversation,
 };

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { joinRoom, onRealtime } from './socket'
 
 /* Rejoint la salle orga et recharge dès qu'un des événements listés arrive. */
-export function useOrgaRealtime(events: readonly string[], reload: () => void | Promise<void>) {
+export function useOrgaRealtime(events: readonly string[], reload: (payload: unknown) => void | Promise<void>) {
   const reloadRef = useRef(reload)
   reloadRef.current = reload
   const key = events.join('|')
@@ -11,8 +11,8 @@ export function useOrgaRealtime(events: readonly string[], reload: () => void | 
     joinRoom('orga')
     const list = key.split('|').filter(Boolean)
     const offs = list.map((event) =>
-      onRealtime(event, () => {
-        void reloadRef.current()
+      onRealtime(event, (payload) => {
+        void reloadRef.current(payload)
       }),
     )
     return () => {

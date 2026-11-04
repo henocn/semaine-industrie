@@ -36,6 +36,7 @@ const AuditEvent = require('./AuditEvent')(sequelize);
 const GlobalResource = require('./GlobalResource')(sequelize);
 const Participation = require('./Participation')(sequelize);
 const GameResult = require('./GameResult')(sequelize);
+const WhatsappMessage = require('./WhatsappMessage')(sequelize);
 
 LabelRequest.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 Organization.hasMany(LabelRequest, { foreignKey: 'organization_id', as: 'labelRequests' });
@@ -90,4 +91,5 @@ module.exports = {
   GlobalResource,
   Participation,
   GameResult,
+  WhatsappMessage,
 };

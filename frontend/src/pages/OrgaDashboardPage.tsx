@@ -149,6 +149,7 @@ export default function OrgaDashboardPage() {
                 { to: '/orga/affaires', label: 'Rencontres d\'affaires' },
                 ...(isAdminRole(getStoredUser()?.role)
                   ? [
+                      { to: '/orga/chatbot', label: 'Chatbot' },
                       { to: '/orga/audit', label: 'Audit et logs' },
                       { to: '/orga/utilisateurs', label: 'Utilisateurs' },
                     ]
