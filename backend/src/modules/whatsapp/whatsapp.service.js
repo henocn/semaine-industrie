@@ -315,7 +315,7 @@ async function replyEntryResources(from, phoneNumberId, linked) {
     phoneNumberId,
     items,
     emptyBody: 'Aucune ressource n\'est encore jointe à votre dossier.',
-    fallbackBody: `Certaines ressources n'ont pas pu être envoyées.\nTéléchargez-les ici : ${SITE()}/ressources`,
+    fallbackBody: `Certaines ressources n'ont pas pu être envoyées.\nTéléchargez-les ici : ${SITE()}/mon-espace`,
     finish: (body) => sendSuiviButtons(from, phoneNumberId, body, linked.kind),
   });
 }
@@ -327,8 +327,8 @@ async function replyGlobalResources(from, phoneNumberId) {
     to: from,
     phoneNumberId,
     items,
-    emptyBody: `Aucune ressource pour le moment.\n\n${SITE()}/ressources`,
-    fallbackBody: `Certaines ressources n'ont pas pu être envoyées.\nTéléchargez-les ici : ${SITE()}/ressources`,
+    emptyBody: `Aucune ressource pour le moment.\n\n${SITE()}/#ressources`,
+    fallbackBody: `Certaines ressources n'ont pas pu être envoyées.\nTéléchargez-les ici : ${SITE()}/#ressources`,
   });
 }
 
@@ -964,13 +964,13 @@ async function replyPassportRecap(from, passport, phoneNumberId) {
 /* Formate le récap passeport école ou particulier. */
 function formatPassportRecap(passport) {
   const kind = passport.kind === 'group' ? 'École' : 'Particulier';
-  const url = `${SITE()}/passeport/${passport.code}`;
+  const url = `${SITE()}/mon-espace?code=${passport.code}`;
   return [
     'Récapitulatif',
     '',
     `${kind} : ${passport.holder_name || passport.school_name || 'Participant'}`,
     `Code de suivi : ${passport.code}`,
-    `Passeport : ${url}`,
+    `Mon espace : ${url}`,
     '',
     'Conservez ce code de suivi.',
   ].join('\n');
@@ -1511,7 +1511,7 @@ function buildApprovalBody(organization) {
     '',
     'Conservez ce code de suivi.',
     'Sur WhatsApp : Suivi de participation, ou envoyez le code.',
-    `Sur le site : ${SITE()}/ressources`,
+    `Sur le site : ${SITE()}/mon-espace?code=${organization.label_code}`,
   ].join('\n');
 }
 
@@ -1652,7 +1652,7 @@ async function notifyLabelReminder(organization) {
       `Rappel pour ${organization.name}.`,
       `Code de suivi : ${organization.label_code}`,
       '',
-      `Ressources : ${SITE()}/ressources`,
+      `Mon espace : ${SITE()}/mon-espace?code=${organization.label_code}`,
     ].join('\n'),
   });
 }

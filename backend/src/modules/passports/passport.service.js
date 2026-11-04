@@ -265,6 +265,7 @@ async function countPassages(passports) {
 }
 
 module.exports = {
+  ARRANGEMENT_STAMP,
   createBatch,
   createIndividual,
   createGroup,

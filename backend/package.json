@@ -10,7 +10,8 @@
     "db:migrate:undo": "npx sequelize-cli db:migrate:undo",
     "db:migrate:undo:all": "npx sequelize-cli db:migrate:undo:all",
     "db:seed": "npx sequelize-cli db:seed:all",
-    "db:seed:superadmin": "node scripts/ensure-superadmin.js"
+    "db:seed:superadmin": "node scripts/ensure-superadmin.js",
+    "db:seed:demo": "node scripts/seed-demo.js"
   },
   "private": true,
   "type": "commonjs",

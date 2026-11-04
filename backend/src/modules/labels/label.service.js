@@ -674,6 +674,7 @@ module.exports = {
   listQrBatch,
   getQrForRequest,
   verifyTrackingCode,
+  normalizeKitFiles,
   setProgrammePdfUrl,
   getProgrammePdfPath,
   absolutePublicUrl,

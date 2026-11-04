@@ -27,7 +27,7 @@ docs/         documentation de déploiement
 | `/industrie`, `/carte`, `/o/:slug` | Industries labellisées, carte des visites, fiche publique |
 | `/vue-par-vous` | Défis : sondage avant / après visite (`?jeu=sondage`), quiz (`?jeu=quiz`), explorateur de talents (`?jeu=talents`). `/questionnaire` y redirige |
 | `/vote` | Vote coup de cœur |
-| `/ressources`, `/faq` | Documents, questions fréquentes |
+| `/mon-espace`, `/faq` | Dossier et bilan des passages par code de suivi, questions fréquentes |
 
 Téléphone obligatoire sur les formulaires publics : saisie internationale avec drapeau (`react-phone-number-input`), revalidée et stockée en E.164 côté API (`libphonenumber-js`, Togo par défaut).
 
@@ -67,6 +67,8 @@ npm run dev
 ```
 
 Healthcheck API : `GET /api/v1/health`
+
+Pour remplir une base locale avec des données fictives : `npm run db:seed:demo` dans `backend/` (refusé hors base locale).
 
 Les variables attendues sont listées dans `backend/.env.example` (base de données, JWT, URL publique, WhatsApp, SMTP). Ne jamais versionner `.env`.
 

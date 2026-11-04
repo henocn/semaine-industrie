@@ -24,6 +24,7 @@ const usersRoutes = require('./modules/users/users.routes');
 const auditRoutes = require('./modules/audit/audit.routes');
 const resourceRoutes = require('./modules/resources/resource.routes');
 const participationRoutes = require('./modules/participations/participation.routes');
+const espaceRoutes = require('./modules/espace/espace.routes');
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use(`${env.API_PREFIX}/users`, usersRoutes);
 app.use(`${env.API_PREFIX}/audit`, auditRoutes);
 app.use(`${env.API_PREFIX}/resources`, resourceRoutes);
 app.use(`${env.API_PREFIX}/participations`, participationRoutes);
+app.use(`${env.API_PREFIX}/espace`, espaceRoutes);
 
 /* 404 JSON pour les routes API inconnues. */
 app.use((req, res, next) => {

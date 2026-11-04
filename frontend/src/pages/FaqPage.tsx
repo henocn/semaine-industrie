@@ -23,11 +23,15 @@ const FAQ = [
   },
   {
     q: 'Faut-il un numéro de téléphone ?',
-    a: "L'e-mail suffit pour déposer une demande. Un numéro WhatsApp peut être ajouté si vous le souhaitez.",
+    a: "Oui, il est demandé dans chaque formulaire, de préférence un numéro WhatsApp : c'est par là que vous recevez votre code et votre QR.",
   },
   {
     q: 'Comment suivre un dossier de label ?',
-    a: 'Avec le code de suivi (exemple : IN-K7P4 pour une industrie), sur le site dans Ressources, ou sur WhatsApp dans Mon espace, puis Suivi de label.',
+    a: 'Avec le code de suivi (exemple : IN-K7P4 pour une industrie), sur le site dans Mon espace, ou sur WhatsApp dans Mon espace, puis Suivi de label.',
+  },
+  {
+    q: 'À quoi sert Mon espace ?',
+    a: 'Avec votre code de suivi, vous retrouvez votre dossier, le bilan de vos passages, vos visites à venir et vos documents.',
   },
   {
     q: "Comment retrouver mes rencontres d'affaires ?",
@@ -43,7 +47,7 @@ const FAQ = [
   },
   {
     q: 'Les documents sont-ils publics ?',
-    a: 'Les ressources générales le sont. Le PDF du label personnel se télécharge avec le code de suivi.',
+    a: "Les ressources générales le sont, sur la page d'accueil. Le PDF du label personnel se télécharge dans Mon espace.",
   },
   {
     q: "Qui contacter ?",

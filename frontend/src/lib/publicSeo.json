@@ -24,9 +24,9 @@
     "description": "Inscrivez-vous à titre personnel à la Semaine de l’industrie 2026 au Togo et recevez votre QR de participation."
   },
   {
-    "path": "/ressources",
-    "title": "Ressources",
-    "description": "Documents et ressources de la Semaine de l’industrie 2026 : programme, label et fichiers utiles pour les structures labellisées."
+    "path": "/mon-espace",
+    "title": "Mon espace",
+    "description": "Entrez votre code de suivi pour retrouver votre dossier, le bilan de vos passages et vos documents de la Semaine de l’industrie 2026."
   },
   {
     "path": "/affaires",
