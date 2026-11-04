@@ -8,7 +8,6 @@ const ApiError = require('../../utils/ApiError');
 const logger = require('../../utils/logger');
 
 const TEMPLATES_FILE = path.join(__dirname, '../../../../deploy/whatsapp-templates.json');
-const THREAD_LIMIT = 500;
 
 /* Libellé des messages reçus sans texte. */
 const MEDIA_LABELS = {
@@ -99,12 +98,10 @@ async function store(row) {
 /* Enregistre le message reçu d'une notification Meta. */
 function recordInbound(envelope) {
   const message = envelope.messages[0];
-  const contact = envelope.contacts?.find((item) => item.wa_id === message.from) || envelope.contacts?.[0];
   return store({
     phone: String(message.from).replace(/\D/g, ''),
     direction: 'in',
     body: inboundText(message),
-    profile_name: contact?.profile?.name || null,
     wa_message_id: message.id || null,
   });
 }
@@ -122,7 +119,7 @@ function recordOutbound(payload, data) {
 /* Une ligne par numéro, de la plus récente à la plus ancienne. */
 function listConversations() {
   return sequelize.query(
-    `SELECT s.phone, s.messages, s.last_at, n.profile_name, l.body AS last_body, l.direction AS last_direction
+    `SELECT s.phone, s.messages, s.last_at, l.body AS last_body, l.direction AS last_direction
      FROM (
        SELECT phone, COUNT(*)::int AS messages, MAX(sent_at) AS last_at
        FROM whatsapp_messages GROUP BY phone
@@ -131,25 +128,19 @@ function listConversations() {
        SELECT body, direction FROM whatsapp_messages m
        WHERE m.phone = s.phone ORDER BY sent_at DESC LIMIT 1
      ) l ON TRUE
-     LEFT JOIN LATERAL (
-       SELECT profile_name FROM whatsapp_messages m
-       WHERE m.phone = s.phone AND profile_name IS NOT NULL ORDER BY sent_at DESC LIMIT 1
-     ) n ON TRUE
      ORDER BY s.last_at DESC`,
     { type: QueryTypes.SELECT },
   );
 }
 
-/* Derniers messages d'un numéro, du plus ancien au plus récent. */
+/* Tous les messages d'un numéro, du plus ancien au plus récent. */
 async function getConversation(phone) {
   if (!/^\d{6,20}$/.test(String(phone))) throw ApiError.badRequest('Numéro invalide');
-  const rows = await WhatsappMessage.findAll({
+  return WhatsappMessage.findAll({
     where: { phone },
     attributes: ['id', 'direction', 'body', 'sent_at'],
-    order: [['sent_at', 'DESC']],
-    limit: THREAD_LIMIT,
+    order: [['sent_at', 'ASC']],
   });
-  return rows.reverse();
 }
 
 module.exports = {

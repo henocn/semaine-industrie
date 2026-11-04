@@ -2,7 +2,6 @@ import { apiFetch } from './client'
 
 export type ChatbotConversation = {
   phone: string
-  profile_name: string | null
   messages: number
   last_at: string
   last_body: string

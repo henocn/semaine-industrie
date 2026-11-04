@@ -19,6 +19,7 @@ import MonEspacePage from './pages/MonEspacePage'
 import OrganizationPage from './pages/OrganizationPage'
 import OrgaAuditPage from './pages/OrgaAuditPage'
 import OrgaChatbotPage from './pages/OrgaChatbotPage'
+import OrgaChatbotDetailPage from './pages/OrgaChatbotDetailPage'
 import OrgaBusinessPage from './pages/OrgaBusinessPage'
 import OrgaDashboardPage from './pages/OrgaDashboardPage'
 import OrgaResourcesPage from './pages/OrgaResourcesPage'
@@ -101,6 +102,7 @@ export default function App() {
             <Route path="/orga/ressources" element={<OrgaResourcesPage />} />
             <Route element={<RequireAdmin />}>
               <Route path="/orga/chatbot" element={<OrgaChatbotPage />} />
+              <Route path="/orga/chatbot/:phone" element={<OrgaChatbotDetailPage />} />
               <Route path="/orga/audit" element={<OrgaAuditPage />} />
               <Route path="/orga/utilisateurs" element={<OrgaUsersPage />} />
             </Route>

@@ -15,7 +15,6 @@ module.exports = (sequelize) => {
       phone: { type: DataTypes.STRING(20), allowNull: false },
       direction: { type: DataTypes.STRING(3), allowNull: false },
       body: { type: DataTypes.TEXT, allowNull: false },
-      profile_name: { type: DataTypes.STRING(200), allowNull: true },
       wa_message_id: { type: DataTypes.STRING(200), allowNull: true, unique: true },
       sent_at: { type: DataTypes.DATE, allowNull: false },
     },

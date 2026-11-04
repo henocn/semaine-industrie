@@ -14,8 +14,6 @@ module.exports = {
       /* in : reçu du correspondant ; out : envoyé par le bot. */
       direction: { type: Sequelize.STRING(3), allowNull: false },
       body: { type: Sequelize.TEXT, allowNull: false },
-      /* Nom du profil WhatsApp, transmis par Meta sur les messages reçus. */
-      profile_name: { type: Sequelize.STRING(200), allowNull: true },
       /* Identifiant Meta : un même message renvoyé par le webhook n'est gardé qu'une fois. */
       wa_message_id: { type: Sequelize.STRING(200), allowNull: true, unique: true },
       sent_at: { type: Sequelize.DATE, allowNull: false },
