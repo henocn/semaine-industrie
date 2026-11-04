@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { registerParticipation } from '../api/participations'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+import { LocationField } from '../components/map/LocationField'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
@@ -33,11 +34,17 @@ export default function InscriptionGroupPage() {
   const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [lat, setLat] = useState<number | null>(null)
+  const [lng, setLng] = useState<number | null>(null)
 
   /* Envoie l'inscription (téléphone obligatoire). */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+    if (lat == null || lng == null) {
+      setError('Placez votre établissement sur la carte.')
+      return
+    }
     setLoading(true)
     const form = e.currentTarget
     const fd = new FormData(form)
@@ -50,6 +57,9 @@ export default function InscriptionGroupPage() {
         phone: String(fd.get('phone') || '').trim() || null,
         description: String(fd.get('description') || '').trim() || null,
         headcount: headcountRaw ? Number(headcountRaw) : null,
+        address: String(fd.get('address') || '').trim() || null,
+        lat,
+        lng,
       })
       setTrackingCode(created.tracking_code ?? null)
       setSent(true)
@@ -102,6 +112,16 @@ export default function InscriptionGroupPage() {
             <Field label={NAME_LABEL[profile]} className="sm:col-span-2">
               <input required name="name" minLength={2} className={field} />
             </Field>
+            <div className="sm:col-span-2">
+              <LocationField
+                lat={lat}
+                lng={lng}
+                onPick={(a, b) => {
+                  setLat(a)
+                  setLng(b)
+                }}
+              />
+            </div>
             <Field label="E-mail">
               <input type="email" name="email" className={field} />
             </Field>

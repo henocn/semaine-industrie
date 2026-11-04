@@ -5,6 +5,7 @@ const { BusinessParticipant, BusinessMeeting } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
+const { assertAvailable, duplicateError } = require('../../utils/uniqueContact');
 const mailService = require('../notifications/mail.service');
 
 /* Vide une chaîne optionnelle. */
@@ -19,11 +20,17 @@ function notesFrom(payload) {
   return emptyToNull('notes' in payload ? payload.notes : payload.offers);
 }
 
+/* Nom qui identifie un participant dans sa section. */
+function identityName(values) {
+  return emptyToNull(values.organization_name) || emptyToNull(values.contact_name);
+}
+
 /* Inscription publique d'un participant B2B. */
 async function register(payload) {
   if (!payload.contact_opt_in) {
     throw ApiError.badRequest('Vous devez accepter d\'être contacté par e-mail / WhatsApp');
   }
+  await assertAvailable('business', { email: payload.email, phone: payload.phone, name: identityName(payload) });
   const row = await BusinessParticipant.create({
     kind: payload.kind,
     organization_name: emptyToNull(payload.organization_name),
@@ -37,7 +44,7 @@ async function register(payload) {
     contact_opt_in: true,
     status: 'pending',
     tracking_code: await trackingService.nextCode('AF'),
-  });
+  }).catch((err) => { throw duplicateError(err); });
   await notifyN8n('business.participant_registered', {
     id: row.id,
     kind: row.kind,
@@ -50,6 +57,7 @@ async function register(payload) {
 
 /* Ajout manuel d'un participant (backoffice). */
 async function createByOrga(payload) {
+  await assertAvailable('business', { email: payload.email, phone: payload.phone, name: identityName(payload) });
   const row = await BusinessParticipant.create({
     kind: payload.kind,
     organization_name: emptyToNull(payload.organization_name),
@@ -63,7 +71,7 @@ async function createByOrga(payload) {
     contact_opt_in: payload.contact_opt_in !== false,
     status: payload.status === 'pending' ? 'pending' : 'approved',
     tracking_code: await trackingService.nextCode('AF'),
-  });
+  }).catch((err) => { throw duplicateError(err); });
   await notifyN8n('business.participant_registered', {
     id: row.id,
     kind: row.kind,
@@ -93,7 +101,15 @@ async function updateParticipant(id, payload) {
     if (key in payload) data[key] = emptyToNull(payload[key]);
   }
   if ('notes' in payload || 'offers' in payload) data.notes = notesFrom(payload);
-  await row.update(data);
+  await assertAvailable('business', {
+    excludeId: row.id,
+    email: data.email,
+    phone: data.phone,
+    name: 'organization_name' in data || 'contact_name' in data
+      ? identityName({ organization_name: row.organization_name, contact_name: row.contact_name, ...data })
+      : null,
+  });
+  await row.update(data).catch((err) => { throw duplicateError(err); });
   return row;
 }
 

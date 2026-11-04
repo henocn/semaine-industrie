@@ -3,7 +3,7 @@ import { createLabelRequest, uploadLabelGallery } from '../api/labels'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
-import { LocationPickerMap } from '../components/map/LocationPickerMap'
+import { LocationField } from '../components/map/LocationField'
 import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { Field } from '../components/ui/Field'
@@ -47,7 +47,7 @@ export default function LabelRequestPage() {
     e.preventDefault()
     setError(null)
     if (lat == null || lng == null) {
-      setError('Placez le site sur la carte (clic).')
+      setError('Placez votre adresse sur la carte.')
       return
     }
     const form = e.currentTarget
@@ -127,14 +127,8 @@ export default function LabelRequestPage() {
             <Field label="Secteur d'activité" className="sm:col-span-2">
               <input name="sector" className={field} />
             </Field>
-            <Field label="Adresse" className="sm:col-span-2">
-              <input name="address" className={field} placeholder="Quartier, ville…" />
-            </Field>
-
             <div className="sm:col-span-2">
-              <p className="text-sm font-semibold text-forest">Emplacement sur la carte</p>
-              <LocationPickerMap
-                className="mt-2"
+              <LocationField
                 lat={lat}
                 lng={lng}
                 onPick={(a, b) => {

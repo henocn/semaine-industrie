@@ -10,7 +10,9 @@ import {
   type Participation,
   type ParticipationKind,
 } from '../api/participations'
+import { googleMapsUrl } from '../api/labels'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { LocationField } from '../components/map/LocationField'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
 import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 import { PhoneField } from '../components/ui/PhoneField'
@@ -36,6 +38,7 @@ const EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
   { header: 'Téléphone', width: 18, value: (r) => r.phone },
   { header: 'E-mail', width: 28, value: (r) => r.email },
   { header: 'Ville', width: 16, value: (r) => r.city },
+  { header: 'Adresse', width: 28, value: (r) => r.address },
   { header: 'Effectif', width: 10, value: (r) => r.headcount },
   { header: 'Passages', width: 10, value: (r) => passageCount(r) },
   { header: 'Spécialités / note', width: 36, value: (r) => r.description },
@@ -70,7 +73,15 @@ function readForm(fd: FormData, kind: ParticipationKind) {
     phone: String(fd.get('phone') || '').trim() || null,
     description: String(fd.get('description') || '').trim() || null,
     headcount: kind === 'ecole' && headcountRaw ? Number(headcountRaw) : null,
+    ...(kind === 'ecole' ? { address: String(fd.get('address') || '').trim() || null } : {}),
   }
+}
+
+/* Coordonnée lue depuis l'API, ou rien si elle est absente. */
+function coordinate(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === '') return null
+  const number = Number(value)
+  return Number.isFinite(number) ? number : null
 }
 
 /* Backoffice : écoles (centres, univ) et particuliers, avec QR à l'acceptation. */
@@ -81,6 +92,7 @@ export default function OrgaParticipationsPage() {
   const [detail, setDetail] = useState<Participation | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [position, setPosition] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null })
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -134,7 +146,8 @@ export default function OrgaParticipationsPage() {
     setBusy(true)
     setError(null)
     try {
-      await createParticipation({ kind, ...readForm(new FormData(form), kind) })
+      await createParticipation({ kind, ...readForm(new FormData(form), kind), ...(kind === 'ecole' ? position : {}) })
+      setPosition({ lat: null, lng: null })
       form.reset()
       setShowAdd(false)
       await load()
@@ -152,7 +165,7 @@ export default function OrgaParticipationsPage() {
     setBusy(true)
     setError(null)
     try {
-      const updated = await updateParticipation(id, readForm(new FormData(form), kind))
+      const updated = await updateParticipation(id, { ...readForm(new FormData(form), kind), ...(kind === 'ecole' ? position : {}) })
       setDetail(updated)
       setEditingId(null)
       await load()
@@ -286,6 +299,11 @@ export default function OrgaParticipationsPage() {
               <input name="headcount" type="number" min={1} className={field} />
             </label>
           )}
+          {isSchool && (
+            <div className="sm:col-span-2">
+              <LocationField lat={position.lat} lng={position.lng} onPick={(lat, lng) => setPosition({ lat, lng })} />
+            </div>
+          )}
           <label className="text-[13px] font-medium text-forest sm:col-span-2">
             {isSchool ? 'Spécialités / séries ou filières' : 'Note'}
             <textarea name="description" rows={3} className={`${field} resize-none`} />
@@ -362,6 +380,7 @@ export default function OrgaParticipationsPage() {
                           onClick={() => {
                             setSelectedId(item.id)
                             setEditingId(item.id)
+                            setPosition({ lat: coordinate(item.lat), lng: coordinate(item.lng) })
                             void getParticipation(item.id).then(setDetail).catch(() => setDetail(item))
                           }}
                         >
@@ -396,6 +415,17 @@ export default function OrgaParticipationsPage() {
                                 <input name="headcount" type="number" min={1} defaultValue={shown.headcount ?? ''} className={field} />
                               </label>
                             )}
+                            {isSchool && (
+                              <div className="sm:col-span-2">
+                                <LocationField
+                                  key={item.id}
+                                  lat={position.lat}
+                                  lng={position.lng}
+                                  defaultAddress={shown.address || ''}
+                                  onPick={(lat, lng) => setPosition({ lat, lng })}
+                                />
+                              </div>
+                            )}
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
                               {isSchool ? 'Spécialités / séries ou filières' : 'Note'}
                               <textarea name="description" rows={3} defaultValue={shown.description || ''} className={`${field} resize-none`} />
@@ -414,6 +444,19 @@ export default function OrgaParticipationsPage() {
                                 </p>
                               )}
                               {shown.city && <p>{shown.city}</p>}
+                              {shown.address && <p>{shown.address}</p>}
+                              {coordinate(shown.lat) !== null && coordinate(shown.lng) !== null && (
+                                <p>
+                                  <a
+                                    href={googleMapsUrl(shown.lat, shown.lng) || undefined}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-semibold text-forest underline underline-offset-2"
+                                  >
+                                    Voir sur la carte
+                                  </a>
+                                </p>
+                              )}
                               {shown.email && <p>{shown.email}</p>}
                               {shown.phone && <p>{shown.phone}</p>}
                               {shown.headcount ? <p>{shown.headcount} personnes</p> : null}

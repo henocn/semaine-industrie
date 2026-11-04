@@ -15,7 +15,7 @@ import {
   type QrBatchItem,
 } from '../api/labels'
 import { OrgaShell } from '../components/layout/OrgaShell'
-import { LocationPickerMap } from '../components/map/LocationPickerMap'
+import { LocationField } from '../components/map/LocationField'
 import { notifyLabelPendingChanged } from '../lib/labelPending'
 import { joinRoom, onRealtime } from '../lib/socket'
 import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components/ui/IconButton'
@@ -510,21 +510,12 @@ export default function OrgaLabelsPage() {
                   <input name="sector" defaultValue={editing?.sector || ''} className={field} />
                 </label>
               )}
-              <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                Adresse
-                <input
-                  name="address"
-                  defaultValue={editing ? formatLabelAddress(editing) : ''}
-                  className={field}
-                  placeholder="Quartier, ville…"
-                />
-              </label>
               <div className="sm:col-span-2">
-                <p className="text-[13px] font-medium text-forest">Emplacement</p>
-                <LocationPickerMap
-                  className="mt-2"
+                <LocationField
+                  key={editing?.id || 'new'}
                   lat={editLat}
                   lng={editLng}
+                  defaultAddress={editing ? formatLabelAddress(editing) : ''}
                   onPick={(a, b) => {
                     setEditLat(a)
                     setEditLng(b)

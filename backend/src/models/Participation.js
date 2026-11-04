@@ -36,6 +36,18 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(120),
         allowNull: true,
       },
+      address: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      lat: {
+        type: DataTypes.DECIMAL(10, 7),
+        allowNull: true,
+      },
+      lng: {
+        type: DataTypes.DECIMAL(10, 7),
+        allowNull: true,
+      },
       headcount: {
         type: DataTypes.INTEGER,
         allowNull: true,

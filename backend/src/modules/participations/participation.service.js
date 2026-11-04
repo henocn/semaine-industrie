@@ -7,6 +7,7 @@ const trackingService = require('../tracking/tracking.service');
 const mailService = require('../notifications/mail.service');
 const logger = require('../../utils/logger');
 const { renderQrCardDataUrl } = require('../../utils/qrCard');
+const { assertAvailable, duplicateError } = require('../../utils/uniqueContact');
 
 /* Vide une chaîne optionnelle. */
 function emptyToNull(value) {
@@ -23,6 +24,9 @@ function pickFields(payload) {
   if ('phone' in payload) data.phone = emptyToNull(payload.phone);
   if ('description' in payload) data.description = emptyToNull(payload.description);
   if ('city' in payload) data.city = emptyToNull(payload.city);
+  if ('address' in payload) data.address = emptyToNull(payload.address);
+  if ('lat' in payload) data.lat = payload.lat ?? null;
+  if ('lng' in payload) data.lng = payload.lng ?? null;
   if ('headcount' in payload) data.headcount = payload.headcount || null;
   return data;
 }
@@ -70,12 +74,14 @@ async function getById(id) {
 /* Crée une participation en attente (école / centre / université, ou particulier). */
 async function create(payload) {
   const kind = payload.kind === 'particulier' ? 'particulier' : 'ecole';
+  const fields = pickFields(payload);
+  await assertAvailable('participations', { kind, email: fields.email, phone: fields.phone, name: fields.name });
   const row = await Participation.create({
     kind,
     status: 'pending',
     tracking_code: await trackingService.nextCode(trackingService.prefixFor(kind)),
-    ...pickFields(payload),
-  });
+    ...fields,
+  }).catch((err) => { throw duplicateError(err); });
   mailService.participationReceived(row);
   try {
     const whatsappService = require('../whatsapp/whatsapp.service');
@@ -90,7 +96,11 @@ async function create(payload) {
 async function update(id, payload) {
   const row = await Participation.findByPk(id);
   if (!row) throw ApiError.notFound('Participation introuvable');
-  await row.update(pickFields(payload));
+  const fields = pickFields(payload);
+  await assertAvailable('participations', {
+    kind: row.kind, excludeId: row.id, email: fields.email, phone: fields.phone, name: fields.name,
+  });
+  await row.update(fields).catch((err) => { throw duplicateError(err); });
   if (row.passport_id && payload.name) {
     const passport = await Passport.findByPk(row.passport_id);
     if (passport) {
