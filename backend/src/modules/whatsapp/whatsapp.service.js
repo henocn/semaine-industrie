@@ -1589,7 +1589,7 @@ async function sendTemplateOrText({ phone, templates, fallback }) {
   if (!to) return { ok: false, reason: 'no_phone' };
   for (const template of templates) {
     const sent = await sendTemplate({ to, ...template });
-    if (sent.ok) return { ...sent, template: template.name };
+    if (sent.ok) return sent;
     logger.warn('[whatsapp] template indisponible', template.name);
   }
   return sendWithNav({ to, body: fallback.join('\n') });
@@ -1680,51 +1680,6 @@ async function notifyParticipationRejected(participation) {
     ],
     fallback: [
       `Bonjour, la participation pour le compte de ${participation.name} n'a pas été acceptée.`,
-      "Pour en savoir plus, contactez l'équipe d'organisation (menu Informations).",
-    ],
-  });
-}
-
-/* Rencontres d'affaires : inscription reçue. */
-async function notifyBusinessReceived(participant) {
-  const name = b2bDisplayName(participant);
-  const code = participant.tracking_code;
-  return sendTemplateOrText({
-    phone: participant.phone,
-    templates: [
-      ...withSpaceButton('si26_affaires_encours', [name, code], code),
-      { name: 'si26_inscription_encours', bodyParams: [name] },
-    ],
-    fallback: [
-      `Bonjour, l'inscription de ${name} aux rencontres d'affaires est en cours de validation.`,
-      `Code de suivi : ${code}.`,
-    ],
-  });
-}
-
-/* Rencontres d'affaires : inscription acceptée (aucun modèle existant ne convient sans parler de places ni de visites). */
-async function notifyBusinessApproved(participant) {
-  const name = b2bDisplayName(participant);
-  const code = participant.tracking_code;
-  return sendTemplateOrText({
-    phone: participant.phone,
-    templates: withSpaceButton('si26_affaires_acceptee', [name, code], code),
-    fallback: [
-      `Bonjour, l'inscription de ${name} aux rencontres d'affaires est acceptée.`,
-      `Code de suivi : ${code}.`,
-      "Vous serez prévenu dès qu'un rendez-vous sera fixé.",
-    ],
-  });
-}
-
-/* Rencontres d'affaires : inscription refusée. */
-async function notifyBusinessRejected(participant) {
-  const name = b2bDisplayName(participant);
-  return sendTemplateOrText({
-    phone: participant.phone,
-    templates: [{ name: 'si26_inscription_refusee', bodyParams: [name] }],
-    fallback: [
-      `Bonjour, l'inscription de ${name} aux rencontres d'affaires n'a pas été acceptée.`,
       "Pour en savoir plus, contactez l'équipe d'organisation (menu Informations).",
     ],
   });
@@ -1968,9 +1923,6 @@ module.exports = {
   notifyParticipationReceived,
   notifyParticipationApproved,
   notifyParticipationRejected,
-  notifyBusinessReceived,
-  notifyBusinessApproved,
-  notifyBusinessRejected,
   notifyLabelReminder,
   notifyVisitReminder,
   notifyVisitScheduled,

@@ -22,7 +22,7 @@ const STATUS_LABEL: Record<Espace['status'], string> = {
 
 /* Explication d'un dossier sans bilan. */
 const STATUS_NOTICE: Partial<Record<Espace['status'], string>> = {
-  pending: 'Votre dossier est en cours d’examen par l’équipe d’organisation. Vous recevrez la réponse par e-mail et sur WhatsApp.',
+  pending: 'Votre dossier est en cours d’examen par l’équipe d’organisation. Vous recevrez bientôt la réponse.',
   rejected: 'Ce dossier n’a pas été retenu. Pour en savoir plus, écrivez à infos@semaineindustrie.tg.',
 }
 

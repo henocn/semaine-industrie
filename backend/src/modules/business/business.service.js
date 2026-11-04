@@ -5,7 +5,6 @@ const { BusinessParticipant, BusinessMeeting } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
-const logger = require('../../utils/logger');
 const mailService = require('../notifications/mail.service');
 
 /* Vide une chaîne optionnelle. */
@@ -18,14 +17,6 @@ function emptyToNull(value) {
 /* Notes saisies (repli sur l'ancien champ « offers »). */
 function notesFrom(payload) {
   return emptyToNull('notes' in payload ? payload.notes : payload.offers);
-}
-
-/* Notifie un participant sur WhatsApp sans jamais bloquer le parcours. */
-function notifyWhatsapp(method, row) {
-  const whatsappService = require('../whatsapp/whatsapp.service');
-  whatsappService[method](row).catch((err) => {
-    logger.warn('[business] notify WhatsApp failed', err.message);
-  });
 }
 
 /* Inscription publique d'un participant B2B. */
@@ -54,7 +45,6 @@ async function register(payload) {
     email: row.email,
   });
   mailService.businessReceived(row);
-  notifyWhatsapp('notifyBusinessReceived', row);
   return row;
 }
 
@@ -148,13 +138,8 @@ async function reviewParticipant(id, status) {
     email: row.email,
     organization_name: row.organization_name,
   });
-  if (status === 'approved') {
-    mailService.businessApproved(row);
-    notifyWhatsapp('notifyBusinessApproved', row);
-  } else {
-    mailService.businessRejected(row);
-    notifyWhatsapp('notifyBusinessRejected', row);
-  }
+  if (status === 'approved') mailService.businessApproved(row);
+  else mailService.businessRejected(row);
   return row;
 }
 

@@ -208,7 +208,7 @@ function emails(site = env.PUBLIC_APP_URL) {
       subject: `Rencontres d’affaires, inscription en cours de validation : ${name}`,
       intro: [`Nous avons bien reçu l’inscription de **${name}** aux rencontres d’affaires. Elle est **en cours de validation** par l’équipe d’organisation.`],
       code,
-      outro: [FOLLOW, 'Vous recevrez une réponse par e-mail et sur WhatsApp.'],
+      outro: [FOLLOW, 'Vous recevrez une réponse par e-mail.'],
       button: space(code),
     }),
 
