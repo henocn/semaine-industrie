@@ -70,8 +70,8 @@ export default function BusinessRegisterPage() {
             </p>
             <TrackingCodeNotice code={trackingCode} />
             <div className="mt-6">
-              <Button to="/programme#vendredi" variant="link">
-                Voir la journée phare
+              <Button to="/programme" variant="link">
+                Voir le programme
               </Button>
             </div>
           </div>

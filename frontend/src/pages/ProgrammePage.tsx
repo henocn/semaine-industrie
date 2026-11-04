@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
-import { DAYS } from '../data'
+import { DAYS, NATIONAL_THEME } from '../data'
 import { Seo } from '../components/Seo'
-import { CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
+import { WRAP } from '../components/layout/Mark'
 import { publicSeo } from '../lib/seo'
 import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
@@ -20,7 +20,7 @@ export default function ProgrammePage() {
           <SectionHeader
             level={1}
             title="Le programme"
-            lead={`Un thème par jour. Fil conducteur : « ${CAMPAIGN_TAGLINE.replace(/\.$/, '')} ». Lieu principal à confirmer (Palais des congrès ou Hôtel Sarakawa).`}
+            lead={`Thème : « ${NATIONAL_THEME} ». Un thème par jour, au Palais des Congrès de Lomé.`}
           />
           <div className="mt-6 flex flex-wrap gap-2.5">
             <Button to="/carte" variant="primary">
@@ -57,11 +57,6 @@ export default function ProgrammePage() {
                   <span className="font-medium text-forest">
                     {d.name}
                     <span className="mt-0.5 block text-[13px] font-normal text-ink/65">{d.theme}</span>
-                    {phare && (
-                      <span className="mt-1.5 inline-block text-[11px] font-semibold text-forest">
-                        Journée phare
-                      </span>
-                    )}
                   </span>
                   <span className="col-span-2 col-start-2 text-[14px] leading-relaxed text-ink/75 md:col-span-1 md:col-start-auto">
                     {d.goal}
@@ -83,7 +78,7 @@ export default function ProgrammePage() {
                       <p className="mb-3 text-[13px] text-ink/60">{d.where}</p>
                       <ol className="grid gap-3">
                         {d.slots.map(([h, t]) => (
-                          <li key={h + t} className="grid grid-cols-[3.5rem_1fr] gap-3 text-[14px]">
+                          <li key={h + t} className="grid grid-cols-[6rem_1fr] gap-3 text-[14px]">
                             <span className="font-medium tabular-nums text-forest">{h}</span>
                             <span className="leading-relaxed text-ink/80">{t}</span>
                           </li>
@@ -96,6 +91,10 @@ export default function ProgrammePage() {
             )
           })}
         </ul>
+        <p className="mt-6 text-[14px] leading-relaxed text-ink/70">
+          En marge du programme : atelier de validation de l’étude sur la gestion des déchets industriels,
+          jeudi 19 novembre de 8h30 à 12h00, Hôtel Concorde.
+        </p>
       </div>
     </main>
   )

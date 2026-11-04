@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent } from 'react'
 import { createLabelRequest, uploadLabelGallery } from '../api/labels'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+import { VisitDaysNote } from '../components/VisitDaysNote'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { LocationField } from '../components/map/LocationField'
@@ -105,6 +106,7 @@ export default function LabelRequestPage() {
             title="Demander le label"
             lead="Industries : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent."
           />
+          <VisitDaysNote audience="industrie" />
         </div>
 
         {sent ? (

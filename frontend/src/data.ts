@@ -3,85 +3,87 @@ export type Day = {
   slots: [string, string][]; phare?: boolean
 }
 
-/* Programme de la proposition MDPISE, octobre 2026. Lieux encore à arrêter. */
+/* Programme officiel MDPISE, novembre 2026. */
 export const DAYS: Day[] = [
   {
     n: 16, name: 'Lundi', theme: 'Ouverture',
-    goal: 'Cérémonie, bilan 2020-2025 et vision 2026-2031, premiers labels, puis visite de la PIA.',
-    where: 'Lieu de cérémonie (PIA, Hôtel 2 Février ou Sarakawa) ; visite PIA l’après-midi',
+    goal: 'Le Ministre ouvre la semaine, présente le bilan, puis visite les entreprises de la PIA.',
+    where: 'Palais des Congrès ; Plateforme industrielle d’Adétikopé (PIA) l’après-midi',
     slots: [
       ['9h00', 'Accueil des invités et de la presse'],
-      ['9h30', 'Cérémonie d’ouverture : mot de bienvenue, discours du Ministre, symbole et label'],
-      ['9h50', 'Film « 2020-2025, ce que l’industrie togolaise a construit », et la vision 2026-2031'],
-      ['10h10', 'Remise des premiers labels aux entreprises et aux écoles'],
-      ['15h00', 'Visite des entreprises de la PIA avec le Ministre et la presse, jusqu’à 16h30'],
+      ['9h30', 'Cérémonie d’ouverture : mot de bienvenue, message du bureau de l’ONUDI, mot de la CCIT, discours du Ministre, présentation du symbole et du label'],
+      ['9h50', 'Film de 3 minutes : « 2020-2025, ce que l’industrie togolaise a construit », et la vision 2026-2031'],
+      ['10h00-11h00', 'Panel sur le thème national : « Accélérer l’industrialisation togolaise : transformation productive, innovation et compétitivité »'],
+      ['11h10', 'Remise des premiers labels aux entreprises et aux écoles ; interviews et prises de vue'],
+      ['15h00-16h30', 'Visite des entreprises de la PIA, avec le Ministre et les autorités'],
     ],
   },
   {
     n: 17, name: 'Mardi', theme: 'Jeunes, métiers et qualité',
-    goal: 'Visites d’usines, Journées de la qualité (HAUQE), forum d’orientation des métiers et « Ils ont commencé petit ».',
-    where: 'Usines le matin ; lieu principal l’après-midi',
+    goal: 'Les usines ouvrent leurs portes, puis les jeunes découvrent les métiers.',
+    where: 'Usines le matin ; Palais des Congrès',
     slots: [
-      ['8h30', 'Visites d’usines, premier créneau (20 à 30 élèves, 90 min)'],
-      ['10h30', 'Visites d’usines, second créneau ; une machine et son métier'],
-      ['9h00', 'En parallèle : HAUQE, Journées nationale et mondiale de la qualité, Prix de la qualité'],
-      ['14h00', 'Forum d’orientation des métiers'],
-      ['16h00', '« Ils ont commencé petit » : trois industriels, dont au moins une femme'],
+      ['8h30-12h00', 'Visites d’usines, ouvertes à tous : deux créneaux de 90 minutes, à 8h30 et à 10h30 ; les groupes scolaires de 20 à 30 élèves sont encadrés par leurs enseignants ; à chaque visite, un salarié explique une machine et son métier'],
+      ['9h00-12h00', 'En parallèle, HAUQE : lancement des Journées nationales de la qualité et célébration de la Journée mondiale de la qualité'],
+      ['14h00-16h00', 'Forum d’orientation des métiers : écoles et entreprises présentent les métiers de l’industrie, les formations qui y mènent et les opportunités ; questions de la salle'],
+      ['16h00-16h45', '« Ils ont commencé petit » : trois industriels, dont au moins une femme, racontent leur première machine, leur premier client et leurs erreurs ; questionnaire'],
     ],
   },
   {
     n: 18, name: 'Mercredi', theme: 'Innovation et mise à niveau',
-    goal: 'INPIT avec les incubateurs, vitrine des innovateurs togolais ; après-midi BRMN.',
-    where: 'Lieu principal (salle toute la journée)',
+    goal: 'La journée de l’INPIT et du BRMN : montrer ce que les Togolais inventent, le protéger, et faire grandir les entreprises.',
+    where: 'Palais des Congrès, une salle toute la journée',
     slots: [
       ['9h00', 'Accueil des participants'],
-      ['9h30', 'INPIT : de la recherche à l’innovation, protéger et valoriser, vitrine des innovateurs togolais'],
-      ['14h00', 'BRMN : Journée de la mise à niveau, jusqu’à 17h00'],
+      ['9h30-12h30', 'INPIT, avec les pôles d’innovation et les incubateurs : atelier « De la recherche à l’innovation ; protéger et valoriser les inventions et les modèles d’utilité », et vitrine des innovateurs togolais'],
+      ['12h30-14h00', 'Pause'],
+      ['14h00-17h00', 'BRMN : Journée de la mise à niveau'],
     ],
   },
   {
     n: 19, name: 'Jeudi', theme: 'Femmes dans l’industrie',
-    goal: 'Portraits, panel, cercle des industrielles, puis visite d’entreprises de femmes en zone franche.',
-    where: 'Lieu principal le matin ; zone franche l’après-midi (API-ZF)',
+    goal: 'Montrer que l’industrie togolaise est aussi faite par des femmes, puis aller les voir au travail.',
+    where: 'Palais des Congrès, puis visite d’entreprises',
     slots: [
-      ['9h00', 'Projection de portraits filmés de femmes de l’industrie'],
-      ['9h30', 'Panel « Les métiers de l’industrie au féminin »'],
-      ['11h00', 'Cercle des industrielles : échanges en petits groupes'],
-      ['14h00', 'Visite d’entreprises de femmes en zone franche, avec l’API-ZF'],
+      ['9h00', 'Accueil des invités'],
+      ['9h30-9h40', 'Projection de portraits filmés de femmes de l’industrie'],
+      ['9h40-10h50', 'Panel « Les métiers de l’industrie au féminin » : des industrielles togolaises et une jeune femme qui démarre son activité industrielle'],
+      ['11h00', 'Visite d’entreprises, ouverte à tous'],
     ],
   },
   {
-    n: 20, name: 'Vendredi', theme: 'Journée phare', phare: true,
-    goal: 'Journée de l’industrialisation de l’Afrique : opportunités, une table ronde, clôture, puis exposition et rencontres d’affaires.',
-    where: 'Lieu principal (Palais des congrès ou Hôtel Sarakawa)',
+    n: 20, name: 'Vendredi', theme: 'Journée de l’industrialisation de l’Afrique', phare: true,
+    goal: 'Une table ronde sur le thème africain de l’édition 2026, la clôture, puis l’ouverture de l’exposition.',
+    where: 'Palais des Congrès',
     slots: [
-      ['8h30', 'Accueil des invités'],
-      ['9h00', 'Ouverture : comité d’organisation ; message de l’ONUDI'],
-      ['9h20', 'API-ZF : opportunités d’investissement'],
-      ['9h35', 'Table ronde : produire et transformer au Togo'],
-      ['10h50', 'Recommandations et discours de clôture du Ministre'],
-      ['11h30', 'Inauguration de l’exposition « Fabriqué au Togo »'],
-      ['14h00', 'Rencontres d’affaires API-ZF (10 tables, 20 min), jusqu’à 17h00'],
-      ['14h00', 'Exposition ouverte et guichet « Je me lance », jusqu’à 18h00'],
+      ['8h30-9h00', 'Accueil des invités'],
+      ['9h00-9h10', 'Ouverture : mot du président du comité d’organisation'],
+      ['9h10-9h20', 'Projection de la vidéo sur la nouvelle stratégie d’industrialisation du Togo'],
+      ['9h20-10h30', 'Table ronde : « Financer l’industrialisation pour un développement inclusif et durable » : un industriel, une industrielle, un investisseur, un jeune entrepreneur industriel, un partenaire technique et financier ; questions du public'],
+      ['10h30-10h45', 'Lecture des recommandations ; clôture'],
+      ['10h45-11h15', 'Collation'],
+      ['13h30', 'Le Ministre ou son représentant inaugure l’exposition « Fabriqué au Togo »'],
+      ['14h00-18h00', 'Exposition ouverte au public ; guichet « Je me lance »'],
     ],
   },
   {
     n: 21, name: 'Samedi', theme: 'Exposition · grand public',
-    goal: 'Familles et jeunes à l’exposition « Fabriqué au Togo » ; démonstrations et vote du produit coup de cœur.',
-    where: 'Lieu principal',
+    goal: 'Familles, jeunes et grand public à l’exposition « Fabriqué au Togo » ; 1 500 à 2 000 visiteurs attendus.',
+    where: 'Palais des Congrès',
     slots: [
-      ['9h00', 'Ouverture de l’exposition au public ; un jeton de vote à l’entrée'],
-      ['14h00', 'Démonstrations de fabrication ; espace enfants'],
-      ['16h00', 'Résultat du vote du produit coup de cœur'],
+      ['9h00', 'Ouverture de l’exposition « Fabriqué au Togo » au public'],
     ],
   },
   {
     n: 22, name: 'Dimanche', theme: 'Bilan',
-    goal: 'Dernier jour de l’exposition ; bilan et résultats publiés en ligne.',
-    where: 'Lieu principal / en ligne',
+    goal: 'Dernier jour de l’exposition ; bilan en chiffres et en images publié le soir ; remerciements publics à chaque entreprise et à chaque école.',
+    where: 'Palais des Congrès ; en ligne',
     slots: [],
   },
 ]
+
+/* Thème national de l'édition 2026 ; « L'industrie à portée de main » reste le slogan. */
+export const NATIONAL_THEME = 'Accélérer l’industrialisation togolaise : transformation productive, innovation et compétitivité'
 
 export const SPEAKERS = [
   ['Faïka Bako', 'Panel · WAFO, huiles et corps gras'],

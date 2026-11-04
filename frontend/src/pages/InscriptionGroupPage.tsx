@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { registerParticipation } from '../api/participations'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+import { VisitDaysNote } from '../components/VisitDaysNote'
 import { LocationField } from '../components/map/LocationField'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
@@ -81,6 +82,7 @@ export default function InscriptionGroupPage() {
             title="Participer en tant qu’école / université"
             lead="Écoles, centres de formation et universités : inscrivez votre groupe. Après validation, le QR du jour J suit."
           />
+          <VisitDaysNote audience="public" />
           <img
             src="/images/inscription-groupe.jpg"
             alt="Élèves en uniforme prenant un selfie avec la silhouette d’un technicien, dans une exposition sur les métiers de l’industrie"

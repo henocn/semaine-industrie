@@ -19,7 +19,7 @@ function voterKey() {
   return v
 }
 
-/* Vote coup de cœur (expo samedi), scores live via Socket.IO. */
+/* Vote coup de cœur de l’exposition, scores live via Socket.IO. */
 export default function VotePage() {
   const [options, setOptions] = useState<VoteOption[]>([])
   const [error, setError] = useState<string | null>(null)
