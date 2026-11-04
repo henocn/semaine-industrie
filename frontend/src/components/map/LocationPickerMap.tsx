@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
-import { createTogoMap, isInTogo } from './togoMap'
+import 'leaflet/dist/leaflet.css'
 
 type Props = {
   lat: number | null
@@ -9,7 +9,8 @@ type Props = {
   className?: string
 }
 
-const OUTSIDE_TOGO = 'Choisissez un emplacement à l’intérieur du Togo.'
+/* Bas-Togo : le cadrage d'ouverture ; le reste de la carte reste accessible. */
+const BAS_TOGO = L.latLngBounds([6.1, 0.55], [7.05, 1.8])
 
 /* Marqueur brand pour le point choisi. */
 function pinIcon() {
@@ -21,7 +22,7 @@ function pinIcon() {
   })
 }
 
-/* Carte du Togo cliquable : pose / déplace le marqueur (lat/lng auto). */
+/* Carte cliquable : pose / déplace le marqueur (lat/lng auto). */
 export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -29,36 +30,25 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
   const onPickRef = useRef(onPick)
   onPickRef.current = onPick
   const focusRef = useRef(false)
-  const lastPosRef = useRef<L.LatLngTuple | null>(null)
   const [locating, setLocating] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
-
-  /* Retient le point s'il est au Togo, sinon le signale ; indique si le point est accepté. */
-  const pickRef = useRef((pickedLat: number, pickedLng: number) => {
-    if (!isInTogo(pickedLat, pickedLng)) {
-      setMessage(OUTSIDE_TOGO)
-      return false
-    }
-    setMessage(null)
-    onPickRef.current(pickedLat, pickedLng)
-    return true
-  })
+  const [locError, setLocError] = useState<string | null>(null)
 
   /* Place le point sur la position de l'appareil. */
   function locateMe() {
     if (!navigator.geolocation) {
-      setMessage('Position indisponible sur cet appareil.')
+      setLocError('Position indisponible sur cet appareil.')
       return
     }
     setLocating(true)
-    setMessage(null)
+    setLocError(null)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        focusRef.current = pickRef.current(pos.coords.latitude, pos.coords.longitude)
+        focusRef.current = true
+        onPickRef.current(pos.coords.latitude, pos.coords.longitude)
         setLocating(false)
       },
       () => {
-        setMessage('Position refusée ou indisponible.')
+        setLocError('Position refusée ou indisponible.')
         setLocating(false)
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 },
@@ -68,10 +58,20 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
-    const map = createTogoMap(containerRef.current)
+    const map = L.map(containerRef.current, {
+      scrollWheelZoom: true,
+      zoomControl: true,
+    }).fitBounds(BAS_TOGO)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap',
+      maxZoom: 18,
+    }).addTo(map)
+
     map.on('click', (e) => {
-      pickRef.current(e.latlng.lat, e.latlng.lng)
+      onPickRef.current(e.latlng.lat, e.latlng.lng)
     })
+
     mapRef.current = map
 
     return () => {
@@ -86,7 +86,6 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
     if (!map) return
 
     if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-      lastPosRef.current = null
       if (markerRef.current) {
         markerRef.current.remove()
         markerRef.current = null
@@ -95,15 +94,12 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
     }
 
     const pos: L.LatLngTuple = [lat, lng]
-    lastPosRef.current = pos
     if (!markerRef.current) {
       markerRef.current = L.marker(pos, { icon: pinIcon(), draggable: true })
         .addTo(map)
         .on('dragend', () => {
           const p = markerRef.current?.getLatLng()
-          if (!p || pickRef.current(p.lat, p.lng)) return
-          /* Déposé hors du Togo : le marqueur revient à sa dernière position. */
-          if (lastPosRef.current) markerRef.current?.setLatLng(lastPosRef.current)
+          if (p) onPickRef.current(p.lat, p.lng)
         })
     } else {
       markerRef.current.setLatLng(pos)
@@ -113,30 +109,26 @@ export function LocationPickerMap({ lat, lng, onPick, className }: Props) {
   }, [lat, lng])
 
   return (
-    <div className={`${className ?? ''} flex flex-col gap-4 sm:flex-row sm:items-start`}>
-      <div
-        ref={containerRef}
-        className="mx-auto h-[576px] w-[240px] shrink-0 border border-forest/20 sm:mx-0"
-        style={{ background: '#fff' }}
-      />
-      <div className="flex flex-col items-start gap-3">
-        <p className="text-[14px] leading-relaxed text-ink/70">
-          Cliquez sur votre région pour zoomer, puis ajustez le point sur votre site.
-        </p>
+    <div className={className}>
+      <div className="mb-3 flex justify-end">
         <button
           type="button"
           onClick={locateMe}
           disabled={locating}
-          className="border border-forest bg-white px-3 py-1.5 text-[13px] font-semibold text-forest disabled:opacity-50"
+          className="bg-forest px-4 py-2 text-[14px] font-semibold text-white disabled:opacity-50"
         >
           {locating ? 'Localisation…' : 'Ma position'}
         </button>
+      </div>
+      <div ref={containerRef} className="h-[55vh] max-h-[480px] min-h-[280px] w-full border border-forest/20" />
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-[13px]">
+        <span className="text-ink/70">Cliquez sur la carte pour placer le point.</span>
         {lat != null && lng != null && (
-          <span className="text-[13px] font-medium text-forest">
+          <span className="font-medium text-forest">
             {lat.toFixed(5)}, {lng.toFixed(5)}
           </span>
         )}
-        {message && <span role="alert" className="text-[13px] text-red-700">{message}</span>}
+        {locError && <span role="alert" className="text-red-700">{locError}</span>}
       </div>
     </div>
   )

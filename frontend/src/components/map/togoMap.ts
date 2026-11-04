@@ -12,7 +12,6 @@ const BASE_ZOOM = 8
 const DEFAULT_TILE_SIZE = 190
 
 let ringPromise: Promise<L.LatLngTuple[]> | null = null
-let loadedRing: L.LatLngTuple[] | null = null
 
 /* Charge une seule fois le tracé de la frontière. */
 function loadRing() {
@@ -22,30 +21,13 @@ function loadRing() {
         if (!res.ok) throw new Error('Frontière indisponible')
         return res.json() as Promise<{ coordinates: [number, number][][] }>
       })
-      .then((shape) => {
-        loadedRing = shape.coordinates[0].map(([lng, lat]): L.LatLngTuple => [lat, lng])
-        return loadedRing
-      })
+      .then((shape) => shape.coordinates[0].map(([lng, lat]): L.LatLngTuple => [lat, lng]))
       .catch((err) => {
         ringPromise = null
         throw err
       })
   }
   return ringPromise
-}
-
-/* Vrai si le point est dans le Togo (l'emprise seule tant que le tracé n'est pas chargé). */
-export function isInTogo(lat: number, lng: number) {
-  if (!loadedRing) return TOGO_BOUNDS.contains([lat, lng])
-  let inside = false
-  for (let i = 0, j = loadedRing.length - 1; i < loadedRing.length; j = i, i += 1) {
-    const [latA, lngA] = loadedRing[i]
-    const [latB, lngB] = loadedRing[j]
-    if (latA > lat !== latB > lat && lng < ((lngB - lngA) * (lat - latA)) / (latB - latA) + lngA) {
-      inside = !inside
-    }
-  }
-  return inside
 }
 
 /* Taille de tuile entière pour que le Togo remplisse la carte au niveau de base.

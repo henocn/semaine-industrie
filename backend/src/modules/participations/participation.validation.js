@@ -13,6 +13,9 @@ const fields = {
   phone: phone().allow('', null),
   description: Joi.string().trim().max(8000).allow('', null),
   city: Joi.string().trim().max(120).allow('', null),
+  address: Joi.string().trim().max(500).allow('', null),
+  lat: Joi.number().min(-90).max(90).allow(null),
+  lng: Joi.number().min(-180).max(180).allow(null),
   headcount: Joi.number().integer().min(1).max(5000).allow(null),
 };
 
@@ -24,12 +27,23 @@ const createSchema = Joi.object({
   phone: fields.phone,
   description: fields.description,
   city: fields.city,
+  address: fields.address,
+  lat: fields.lat,
+  lng: fields.lng,
   headcount: fields.headcount,
+});
+
+/* Une école indique sa position à l'inscription publique. */
+const schoolPosition = (field) => field.when('kind', {
+  is: 'ecole',
+  then: Joi.number().required().messages({ 'any.required': 'Placez votre établissement sur la carte' }),
 });
 
 /* Inscription publique : téléphone obligatoire. */
 const publicSchema = createSchema.keys({
   phone: phone().required(),
+  lat: schoolPosition(fields.lat),
+  lng: schoolPosition(fields.lng),
 });
 
 /* Mise à jour d'une participation. */
@@ -39,6 +53,9 @@ const updateSchema = Joi.object({
   phone: fields.phone,
   description: fields.description,
   city: fields.city,
+  address: fields.address,
+  lat: fields.lat,
+  lng: fields.lng,
   headcount: fields.headcount,
 }).min(1);
 

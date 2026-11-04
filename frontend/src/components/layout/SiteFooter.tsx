@@ -34,14 +34,9 @@ export function SiteFooter() {
         <div>
           <p className="font-semibold text-white">La semaine</p>
           <ul className="mt-4 space-y-2.5">
-            <li><Link to="/inscription-particulier" className={LINK}>Participer en tant que particulier</Link></li>
-            <li><Link to="/inscription-groupe" className={LINK}>Participer en tant qu’école / université</Link></li>
-            <li><Link to="/mon-espace" className={LINK}>Mon espace</Link></li>
             <li><Link to="/programme" className={LINK}>Programme</Link></li>
             <li><Link to="/carte" className={LINK}>Carte des usines</Link></li>
-            <li><Link to="/vote" className={LINK}>Vote samedi</Link></li>
-            <li><Link to="/vue-par-vous" className={LINK}>L’industrie, vue par vous</Link></li>
-            <li><Link to="/vue-par-vous?jeu=sondage" className={LINK}>Questionnaire</Link></li>
+            <li><Link to="/mon-espace" className={LINK}>Mon espace</Link></li>
             <li><Link to="/faq" className={LINK}>Questions fréquentes</Link></li>
             <li><Link to="/#contact" className={LINK}>Contact</Link></li>
           </ul>

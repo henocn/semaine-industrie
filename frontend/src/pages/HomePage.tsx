@@ -34,8 +34,8 @@ const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to
 /* Chiffres repères, sans KPI inventé. */
 const KEY_FIGURES: [string, string][] = [
   ['7 jours', 'Un thème par jour'],
-  ['16 au 22 nov.', 'Journée phare le 20'],
-  ['Lomé + régions', 'Du port aux sites'],
+  ['16 au 22 nov.', 'Journée de l’industrialisation de l’Afrique le 20'],
+  ['Palais des Congrès', 'Lomé, et visites d’usines'],
 ]
 
 const CONTACT_INPUT =
@@ -100,7 +100,7 @@ function Hero() {
               <span className="text-energy">.</span>
             </h1>
             <p className="mt-5 max-w-md text-base leading-relaxed text-ink/75">
-              Pendant une semaine, les usines ouvrent leurs portes aux élèves, aux étudiants et au public.
+              Les usines ouvrent leurs portes aux élèves, aux étudiants et au public, et le Palais des Congrès de Lomé accueille l’exposition « Fabriqué au Togo ».
             </p>
             <div className="mt-7 flex flex-wrap gap-2.5">
               <Button to="/programme">Programme</Button>
@@ -204,14 +204,14 @@ function ProgrammeStrip() {
       <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-usine.png)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal max-w-3xl`}>
         <SectionHeader
-          title="Journée phare"
-          lead="Vendredi 20 novembre, Journée de l’industrialisation de l’Afrique."
+          title="Journée de l’industrialisation de l’Afrique"
+          lead="Vendredi 20 novembre, au Palais des Congrès de Lomé."
         />
         <p className="mt-6 text-[15px] leading-relaxed text-ink/75">{dayJ.goal}</p>
         <p className="mt-2 text-[13px] text-ink/55">{dayJ.where}</p>
         <ul className="mt-6 space-y-2.5 border-t border-forest/15 pt-6">
           {dayJ.slots.map(([h, t]) => (
-            <li key={h + t} className="grid grid-cols-[3.5rem_1fr] gap-3 text-[14px]">
+            <li key={h + t} className="grid grid-cols-[6rem_1fr] gap-3 text-[14px]">
               <span className="font-medium tabular-nums text-forest">{h}</span>
               <span className="text-ink/75">{t}</span>
             </li>
@@ -235,7 +235,7 @@ function Women() {
         <div className="reveal">
           <SectionHeader
             title="Les métiers de l’industrie au féminin"
-            lead="Panel du jeudi 19 novembre, à 9h30."
+            lead="Panel du jeudi 19 novembre, à 9h40."
           />
           <Photo name="atelier" alt="Ouvrières dans un atelier textile" className="mt-8 aspect-[4/3]" />
         </div>

@@ -20,6 +20,9 @@ export type Participation = {
   phone: string | null
   description: string | null
   city: string | null
+  address: string | null
+  lat: string | number | null
+  lng: string | number | null
   headcount: number | null
   status: ParticipationStatus
   tracking_code?: string | null
@@ -34,6 +37,9 @@ export type ParticipationInput = {
   phone?: string | null
   description?: string | null
   city?: string | null
+  address?: string | null
+  lat?: number | null
+  lng?: number | null
   headcount?: number | null
 }
 

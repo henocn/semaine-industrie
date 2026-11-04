@@ -7,11 +7,15 @@ import { SITE_URL, publicSeo } from '../lib/seo'
 const FAQ = [
   {
     q: 'Quand a lieu la Semaine ?',
-    a: 'Du lundi 16 au dimanche 22 novembre 2026, au Togo. La journée phare est le vendredi 20 novembre.',
+    a: 'Du lundi 16 au dimanche 22 novembre 2026, au Palais des Congrès de Lomé. Le vendredi 20 novembre est la Journée de l’industrialisation de l’Afrique.',
   },
   {
     q: 'Qui peut participer ?',
     a: 'Les entreprises, les écoles, les jeunes, les familles et les acteurs économiques. Certaines visites se font sur inscription.',
+  },
+  {
+    q: 'Quand ont lieu les visites ?',
+    a: 'Le mardi 17 novembre à 8h30 ou à 10h30, et le jeudi 19 novembre à 11h00, ouvertes à tous. Le lundi 16 novembre, le Ministre et les autorités visitent les entreprises de la PIA.',
   },
   {
     q: "Comment s'inscrire, école, université ou particulier ?",
@@ -43,7 +47,7 @@ const FAQ = [
   },
   {
     q: 'Comment voter pour le coup de cœur ?',
-    a: "Le samedi, sur la page Vote. Un vote par navigateur. Les produits en lice sont ceux retenus par l'organisation.",
+    a: "Sur la page Vote. Un vote par navigateur. Les produits en lice sont ceux retenus par l'organisation.",
   },
   {
     q: 'Les documents sont-ils publics ?',

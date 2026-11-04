@@ -12,6 +12,7 @@ const engagementService = require('../engagement/engagement.service');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const { notifyN8n } = require('../../utils/n8n');
+const { assertAvailable, duplicateError } = require('../../utils/uniqueContact');
 const whatsappService = require('../whatsapp/whatsapp.service');
 const mailService = require('../notifications/mail.service');
 const logger = require('../../utils/logger');
@@ -79,12 +80,13 @@ async function createRequest(payload) {
       throw ApiError.badRequest('Trois images sont obligatoires pour une industrie');
     }
   }
+  await assertAvailable('labels', { email: data.contact_email, phone: data.contact_phone });
   const row = await LabelRequest.create({
     ...data,
     contact_opt_in: true,
     status: 'pending',
     tracking_code: await uniqueLabelCode(data.structure_type),
-  });
+  }).catch((err) => { throw duplicateError(err); });
   mailService.labelReceived(row);
   whatsappService.notifyLabelReceived(row).catch((err) => {
     logger.warn('[label] notify WhatsApp failed', err.message);
@@ -100,11 +102,12 @@ async function createRequestByOrga(payload) {
   }
   if (!Array.isArray(data.gallery_urls)) data.gallery_urls = [];
   if (!Array.isArray(data.products)) data.products = [];
+  await assertAvailable('labels', { email: data.contact_email, phone: data.contact_phone });
   const row = await LabelRequest.create({
     ...data,
     status: 'pending',
     tracking_code: await uniqueLabelCode(data.structure_type),
-  });
+  }).catch((err) => { throw duplicateError(err); });
   return row;
 }
 
@@ -204,6 +207,7 @@ async function updateRequest(id, payload) {
   const request = await getRequestById(id);
   const previousName = request.structure_name;
   const data = { ...payload };
+  await assertAvailable('labels', { excludeId: request.id, email: data.contact_email, phone: data.contact_phone });
   const nextType = data.structure_type || request.structure_type;
   if (nextType === 'ecole') {
     data.sector = null;
@@ -215,7 +219,7 @@ async function updateRequest(id, payload) {
   if (!request.contact_name || request.contact_name === previousName) {
     request.contact_name = request.structure_name;
   }
-  await request.save();
+  await request.save().catch((err) => { throw duplicateError(err); });
 
   if (request.status === 'approved' && request.organization_id) {
     const org = await Organization.findByPk(request.organization_id);

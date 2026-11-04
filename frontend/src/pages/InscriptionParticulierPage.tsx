@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { registerParticipation } from '../api/participations'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+import { VisitDaysNote } from '../components/VisitDaysNote'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
@@ -56,6 +57,7 @@ export default function InscriptionParticulierPage() {
             title="Participer"
             lead="Étudiant, parent, jeune diplômé ou curieux de l'industrie : inscrivez-vous. Votre QR arrive par e-mail et sur WhatsApp après validation."
           />
+          <VisitDaysNote audience="public" />
           <img
             src="/images/inscription-particulier.jpg"
             alt="Silhouette d’une technicienne en bleu de travail et casque, clé en main, dans une exposition sur les métiers de l’industrie"
