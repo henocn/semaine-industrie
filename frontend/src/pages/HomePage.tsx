@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { sendContactMessage } from '../api/contact'
 import { listResources, type GlobalResource } from '../api/resources'
 import { ResourceCard } from '../components/ResourceCard'
-import { DAYS, SPEAKERS, PLACES, PARTNERS, YOUTH_PILLAR } from '../data'
+import { DAYS, NATIONAL_THEME, SPEAKERS, PLACES, PARTNERS, YOUTH_PILLAR } from '../data'
 import { Seo } from '../components/Seo'
 import { CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
 import { publicSeo } from '../lib/seo'
@@ -95,12 +95,12 @@ function Hero() {
       <div className="relative flex flex-col md:block">
         <div className={`${WRAP} relative z-10 grid pt-12 pb-6 sm:pt-16 md:min-h-[32rem] md:grid-cols-2 md:items-center md:py-16`}>
           <div>
-            <h1 className="display mt-4 max-w-xl text-balance text-[clamp(2.25rem,1.5rem+3vw,4rem)] font-extrabold leading-[1.05] text-forest">
+            <h1 className="display mt-4 max-w-xl text-balance text-[clamp(2.75rem,1.5rem+4vw,5.5rem)] font-extrabold leading-[1.05] text-forest">
               {CAMPAIGN_TAGLINE.replace(/\.$/, '')}
               <span className="text-energy">.</span>
             </h1>
-            <p className="mt-5 max-w-md text-base leading-relaxed text-ink/75">
-              Les usines ouvrent leurs portes aux élèves, aux étudiants et au public, et le Palais des Congrès de Lomé accueille l’exposition « Fabriqué au Togo ».
+            <p className="display mt-5 max-w-xl text-[clamp(1.125rem,1rem+0.6vw,1.5rem)] font-semibold leading-snug text-forest">
+              Thème : « {NATIONAL_THEME} »
             </p>
             <div className="mt-7 flex flex-wrap gap-2.5">
               <Button to="/programme">Programme</Button>
