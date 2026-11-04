@@ -80,7 +80,7 @@ export async function uploadLabelGallery(files: File[]) {
 
 /* Envoie une demande de label. */
 export function createLabelRequest(payload: LabelRequestPayload) {
-  return apiFetch<{ id: string; status: string }>('/labels/requests', {
+  return apiFetch<{ id: string; status: string; tracking_code?: string | null }>('/labels/requests', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
@@ -95,6 +95,7 @@ export type LabelRequest = {
   id: string
   organization_id?: string | null
   label_code?: string | null
+  tracking_code?: string | null
   structure_name: string
   structure_type: 'entreprise' | 'ecole'
   sector: string | null

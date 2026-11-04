@@ -22,6 +22,7 @@ export type Participation = {
   city: string | null
   headcount: number | null
   status: ParticipationStatus
+  tracking_code?: string | null
   passport: ParticipationPassport | null
   createdAt?: string
 }

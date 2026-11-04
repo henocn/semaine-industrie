@@ -8,7 +8,6 @@ const MUTED = '#5b6b66';
 const LINE = '#dfe7e3';
 const FONT = 'Arial, Helvetica, sans-serif';
 const CONTACT = 'infos@semaineindustrie.tg';
-const CARD_CID = 'carte-qr';
 
 /* Échappe un texte pour le HTML. */
 function esc(value) {
@@ -55,11 +54,6 @@ function buttonBlock({ label, url }) {
   </tr></table>`;
 }
 
-/* Carte QR affichée dans le message. */
-function cardBlock(name) {
-  return `<p style="margin:4px 0 20px"><img src="cid:${CARD_CID}" width="280" alt="Carte QR de ${esc(name)}" style="display:block;width:280px;max-width:100%;height:auto;border:1px solid ${LINE}"></p>`;
-}
-
 /* Assemble le message : HTML, texte et pièces jointes. */
 function buildEmail({
   subject, intro, code = null, details = [], outro = [], button = null, card = null,
@@ -69,7 +63,6 @@ function buildEmail({
     ...intro.map(paragraph),
     code ? `<p style="margin:0 0 6px;font:14px/1.4 ${FONT};color:${MUTED}">Votre code de suivi</p>${codeBlock(code)}` : '',
     details.length ? detailsBlock(details) : '',
-    card ? cardBlock(card.name) : '',
     ...outro.map(paragraph),
     button ? buttonBlock(button) : '',
   ].join('\n');
@@ -104,7 +97,6 @@ function buildEmail({
     ? [{
       filename: `carte-qr-${card.fileCode}.png`,
       content: card.png,
-      cid: CARD_CID,
       contentType: 'image/png',
     }]
     : [];
@@ -143,7 +135,7 @@ function emails(site = env.PUBLIC_APP_URL) {
       intro: [`La participation de **${name}** à la Semaine de l’industrie 2026 a été **acceptée**.`],
       code,
       details: [['Établissement', name], ['Places accordées', String(places)], ['Statut', 'Acceptée']],
-      card: { name, png: cardPng, fileCode: code },
+      card: { png: cardPng, fileCode: code },
       outro: ['Votre carte QR est jointe à ce message : présentez-la à l’entrée des sites.', 'Vous serez prévenu dès qu’une visite sera arrangée.'],
       button: space(code),
     }),
@@ -169,7 +161,7 @@ function emails(site = env.PUBLIC_APP_URL) {
       subject: 'Votre inscription est acceptée',
       intro: [`L’inscription de **${name}** à la Semaine de l’industrie 2026 a été **acceptée**.`],
       code,
-      card: { name, png: cardPng, fileCode: code },
+      card: { png: cardPng, fileCode: code },
       outro: ['Votre carte QR est jointe à ce message : présentez-la à l’entrée des sites.'],
       button: space(code),
     }),
@@ -195,7 +187,7 @@ function emails(site = env.PUBLIC_APP_URL) {
       subject: `Label accordé : ${name}`,
       intro: [`La demande de label de **${name}** a été **acceptée**.`],
       code,
-      card: { name, png: cardPng, fileCode: code },
+      card: { png: cardPng, fileCode: code },
       outro: [
         'Votre carte QR est jointe à ce message : elle mène à votre fiche publique.',
         'Gardez votre code pour vous : il sert à valider les passages des visiteurs sur votre site.',
@@ -258,6 +250,15 @@ function emails(site = env.PUBLIC_APP_URL) {
       intro: [`L’établissement **${school}** visitera votre site.`],
       details: [['Date', day], ['Horaire', slot], ['Établissement', school], ['Effectif prévu', `${headcount} personnes`]],
       button: code ? space(code) : null,
+    }),
+
+    /* Rappel du code de suivi. */
+    labelReminder: ({ name, code }) => buildEmail({
+      subject: `Rappel de votre code de suivi : ${name}`,
+      intro: [`Voici le rappel du code de suivi de **${name}**.`],
+      code,
+      outro: ['Conservez ce code de suivi.'],
+      button: space(code),
     }),
 
     /* Rappel d'une visite. */

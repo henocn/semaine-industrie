@@ -2,7 +2,9 @@
 
 const crypto = require('crypto');
 const { QueryTypes, Op } = require('sequelize');
-const { sequelize, Organization, Passport, BusinessParticipant } = require('../../models');
+const {
+  sequelize, Organization, Passport, BusinessParticipant, Participation, LabelRequest,
+} = require('../../models');
 
 const START = 2001;
 const PREFIXES = ['EC', 'PA', 'AF', 'IN'];
@@ -56,6 +58,8 @@ async function isCodeTaken(code, transaction) {
     `SELECT 1 FROM organizations WHERE label_code = :code OR legacy_code = :code
      UNION ALL SELECT 1 FROM passports WHERE code = :code OR legacy_code = :code
      UNION ALL SELECT 1 FROM business_participants WHERE tracking_code = :code OR legacy_code = :code
+     UNION ALL SELECT 1 FROM participations WHERE tracking_code = :code
+     UNION ALL SELECT 1 FROM label_requests WHERE tracking_code = :code
      LIMIT 1`,
     { replacements: { code }, transaction, type: QueryTypes.SELECT },
   );
@@ -110,6 +114,18 @@ async function findByCode(raw) {
   return null;
 }
 
+/* Retrouve un dossier sans fiche définitive : inscription ou demande en attente ou refusée. */
+async function findRequestByCode(raw) {
+  const code = normalizeCode(raw);
+  if (!code) return null;
+  const where = { tracking_code: code, status: ['pending', 'rejected'] };
+  const participation = await Participation.findOne({ where });
+  if (participation) return { kind: 'participation', participation };
+  const request = await LabelRequest.findOne({ where });
+  if (request) return { kind: 'label', request };
+  return null;
+}
+
 module.exports = {
   START,
   PREFIXES,
@@ -119,4 +135,5 @@ module.exports = {
   prefixFor,
   nextCode,
   findByCode,
+  findRequestByCode,
 };

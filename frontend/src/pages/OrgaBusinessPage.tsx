@@ -115,7 +115,7 @@ export default function OrgaBusinessPage() {
         p.phone,
         p.sector,
         businessKindLabel(p.kind),
-        p.status === 'approved' ? p.tracking_code : null,
+        p.tracking_code,
       ]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
@@ -152,7 +152,7 @@ export default function OrgaBusinessPage() {
   /* Colonnes des exports Excel (personnes, rendez-vous). */
   const peopleColumns = useMemo<ExcelColumn<BusinessParticipant>[]>(
     () => [
-      { header: 'Code de suivi', width: 14, value: (p) => (p.status === 'approved' ? p.tracking_code : '') },
+      { header: 'Code de suivi', width: 14, value: (p) => p.tracking_code || '' },
       { header: 'Nom et prénom', width: 28, value: (p) => p.contact_name || p.organization_name },
       { header: 'Profil', width: 14, value: (p) => businessKindLabel(p.kind) },
       { header: 'Statut', width: 12, value: (p) => statusLabel(p.status) },
@@ -528,7 +528,7 @@ export default function OrgaBusinessPage() {
                       >
                         <SelectCell selection={pickedPeople} id={p.id} />
                         <td className="font-semibold text-forest">
-                          {p.status === 'approved' && p.tracking_code ? p.tracking_code : '—'}
+                          {p.tracking_code || '—'}
                         </td>
                         <td className="font-semibold text-forest">{p.contact_name || p.organization_name || '—'}</td>
                         <td>

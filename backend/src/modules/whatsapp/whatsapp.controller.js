@@ -2,6 +2,7 @@
 
 const env = require('../../config/env');
 const whatsappService = require('./whatsapp.service');
+const mailService = require('../notifications/mail.service');
 const logger = require('../../utils/logger');
 const ApiResponse = require('../../utils/ApiResponse');
 
@@ -94,6 +95,7 @@ async function remindLabel(req, res, next) {
         error: 'organization.label_code et contact_phone requis',
       });
     }
+    mailService.labelReminder(organization);
     const sent = await whatsappService.notifyLabelReminder(organization);
     if (!sent.ok) {
       return res.status(502).json({ success: false, error: 'send_failed', data: sent });
@@ -117,6 +119,12 @@ async function remindVisit(req, res, next) {
         error: 'organization.label_code et contact_phone requis',
       });
     }
+    mailService.visitReminder({
+      organization,
+      visitDay: req.body?.visitDay,
+      visitSlot: req.body?.visitSlot,
+      place: req.body?.place,
+    });
     const sent = await whatsappService.notifyVisitReminder({
       organization,
       visitDay: req.body?.visitDay,

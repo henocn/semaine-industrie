@@ -3,6 +3,8 @@
 const { Participation, Passport } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const passportService = require('../passports/passport.service');
+const trackingService = require('../tracking/tracking.service');
+const mailService = require('../notifications/mail.service');
 const logger = require('../../utils/logger');
 const { renderQrCardDataUrl } = require('../../utils/qrCard');
 
@@ -67,11 +69,14 @@ async function getById(id) {
 
 /* Crée une participation en attente (école / centre / université, ou particulier). */
 async function create(payload) {
+  const kind = payload.kind === 'particulier' ? 'particulier' : 'ecole';
   const row = await Participation.create({
-    kind: payload.kind === 'particulier' ? 'particulier' : 'ecole',
+    kind,
     status: 'pending',
+    tracking_code: await trackingService.nextCode(trackingService.prefixFor(kind)),
     ...pickFields(payload),
   });
+  mailService.participationReceived(row);
   try {
     const whatsappService = require('../whatsapp/whatsapp.service');
     await whatsappService.notifyParticipationReceived(row);
@@ -109,9 +114,11 @@ async function ensurePassport(row) {
       school_name: row.name,
       holder_name: row.name,
       headcount: row.headcount,
+      code: row.tracking_code,
     })
-    : await passportService.createIndividual({ holder_name: row.name });
+    : await passportService.createIndividual({ holder_name: row.name, code: row.tracking_code });
   row.passport_id = passport.id;
+  row.tracking_code = passport.code;
   return passport;
 }
 
@@ -127,6 +134,7 @@ async function approve(id) {
 
   if (!wasApproved) {
     const presented = await present(row, { withImage: false });
+    mailService.participationApproved(row, presented.passport.code);
     try {
       const whatsappService = require('../whatsapp/whatsapp.service');
       await whatsappService.notifyParticipationApproved(presented);
@@ -145,6 +153,7 @@ async function reject(id) {
   row.status = 'rejected';
   await row.save();
   if (!wasRejected) {
+    mailService.participationRejected(row);
     try {
       const whatsappService = require('../whatsapp/whatsapp.service');
       await whatsappService.notifyParticipationRejected(row);

@@ -26,7 +26,7 @@ import { excelDate, statusLabel, type ExcelColumn } from '../lib/excel'
 
 /* Colonnes de l'export Excel des demandes de label. */
 const EXPORT_COLUMNS: ExcelColumn<LabelRequest>[] = [
-  { header: 'Code de suivi', width: 14, value: (r) => (r.status === 'approved' ? r.label_code : '') },
+  { header: 'Code de suivi', width: 14, value: (r) => r.label_code || r.tracking_code || '' },
   { header: 'Structure', width: 32, value: (r) => r.structure_name },
   { header: 'Type', width: 14, value: (r) => formatStructureType(r.structure_type) },
   { header: 'Statut', width: 12, value: (r) => statusLabel(r.status) },
@@ -147,7 +147,7 @@ export default function OrgaLabelsPage() {
     if (!q) return items
     return items.filter((item) =>
       [
-        item.status === 'approved' ? item.label_code : null,
+        item.label_code || item.tracking_code,
         item.structure_name,
         item.contact_phone,
         item.contact_email,
@@ -384,7 +384,7 @@ export default function OrgaLabelsPage() {
               >
                 <SelectCell selection={picked} id={item.id} />
                 <td className="font-semibold text-forest">
-                  {item.status === 'approved' && item.label_code ? item.label_code : '—'}
+                  {item.label_code || item.tracking_code || '—'}
                 </td>
                 <td className="font-medium text-forest">{item.structure_name}</td>
                 <td>

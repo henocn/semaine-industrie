@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { registerParticipation } from '../api/participations'
+import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
@@ -29,6 +30,7 @@ const DESCRIPTION_LABEL: Record<Profile, string> = {
 export default function InscriptionGroupPage() {
   const [profile, setProfile] = useState<Profile>('ecole')
   const [sent, setSent] = useState(false)
+  const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -41,7 +43,7 @@ export default function InscriptionGroupPage() {
     const fd = new FormData(form)
     const headcountRaw = String(fd.get('headcount') || '').trim()
     try {
-      await registerParticipation({
+      const created = await registerParticipation({
         kind: 'ecole',
         name: String(fd.get('name') || '').trim(),
         email: String(fd.get('email') || '').trim() || null,
@@ -49,6 +51,7 @@ export default function InscriptionGroupPage() {
         description: String(fd.get('description') || '').trim() || null,
         headcount: headcountRaw ? Number(headcountRaw) : null,
       })
+      setTrackingCode(created.tracking_code ?? null)
       setSent(true)
       scrollToTopNow()
     } catch (err) {
@@ -81,6 +84,7 @@ export default function InscriptionGroupPage() {
         {sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
             <p className="text-xl text-forest">Merci. Votre inscription est enregistrée.</p>
+            <TrackingCodeNotice code={trackingCode} />
           </div>
         ) : (
           <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">

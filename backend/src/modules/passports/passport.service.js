@@ -35,6 +35,7 @@ async function createGroup({
   headcount,
   school_organization_id,
   holder_name,
+  code: reservedCode,
 } = {}) {
   if (school_organization_id) {
     const school = await Organization.findOne({
@@ -77,7 +78,7 @@ async function createGroup({
 
   if (!school_name) throw ApiError.badRequest('École requise pour un passeport de groupe');
 
-  const code = await uniqueCode('group');
+  const code = reservedCode || await uniqueCode('group');
   const passport = await Passport.create({
     code,
     kind: 'group',
@@ -109,10 +110,10 @@ async function createBatch({ count = 10, school_name, class_label } = {}) {
 }
 
 /* Crée un passeport individuel (une personne, un QR). */
-async function createIndividual({ holder_name } = {}) {
+async function createIndividual({ holder_name, code: reservedCode } = {}) {
   const name = String(holder_name || '').trim();
   if (!name) throw ApiError.badRequest('Nom requis');
-  const code = await uniqueCode('individual');
+  const code = reservedCode || await uniqueCode('individual');
   const passport = await Passport.create({
     code,
     kind: 'individual',

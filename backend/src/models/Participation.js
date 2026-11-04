@@ -45,6 +45,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 'pending',
       },
+      tracking_code: {
+        type: DataTypes.STRING(16),
+        allowNull: true,
+        unique: true,
+      },
       passport_id: {
         type: DataTypes.UUID,
         allowNull: true,

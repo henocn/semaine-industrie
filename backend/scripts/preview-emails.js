@@ -47,6 +47,7 @@ async function main() {
     mail.meeting({ code: company.code, day: '20/11/2026', slot: '15:00 à 15:30', place: 'Salle des rencontres, Lomé', others: 'Golfe Capital', rescheduled: true }),
     mail.schoolVisit({ code: school.code, day: '18/11/2026', slot: '09:00 à 12:00', site: site.name }),
     mail.siteVisit({ code: site.code, day: '18/11/2026', slot: '09:00 à 12:00', school: school.name, headcount: 32 }),
+    mail.labelReminder(site),
     mail.visitReminder({ code: school.code, day: '18/11/2026', slot: '09:00 à 12:00', place: site.name }),
   ];
 

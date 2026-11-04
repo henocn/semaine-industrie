@@ -28,7 +28,7 @@ function getTransporter() {
 }
 
 /* Envoie un e-mail transactionnel (no-reply). */
-async function sendNotifyMail({ to, subject, text, html }) {
+async function sendNotifyMail({ to, subject, text, html, attachments }) {
   const tx = getTransporter();
   if (!tx) {
     logger.warn('[mail] SMTP non configuré, e-mail ignoré', subject, to);
@@ -41,6 +41,7 @@ async function sendNotifyMail({ to, subject, text, html }) {
       subject,
       text,
       html: html || undefined,
+      attachments: attachments?.length ? attachments : undefined,
       replyTo: env.MAIL_TO_CONTACT,
     });
     return { ok: true, id: info.messageId };
