@@ -21,6 +21,10 @@ export default function PrivacyPage() {
           pour le suivi (validation, rendez-vous, rappels).
         </p>
         <p>
+          Les échanges avec le bot WhatsApp sont enregistrés et consultables par les administrateurs
+          de la plateforme, pour le suivi des demandes.
+        </p>
+        <p>
           Cookies : uniquement des cookies techniques (session, préférence cookies). Pas de publicité
           tierce.
         </p>

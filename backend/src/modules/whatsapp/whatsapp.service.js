@@ -17,6 +17,7 @@ const {
 } = require('../../models');
 const trackingService = require('../tracking/tracking.service');
 const resourceService = require('../resources/resource.service');
+const conversationService = require('./conversation.service');
 
 const QR_DIR = path.join(__dirname, '../../../uploads/qr');
 const BTN_SUIVI = 'Suivi participation';
@@ -79,6 +80,7 @@ async function graphSend(phoneNumberId, payload) {
     logger.warn('[whatsapp] send failed', res.status, data);
     return { ok: false, status: res.status, data };
   }
+  conversationService.recordOutbound(payload, data);
   return { ok: true, data };
 }
 
@@ -866,22 +868,18 @@ async function replyB2bMenu(from, participant, phoneNumberId) {
   );
 }
 
+/* Partie d'une notification qui porte les messages (Meta direct ou n8n), sinon null. */
+function inboundEnvelope(raw) {
+  const body = raw?.body && typeof raw.body === 'object' ? raw.body : raw;
+  const value = body?.messages?.[0] ? body : body?.entry?.[0]?.changes?.[0]?.value;
+  return value?.messages?.[0] ? value : null;
+}
+
 /* Extrait le message utile (texte, bouton ou liste) depuis Meta ou n8n. */
 function extractInbound(raw) {
-  const body = raw?.body && typeof raw.body === 'object' ? raw.body : raw;
-  let msg = null;
-  let phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID || '';
-
-  if (body?.messages?.[0]) {
-    msg = body.messages[0];
-    phoneNumberId = body.metadata?.phone_number_id || phoneNumberId;
-  } else {
-    const value = body?.entry?.[0]?.changes?.[0]?.value;
-    if (value?.messages?.[0]) {
-      msg = value.messages[0];
-      phoneNumberId = value.metadata?.phone_number_id || phoneNumberId;
-    }
-  }
+  const envelope = inboundEnvelope(raw);
+  const msg = envelope?.messages[0];
+  const phoneNumberId = envelope?.metadata?.phone_number_id || env.WHATSAPP_PHONE_NUMBER_ID || '';
 
   if (!msg || !msg.from) return null;
 
@@ -1493,6 +1491,9 @@ async function handleText(from, text, phoneNumberId) {
 
 /* Point d'entrée bot : inbound Meta/n8n → réponses interactives. */
 async function processInbound(raw) {
+  const envelope = inboundEnvelope(raw);
+  if (envelope?.messages[0]?.from) conversationService.recordInbound(envelope);
+
   const inbound = extractInbound(raw);
   if (!inbound) {
     return { handled: false };

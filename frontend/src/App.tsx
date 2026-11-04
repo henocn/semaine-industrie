@@ -18,6 +18,7 @@ import MapPage from './pages/MapPage'
 import MonEspacePage from './pages/MonEspacePage'
 import OrganizationPage from './pages/OrganizationPage'
 import OrgaAuditPage from './pages/OrgaAuditPage'
+import OrgaChatbotPage from './pages/OrgaChatbotPage'
 import OrgaBusinessPage from './pages/OrgaBusinessPage'
 import OrgaDashboardPage from './pages/OrgaDashboardPage'
 import OrgaResourcesPage from './pages/OrgaResourcesPage'
@@ -99,6 +100,7 @@ export default function App() {
             <Route path="/orga/enquete" element={<OrgaSurveyPage />} />
             <Route path="/orga/ressources" element={<OrgaResourcesPage />} />
             <Route element={<RequireAdmin />}>
+              <Route path="/orga/chatbot" element={<OrgaChatbotPage />} />
               <Route path="/orga/audit" element={<OrgaAuditPage />} />
               <Route path="/orga/utilisateurs" element={<OrgaUsersPage />} />
             </Route>

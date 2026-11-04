@@ -243,6 +243,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         <NavLink to="/orga/ressources" className={linkClass}>Ressources</NavLink>
         {isAdminRole(user?.role) && (
           <>
+            <NavLink to="/orga/chatbot" className={linkClass}>Chatbot</NavLink>
             <NavLink to="/orga/audit" className={linkClass}>Audit et logs</NavLink>
             <NavLink to="/orga/utilisateurs" className={linkClass}>Utilisateurs</NavLink>
           </>
