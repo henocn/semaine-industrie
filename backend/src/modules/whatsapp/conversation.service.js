@@ -6,6 +6,7 @@ const { QueryTypes } = require('sequelize');
 const { sequelize, WhatsappMessage } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const logger = require('../../utils/logger');
+const { emitRealtime } = require('../../realtime/io');
 
 const TEMPLATES_FILE = path.join(__dirname, '../../../../deploy/whatsapp-templates.json');
 
@@ -90,6 +91,8 @@ function inboundText(message) {
 async function store(row) {
   try {
     await WhatsappMessage.bulkCreate([{ ...row, sent_at: new Date() }], { ignoreDuplicates: true });
+    /* Le signal ne porte que le numéro : le contenu se lit par l'API réservée aux admins. */
+    emitRealtime('whatsapp:message', { phone: row.phone }, 'admin');
   } catch (err) {
     logger.warn('[whatsapp] message non enregistré', err.message);
   }

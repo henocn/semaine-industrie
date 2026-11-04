@@ -93,6 +93,8 @@ function attachPresenceHandlers(io, socket) {
 
       await bindSocket(socket, user.id);
       socket.join('orga');
+      /* Les conversations du bot sont réservées aux admins. */
+      if (user.role === 'admin') socket.join('admin');
       broadcastPresence(io);
     } catch (err) {
       logger.debug('[presence] auth failed', err.message);

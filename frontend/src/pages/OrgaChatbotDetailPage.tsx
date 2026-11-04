@@ -1,7 +1,8 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getChatbotConversation, type ChatbotMessage } from '../api/chatbot'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 
 /* Affiche le texte en gras entre astérisques, comme WhatsApp. */
 function RichText({ text }: { text: string }) {
@@ -14,27 +15,50 @@ function RichText({ text }: { text: string }) {
   )
 }
 
-/* Conversation complète d'un contact, en lecture seule ; s'ouvre sur les derniers messages. */
+/* Distance au bas de page sous laquelle les nouveaux messages restent suivis. */
+const FOLLOW_MARGIN = 150
+
+/* Conversation complète d'un contact, en lecture seule et en direct ; s'ouvre sur les derniers messages. */
 export default function OrgaChatbotDetailPage() {
   const { phone = '' } = useParams()
   const [result, setResult] = useState<{ phone: string; messages?: ChatbotMessage[]; error?: string } | null>(null)
 
-  useEffect(() => {
-    let active = true
-    getChatbotConversation(phone)
-      .then((messages) => {
-        if (active) setResult({ phone, messages })
-      })
-      .catch((err) => {
-        if (active) setResult({ phone, error: err instanceof Error ? err.message : 'Erreur' })
-      })
-    return () => {
-      active = false
+  const lastRequest = useRef(0)
+  const follow = useRef(true)
+  const end = useRef<HTMLDivElement>(null)
+
+  /* Charge la conversation. Une erreur passagère n'efface pas ce qui est déjà affiché. */
+  const load = useCallback(async () => {
+    lastRequest.current += 1
+    const request = lastRequest.current
+    try {
+      const messages = await getChatbotConversation(phone)
+      if (request !== lastRequest.current) return
+      /* Qui relit plus haut garde sa position ; qui est en bas suit les nouveaux messages. */
+      follow.current = !end.current || end.current.getBoundingClientRect().top - window.innerHeight < FOLLOW_MARGIN
+      setResult({ phone, messages })
+    } catch (err) {
+      if (request !== lastRequest.current) return
+      const error = err instanceof Error ? err.message : 'Erreur'
+      setResult((previous) => (previous?.phone === phone && previous.messages ? previous : { phone, error }))
     }
   }, [phone])
 
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  useOrgaRealtime(['whatsapp:message'], (payload) => {
+    if ((payload as { phone?: string } | undefined)?.phone === phone) return load()
+  })
+
   const current = result?.phone === phone ? result : null
   const messages = current?.messages
+  const count = messages?.length ?? 0
+
+  useEffect(() => {
+    if (count && follow.current) end.current?.scrollIntoView({ block: 'end' })
+  }, [count])
 
   return (
     <OrgaShell
@@ -69,11 +93,7 @@ export default function OrgaChatbotDetailPage() {
               )
             })}
           </ol>
-          <div
-            ref={(element) => {
-              element?.scrollIntoView({ block: 'end' })
-            }}
-          />
+          <div ref={end} />
         </section>
       )}
     </OrgaShell>

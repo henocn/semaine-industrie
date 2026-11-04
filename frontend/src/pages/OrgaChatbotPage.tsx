@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { listChatbotConversations, type ChatbotConversation } from '../api/chatbot'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 
 const COLUMNS = 4
 
@@ -12,13 +13,17 @@ export default function OrgaChatbotPage() {
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const lastRequest = useRef(0)
 
-  /* Charge la liste des contacts. */
+  /* Charge la liste des contacts ; seule la réponse la plus récente compte. */
   async function load() {
+    lastRequest.current += 1
+    const request = lastRequest.current
     setBusy(true)
     try {
       setError(null)
-      setRows(await listChatbotConversations())
+      const list = await listChatbotConversations()
+      if (request === lastRequest.current) setRows(list)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur')
     } finally {
@@ -29,6 +34,8 @@ export default function OrgaChatbotPage() {
   useEffect(() => {
     void load()
   }, [])
+
+  useOrgaRealtime(['whatsapp:message'], () => load())
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
