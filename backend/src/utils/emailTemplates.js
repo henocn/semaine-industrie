@@ -1,7 +1,5 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
 const env = require('../config/env');
 
 const FOREST = '#024d3e';
@@ -10,8 +8,6 @@ const MUTED = '#5b6b66';
 const LINE = '#dfe7e3';
 const FONT = 'Arial, Helvetica, sans-serif';
 const CONTACT = 'infos@semaineindustrie.tg';
-const LOGO_PATH = path.join(__dirname, '../../assets/brand/logo-email.png');
-const LOGO_CID = 'logo-si26';
 const CARD_CID = 'carte-qr';
 
 /* Échappe un texte pour le HTML. */
@@ -83,8 +79,7 @@ function buildEmail({
 <body style="margin:0;padding:0;background:#f5f8f6">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f8f6"><tr><td align="center" style="padding:24px 12px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid ${LINE}">
-    <tr><td style="padding:28px 32px 8px"><img src="cid:${LOGO_CID}" width="190" height="55" alt="Semaine de l'industrie 2026" style="display:block"></td></tr>
-    <tr><td style="padding:20px 32px 12px">${body}</td></tr>
+    <tr><td style="padding:28px 32px 12px">${body}</td></tr>
     <tr><td style="padding:18px 32px 26px;border-top:1px solid ${LINE};font:13px/1.5 ${FONT};color:${MUTED}">
       Semaine de l’industrie 2026, du 16 au 22 novembre, au Togo.<br>
       Une question ? <a href="mailto:${CONTACT}" style="color:${FOREST}">${CONTACT}</a>
@@ -105,20 +100,14 @@ function buildEmail({
     `Semaine de l’industrie 2026, du 16 au 22 novembre, au Togo. Une question ? ${CONTACT}`,
   ].join('\n');
 
-  const attachments = [{
-    filename: 'logo.png',
-    content: fs.readFileSync(LOGO_PATH),
-    cid: LOGO_CID,
-    contentType: 'image/png',
-  }];
-  if (card) {
-    attachments.push({
+  const attachments = card
+    ? [{
       filename: `carte-qr-${card.fileCode}.png`,
       content: card.png,
       cid: CARD_CID,
       contentType: 'image/png',
-    });
-  }
+    }]
+    : [];
 
   return { subject, text, html, attachments };
 }
