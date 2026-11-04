@@ -16,6 +16,7 @@ import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
 import MonEspacePage from './pages/MonEspacePage'
+import NotFoundPage from './pages/NotFoundPage'
 import OrganizationPage from './pages/OrganizationPage'
 import OrgaAuditPage from './pages/OrgaAuditPage'
 import OrgaChatbotPage from './pages/OrgaChatbotPage'
@@ -88,6 +89,7 @@ export default function App() {
             <Route path="/confidentialite" element={<PrivacyPage />} />
             <Route path="/o/:slug" element={<OrganizationPage />} />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/bilan" element={<Navigate to="/orga" replace />} />
