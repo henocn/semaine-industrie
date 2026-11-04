@@ -7,12 +7,14 @@ import {
   updateProfile,
   type AuthUser,
 } from '../../api/auth'
+import { listParticipants } from '../../api/business'
 import { listLabelRequests, type LabelRequest } from '../../api/labels'
 import { listParticipations } from '../../api/participations'
 import { LABEL_PENDING_EVENT } from '../../lib/labelPending'
 import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
 import { joinRoom, onRealtime } from '../../lib/socket'
 import { isAdminRole, isStaffRole } from '../../lib/roles'
+import { PendingBadge } from '../orga/PendingBadge'
 import { Seo } from '../Seo'
 import { BrandLogo } from './Mark'
 
@@ -43,6 +45,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
   const [accountOpen, setAccountOpen] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
   const [participationCount, setParticipationCount] = useState(0)
+  const [businessCount, setBusinessCount] = useState(0)
   const [banner, setBanner] = useState<string | null>(null)
 
   /* Dans le backoffice le scroll est sur <main>, pas sur la fenêtre. */
@@ -71,6 +74,12 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     try {
       const parts = await listParticipations({ status: 'pending' })
       setParticipationCount(parts.length)
+    } catch {
+      // ignore
+    }
+    try {
+      const people = await listParticipants({ status: 'pending' })
+      setBusinessCount(people.length)
     } catch {
       // ignore
     }
@@ -104,6 +113,9 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
       })
     })
     const offLabelUpdated = onRealtime<LabelRequest>('label:updated', () => {
+      void refreshPending()
+    })
+    const offLabelDeleted = onRealtime('label:deleted', () => {
       void refreshPending()
     })
     const offParticipation = onRealtime<{
@@ -145,6 +157,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
       document.removeEventListener('visibilitychange', onVisible)
       offLabelCreated()
       offLabelUpdated()
+      offLabelDeleted()
       offParticipation()
       offBusiness()
     }
@@ -215,30 +228,21 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         <NavLink to="/orga/labels" className={linkClass}>
           <span className="flex w-full items-center justify-between gap-2">
             Demandes de labels
-            {pendingCount > 0 && (
-              <span
-                className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
-                title={`${pendingCount} en attente`}
-              >
-                {pendingCount > 99 ? '99+' : pendingCount}
-              </span>
-            )}
+            <PendingBadge count={pendingCount} />
           </span>
         </NavLink>
         <NavLink to="/orga/participations" className={linkClass}>
           <span className="flex w-full items-center justify-between gap-2">
             Participations
-            {participationCount > 0 && (
-              <span
-                className="min-w-5 bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold text-ink"
-                title={`${participationCount} en attente`}
-              >
-                {participationCount > 99 ? '99+' : participationCount}
-              </span>
-            )}
+            <PendingBadge count={participationCount} />
           </span>
         </NavLink>
-        <NavLink to="/orga/affaires" className={linkClass}>Rencontres d&apos;affaires</NavLink>
+        <NavLink to="/orga/affaires" className={linkClass}>
+          <span className="flex w-full items-center justify-between gap-2">
+            Rencontres d&apos;affaires
+            <PendingBadge count={businessCount} />
+          </span>
+        </NavLink>
         <NavLink to="/orga/enquete" className={linkClass}>Sondage</NavLink>
         <NavLink to="/orga/ressources" className={linkClass}>Ressources</NavLink>
         {isAdminRole(user?.role) && (

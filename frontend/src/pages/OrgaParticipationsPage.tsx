@@ -17,6 +17,7 @@ import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components
 import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 import { PhoneField } from '../components/ui/PhoneField'
 import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSelection'
+import { PendingBadge } from '../components/orga/PendingBadge'
 import { useRowSelection } from '../lib/useRowSelection'
 import { excelDate, type ExcelColumn } from '../lib/excel'
 
@@ -92,16 +93,30 @@ export default function OrgaParticipationsPage() {
   const [detail, setDetail] = useState<Participation | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [pendingByKind, setPendingByKind] = useState<Record<ParticipationKind, number>>({ ecole: 0, particulier: 0 })
   const [position, setPosition] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null })
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  /* Recharge l'onglet courant. */
+  /* Compte les inscriptions à traiter, pour les deux onglets. */
+  async function loadPending() {
+    const pending = await listParticipations({ status: 'pending' })
+    setPendingByKind({
+      ecole: pending.filter((row) => row.kind === 'ecole').length,
+      particulier: pending.filter((row) => row.kind === 'particulier').length,
+    })
+  }
+
+  /* Recharge l'onglet courant et les compteurs. */
   async function load() {
-    const data = await listParticipations({ kind })
+    const [data] = await Promise.all([listParticipations({ kind }), loadPending()])
     setRows(data)
   }
+
+  useEffect(() => {
+    void loadPending().catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     setRows([])
@@ -269,11 +284,12 @@ export default function OrgaParticipationsPage() {
             key={key}
             type="button"
             onClick={() => setKind(key)}
-            className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
+            className={`flex flex-1 items-center justify-center gap-2 px-4 py-2.5 text-[14px] font-semibold ${
               kind === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
             } ${key === 'particulier' ? 'border-l border-black' : ''}`}
           >
             {key === 'ecole' ? 'Écoles' : 'Particuliers'}
+            <PendingBadge count={pendingByKind[key]} />
           </button>
         ))}
       </div>
