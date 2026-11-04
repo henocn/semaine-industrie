@@ -55,8 +55,8 @@ export default function MapPage() {
         )}
 
         {points.length > 0 && (
-          <div className="mt-8 grid gap-5 lg:h-[min(72vh,740px)] lg:grid-cols-[minmax(0,1.8fr)_minmax(260px,0.95fr)] lg:items-stretch lg:overflow-hidden">
-            <div className="min-h-[360px] min-w-0 overflow-hidden sm:min-h-[440px] lg:min-h-0 lg:h-full">
+          <div className="mt-8 grid gap-5 lg:h-[720px] lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch lg:overflow-hidden">
+            <div className="mx-auto h-[624px] w-[260px] overflow-hidden border border-forest/15 lg:h-full lg:w-full">
               <SitesMap
                 points={points}
                 selectedId={selected}
