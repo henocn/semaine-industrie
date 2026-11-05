@@ -38,7 +38,7 @@ export function isBackofficeHost() {
   return window.location.hostname === 'backoffice.semaineindustrie.tg'
 }
 export const DEFAULT_DESCRIPTION =
-  'Du 16 au 22 novembre 2026 au Togo : usines ouvertes, métiers, journée phare du 20 novembre et rencontres d’affaires.'
+  'Du 16 au 22 novembre 2026 au Togo : usines ouvertes, métiers, Journée de l’industrialisation de l’Afrique et rencontres d’affaires.'
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og.jpg`
 
 /* Met à jour ou crée une balise meta / link dans le head. */
@@ -72,7 +72,9 @@ export function applySeo({
   noIndex = false,
 }: SeoInput) {
   const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} · Togo`
-  const url = `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  /* Les pages préparées au build sont des dossiers : le serveur les sert avec une barre oblique finale. */
+  const url = `${SITE_URL}${cleanPath !== '/' && PUBLIC_SEO[cleanPath] ? `${cleanPath}/` : cleanPath}`
 
   document.title = fullTitle
 
