@@ -42,7 +42,7 @@ export default function PrivacyPage() {
       <div className={`${WRAP} max-w-2xl space-y-10 text-[15px] leading-relaxed text-ink/80`}>
         <div className="animate-rise">
           <SectionHeader level={1} title="Politique de confidentialité" />
-          <p className="mt-3 text-[14px] text-ink/60">Dernière mise à jour : 4 novembre 2026</p>
+          <p className="mt-3 text-[14px] text-ink/60">Dernière mise à jour : 5 novembre 2026</p>
           <p className="mt-4">
             Cette politique explique quelles données personnelles sont collectées sur semaineindustrie.tg
             et par le bot WhatsApp de la Semaine de l&apos;industrie 2026, à quoi elles servent, qui y a
@@ -63,7 +63,7 @@ export default function PrivacyPage() {
           <Bullets
             items={[
               <><strong>Inscription d&apos;une école ou d&apos;une université :</strong> nom de l&apos;établissement, e-mail, téléphone, position sur la carte, effectif souhaité, spécialités ou filières. Aucun nom d&apos;élève n&apos;est demandé.</>,
-              <><strong>Inscription d&apos;un particulier :</strong> nom et prénom, e-mail, téléphone, ville et note éventuelle.</>,
+              <><strong>Inscription d&apos;un particulier :</strong> nom et prénom, e-mail, téléphone, ville et quartier, et note éventuelle.</>,
               <><strong>Demande de label d&apos;une industrie :</strong> nom et secteur de la structure, position sur la carte, photos, e-mail, téléphone, capacité d&apos;accueil, produits, description et règles de sécurité.</>,
               <><strong>Rencontres d&apos;affaires :</strong> profil, nom, e-mail, téléphone, secteur d&apos;activité et notes.</>,
               <><strong>Formulaire de contact :</strong> nom, e-mail et message, transmis par e-mail à l&apos;équipe d&apos;organisation.</>,
@@ -82,6 +82,7 @@ export default function PrivacyPage() {
               'Vous attribuer un code de suivi et vous permettre de consulter votre dossier dans Mon espace.',
               'Vous informer par e-mail et sur WhatsApp : réception, décision, visites, rendez-vous et rappels.',
               'Organiser les visites et les rencontres d’affaires, et enregistrer les passages sur les sites.',
+              'Affecter à chaque particulier une école de départ.',
               'Publier la fiche des industries labellisées et la carte des visites.',
               'Répondre à vos questions, y compris par le bot WhatsApp, et assurer le suivi de vos échanges.',
               'Établir des bilans de l’événement, assurer la sécurité du site et corriger les anomalies.',

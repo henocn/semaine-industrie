@@ -33,17 +33,26 @@ const createSchema = Joi.object({
   headcount: fields.headcount,
 });
 
-/* Une école indique sa position à l'inscription publique. */
-const schoolPosition = (field) => field.when('kind', {
+/* Champ obligatoire pour une école à l'inscription publique. */
+const requiredForSchool = (field, message) => field.when('kind', {
   is: 'ecole',
-  then: Joi.number().required().messages({ 'any.required': 'Placez votre établissement sur la carte' }),
+  then: Joi.number().invalid(null).required().messages({ 'any.required': message, 'any.invalid': message }),
 });
 
-/* Inscription publique : téléphone obligatoire. */
+/* Inscription publique : téléphone obligatoire ; position et effectif pour une école, adresse pour un particulier. */
 const publicSchema = createSchema.keys({
   phone: phone().required(),
-  lat: schoolPosition(fields.lat),
-  lng: schoolPosition(fields.lng),
+  lat: requiredForSchool(fields.lat, 'Placez votre établissement sur la carte'),
+  lng: requiredForSchool(fields.lng, 'Placez votre établissement sur la carte'),
+  headcount: requiredForSchool(fields.headcount, 'Indiquez l’effectif souhaité'),
+  address: fields.address.when('kind', {
+    is: 'particulier',
+    then: Joi.string().trim().min(2).max(500).invalid('', null).required().messages({
+      'any.required': 'Indiquez votre ville et votre quartier',
+      'any.invalid': 'Indiquez votre ville et votre quartier',
+      'string.empty': 'Indiquez votre ville et votre quartier',
+    }),
+  }),
 });
 
 /* Mise à jour d'une participation. */

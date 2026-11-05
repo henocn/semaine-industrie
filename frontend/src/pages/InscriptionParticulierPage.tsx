@@ -33,7 +33,7 @@ export default function InscriptionParticulierPage() {
         name: String(fd.get('name') || '').trim(),
         email: String(fd.get('email') || '').trim() || null,
         phone: String(fd.get('phone') || '').trim() || null,
-        city: String(fd.get('city') || '').trim() || null,
+        address: String(fd.get('address') || '').trim(),
         description: String(fd.get('description') || '').trim() || null,
         headcount: null,
       })
@@ -84,8 +84,12 @@ export default function InscriptionParticulierPage() {
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <PhoneField required name="phone" className={field} />
             </Field>
-            <Field label="Ville" className="sm:col-span-2">
-              <input name="city" autoComplete="address-level2" className={field} />
+            <Field
+              label="Ville Quartier"
+              hint="Soyez précis : cela nous permet de vous affecter une école de départ vers les visites."
+              className="sm:col-span-2"
+            >
+              <input required name="address" minLength={2} maxLength={500} autoComplete="street-address" className={field} />
             </Field>
             <Field label="Ce qui vous intéresse" className="sm:col-span-2">
               <textarea name="description" rows={3} className={`${field} resize-none`} />

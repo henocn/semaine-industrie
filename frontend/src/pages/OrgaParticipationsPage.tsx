@@ -74,7 +74,7 @@ function readForm(fd: FormData, kind: ParticipationKind) {
     phone: String(fd.get('phone') || '').trim() || null,
     description: String(fd.get('description') || '').trim() || null,
     headcount: kind === 'ecole' && headcountRaw ? Number(headcountRaw) : null,
-    ...(kind === 'ecole' ? { address: String(fd.get('address') || '').trim() || null } : {}),
+    address: String(fd.get('address') || '').trim() || null,
   }
 }
 
@@ -320,6 +320,12 @@ export default function OrgaParticipationsPage() {
               <LocationField lat={position.lat} lng={position.lng} onPick={(lat, lng) => setPosition({ lat, lng })} />
             </div>
           )}
+          {!isSchool && (
+            <label className="text-[13px] font-medium text-forest sm:col-span-2">
+              Ville Quartier
+              <input name="address" maxLength={500} className={field} />
+            </label>
+          )}
           <label className="text-[13px] font-medium text-forest sm:col-span-2">
             {isSchool ? 'Spécialités / séries ou filières' : 'Note'}
             <textarea name="description" rows={3} className={`${field} resize-none`} />
@@ -442,6 +448,12 @@ export default function OrgaParticipationsPage() {
                                 />
                               </div>
                             )}
+                            {!isSchool && (
+                              <label className="text-[13px] font-medium text-forest sm:col-span-2">
+                                Ville Quartier
+                                <input name="address" maxLength={500} defaultValue={shown.address || ''} className={field} />
+                              </label>
+                            )}
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
                               {isSchool ? 'Spécialités / séries ou filières' : 'Note'}
                               <textarea name="description" rows={3} defaultValue={shown.description || ''} className={`${field} resize-none`} />
@@ -459,7 +471,7 @@ export default function OrgaParticipationsPage() {
                                   Date de demande · {new Date(shown.createdAt).toLocaleString('fr-FR')}
                                 </p>
                               )}
-                              {shown.city && <p>{shown.city}</p>}
+                              {shown.city && !shown.address?.toLowerCase().includes(shown.city.trim().toLowerCase()) && <p>{shown.city}</p>}
                               {shown.address && <p>{shown.address}</p>}
                               {coordinate(shown.lat) !== null && coordinate(shown.lng) !== null && (
                                 <p>

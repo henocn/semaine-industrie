@@ -135,7 +135,7 @@ export default function InscriptionGroupPage() {
               hint="Le nombre de participants sera confirmé par l'organisation, sous réserve des places disponibles."
               className="sm:col-span-2"
             >
-              <input name="headcount" type="number" min={1} className={field} />
+              <input required name="headcount" type="number" min={1} className={field} />
             </Field>
             <Field label={DESCRIPTION_LABEL[profile]} className="sm:col-span-2">
               <textarea name="description" rows={3} className={`${field} resize-none`} />
