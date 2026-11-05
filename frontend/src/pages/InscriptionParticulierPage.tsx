@@ -86,7 +86,7 @@ export default function InscriptionParticulierPage() {
             </Field>
             <Field
               label="Ville Quartier"
-              hint="Soyez précis : cela nous permet de vous affecter une école de départ vers les visites."
+              hint="Merci d’indiquer une localisation précise : elle nous permettra de vous affecter une école de départ pour les visites."
               className="sm:col-span-2"
             >
               <input required name="address" minLength={2} maxLength={500} autoComplete="street-address" className={field} />

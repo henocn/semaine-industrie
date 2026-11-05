@@ -13,8 +13,17 @@ import { PhoneField } from '../components/ui/PhoneField'
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
 
+const MIN_NOTE_WORDS = 30
+
+/* Compte les mots d'un texte. */
+function countWords(text: string) {
+  return text.trim().split(/\s+/).filter(Boolean).length
+}
+
 /* Inscription publique aux rencontres d'affaires. */
 export default function BusinessRegisterPage() {
+  const [profile, setProfile] = useState('entreprise')
+  const [noteWords, setNoteWords] = useState(0)
   const [sent, setSent] = useState(false)
   const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -31,9 +40,15 @@ export default function BusinessRegisterPage() {
       setLoading(false)
       return
     }
+    if (countWords(String(fd.get('notes') || '')) < MIN_NOTE_WORDS) {
+      setError(`Décrivez votre demande en ${MIN_NOTE_WORDS} mots au moins.`)
+      setLoading(false)
+      return
+    }
     try {
       const created = await registerParticipant({
-        kind: String(fd.get('kind') || 'entreprise'),
+        kind: profile,
+        organization_name: profile === 'entreprise' ? String(fd.get('organization_name') || '').trim() : undefined,
         contact_name: String(fd.get('contact_name') || '').trim(),
         email: String(fd.get('email') || ''),
         phone: String(fd.get('phone') || '') || undefined,
@@ -78,25 +93,44 @@ export default function BusinessRegisterPage() {
         ) : (
           <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">
             <Field label="Profil">
-              <select name="kind" className={field} defaultValue="entreprise">
+              <select name="kind" className={field} value={profile} onChange={(e) => setProfile(e.target.value)}>
                 <option value="entreprise">Entreprise</option>
                 <option value="particulier">Particulier</option>
               </select>
             </Field>
-            <Field label="Nom et prénom">
+            {profile === 'entreprise' && (
+              <Field label="Nom de l’entreprise">
+                <input required name="organization_name" minLength={2} maxLength={200} autoComplete="organization" className={field} />
+              </Field>
+            )}
+            <Field label="Votre nom et prénom">
               <input required name="contact_name" minLength={2} autoComplete="name" className={field} />
             </Field>
             <Field label="E-mail">
               <input required type="email" name="email" className={field} />
             </Field>
-            <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
+            <Field
+              label="Téléphone"
+              hint="De préférence un numéro WhatsApp."
+              className={profile === 'entreprise' ? 'sm:col-span-2' : ''}
+            >
               <PhoneField required name="phone" className={field} />
             </Field>
-            <Field label="Secteur" className="sm:col-span-2">
+            <Field label="Secteur d’activité" className="sm:col-span-2">
               <input name="sector" className={field} />
             </Field>
-            <Field label="Motif de demande" className="sm:col-span-2">
-              <textarea name="notes" rows={3} className={`${field} resize-none`} />
+            <Field
+              label="Motif de demande"
+              hint={`${noteWords} mot${noteWords > 1 ? 's' : ''} sur ${MIN_NOTE_WORDS} minimum`}
+              className="sm:col-span-2"
+            >
+              <textarea
+                required
+                name="notes"
+                rows={4}
+                onChange={(e) => setNoteWords(countWords(e.target.value))}
+                className={`${field} resize-none`}
+              />
             </Field>
             <label className="flex items-start gap-3 text-[14px] text-ink/80 sm:col-span-2">
               <input required type="checkbox" name="contact_opt_in" className="mt-1 accent-forest" />

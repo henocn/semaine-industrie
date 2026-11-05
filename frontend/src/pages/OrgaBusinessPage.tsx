@@ -154,11 +154,12 @@ export default function OrgaBusinessPage() {
     () => [
       { header: 'Code de suivi', width: 14, value: (p) => p.tracking_code || '' },
       { header: 'Nom et prénom', width: 28, value: (p) => p.contact_name || p.organization_name },
+      { header: 'Entreprise', width: 28, value: (p) => p.organization_name },
       { header: 'Profil', width: 14, value: (p) => businessKindLabel(p.kind) },
       { header: 'Statut', width: 12, value: (p) => statusLabel(p.status) },
       { header: 'Téléphone', width: 18, value: (p) => p.phone },
       { header: 'E-mail', width: 28, value: (p) => p.email },
-      { header: 'Secteur', width: 20, value: (p) => p.sector },
+      { header: 'Secteur d’activité', width: 20, value: (p) => p.sector },
       { header: 'Rendez-vous', width: 12, value: (p) => visitsByParticipant.get(p.id) || 0 },
       { header: 'Motif de demande', width: 40, value: (p) => p.notes },
       { header: 'Date de demande', width: 18, value: (p) => excelDate(p.createdAt) },
@@ -225,6 +226,7 @@ export default function OrgaBusinessPage() {
     try {
       await updateParticipant(id, {
         kind: String(fd.get('kind') || 'entreprise') as BusinessParticipant['kind'],
+        organization_name: String(fd.get('organization_name') || ''),
         contact_name: String(fd.get('contact_name') || ''),
         email: String(fd.get('email') || ''),
         phone: String(fd.get('phone') || ''),
@@ -266,6 +268,7 @@ export default function OrgaBusinessPage() {
     try {
       await createParticipantOrga({
         kind: String(fd.get('kind') || 'entreprise'),
+        organization_name: String(fd.get('organization_name') || '') || undefined,
         contact_name: String(fd.get('contact_name') || ''),
         email: String(fd.get('email') || ''),
         phone: String(fd.get('phone') || '') || undefined,
@@ -464,7 +467,11 @@ export default function OrgaBusinessPage() {
                   </select>
                 </label>
                 <label className="text-[13px] font-medium text-forest">
-                  Secteur
+                  Nom de l’entreprise
+                  <input name="organization_name" minLength={2} className={field} />
+                </label>
+                <label className="text-[13px] font-medium text-forest">
+                  Secteur d’activité
                   <input name="sector" className={field} />
                 </label>
                 <label className="text-[13px] font-medium text-forest">
@@ -615,7 +622,11 @@ export default function OrgaBusinessPage() {
                                     </select>
                                   </label>
                                   <label className="text-[13px] font-medium text-forest">
-                                    Secteur
+                                    Nom de l’entreprise
+                                    <input name="organization_name" minLength={2} defaultValue={selectedParticipant.organization_name || ''} className={field} />
+                                  </label>
+                                  <label className="text-[13px] font-medium text-forest">
+                                    Secteur d’activité
                                     <input name="sector" defaultValue={selectedParticipant.sector || ''} className={field} />
                                   </label>
                                   <label className="text-[13px] font-medium text-forest">
@@ -669,8 +680,14 @@ export default function OrgaBusinessPage() {
                                     '—'
                                   )}
                                 </p>
+                                {selectedParticipant.organization_name && (
+                                  <p>
+                                    <span className="text-ink/45">Entreprise · </span>
+                                    {selectedParticipant.organization_name}
+                                  </p>
+                                )}
                                 <p>
-                                  <span className="text-ink/45">Secteur · </span>
+                                  <span className="text-ink/45">Secteur d’activité · </span>
                                   {selectedParticipant.sector || '—'}
                                 </p>
                                 <p>
