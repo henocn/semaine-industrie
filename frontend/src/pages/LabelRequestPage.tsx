@@ -9,7 +9,7 @@ import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { Field } from '../components/ui/Field'
 import { SectionHeader } from '../components/ui/SectionHeader'
-import { prepareGalleryFiles } from '../lib/imageQuality'
+import { checkGalleryFiles } from '../lib/imageQuality'
 import { scrollToTopNow } from '../lib/scroll'
 import { PhoneField } from '../components/ui/PhoneField'
 
@@ -67,8 +67,8 @@ export default function LabelRequestPage() {
     try {
       const input = form.elements.namedItem('gallery') as HTMLInputElement
       const files = input.files ? Array.from(input.files) : []
-      const prepared = await prepareGalleryFiles(files)
-      const gallery_urls = await uploadLabelGallery(prepared)
+      checkGalleryFiles(files)
+      const gallery_urls = await uploadLabelGallery(files)
 
       const created = await createLabelRequest({
         structure_name: String(fd.get('structure_name') || ''),
@@ -115,11 +115,6 @@ export default function LabelRequestPage() {
               Merci. Votre demande est enregistrée. Vous recevrez la réponse par e-mail et sur WhatsApp.
             </p>
             <TrackingCodeNotice code={trackingCode} />
-            <div className="mt-6">
-              <Button to="/programme" variant="link">
-                Voir le programme
-              </Button>
-            </div>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">
@@ -141,7 +136,7 @@ export default function LabelRequestPage() {
             </div>
 
             <div className="sm:col-span-2">
-              <p className="text-sm font-semibold text-forest">Au moins 3 photos en bonne qualité de votre installation ou produits.</p>
+              <p className="text-sm font-semibold text-forest">3 photos en bonne qualité de votre installation ou produits, 4 Mo maximum par photo.</p>
               <div className="mt-1.5">
                 <input
                   id={galleryInputId}
