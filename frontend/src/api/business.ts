@@ -60,6 +60,7 @@ export function registerParticipant(payload: {
 /* Ajout manuel orga (approuvé par défaut). */
 export function createParticipantOrga(payload: {
   kind: string
+  organization_name?: string
   contact_name: string
   email: string
   phone?: string

@@ -3,6 +3,9 @@
 const Joi = require('joi');
 const { phone } = require('../../utils/phone');
 
+const MIN_NOTE_WORDS = 30;
+const NOTE_MESSAGE = `Décrivez votre demande en ${MIN_NOTE_WORDS} mots au moins`;
+
 /* Champs communs d'un participant ; offers / seeks / country restent acceptés pour les anciens formulaires. */
 const participantFields = {
   kind: Joi.string().valid('entreprise', 'particulier'),
@@ -20,8 +23,23 @@ const participantFields = {
 const registerSchema = Joi.object({
   ...participantFields,
   kind: participantFields.kind.required(),
+  organization_name: participantFields.organization_name.when('kind', {
+    is: 'entreprise',
+    then: Joi.string().trim().min(2).max(200).invalid('', null).required().messages({
+      'any.required': 'Indiquez le nom de l’entreprise',
+      'any.invalid': 'Indiquez le nom de l’entreprise',
+      'string.empty': 'Indiquez le nom de l’entreprise',
+    }),
+  }),
   email: participantFields.email.required(),
   phone: phone().required(),
+  notes: Joi.string().trim().required().custom((value, helpers) => (
+    value.split(/\s+/).filter(Boolean).length < MIN_NOTE_WORDS ? helpers.error('notes.tooShort') : value
+  )).messages({
+    'any.required': NOTE_MESSAGE,
+    'string.empty': NOTE_MESSAGE,
+    'notes.tooShort': NOTE_MESSAGE,
+  }),
   contact_opt_in: Joi.boolean().valid(true).required(),
 });
 
