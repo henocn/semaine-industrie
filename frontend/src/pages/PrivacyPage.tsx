@@ -67,6 +67,7 @@ export default function PrivacyPage() {
               <><strong>Demande de label d&apos;une industrie :</strong> nom et secteur de la structure, position sur la carte, photos, e-mail, téléphone, capacité d&apos;accueil, produits, description et règles de sécurité.</>,
               <><strong>Rencontres d&apos;affaires :</strong> profil, nom, e-mail, téléphone, secteur d&apos;activité et notes.</>,
               <><strong>Formulaire de contact :</strong> nom, e-mail et message, transmis par e-mail à l&apos;équipe d&apos;organisation.</>,
+              <><strong>Chatbot du site :</strong> contenu des messages que vous y écrivez, date et heure. Il ne vous demande aucune donnée personnelle : évitez d&apos;y en écrire.</>,
               <><strong>Bot WhatsApp :</strong> numéro de téléphone, contenu des messages échangés avec le bot, date et heure.</>,
               <><strong>Visites et passages :</strong> sites visités ou accueillis, créneaux, date et heure des passages enregistrés.</>,
               <><strong>Sondages, votes et jeux :</strong> vos réponses et, pour les votes, un identifiant aléatoire qui empêche de voter deux fois. Un sondage peut être rattaché à votre code de suivi si vous le renseignez.</>,
@@ -84,7 +85,7 @@ export default function PrivacyPage() {
               'Organiser les visites et les rencontres d’affaires, et enregistrer les passages sur les sites.',
               'Affecter à chaque particulier une école de départ.',
               'Publier la fiche des industries labellisées et la carte des visites.',
-              'Répondre à vos questions, y compris par le bot WhatsApp, et assurer le suivi de vos échanges.',
+              'Répondre à vos questions, y compris par le chatbot du site et le bot WhatsApp, et assurer le suivi de vos échanges.',
               'Établir des bilans de l’événement, assurer la sécurité du site et corriger les anomalies.',
             ]}
           />
@@ -109,7 +110,7 @@ export default function PrivacyPage() {
               <><strong>L&apos;équipe d&apos;organisation :</strong> les comptes autorisés du backoffice accèdent aux dossiers. Les conversations du bot sont réservées aux comptes administrateurs.</>,
               <><strong>Le public :</strong> la fiche d&apos;une industrie labellisée (nom, secteur, lieu, description, produits et photos) est publique, sans son e-mail ni son téléphone. La carte des visites affiche le nom des établissements, leur effectif et leur créneau.</>,
               <><strong>Les industries visitées :</strong> elles voient le nom et l&apos;effectif des groupes attendus ou reçus. Les particuliers y restent anonymes.</>,
-              <><strong>Nos prestataires techniques :</strong> Meta pour WhatsApp, SiteGround pour l&apos;envoi des e-mails, OpenStreetMap pour l&apos;affichage des cartes et Google Fonts pour les polices du site. Ces deux derniers reçoivent l&apos;adresse IP de votre appareil lorsqu&apos;ils affichent une carte ou une police.</>,
+              <><strong>Nos prestataires techniques :</strong> Meta pour WhatsApp, Google (Gemini) pour générer les réponses du chatbot du site, SiteGround pour l&apos;envoi des e-mails, OpenStreetMap pour l&apos;affichage des cartes et Google Fonts pour les polices du site. Ces deux derniers reçoivent l&apos;adresse IP de votre appareil lorsqu&apos;ils affichent une carte ou une police.</>,
             ]}
           />
           <p>
@@ -167,6 +168,7 @@ export default function PrivacyPage() {
           <Bullets
             items={[
               'votre choix concernant cet avis ;',
+              'l’identifiant anonyme et la conversation en cours du chatbot ;',
               'l’identifiant aléatoire de vote ;',
               'la session de connexion des comptes de l’équipe ;',
               'le code saisi par une industrie pour valider les passages.',
