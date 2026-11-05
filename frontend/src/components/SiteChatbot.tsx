@@ -1,14 +1,12 @@
-import { Fragment, useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageCircle, RotateCcw, Send, X } from 'lucide-react'
+import { Bot, Send, X } from 'lucide-react'
 import { askChatbot } from '../api/chatbot-public'
-import { BrandLogoWhite } from './layout/Mark'
 
 type Message = { id: string; role: 'user' | 'bot'; text: string; failed?: boolean }
 
 const VISITOR_KEY = 'si_chat_visitor'
 const SESSION_KEY = 'si_chat_session'
-const SUGGESTIONS = ['Quel est le programme ?', 'Quels sont les jours de visite ?', 'Comment s’inscrire ?']
 const FALLBACK = 'Le service est momentanément indisponible. Vous pouvez écrire à infos@semaineindustrie.tg.'
 const SITE_LINK = /^https?:\/\/(?:www\.)?semaineindustrie\.tg(\/[^\s]*)?$/i
 const INLINE = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)\s]+\)|https?:\/\/[^\s)]+|[\w.+-]+@[\w-]+\.[\w.-]*\w)/g
@@ -97,7 +95,7 @@ export function SiteChatbot() {
   const conversation = useRef<string | null>(readSession().conversationId)
   const request = useRef<AbortController | null>(null)
   const launcher = useRef<HTMLButtonElement>(null)
-  const field = useRef<HTMLTextAreaElement>(null)
+  const field = useRef<HTMLInputElement>(null)
   const list = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -119,15 +117,6 @@ export function SiteChatbot() {
   function close() {
     setOpen(false)
     requestAnimationFrame(() => launcher.current?.focus())
-  }
-
-  /* Repart d'une conversation vide. */
-  function restart() {
-    request.current?.abort()
-    conversation.current = null
-    setBusy(false)
-    setMessages([])
-    field.current?.focus()
   }
 
   /* Pose une question et affiche la réponse au fil de l'eau. */
@@ -177,24 +166,17 @@ export function SiteChatbot() {
     void ask(input)
   }
 
-  /* Entrée envoie ; Maj + Entrée passe à la ligne. */
-  function onFieldKey(e: KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      void ask(input)
-    }
-  }
-
   if (!open) {
     return (
       <button
         ref={launcher}
         type="button"
         onClick={() => setOpen(true)}
-        className="site-chat-launcher fixed right-4 z-[85] flex items-center gap-2 bg-forest px-4 py-3 text-[14px] font-semibold text-white shadow-lg shadow-forest/25 transition-colors hover:bg-ink"
+        aria-label="Ouvrir l’assistant"
+        title="Ouvrir l’assistant"
+        className="site-chat-launcher fixed right-4 z-[85] grid h-16 w-16 place-items-center rounded-full border-[3px] border-sun bg-forest text-white shadow-lg shadow-forest/25 transition-colors hover:bg-ink"
       >
-        <MessageCircle className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-        Une question ?
+        <Bot className="h-9 w-9" strokeWidth={1.5} aria-hidden="true" />
       </button>
     )
   }
@@ -206,38 +188,22 @@ export function SiteChatbot() {
       onKeyDown={(e) => {
         if (e.key === 'Escape') close()
       }}
-      className="fixed inset-0 z-[90] flex flex-col border border-forest/20 bg-white text-ink shadow-2xl shadow-forest/30 sm:inset-auto sm:bottom-4 sm:right-4 sm:h-[min(38rem,calc(100dvh-2rem))] sm:w-[25rem]"
+      className="fixed inset-0 z-[90] flex flex-col overflow-hidden border border-forest/20 bg-white text-ink shadow-2xl shadow-forest/30 sm:inset-auto sm:bottom-4 sm:right-4 sm:h-[min(38rem,calc(100dvh-2rem))] sm:w-[25rem]"
     >
-      <header className="flex items-center justify-between gap-3 bg-forest px-4 py-3 text-white">
-        <BrandLogoWhite className="h-9 w-auto" />
-        <div className="flex items-center gap-1">
-          <button type="button" onClick={restart} aria-label="Nouvelle conversation" title="Nouvelle conversation" className="grid h-9 w-9 place-items-center transition-colors hover:bg-white/15">
-            <RotateCcw className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-          </button>
-          <button type="button" onClick={close} aria-label="Fermer" title="Fermer" className="grid h-9 w-9 place-items-center transition-colors hover:bg-white/15">
-            <X className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-          </button>
-        </div>
-      </header>
+      <button
+        type="button"
+        onClick={close}
+        aria-label="Fermer"
+        title="Fermer"
+        className="absolute right-2 top-2 z-10 grid h-9 w-9 place-items-center bg-white/90 text-forest transition-colors hover:bg-forest hover:text-white"
+      >
+        <X className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+      </button>
 
-      <div ref={list} aria-live="polite" className="flex-1 space-y-3 overflow-y-auto bg-sage/60 p-4 text-[15px] leading-relaxed">
+      <div ref={list} aria-live="polite" className="flex-1 space-y-3 overflow-y-auto bg-sage/60 p-4 pt-12 text-[15px] leading-relaxed">
         <div className="max-w-[90%] border border-forest/10 bg-white px-3.5 py-2.5">
           Bonjour ! Je vous renseigne sur le programme, les visites et les inscriptions à la Semaine de l’industrie 2026.
         </div>
-        {messages.length === 0 && (
-          <div className="flex flex-col items-start gap-2">
-            {SUGGESTIONS.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => void ask(suggestion)}
-                className="border border-forest/40 bg-white px-3 py-1.5 text-left text-[14px] font-medium text-forest transition-colors hover:bg-forest hover:text-white"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
         {messages.map((message) => (message.role === 'user' ? (
           <div key={message.id} className="ml-auto w-fit max-w-[85%] whitespace-pre-wrap break-words bg-forest px-3.5 py-2.5 text-white">
             {message.text}
@@ -252,17 +218,17 @@ export function SiteChatbot() {
       </div>
 
       <form onSubmit={onSubmit} className="border-t border-forest/15 bg-white p-3">
-        <div className="flex items-end gap-2">
-          <textarea
+        <div className="flex items-center gap-2">
+          <input
             ref={field}
+            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={onFieldKey}
-            rows={2}
+            autoComplete="off"
             maxLength={1000}
             placeholder="Écrivez votre question"
             aria-label="Votre question"
-            className="min-h-11 flex-1 resize-none border border-forest/30 bg-white px-3 py-2 text-[15px] text-ink placeholder:text-ink/45 focus:border-forest focus:outline-none"
+            className="h-11 min-w-0 flex-1 border border-forest/30 bg-white px-3 text-[15px] text-ink placeholder:text-ink/45 focus:border-forest focus:outline-none"
           />
           <button
             type="submit"
@@ -274,8 +240,8 @@ export function SiteChatbot() {
             <Send className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
-        <p className="mt-2 text-[12px] leading-snug text-ink/55">
-          Réponses automatiques, à vérifier dans le programme. N’écrivez pas de données personnelles.{' '}
+        <p className="mt-2 text-[12px] text-ink/55">
+          Réponses automatiques.{' '}
           <Link to="/confidentialite" className="underline underline-offset-2">Confidentialité</Link>
         </p>
       </form>
