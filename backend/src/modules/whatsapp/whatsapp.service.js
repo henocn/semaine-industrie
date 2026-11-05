@@ -1595,17 +1595,12 @@ async function sendTemplateOrText({ phone, templates, fallback }) {
   return sendWithNav({ to, body: fallback.join('\n') });
 }
 
-/* Modèle avec bouton Mon espace : son URL contient le code ou reste fixe selon sa création chez Meta. */
-function withSpaceButton(name, bodyParams, code) {
-  return [{ name, bodyParams, buttonParams: [code] }, { name, bodyParams }];
-}
-
 /* Accusé de réception d'une demande de label. */
 async function notifyLabelReceived(request) {
   return sendTemplateOrText({
     phone: request?.contact_phone,
     templates: [
-      ...withSpaceButton('si26_label_encours2', [request.structure_name, request.tracking_code], request.tracking_code),
+      { name: 'si26_label_encours2', bodyParams: [request.structure_name, request.tracking_code] },
       { name: 'si26_label_encours', bodyParams: [request.structure_name] },
     ],
     fallback: [
@@ -1634,11 +1629,10 @@ async function notifyParticipationReceived(participation) {
   return sendTemplateOrText({
     phone: participation?.phone,
     templates: [
-      ...withSpaceButton(
-        participation.kind === 'particulier' ? 'si26_particulier_encours' : 'si26_inscription_encours2',
-        [name, code],
-        code,
-      ),
+      {
+        name: participation.kind === 'particulier' ? 'si26_particulier_encours' : 'si26_inscription_encours2',
+        bodyParams: [name, code],
+      },
       { name: 'si26_inscription_encours', bodyParams: [name] },
     ],
     fallback: [
@@ -1658,7 +1652,7 @@ async function notifyParticipationApproved(participation) {
   return sendTemplateOrText({
     phone: participation?.phone,
     templates: [
-      ...(individual ? withSpaceButton('si26_particulier_acceptee', [participation.name, code], code) : []),
+      ...(individual ? [{ name: 'si26_particulier_acceptee', bodyParams: [participation.name, code] }] : []),
       { name: 'si26_inscription_acceptee', bodyParams: [participation.name, places, code] },
     ],
     fallback: [
