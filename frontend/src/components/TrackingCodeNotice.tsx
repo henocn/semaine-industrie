@@ -9,7 +9,7 @@ export function TrackingCodeNotice({ code }: { code?: string | null }) {
       <p className="mt-2 inline-block bg-forest px-4 py-2 font-mono text-xl tracking-wide text-white">{code}</p>
       <p className="mt-3">
         <Link to={`/mon-espace?code=${encodeURIComponent(code)}`} className="font-semibold text-forest underline underline-offset-4">
-          Suivre mon dossier dans Mon espace
+          Suivi de participation
         </Link>
       </p>
     </div>
