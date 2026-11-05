@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { CookieConsent } from '../CookieConsent'
+import { SiteChatbot } from '../SiteChatbot'
 import { SiteFooter } from './SiteFooter'
 import { SiteHeader } from './SiteHeader'
 
@@ -25,6 +26,7 @@ export function PublicLayout() {
         </div>
         <SiteFooter />
         <CookieConsent />
+        <SiteChatbot />
       </div>
     </div>
   )

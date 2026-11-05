@@ -285,3 +285,15 @@ select.orga-input {
   .ui-btn-outline { transition: none; }
   .fold { transition: none; }
 }
+/* Bouton du chat : jamais sous le bandeau des cookies. */
+.site-chat-launcher {
+  bottom: 1rem;
+}
+:root:has([aria-label="Cookies"]) .site-chat-launcher {
+  bottom: 6.5rem;
+}
+@media (max-width: 640px) {
+  :root:has([aria-label="Cookies"]) .site-chat-launcher {
+    bottom: 11.5rem;
+  }
+}

@@ -25,6 +25,10 @@ const env = cleanEnv(process.env, {
   PUBLIC_APP_URL: str({ default: 'http://localhost:5173' }),
   N8N_WEBHOOK_URL: str({ default: '' }),
 
+  /* Assistant du site : la clé reste sur le serveur. */
+  DIFY_API_URL: str({ default: 'https://dify.dekaeditions.tg/v1' }),
+  DIFY_API_KEY: str({ default: '' }),
+
   /* WhatsApp Cloud API (bot Semaine de l'industrie) */
   WHATSAPP_TOKEN: str({ default: '' }),
   WHATSAPP_PHONE_NUMBER_ID: str({ default: '' }),
