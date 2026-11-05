@@ -6,56 +6,44 @@ import { SITE_URL, publicSeo } from '../lib/seo'
 
 const FAQ = [
   {
-    q: 'Quand a lieu la Semaine ?',
-    a: 'Du lundi 16 au dimanche 22 novembre 2026, au Palais des Congrès de Lomé. Le vendredi 20 novembre est la Journée de l’industrialisation de l’Afrique.',
+    q: 'Qu’est-ce que la Semaine de l’industrie ?',
+    a: 'La Semaine de l’industrie est un événement qui vous permet de découvrir les entreprises, les métiers, les produits et les innovations de l’industrie togolaise. Elle réunit pendant une semaine les professionnels du secteur et le grand public autour de différentes activités.',
   },
   {
-    q: 'Qui peut participer ?',
-    a: 'Les entreprises, les écoles, les jeunes, les familles et les acteurs économiques. Certaines visites se font sur inscription.',
+    q: 'Quand et où se déroule la Semaine de l’industrie 2026 ?',
+    a: 'La Semaine de l’industrie se déroule du 16 au 22 novembre 2026, principalement au Palais des Congrès de Lomé. Certaines activités, comme les visites d’usines, se tiennent directement dans les entreprises et sur les sites industriels.',
   },
   {
-    q: 'Quand ont lieu les visites ?',
-    a: 'Le mardi 17 novembre à 8h30 ou à 10h30, et le jeudi 19 novembre à 11h00, ouvertes à tous. Le lundi 16 novembre, le Ministre et les autorités visitent les entreprises de la PIA.',
+    q: 'Qui peut participer à la Semaine de l’industrie ?',
+    a: 'La Semaine de l’industrie est ouverte à tous. Que vous soyez élève, étudiant, enseignant, salarié, entrepreneur, industriel, investisseur ou simplement curieux de découvrir l’industrie togolaise, cette semaine s’adresse à vous.',
   },
   {
-    q: "Comment s'inscrire, école, université ou particulier ?",
-    a: "Depuis Participer : En tant que particulier pour une inscription personnelle, ou En tant qu’école / université pour un groupe. Après validation, un QR est remis pour le jour J.",
+    q: 'Quelles activités sont prévues pendant la Semaine de l’industrie ?',
+    a: 'Au programme : des visites d’usines, des rencontres avec des industriels, un forum d’orientation des métiers, des panels et des échanges, des activités autour de l’innovation et de la qualité, ainsi que l’exposition « Fabriqué au Togo ».',
   },
   {
-    q: 'Comment demander le label ?',
-    a: 'Depuis Participer, puis Demande de label : industries. Après acceptation, un code de suivi est envoyé.',
+    q: 'Les visites d’usines sont-elles ouvertes au public ?',
+    a: 'Oui ! Des visites d’usines ouvertes au grand public sont prévues les mardi 17 et jeudi 19 novembre 2026.\nPour vous inscrire et connaître les modalités de participation, rendez-vous dans la rubrique « Participer » du site.',
   },
   {
-    q: 'Faut-il un numéro de téléphone ?',
-    a: "Oui, il est demandé dans chaque formulaire, de préférence un numéro WhatsApp : c'est par là que vous recevez votre code et votre QR.",
+    q: 'Qu’est-ce que le Forum d’orientation des métiers de l’industrie ?',
+    a: 'Le Forum d’orientation des métiers est un espace de rencontre entre les jeunes, les établissements de formation et les professionnels qui travaillent dans l’industrie. Il vous permet de découvrir les métiers du secteur, les formations pour y accéder et les opportunités professionnelles.\nIl se tient le mardi 17 novembre 2026, de 14 h à 16 h, au Palais des Congrès de Lomé.',
   },
   {
-    q: 'Comment suivre un dossier de label ?',
-    a: 'Avec le code de suivi (exemple : IN-K7P4 pour une industrie), sur le site dans Mon espace, ou sur WhatsApp dans Mon espace, puis Suivi de label.',
+    q: 'Quand se tient l’exposition « Fabriqué au Togo » et est-elle ouverte au public ?',
+    a: 'L’exposition « Fabriqué au Togo » se déroule du 20 au 22 novembre 2026, au Palais des Congrès de Lomé.\nOui, elle est ouverte au grand public ! C’est l’occasion de découvrir la diversité des produits fabriqués au Togo et de mieux connaître les entreprises qui les produisent.\nL’exposition ouvre ses portes le vendredi 20 novembre à partir de 14 h.',
   },
   {
-    q: 'À quoi sert Mon espace ?',
-    a: 'Avec votre code de suivi, vous retrouvez votre dossier, le bilan de vos passages, vos visites à venir et vos documents.',
+    q: 'Comment s’inscrire à la Semaine de l’industrie en tant que particulier, école ou université ?',
+    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « En tant que particulier » pour une inscription individuelle.\n• « En tant qu’école / université » pour inscrire un groupe.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
   },
   {
-    q: "Comment retrouver mes rencontres d'affaires ?",
-    a: "Avec l'e-mail utilisé à l'inscription, ou le code (exemple : AF-9TQB), sur WhatsApp : Mon espace, puis Rencontres d'affaires.",
+    q: 'Comment demander un label et suivre l’évolution de sa demande ?',
+    a: 'Pour demander un label, rendez-vous dans la rubrique « Participer », puis sélectionnez « Demande de label : industries ».\nDès l’envoi de votre demande, un code de suivi vous est remis. Ce code vous permet de suivre votre dossier depuis la rubrique « Mon espace » du site ou sur WhatsApp, en sélectionnant « Suivi de participation ».',
   },
   {
-    q: 'Où consulter le programme ?',
-    a: "La page Programme détaille chaque jour. L'accueil ne montre que le vendredi 20. Sur WhatsApp, Programme demande de choisir une date.",
-  },
-  {
-    q: 'Comment voter pour le coup de cœur ?',
-    a: "Sur la page Vote. Un vote par navigateur. Les produits en lice sont ceux retenus par l'organisation.",
-  },
-  {
-    q: 'Les documents sont-ils publics ?',
-    a: "Les ressources générales le sont, sur la page d'accueil. Le PDF du label personnel se télécharge dans Mon espace.",
-  },
-  {
-    q: "Qui contacter ?",
-    a: 'infos@semaineindustrie.tg, ou le formulaire Contact du site.',
+    q: 'Où consulter le programme complet et obtenir des informations complémentaires ?',
+    a: 'Le programme détaillé de la Semaine de l’industrie est disponible dans la rubrique « Programme » du site.\nPour toute autre question ou information complémentaire, vous pouvez utiliser la rubrique « Contact » ou écrire à infos@semaineindustrie.tg.',
   },
 ]
 
@@ -107,7 +95,7 @@ export default function FaqPage() {
                   </span>
                 </span>
               </summary>
-              <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-ink/75">{item.a}</p>
+              <p className="mt-2 max-w-xl whitespace-pre-line text-[15px] leading-relaxed text-ink/75">{item.a}</p>
             </details>
           ))}
         </div>

@@ -44,7 +44,8 @@ function setCanonical(html, href) {
 function applyRoute(html, route) {
   const title = fullTitle(route.title)
   const path = route.path.startsWith('/') ? route.path : `/${route.path}`
-  const url = `${siteUrl}${path === '/' ? '/' : path}`
+  /* Même adresse que celle servie : un dossier avec une barre oblique finale. */
+  const url = `${siteUrl}${path === '/' ? '/' : `${path}/`}`
   const description = route.description
 
   let out = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)}</title>`)
