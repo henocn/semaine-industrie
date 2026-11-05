@@ -282,6 +282,154 @@
           }
         }
       ]
+    },
+    {
+      "name": "si26_inscription_encours2",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour, la participation pour le compte de *{{1}}* à la Semaine de l'industrie 2026 est *en cours de validation*.\nVotre code de suivi est : *{{2}}*.\nSuivez votre inscription dans Mon espace sur la plateforme officielle.",
+          "example": {
+            "body_text": [
+              [
+                "Lycée technique de Kara",
+                "EC-G7H5"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            {
+              "type": "URL",
+              "text": "Mon espace",
+              "url": "https://semaineindustrie.tg/mon-espace"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_label_encours2",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour, votre demande de label pour le compte de *{{1}}* a été reçue et est *en cours d'examen*.\nVotre code de suivi est : *{{2}}*.\nSuivez votre demande dans Mon espace sur la plateforme officielle.",
+          "example": {
+            "body_text": [
+              [
+                "Minoterie du Golfe",
+                "IN-K7P4"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            {
+              "type": "URL",
+              "text": "Mon espace",
+              "url": "https://semaineindustrie.tg/mon-espace"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_particulier_encours",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour, l'inscription de *{{1}}* à la Semaine de l'industrie 2026 est *en cours de validation*.\nCode de suivi : *{{2}}*.\nSuivez votre inscription dans Mon espace sur la plateforme officielle.",
+          "example": {
+            "body_text": [
+              [
+                "Afi Mensah",
+                "PA-3MXR"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            {
+              "type": "URL",
+              "text": "Mon espace",
+              "url": "https://semaineindustrie.tg/mon-espace"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_particulier_acceptee",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour, l'inscription de *{{1}}* à la Semaine de l'industrie 2026 a été *acceptée*.\nCode de suivi : *{{2}}*.\nRetrouvez votre QR de participation dans Mon espace sur la plateforme officielle.",
+          "example": {
+            "body_text": [
+              [
+                "Afi Mensah",
+                "PA-3MXR"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            {
+              "type": "URL",
+              "text": "Mon espace",
+              "url": "https://semaineindustrie.tg/mon-espace"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "si26_particulier_refusee",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour, l'inscription de *{{1}}* à la Semaine de l'industrie 2026 *n'a pas été acceptée*.\nVous pouvez contacter l'équipe d'organisation via ce bouton pour obtenir plus de détails.",
+          "example": {
+            "body_text": [
+              [
+                "Afi Mensah"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            {
+              "type": "QUICK_REPLY",
+              "text": "Informations"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
