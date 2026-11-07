@@ -112,7 +112,7 @@ export default function InscriptionParticulierPage() {
               <textarea name="description" rows={3} className={`${field} resize-none`} />
             </Field>
             {full && (
-              <p className="sm:col-span-2 text-[15px] leading-relaxed text-ink/80">
+              <p className="sm:col-span-2 text-[15px] leading-relaxed text-red-700">
                 Les places prévues pour les particuliers sont toutes attribuées. Vous pouvez quand même vous inscrire : votre demande sera placée en liste d’attente et nous vous préviendrons dès qu’une place se libère.
               </p>
             )}
