@@ -1,5 +1,4 @@
-import { DAYS } from '../data'
-import { FAQ } from '../pages/FaqPage'
+import { DAYS, FAQ } from '../data'
 import { PUBLIC_SEO, SITE_URL } from './seo'
 
 /*

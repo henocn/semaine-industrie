@@ -16,7 +16,7 @@ import { useRevealInView } from '../hooks/useReveal'
 const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to: string; cta: string }> = {
   Rêver: {
     text: 'Découvrez les usines, les produits et les métiers du Togo, près de chez vous.',
-    to: '/industrie',
+    to: '/industrie/',
     cta: 'L’industrie',
   },
   Comprendre: {
@@ -26,7 +26,7 @@ const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to
   },
   Commencer: {
     text: 'Industries : demandez le label et rejoignez la semaine.',
-    to: '/label',
+    to: '/label/',
     cta: 'Demander le label',
   },
 }
@@ -96,6 +96,10 @@ function Hero() {
         <div className={`${WRAP} relative z-10 grid pt-12 pb-6 sm:pt-16 md:min-h-[32rem] md:grid-cols-2 md:items-center md:py-16`}>
           <div>
             <h1 className="display mt-4 max-w-xl text-balance text-[clamp(2.75rem,1.5rem+4vw,5.5rem)] font-extrabold leading-[1.05] text-forest">
+              {/* Libellé descriptif dans le H1 : le slogan seul ne dit ni l'événement, ni le pays, ni l'année. */}
+              <span className="mb-3 block text-[clamp(0.875rem,0.8rem+0.3vw,1.0625rem)] font-bold uppercase leading-snug tracking-[0.08em] text-forest/75">
+                Semaine de l’industrie 2026 au Togo · 16-22 novembre, Lomé
+              </span>
               {CAMPAIGN_TAGLINE.replace(/\.$/, '')}
               <span className="text-energy">.</span>
             </h1>
@@ -103,8 +107,8 @@ function Hero() {
               Thème : « {NATIONAL_THEME} »
             </p>
             <div className="mt-7 flex flex-wrap gap-2.5">
-              <Button to="/programme">Programme</Button>
-              <Button to="/label" variant="outline">
+              <Button to="/programme/">Programme</Button>
+              <Button to="/label/" variant="outline">
                 Demander un label
               </Button>
             </div>
@@ -117,6 +121,8 @@ function Hero() {
               src={s.src}
               alt={i === slide ? s.alt : ''}
               aria-hidden={i !== slide}
+              fetchPriority={i === 0 ? 'high' : 'low'}
+              decoding="async"
               className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
                 i === slide ? 'opacity-100' : 'opacity-0'
               }`}
@@ -218,7 +224,7 @@ function ProgrammeStrip() {
           ))}
         </ul>
         <div className="mt-8">
-          <Button to="/programme" variant="outline">
+          <Button to="/programme/" variant="outline">
             Tout le programme
           </Button>
         </div>

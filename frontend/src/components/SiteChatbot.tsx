@@ -242,7 +242,7 @@ export function SiteChatbot() {
         </div>
         <p className="mt-2 text-[12px] text-ink/55">
           Réponses automatiques.{' '}
-          <Link to="/confidentialite" className="underline underline-offset-2">Confidentialité</Link>
+          <Link to="/confidentialite/" className="underline underline-offset-2">Confidentialité</Link>
         </p>
       </form>
     </section>

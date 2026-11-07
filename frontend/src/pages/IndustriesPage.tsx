@@ -52,14 +52,14 @@ export default function IndustriesPage() {
         <div className="animate-rise">
           <SectionHeader
             level={1}
-            title="Industrie"
-            lead="Les entreprises labellisées de la Semaine. Ouvrez une fiche pour découvrir le site et les produits."
+            title="Les industries labellisées"
+            lead="Les industries togolaises labellisées « Usine ouverte » pour la Semaine de l’industrie 2026 : plastique, pharmacie, agro-alimentaire, textile, matériaux… de la zone portuaire de Lomé à la Plateforme d’Adétikopé (PIA). Ouvrez une fiche pour découvrir le site et les produits."
           />
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button to="/carte" variant="link">
+            <Button to="/carte/" variant="link">
               Voir sur la carte
             </Button>
-            <Button to="/label" variant="link">
+            <Button to="/label/" variant="link">
               Demander le label
             </Button>
           </div>

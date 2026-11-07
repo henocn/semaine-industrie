@@ -72,7 +72,7 @@ export function AppRoutes() {
             <Route path="/" element={<HomePage />} />
             <Route path="/programme" element={<ProgrammePage />} />
             <Route path="/label" element={<LabelRequestPage />} />
-            <Route path="/inscription" element={<Navigate to="/inscription-groupe" replace />} />
+            <Route path="/inscription" element={<Navigate to="/inscription-groupe/" replace />} />
             <Route path="/inscription-groupe" element={<InscriptionGroupPage />} />
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
             <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />

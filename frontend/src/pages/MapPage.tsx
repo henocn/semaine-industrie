@@ -42,10 +42,10 @@ export default function MapPage() {
         <div className="animate-rise flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader
             level={1}
-            title="Carte des visites"
-            lead="Sites industriels qui accueillent déjà des établissements pendant la semaine."
+            title="Carte des usines ouvertes"
+            lead="Les sites industriels du Togo qui accueillent écoles, universités et particuliers du lundi 16 au vendredi 20 novembre 2026, sur inscription et par petits groupes."
           />
-          <Button to="/industrie" variant="link">Voir toutes les industries</Button>
+          <Button to="/industrie/" variant="link">Voir toutes les industries</Button>
         </div>
 
         {error && <p className="mt-6 text-red-700">{error}</p>}

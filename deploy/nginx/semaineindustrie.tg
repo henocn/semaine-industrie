@@ -85,8 +85,16 @@ server {
         proxy_read_timeout 86400;
     }
 
+    error_page 404 /404.html;
+
+    # Routes applicatives dynamiques ou de redirection : coquille vide app.html (noindex).
+    location ~ ^/(o|passage|passeport|questions|questionnaire|inscription|ressources)(/|$) {
+        try_files $uri $uri/index.html /app.html;
+    }
+
+    # Pages publiques pré-rendues : fichier réel, sinon vraie 404 (pas de repli sur l'accueil).
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files $uri $uri/index.html =404;
     }
 
     listen [::]:443 ssl; # managed by Certbot
