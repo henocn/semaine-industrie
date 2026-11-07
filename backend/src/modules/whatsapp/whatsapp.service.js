@@ -1399,7 +1399,7 @@ async function resolveIdent(from, text, phoneNumberId, intent) {
   return replyAskCode(
     from,
     phoneNumberId,
-    'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5, PA-3MXR ou AF-9TQB).',
+    'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5 ou PA-3MXR).',
   );
 }
 
@@ -1435,7 +1435,7 @@ async function handleText(from, text, phoneNumberId) {
     return replyAskCode(
       from,
       phoneNumberId,
-      'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5, PA-3MXR ou AF-9TQB).',
+      'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5 ou PA-3MXR).',
     );
   }
 
