@@ -374,6 +374,36 @@
       ]
     },
     {
+      "name": "si26_particulier_attente",
+      "language": "fr",
+      "category": "UTILITY",
+      "allow_category_change": false,
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Bonjour, l'inscription de *{{1}}* à la Semaine de l'industrie 2026 est bien enregistrée.\nToutes les places prévues pour les particuliers sont déjà attribuées : elle est placée *en liste d'attente*.\nCode de suivi : *{{2}}*.\nNous vous préviendrons dès qu'une place se libère. Suivez votre inscription dans Mon espace sur la plateforme officielle.",
+          "example": {
+            "body_text": [
+              [
+                "Afi Mensah",
+                "PA-3MXR"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [
+            {
+              "type": "URL",
+              "text": "Mon espace",
+              "url": "https://semaineindustrie.tg/mon-espace"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "si26_particulier_acceptee",
       "language": "fr",
       "category": "UTILITY",

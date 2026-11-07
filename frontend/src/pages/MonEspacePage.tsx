@@ -17,12 +17,14 @@ const TYPE_LABEL: Record<EspaceType, string> = {
 const STATUS_LABEL: Record<Espace['status'], string> = {
   approved: 'Dossier validé',
   pending: 'En attente de validation',
+  waitlist: 'En liste d’attente',
   rejected: 'Dossier non retenu',
 }
 
 /* Explication d'un dossier sans bilan. */
 const STATUS_NOTICE: Partial<Record<Espace['status'], string>> = {
   pending: 'Votre dossier est en cours d’examen par l’équipe d’organisation. Vous recevrez bientôt la réponse.',
+  waitlist: 'Les places prévues pour les particuliers sont toutes attribuées. Votre inscription est en liste d’attente : nous vous préviendrons par e-mail et sur WhatsApp dès qu’une place se libère.',
   rejected: 'Ce dossier n’a pas été retenu. Pour en savoir plus, écrivez à infos@semaineindustrie.tg.',
 }
 

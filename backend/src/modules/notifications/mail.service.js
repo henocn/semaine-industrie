@@ -51,6 +51,11 @@ function participationReceived(row) {
     : mail.individualReceived({ name: row.name, code: row.tracking_code })));
 }
 
+/* Particulier inscrit au-delà des places : liste d'attente. */
+function participationWaitlisted(row) {
+  return deliver(row.email, (mail) => mail.individualWaitlisted({ name: row.name, code: row.tracking_code }));
+}
+
 /* Inscription acceptée, avec la carte QR en pièce jointe. */
 function participationApproved(row, code) {
   return deliver(row.email, async (mail) => {
@@ -159,6 +164,7 @@ function visitReminder({ organization, visitDay, visitSlot, place }) {
 
 module.exports = {
   participationReceived,
+  participationWaitlisted,
   participationApproved,
   participationRejected,
   labelReceived,

@@ -42,6 +42,15 @@ async function getOne(req, res, next) {
   }
 }
 
+/* Places restantes pour les particuliers (formulaire public). */
+async function capacity(req, res, next) {
+  try {
+    return ApiResponse.success(res, await service.particulierCapacity());
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Crée une participation. */
 async function create(req, res, next) {
   try {
@@ -128,6 +137,7 @@ async function remove(req, res, next) {
 }
 
 module.exports = {
+  capacity,
   list,
   getOne,
   create,

@@ -24,10 +24,10 @@ import { excelDate, type ExcelColumn } from '../lib/excel'
 const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
 /* Libellé court du statut. */
-function statusLabel(status: Participation['status']) {
+function statusLabel(status: Participation['status'], waitlisted = false) {
   if (status === 'approved') return 'Acceptée'
   if (status === 'rejected') return 'Refusée'
-  return 'En attente'
+  return waitlisted ? 'Liste d’attente' : 'En attente'
 }
 
 /* Nombre de passages (0 tant qu'aucun scan). */
@@ -35,7 +35,7 @@ function statusLabel(status: Participation['status']) {
 const EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
   { header: 'Code de suivi', width: 14, value: (r) => r.passport?.code || r.tracking_code || '' },
   { header: 'Nom', width: 32, value: (r) => r.name },
-  { header: 'Statut', width: 12, value: (r) => statusLabel(r.status) },
+  { header: 'Statut', width: 12, value: (r) => statusLabel(r.status, r.waitlisted) },
   { header: 'Téléphone', width: 18, value: (r) => r.phone },
   { header: 'E-mail', width: 28, value: (r) => r.email },
   { header: 'Ville', width: 16, value: (r) => r.city },
@@ -380,7 +380,7 @@ export default function OrgaParticipationsPage() {
                     </td>
                     <td className="font-medium text-forest">{item.name}</td>
                     <td>{item.phone || item.email || '…'}</td>
-                    <td>{statusLabel(item.status)}</td>
+                    <td>{statusLabel(item.status, item.waitlisted)}</td>
                     <td className={passageCount(item) > 0 ? 'font-semibold text-forest' : 'text-ink/45'}>
                       {passageCount(item)}
                     </td>

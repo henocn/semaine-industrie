@@ -156,6 +156,18 @@ function emails(site = env.PUBLIC_APP_URL) {
       button: space(code),
     }),
 
+    /* Particulier : inscription reçue alors que les places sont prises. */
+    individualWaitlisted: ({ name, code }) => buildEmail({
+      subject: 'Votre inscription est en liste d’attente',
+      intro: [
+        `Nous avons bien reçu l’inscription de **${name}** à la Semaine de l’industrie 2026.`,
+        'Toutes les places prévues pour les particuliers sont déjà attribuées : elle est placée **en liste d’attente**.',
+      ],
+      code,
+      outro: ['Nous vous préviendrons par e-mail et sur WhatsApp dès qu’une place se libère.', FOLLOW],
+      button: space(code),
+    }),
+
     /* Particulier : inscription acceptée, avec la carte QR. */
     individualApproved: ({ name, code, cardPng }) => buildEmail({
       subject: 'Votre inscription est acceptée',

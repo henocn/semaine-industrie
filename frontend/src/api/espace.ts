@@ -13,7 +13,7 @@ export type Espace = {
   code: string
   type: EspaceType
   name: string
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'waitlist' | 'approved' | 'rejected'
   qr_data_url: string | null
   page_url: string | null
   facts: { label: string; value: string }[]
