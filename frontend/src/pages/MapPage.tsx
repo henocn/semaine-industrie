@@ -13,6 +13,8 @@ export default function MapPage() {
   const [points, setPoints] = useState<MapPoint[]>([])
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
+  /* Tant que la liste n'est pas arrivée (et au pré-rendu), pas de message « aucune visite ». */
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     /* Charge les sites entreprises, ne garde que ceux avec visites. */
@@ -27,6 +29,8 @@ export default function MapPage() {
         )
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Carte indisponible')
+      } finally {
+        setLoaded(true)
       }
     }
     load()
@@ -42,15 +46,15 @@ export default function MapPage() {
         <div className="animate-rise flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader
             level={1}
-            title="Carte des visites"
-            lead="Sites industriels qui accueillent déjà des établissements pendant la semaine."
+            title="Carte des usines ouvertes"
+            lead="Les sites industriels du Togo qui accueillent écoles, universités et particuliers du lundi 16 au vendredi 20 novembre 2026, sur inscription et par petits groupes."
           />
-          <Button to="/industrie" variant="link">Voir toutes les industries</Button>
+          <Button to="/industrie/" variant="link">Voir toutes les industries</Button>
         </div>
 
         {error && <p className="mt-6 text-red-700">{error}</p>}
 
-        {!error && points.length === 0 && (
+        {loaded && !error && points.length === 0 && (
           <p className="mt-10 text-ink/50">Aucune visite arrangée pour le moment.</p>
         )}
 

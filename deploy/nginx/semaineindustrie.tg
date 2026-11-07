@@ -52,6 +52,10 @@ server {
         return 302 https://backoffice.semaineindustrie.tg$request_uri;
     }
 
+    location = /bilan {
+        return 302 https://backoffice.semaineindustrie.tg/orga;
+    }
+
     location /uploads/ {
         proxy_pass http://industrie_api;
         proxy_http_version 1.1;
@@ -85,8 +89,21 @@ server {
         proxy_read_timeout 86400;
     }
 
+    error_page 404 /404.html;
+
+    # Routes applicatives dynamiques ou de redirection : coquille vide app.html (noindex).
+    location ~ ^/(o|passage|passeport|questions|questionnaire|inscription|ressources)(/|$) {
+        try_files $uri $uri/index.html /app.html;
+    }
+
+    location = /app.html {
+        expires -1;
+    }
+
+    # Pages publiques pré-rendues : fichier réel, sinon vraie 404 (pas de repli sur l'accueil).
     location / {
-        try_files $uri $uri/ /index.html;
+        expires -1;
+        try_files $uri $uri/index.html =404;
     }
 
     listen [::]:443 ssl; # managed by Certbot

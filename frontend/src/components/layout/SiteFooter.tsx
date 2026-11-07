@@ -17,7 +17,7 @@ export function SiteFooter() {
     <footer className="relative overflow-hidden border-t-4 border-sun bg-forest text-white">
       <div
         className="section-soft-bg section-soft-bg--on-dark"
-        style={{ backgroundImage: 'url(/images/bg-industrie.png)' }}
+        style={{ backgroundImage: 'url(/images/bg-industrie.webp)' }}
         aria-hidden="true"
       />
       <div className={`${WRAP} grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]`}>
@@ -34,10 +34,10 @@ export function SiteFooter() {
         <div>
           <p className="font-semibold text-white">La semaine</p>
           <ul className="mt-4 space-y-2.5">
-            <li><Link to="/programme" className={LINK}>Programme</Link></li>
-            <li><Link to="/carte" className={LINK}>Carte des usines</Link></li>
-            <li><Link to="/mon-espace" className={LINK}>Mon espace</Link></li>
-            <li><Link to="/faq" className={LINK}>Questions fréquentes</Link></li>
+            <li><Link to="/programme/" className={LINK}>Programme</Link></li>
+            <li><Link to="/carte/" className={LINK}>Carte des usines</Link></li>
+            <li><Link to="/mon-espace/" className={LINK}>Mon espace</Link></li>
+            <li><Link to="/faq/" className={LINK}>Questions fréquentes</Link></li>
             <li><Link to="/#contact" className={LINK}>Contact</Link></li>
           </ul>
         </div>
@@ -67,7 +67,7 @@ export function SiteFooter() {
         <div className={`${WRAP} flex flex-col gap-3 py-6 text-sm text-white/70 sm:flex-row sm:items-center sm:justify-between`}>
           <p>© 2026 Semaine de l’industrie, République togolaise</p>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <Link to="/confidentialite" className={LINK}>Confidentialité</Link>
+            <Link to="/confidentialite/" className={LINK}>Confidentialité</Link>
             <span className="text-[12px] font-normal tracking-wide text-white/50">Powered by DEKA Editions</span>
           </p>
         </div>

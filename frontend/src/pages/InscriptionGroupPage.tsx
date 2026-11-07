@@ -83,14 +83,17 @@ export default function InscriptionGroupPage() {
             lead="Écoles, centres de formation et universités : inscrivez votre groupe. Après validation, le QR du jour J suit."
           />
           <VisitDaysNote audience="public" />
-          <img
-            src="/images/inscription-groupe.jpg"
-            alt="Élèves en uniforme prenant un selfie avec la silhouette d’un technicien, dans une exposition sur les métiers de l’industrie"
-            loading="lazy"
-            width={1344}
-            height={752}
-            className="mt-8 aspect-[16/10] w-full rounded-sm object-cover"
-          />
+          <picture className="contents">
+            <source srcSet="/images/inscription-groupe.webp" type="image/webp" />
+            <img
+              src="/images/inscription-groupe.jpg"
+              alt="Élèves en uniforme prenant un selfie avec la silhouette d’un technicien, dans une exposition sur les métiers de l’industrie"
+              loading="lazy"
+              width={1344}
+              height={752}
+              className="mt-8 aspect-[16/10] w-full rounded-sm object-cover"
+            />
+          </picture>
         </div>
 
         {sent ? (

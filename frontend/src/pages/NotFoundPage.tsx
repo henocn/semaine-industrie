@@ -10,7 +10,7 @@ export default function NotFoundPage() {
       <Seo title="Page introuvable" path="/404" noIndex />
       <div
         className="section-soft-bg section-soft-bg--on-dark"
-        style={{ backgroundImage: 'url(/images/bg-industrie.png)' }}
+        style={{ backgroundImage: 'url(/images/bg-industrie.webp)' }}
         aria-hidden="true"
       />
       <div className="relative flex flex-col items-center">
@@ -26,7 +26,7 @@ export default function NotFoundPage() {
         </p>
         <div className="mt-[clamp(0.75rem,3.5vh,2rem)] flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           <Button to="/" variant="accent">Retour à l’accueil</Button>
-          <Link to="/programme" className="font-semibold text-white underline decoration-white/40 underline-offset-4 hover:decoration-white">
+          <Link to="/programme/" className="font-semibold text-white underline decoration-white/40 underline-offset-4 hover:decoration-white">
             Voir le programme
           </Link>
         </div>

@@ -19,11 +19,11 @@ export default function ProgrammePage() {
         <div className={WRAP}>
           <SectionHeader
             level={1}
-            title="Le programme"
+            title="Le programme du 16 au 22 novembre"
             lead={`Thème : « ${NATIONAL_THEME} ». Trois rendez-vous au Palais des Congrès de Lomé, du lundi 16 au mercredi 18 novembre ; usines ouvertes jusqu’au vendredi 20.`}
           />
           <div className="mt-6 flex flex-wrap gap-2.5">
-            <Button to="/carte" variant="primary">
+            <Button to="/carte/" variant="primary">
               Carte des sites
             </Button>
             <Button to="/#contact" variant="outline">

@@ -12,6 +12,8 @@
 | inscription-particulier.jpg | Participer en tant que particulier (colonne de gauche) | 880 px |
 | inscription-groupe.jpg | Inscription écoles / universités (colonne de gauche) | 1344 px |
 | metiers.jpg         | L’industrie, vue par vous (bandeau sous le titre)      | 1344 px |
-| bg-*.png            | Fonds discrets des sections et du pied de page         | — |
+| bg-*.webp           | Fonds discrets des sections et du pied de page (WebP)  | — |
 
 Pour remplacer une photo, gardez le même nom de fichier.
+
+Avant d’ajouter une photo : 1 600 px de large au plus (1 920 px pour une image plein écran), JPEG qualité ~78 ou WebP. Un fond décoratif en PNG pèse 10 fois plus que le même en WebP.

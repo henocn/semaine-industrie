@@ -3,7 +3,9 @@ export function BrandLogo({ className = 'h-9 w-auto' }: { className?: string }) 
   return (
     <img
       src="/brand/logo-couleur-transparent.png"
-      alt="Semaine de l’Industrie 2026"
+      alt="Semaine de l’Industrie 2026 au Togo"
+      width={800}
+      height={231}
       className={`object-contain ${className}`}
     />
   )
@@ -14,7 +16,9 @@ export function BrandLogoWhite({ className = 'h-9 w-auto' }: { className?: strin
   return (
     <img
       src="/brand/logo-blanc-transparent.png"
-      alt="Semaine de l’Industrie 2026"
+      alt="Semaine de l’Industrie 2026 au Togo"
+      width={800}
+      height={231}
       className={`object-contain ${className}`}
     />
   )

@@ -1,56 +1,58 @@
 [
   {
     "path": "/",
-    "description": "Du 16 au 22 novembre 2026 au Togo : rendez-vous au Palais des Congrès de Lomé, usines ouvertes, forum des métiers et exposition « Fabriqué au Togo »."
+    "fullTitle": "Semaine de l’industrie 2026 au Togo · 16-22 novembre, Lomé",
+    "description": "Du 16 au 22 novembre 2026 au Togo : rendez-vous au Palais des Congrès de Lomé, usines ouvertes aux écoles et au public, forum des métiers et exposition « Fabriqué au Togo »."
   },
   {
     "path": "/programme",
-    "title": "Programme",
+    "title": "Programme du 16 au 22 novembre à Lomé",
     "description": "Programme officiel de la Semaine de l’industrie 2026 au Togo : trois rendez-vous au Palais des Congrès de Lomé du 16 au 18 novembre, usines ouvertes jusqu’au 20."
   },
   {
     "path": "/label",
-    "title": "Demander le label",
-    "description": "Industries togolaises : demandez le label officiel pour ouvrir votre site et rejoindre le parcours de la Semaine de l’industrie 2026."
+    "title": "Label « Usine ouverte » pour les industries",
+    "description": "Industries togolaises : demandez le label officiel pour ouvrir votre usine aux écoles et au public pendant la Semaine de l’industrie 2026 au Togo."
   },
   {
     "path": "/inscription-groupe",
-    "title": "Participer en tant qu’école / université",
-    "description": "Écoles, centres de formation et universités : inscrivez votre groupe à la Semaine de l’industrie 2026 pour recevoir votre QR de participation."
+    "title": "Inscrire une école ou une université",
+    "description": "Écoles, centres de formation et universités du Togo : inscrivez votre groupe aux visites d’usines de la Semaine de l’industrie 2026 et recevez votre QR de participation."
   },
   {
     "path": "/inscription-particulier",
-    "title": "Participer en tant que particulier",
-    "description": "Inscrivez-vous à titre personnel à la Semaine de l’industrie 2026 au Togo et recevez votre QR de participation."
+    "title": "S’inscrire en tant que particulier",
+    "description": "Inscrivez-vous à titre personnel à la Semaine de l’industrie 2026 au Togo : visites d’usines et rendez-vous au Palais des Congrès de Lomé, avec votre QR de participation."
   },
   {
     "path": "/mon-espace",
     "title": "Mon espace",
-    "description": "Entrez votre code de suivi pour retrouver votre dossier, le bilan de vos passages et vos documents de la Semaine de l’industrie 2026."
+    "description": "Entrez votre code de suivi pour retrouver votre dossier, le bilan de vos passages et vos documents de la Semaine de l’industrie 2026.",
+    "noIndex": true
   },
   {
     "path": "/carte",
-    "title": "Carte des visites",
-    "description": "Carte des usines ouvertes au Togo pendant la Semaine de l’industrie 2026 : sites, visites d’établissements et accès."
+    "title": "Carte des usines ouvertes au Togo",
+    "description": "Carte des usines ouvertes au Togo pendant la Semaine de l’industrie 2026 : sites industriels, visites d’établissements et accès."
   },
   {
     "path": "/industrie",
-    "title": "Industrie",
-    "description": "Annuaire des entreprises labellisées de la Semaine de l’industrie 2026 : fiches, produits et sites ouverts au public."
+    "title": "Industries togolaises labellisées",
+    "description": "Annuaire des industries togolaises labellisées pour la Semaine de l’industrie 2026 : fiches, produits et usines ouvertes au public."
   },
   {
     "path": "/vue-par-vous",
     "title": "L’industrie, vue par vous !",
-    "description": "Donnez votre avis sur les visites d’usines, testez vos connaissances sur l’industrie et découvrez votre profil de talents, Semaine de l’industrie 2026 au Togo."
+    "description": "Donnez votre avis sur les visites d’usines, testez vos connaissances sur l’industrie togolaise et découvrez votre profil de talents, Semaine de l’industrie 2026."
   },
   {
     "path": "/faq",
     "title": "Questions fréquentes",
-    "description": "Dates, label, inscriptions, visites et concours vidéo : les questions fréquentes de la Semaine de l’industrie 2026."
+    "description": "Dates, lieux, label, inscriptions, visites d’usines et concours vidéo : les questions fréquentes de la Semaine de l’industrie 2026 au Togo."
   },
   {
     "path": "/confidentialite",
     "title": "Confidentialité",
-    "description": "Politique de confidentialité et cookies du site semaineindustrie.tg, Semaine de l’industrie 2026."
+    "description": "Politique de confidentialité et cookies du site semaineindustrie.tg, Semaine de l’industrie 2026 au Togo."
   }
 ]

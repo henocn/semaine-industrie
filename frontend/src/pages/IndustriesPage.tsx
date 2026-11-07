@@ -38,11 +38,14 @@ function IndustryCover({ item }: { item: IndustryCard }) {
 export default function IndustriesPage() {
   const [items, setItems] = useState<IndustryCard[]>([])
   const [error, setError] = useState<string | null>(null)
+  /* Tant que la liste n'est pas arrivée (et au pré-rendu), pas de message « aucune industrie ». */
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     listIndustries()
       .then(setItems)
       .catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
+      .finally(() => setLoaded(true))
   }, [])
 
   return (
@@ -52,14 +55,14 @@ export default function IndustriesPage() {
         <div className="animate-rise">
           <SectionHeader
             level={1}
-            title="Industrie"
-            lead="Les entreprises labellisées de la Semaine. Ouvrez une fiche pour découvrir le site et les produits."
+            title="Les industries labellisées"
+            lead="Les industries togolaises labellisées « Usine ouverte » pour la Semaine de l’industrie 2026 : plastique, pharmacie, agro-alimentaire, textile, matériaux… de la zone portuaire de Lomé à la Plateforme d’Adétikopé (PIA). Ouvrez une fiche pour découvrir le site et les produits."
           />
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button to="/carte" variant="link">
+            <Button to="/carte/" variant="link">
               Voir sur la carte
             </Button>
-            <Button to="/label" variant="link">
+            <Button to="/label/" variant="link">
               Demander le label
             </Button>
           </div>
@@ -70,7 +73,7 @@ export default function IndustriesPage() {
             {error}
           </p>
         )}
-        {!error && items.length === 0 && (
+        {loaded && !error && items.length === 0 && (
           <p className="mt-10 text-ink/70">Aucune industrie publiée pour le moment.</p>
         )}
 

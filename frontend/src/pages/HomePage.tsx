@@ -16,7 +16,7 @@ import { useRevealInView } from '../hooks/useReveal'
 const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to: string; cta: string }> = {
   Rêver: {
     text: 'Découvrez les usines, les produits et les métiers du Togo, près de chez vous.',
-    to: '/industrie',
+    to: '/industrie/',
     cta: 'L’industrie',
   },
   Comprendre: {
@@ -26,7 +26,7 @@ const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to
   },
   Commencer: {
     text: 'Industries : demandez le label et rejoignez la semaine.',
-    to: '/label',
+    to: '/label/',
     cta: 'Demander le label',
   },
 }
@@ -59,14 +59,18 @@ function Photo({
       {missing ? (
         <span className="absolute bottom-3 left-4 text-xs text-forest/50">images/{name}.jpg</span>
       ) : (
-        <img
-          src={`/images/${name}.jpg`}
-          alt={alt}
-          loading="lazy"
-          onError={() => setMissing(true)}
-          style={{ objectPosition: position }}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        <picture>
+          <source srcSet={`/images/${name}.webp`} type="image/webp" />
+          <img
+            src={`/images/${name}.jpg`}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            onError={() => setMissing(true)}
+            style={{ objectPosition: position }}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </picture>
       )}
     </div>
   )
@@ -83,12 +87,26 @@ const HERO_INTERVAL_MS = 4000
 /* Hero sobre : texte à gauche, photos qui défilent et se fondent de gauche à droite. */
 function Hero() {
   const [slide, setSlide] = useState(0)
+  const [restLoaded, setRestLoaded] = useState(false)
 
+  /* Les photos 2 et 3 du défilement se chargent une fois la page affichée. */
   useEffect(() => {
+    const load = () => setRestLoaded(true)
+    if (document.readyState === 'complete') {
+      const id = window.setTimeout(load, 300)
+      return () => window.clearTimeout(id)
+    }
+    window.addEventListener('load', load, { once: true })
+    return () => window.removeEventListener('load', load)
+  }, [])
+
+  /* Le défilement ne démarre qu'une fois les photos suivantes demandées (pas de vue vide). */
+  useEffect(() => {
+    if (!restLoaded) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const id = window.setInterval(() => setSlide((s) => (s + 1) % HERO_SLIDES.length), HERO_INTERVAL_MS)
     return () => window.clearInterval(id)
-  }, [])
+  }, [restLoaded])
 
   return (
     <section id="top" className="border-b border-forest/10 bg-sage">
@@ -96,6 +114,10 @@ function Hero() {
         <div className={`${WRAP} relative z-10 grid pt-12 pb-6 sm:pt-16 md:min-h-[32rem] md:grid-cols-2 md:items-center md:py-16`}>
           <div>
             <h1 className="display mt-4 max-w-xl text-balance text-[clamp(2.75rem,1.5rem+4vw,5.5rem)] font-extrabold leading-[1.05] text-forest">
+              {/* Libellé descriptif dans le H1 : le slogan seul ne dit ni l'événement, ni le pays, ni l'année. */}
+              <span className="mb-3 block text-[clamp(0.875rem,0.8rem+0.3vw,1.0625rem)] font-bold uppercase leading-snug tracking-[0.08em] text-forest/75">
+                Semaine de l’industrie 2026 au Togo · 16-22 novembre, Lomé
+              </span>
               {CAMPAIGN_TAGLINE.replace(/\.$/, '')}
               <span className="text-energy">.</span>
             </h1>
@@ -103,25 +125,32 @@ function Hero() {
               Thème : « {NATIONAL_THEME} »
             </p>
             <div className="mt-7 flex flex-wrap gap-2.5">
-              <Button to="/programme">Programme</Button>
-              <Button to="/label" variant="outline">
+              <Button to="/programme/">Programme</Button>
+              <Button to="/label/" variant="outline">
                 Demander un label
               </Button>
             </div>
           </div>
         </div>
         <div className="hero-fade relative h-64 sm:h-80 md:absolute md:inset-0 md:h-auto">
-          {HERO_SLIDES.map((s, i) => (
-            <img
-              key={s.src}
-              src={s.src}
-              alt={i === slide ? s.alt : ''}
-              aria-hidden={i !== slide}
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-                i === slide ? 'opacity-100' : 'opacity-0'
-              }`}
-            />
-          ))}
+          {HERO_SLIDES.map((s, i) =>
+            /* Seule la 1re photo part au chargement ; les suivantes après coup (poids initial divisé). */
+            i === 0 || restLoaded ? (
+              <picture key={s.src}>
+                <source srcSet={s.src.replace(/\.jpg$/, '.webp')} type="image/webp" />
+                <img
+                  src={s.src}
+                  alt={i === slide ? s.alt : ''}
+                  aria-hidden={i !== slide}
+                  fetchPriority={i === 0 ? 'high' : 'low'}
+                  decoding="async"
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+                    i === slide ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              </picture>
+            ) : null,
+          )}
           <div className="absolute inset-0 bg-sage/25" aria-hidden="true" />
         </div>
       </div>
@@ -143,7 +172,7 @@ function Hero() {
 function Tools() {
   return (
     <section className="relative overflow-hidden py-12 sm:py-16">
-      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-robots.png)' }} aria-hidden="true" />
+      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-robots.webp)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal`}>
         <SectionHeader
           title={YOUTH_PILLAR.title}
@@ -201,7 +230,7 @@ function ProgrammeStrip() {
 
   return (
     <section className="relative overflow-hidden py-12 sm:py-16">
-      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-usine.png)' }} aria-hidden="true" />
+      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-usine.webp)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal max-w-3xl`}>
         <SectionHeader
           title="L’ouverture"
@@ -218,7 +247,7 @@ function ProgrammeStrip() {
           ))}
         </ul>
         <div className="mt-8">
-          <Button to="/programme" variant="outline">
+          <Button to="/programme/" variant="outline">
             Tout le programme
           </Button>
         </div>
@@ -256,7 +285,7 @@ function Women() {
 function Places() {
   return (
     <section id="lieux" className="relative overflow-hidden bg-sage py-12 sm:py-16">
-      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-industrie.png)' }} aria-hidden="true" />
+      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-industrie.webp)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal`}>
         <SectionHeader title="Les sites ouverts, du port aux régions" />
         <Photo

@@ -11,26 +11,26 @@ type NavGroup = {
 }
 
 const PARTICIPER_ITEMS: NavItem[] = [
-  { label: 'En tant que particulier', to: '/inscription-particulier' },
-  { label: 'En tant qu’école / université', to: '/inscription-groupe' },
-  { label: 'Demande de label : industries', to: '/label' },
+  { label: 'En tant que particulier', to: '/inscription-particulier/' },
+  { label: 'En tant qu’école / université', to: '/inscription-groupe/' },
+  { label: 'Demande de label : industries', to: '/label/' },
   // Retiré du public : hors du programme validé. Les inscriptions déjà reçues restent au back-office.
   // { label: 'Rencontres d’affaires', to: '/affaires' },
-  { label: 'Mon espace', to: '/mon-espace', red: true },
+  { label: 'Mon espace', to: '/mon-espace/', red: true },
 ]
 
 const GROUPS: NavGroup[] = [
   {
     label: 'Explorer',
     items: [
-      { label: 'Industrie', to: '/industrie' },
-      { label: 'Carte & visites', to: '/carte' },
+      { label: 'Industrie', to: '/industrie/' },
+      { label: 'Carte & visites', to: '/carte/' },
     ],
   },
   {
     label: 'Défis',
     items: [
-      { label: 'L’industrie, vue par vous', to: '/vue-par-vous' },
+      { label: 'L’industrie, vue par vous', to: '/vue-par-vous/' },
       // Retiré du public : le vote n'est plus au programme validé.
       // { label: 'Vote coup de cœur', to: '/vote' },
     ],
@@ -38,7 +38,7 @@ const GROUPS: NavGroup[] = [
   {
     label: 'À propos',
     items: [
-      { label: 'Questions fréquentes', to: '/faq' },
+      { label: 'Questions fréquentes', to: '/faq/' },
       { label: 'Contact', to: '/#contact' },
     ],
   },

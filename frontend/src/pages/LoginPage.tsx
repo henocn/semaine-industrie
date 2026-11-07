@@ -122,11 +122,14 @@ export default function LoginPage() {
       </div>
 
       <div className="relative hidden h-full overflow-hidden bg-forest lg:block">
-        <img
-          src="/images/hall.jpg"
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-45"
-        />
+        <picture>
+          <source srcSet="/images/hall.webp" type="image/webp" />
+          <img
+            src="/images/hall.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-45"
+          />
+        </picture>
         <div className="absolute inset-0 bg-forest/55" />
         <div className="relative flex h-full items-center justify-center px-12 text-center">
           <div className="max-w-md">
