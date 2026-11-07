@@ -1,10 +1,10 @@
-import { useEffect } from 'react'
 import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { SITE_URL, publicSeo } from '../lib/seo'
 
-const FAQ = [
+/* Questions-réponses ; aussi lues au build pour le balisage FAQPage (lib/structuredData.ts). */
+export const FAQ = [
   {
     q: 'Qu’est-ce que la Semaine de l’industrie ?',
     a: 'La Semaine de l’industrie est un événement qui vous permet de découvrir les entreprises, les métiers, les produits et les innovations de l’industrie togolaise. Elle réunit pendant une semaine les professionnels du secteur et le grand public autour de différentes activités.',
@@ -51,32 +51,8 @@ const FAQ = [
   },
 ]
 
-/* Injecte le balisage FAQ pour les moteurs de recherche. */
-function useFaqJsonLd() {
-  useEffect(() => {
-    const script = document.createElement('script')
-    script.type = 'application/ld+json'
-    script.id = 'faq-jsonld'
-    script.text = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: FAQ.map((item) => ({
-        '@type': 'Question',
-        name: item.q,
-        acceptedAnswer: { '@type': 'Answer', text: item.a },
-      })),
-    })
-    document.head.appendChild(script)
-    return () => {
-      script.remove()
-    }
-  }, [])
-}
-
 /* Page À propos : questions fréquentes. */
 export default function FaqPage() {
-  useFaqJsonLd()
-
   return (
     <main className="py-16 sm:py-24">
       <Seo {...publicSeo('/faq')} />

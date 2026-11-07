@@ -61,10 +61,10 @@ function BackofficeGate({ children }: { children: ReactNode }) {
   return children
 }
 
-/* Routeur : layout public partagé + espace orga. */
-export default function App() {
+/* Arbre des routes, partagé par le navigateur (BrowserRouter) et le pré-rendu (StaticRouter). */
+export function AppRoutes() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <BackofficeGate>
         <Routes>
@@ -115,6 +115,15 @@ export default function App() {
           </Route>
         </Routes>
       </BackofficeGate>
+    </>
+  )
+}
+
+/* Routeur : layout public partagé + espace orga. */
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
     </BrowserRouter>
   )
 }

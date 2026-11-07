@@ -2,9 +2,12 @@ import publicSeoCatalog from './publicSeo.json' with { type: 'json' }
 
 export const SITE_URL = 'https://semaineindustrie.tg'
 export const SITE_NAME = 'Semaine de l’industrie 2026'
+/* Suffixe des titres : « Togo » distingue l'événement de son homonyme français, aux mêmes dates. */
+export const TITLE_SUFFIX = 'Semaine de l’industrie Togo 2026'
 
 export type SeoInput = {
   title?: string
+  fullTitle?: string
   description?: string
   path?: string
   image?: string
@@ -14,7 +17,9 @@ export type SeoInput = {
 export type PublicSeoEntry = {
   path: string
   title?: string
+  fullTitle?: string
   description: string
+  noIndex?: boolean
 }
 
 export const PUBLIC_SEO: Record<string, PublicSeoEntry> = Object.fromEntries(
@@ -28,8 +33,16 @@ export function publicSeo(path: string): SeoInput {
   return {
     path: row.path,
     title: row.title,
+    fullTitle: row.fullTitle,
     description: row.description,
+    noIndex: row.noIndex,
   }
+}
+
+/* Titre complet affiché dans l'onglet et les résultats (même règle que scripts/prerender.mjs). */
+export function composeTitle(title?: string, fullTitle?: string) {
+  if (fullTitle) return fullTitle
+  return title ? `${title} · ${TITLE_SUFFIX}` : `${SITE_NAME} au Togo`
 }
 
 /* Indique si on est sur le sous-domaine backoffice. */
@@ -37,8 +50,7 @@ export function isBackofficeHost() {
   if (typeof window === 'undefined') return false
   return window.location.hostname === 'backoffice.semaineindustrie.tg'
 }
-export const DEFAULT_DESCRIPTION =
-  'Du 16 au 22 novembre 2026 au Togo : rendez-vous au Palais des Congrès de Lomé, usines ouvertes, forum des métiers et exposition « Fabriqué au Togo ».'
+export const DEFAULT_DESCRIPTION = PUBLIC_SEO['/'].description
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og.jpg`
 
 /* Met à jour ou crée une balise meta / link dans le head. */
@@ -66,12 +78,13 @@ function setCanonical(href: string) {
 /* Applique le SEO de la page courante (title, description, Open Graph, Twitter). */
 export function applySeo({
   title,
+  fullTitle: explicitTitle,
   description = DEFAULT_DESCRIPTION,
   path = '/',
   image = DEFAULT_OG_IMAGE,
   noIndex = false,
 }: SeoInput) {
-  const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} · Togo`
+  const fullTitle = composeTitle(title, explicitTitle)
   const cleanPath = path.startsWith('/') ? path : `/${path}`
   /* Les pages préparées au build sont des dossiers : le serveur les sert avec une barre oblique finale. */
   const url = `${SITE_URL}${cleanPath !== '/' && PUBLIC_SEO[cleanPath] ? `${cleanPath}/` : cleanPath}`
@@ -79,7 +92,7 @@ export function applySeo({
   document.title = fullTitle
 
   setMeta('name', 'description', description)
-  setMeta('name', 'robots', noIndex ? 'noindex, nofollow' : 'index, follow')
+  setMeta('name', 'robots', noIndex ? 'noindex, follow' : 'index, follow, max-image-preview:large')
   setMeta('name', 'theme-color', '#024D3E')
 
   setMeta('property', 'og:type', 'website')

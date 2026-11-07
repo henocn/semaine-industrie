@@ -5,7 +5,7 @@ import { applySeo, type SeoInput } from '../lib/seo'
 export function Seo(props: SeoInput) {
   useEffect(() => {
     applySeo(props)
-  }, [props.title, props.description, props.path, props.image, props.noIndex])
+  }, [props.title, props.fullTitle, props.description, props.path, props.image, props.noIndex])
 
   return null
 }
