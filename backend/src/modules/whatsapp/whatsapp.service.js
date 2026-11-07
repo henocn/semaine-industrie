@@ -895,14 +895,19 @@ function extractLabelCode(text) {
 }
 
 /* Répond à un code dont le dossier n'est pas encore accepté (aucun QR ni menu de suivi). */
-function replyRequestStatus(from, found, phoneNumberId) {
+async function replyRequestStatus(from, found, phoneNumberId) {
   const item = found.participation || found.request;
+  const participationService = require('../participations/participation.service');
+  const waitlisted = found.participation ? await participationService.isWaitlisted(found.participation) : false;
+  let status = 'Non retenu';
+  if (waitlisted) status = "En liste d'attente";
+  else if (item.status === 'pending') status = 'En cours de validation';
   return sendWithNav({
     to: from,
     phoneNumberId,
     body: [
       `Dossier : ${item.name || item.structure_name}`,
-      `Statut : ${item.status === 'pending' ? 'En cours de validation' : 'Non retenu'}`,
+      `Statut : ${status}`,
       `Code de suivi : ${item.tracking_code}`,
       `Mon espace : ${SITE()}/mon-espace?code=${item.tracking_code}`,
     ].join('\n'),
@@ -1617,6 +1622,21 @@ async function notifyParticipationReceived(participation) {
   });
 }
 
+/* Particulier inscrit au-delà des places : liste d'attente (modèle si26_particulier_attente). */
+async function notifyParticipationWaitlisted(participation) {
+  const { name, tracking_code: code } = participation;
+  return sendTemplateOrText({
+    phone: participation?.phone,
+    templates: [{ name: 'si26_particulier_attente', bodyParams: [name, code] }],
+    fallback: [
+      `Bonjour, l'inscription de ${name} à la Semaine de l'industrie 2026 est bien enregistrée.`,
+      "Toutes les places prévues pour les particuliers sont déjà attribuées : elle est placée en liste d'attente.",
+      `Code de suivi : ${code}.`,
+      "Nous vous préviendrons dès qu'une place se libère.",
+    ],
+  });
+}
+
 /* Confirme l'inscription : places accordées + code de suivi. */
 async function notifyParticipationApproved(participation) {
   const code = participation?.passport?.code;
@@ -1889,6 +1909,7 @@ module.exports = {
   notifyLabelReceived,
   notifyLabelRejected,
   notifyParticipationReceived,
+  notifyParticipationWaitlisted,
   notifyParticipationApproved,
   notifyParticipationRejected,
   notifyLabelReminder,

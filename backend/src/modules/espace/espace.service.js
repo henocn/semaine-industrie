@@ -337,12 +337,12 @@ function requestSpace({
 }
 
 /* Espace d'une inscription école ou particulier en attente ou refusée. */
-function participationSpace(row) {
+function participationSpace(row, waitlisted = false) {
   return requestSpace({
     code: row.tracking_code,
     type: row.kind,
     name: row.name,
-    status: row.status,
+    status: waitlisted ? 'waitlist' : row.status,
     rows: [
       ['Ville', row.city],
       ['Effectif déclaré', row.headcount ? `${row.headcount} personnes` : null],
@@ -385,7 +385,10 @@ async function getByCode(rawCode) {
       : industrySpace(found.organization);
   }
   const request = await trackingService.findRequestByCode(code);
-  if (request?.kind === 'participation') return participationSpace(request.participation);
+  if (request?.kind === 'participation') {
+    const participationService = require('../participations/participation.service');
+    return participationSpace(request.participation, await participationService.isWaitlisted(request.participation));
+  }
   if (request?.kind === 'label') return labelRequestSpace(request.request);
   throw ApiError.notFound('Aucun dossier ne correspond à ce code');
 }

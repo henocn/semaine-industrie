@@ -1,7 +1,7 @@
 'use strict';
 
 /* Charge et valide les variables d'environnement. */
-const { cleanEnv, str, port } = require('envalid');
+const { cleanEnv, str, port, num } = require('envalid');
 const dotenv = require('dotenv');
 
 /* override: true pour que .env gagne sur un ancien WHATSAPP_TOKEN injecté par PM2 */
@@ -38,6 +38,8 @@ const env = cleanEnv(process.env, {
 
   /* PDF programme officiel (chemin public ou URL absolue). */
   PROGRAMME_PDF_URL: str({ default: '/uploads/docs/programme-si2026.pdf' }),
+  /* Places pour les particuliers ; au-delà, l'inscription reste ouverte en liste d'attente. */
+  PARTICULIER_LIMIT: num({ default: 80 }),
 
   /* SMTP SiteGround — mot de passe à renseigner en prod (laisser vide ici si besoin). */
   SMTP_HOST: str({ default: 'mail.semaineindustrie.tg' }),

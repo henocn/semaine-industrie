@@ -28,6 +28,8 @@ export type Participation = {
   tracking_code?: string | null
   passport: ParticipationPassport | null
   createdAt?: string
+  /* Particulier en attente de validation, au-delà des places prévues. */
+  waitlisted?: boolean
 }
 
 export type ParticipationInput = {
@@ -55,6 +57,11 @@ export function listParticipations(params?: { kind?: ParticipationKind; status?:
 /* Fiche avec le QR, s'il a déjà été créé. */
 export function getParticipation(id: string) {
   return apiFetch<Participation>(`/participations/${id}`)
+}
+
+/* Indique si les places prévues pour les particuliers sont toutes prises. */
+export function getParticulierCapacity() {
+  return apiFetch<{ full: boolean }>('/participations/public/capacity')
 }
 
 /* Inscription publique (école / centre / univ, ou particulier), sans compte. */

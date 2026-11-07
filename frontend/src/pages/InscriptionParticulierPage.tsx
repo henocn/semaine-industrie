@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { registerParticipation } from '../api/participations'
+import { useEffect, useState, type FormEvent } from 'react'
+import { getParticulierCapacity, registerParticipation } from '../api/participations'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
 import { VisitDaysNote } from '../components/VisitDaysNote'
 import { Seo } from '../components/Seo'
@@ -20,6 +20,15 @@ export default function InscriptionParticulierPage() {
   const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [full, setFull] = useState(false)
+  const [waitlisted, setWaitlisted] = useState(false)
+
+  /* Prévient avant l'envoi si les places sont toutes prises ; le formulaire reste ouvert. */
+  useEffect(() => {
+    getParticulierCapacity()
+      .then((capacity) => setFull(capacity.full))
+      .catch(() => setFull(false))
+  }, [])
 
   /* Envoie l'inscription (téléphone obligatoire). */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -38,6 +47,7 @@ export default function InscriptionParticulierPage() {
         headcount: null,
       })
       setTrackingCode(created.tracking_code ?? null)
+      setWaitlisted(Boolean(created.waitlisted))
       setSent(true)
       scrollToTopNow()
     } catch (err) {
@@ -70,7 +80,14 @@ export default function InscriptionParticulierPage() {
 
         {sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
-            <p className="text-xl text-forest">Merci. Votre inscription est enregistrée.</p>
+            <p className="text-xl text-forest">
+              {waitlisted ? 'Merci. Votre inscription est enregistrée en liste d’attente.' : 'Merci. Votre inscription est enregistrée.'}
+            </p>
+            {waitlisted && (
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
+                Toutes les places prévues pour les particuliers sont déjà attribuées. Nous vous préviendrons par e-mail et sur WhatsApp dès qu’une place se libère.
+              </p>
+            )}
             <TrackingCodeNotice code={trackingCode} />
           </div>
         ) : (
@@ -94,6 +111,11 @@ export default function InscriptionParticulierPage() {
             <Field label="Ce qui vous intéresse" className="sm:col-span-2">
               <textarea name="description" rows={3} className={`${field} resize-none`} />
             </Field>
+            {full && (
+              <p className="sm:col-span-2 text-[15px] leading-relaxed text-red-700">
+                Les places prévues pour les particuliers sont toutes attribuées. Vous pouvez quand même vous inscrire : votre demande sera placée en liste d’attente et nous vous préviendrons dès qu’une place se libère.
+              </p>
+            )}
             {error && <p className="sm:col-span-2 text-sm text-red-700">{error}</p>}
             <div className="sm:col-span-2">
               <Button type="submit" disabled={loading}>

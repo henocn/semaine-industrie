@@ -1,6 +1,8 @@
 'use strict';
 
+const { Op } = require('sequelize');
 const { Participation, Passport } = require('../../models');
+const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const passportService = require('../passports/passport.service');
 const trackingService = require('../tracking/tracking.service');
@@ -52,6 +54,31 @@ async function present(row, { withImage = false } = {}) {
   return { ...json, passport: { ...(await passportService.withQr(passport)), qr_data_url, passages } };
 }
 
+/* Particuliers qui comptent dans les places : tous ceux qui ne sont pas refusés. */
+const ACTIVE_PARTICULIERS = { kind: 'particulier', status: { [Op.ne]: 'rejected' } };
+
+/* Particuliers au-delà des places, par ordre d'arrivée : ils sont en liste d'attente. */
+async function waitlistIds() {
+  const rows = await Participation.findAll({
+    where: ACTIVE_PARTICULIERS,
+    attributes: ['id'],
+    order: [['created_at', 'ASC'], ['id', 'ASC']],
+  });
+  return new Set(rows.slice(env.PARTICULIER_LIMIT).map((row) => row.id));
+}
+
+/* Une inscription en attente de validation est-elle en liste d'attente ? */
+async function isWaitlisted(row) {
+  if (!row || row.kind !== 'particulier' || row.status !== 'pending') return false;
+  return (await waitlistIds()).has(row.id);
+}
+
+/* Indique au formulaire public si les places des particuliers sont toutes prises. */
+async function particulierCapacity() {
+  const taken = await Participation.count({ where: ACTIVE_PARTICULIERS });
+  return { full: taken >= env.PARTICULIER_LIMIT };
+}
+
 /* Liste les participations, filtrables par type et statut. */
 async function list({ kind, status } = {}) {
   const where = {};
@@ -61,14 +88,18 @@ async function list({ kind, status } = {}) {
     where,
     order: [['created_at', 'DESC']],
   });
-  return Promise.all(rows.map((row) => present(row)));
+  const waitlist = await waitlistIds();
+  return Promise.all(rows.map(async (row) => ({
+    ...(await present(row)),
+    waitlisted: row.status === 'pending' && waitlist.has(row.id),
+  })));
 }
 
 /* Fiche d'une participation, avec le QR s'il existe. */
 async function getById(id) {
   const row = await Participation.findByPk(id);
   if (!row) throw ApiError.notFound('Participation introuvable');
-  return present(row, { withImage: true });
+  return { ...(await present(row, { withImage: true })), waitlisted: await isWaitlisted(row) };
 }
 
 /* Crée une participation en attente (école / centre / université, ou particulier). */
@@ -82,14 +113,21 @@ async function create(payload) {
     tracking_code: await trackingService.nextCode(trackingService.prefixFor(kind)),
     ...fields,
   }).catch((err) => { throw duplicateError(err); });
-  mailService.participationReceived(row);
+  const waitlisted = await isWaitlisted(row);
+  if (waitlisted) {
+    mailService.participationWaitlisted(row);
+  } else {
+    mailService.participationReceived(row);
+  }
   try {
     const whatsappService = require('../whatsapp/whatsapp.service');
-    await whatsappService.notifyParticipationReceived(row);
+    await (waitlisted
+      ? whatsappService.notifyParticipationWaitlisted(row)
+      : whatsappService.notifyParticipationReceived(row));
   } catch (err) {
     logger.warn('[participation] notify WhatsApp failed', err.message);
   }
-  return present(row);
+  return { ...(await present(row)), waitlisted };
 }
 
 /* Met à jour les informations. */
@@ -183,6 +221,8 @@ async function remove(id) {
 }
 
 module.exports = {
+  isWaitlisted,
+  particulierCapacity,
   list,
   getById,
   create,
