@@ -17,7 +17,7 @@ export function SiteFooter() {
     <footer className="relative overflow-hidden border-t-4 border-sun bg-forest text-white">
       <div
         className="section-soft-bg section-soft-bg--on-dark"
-        style={{ backgroundImage: 'url(/images/bg-industrie.png)' }}
+        style={{ backgroundImage: 'url(/images/bg-industrie.webp)' }}
         aria-hidden="true"
       />
       <div className={`${WRAP} grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]`}>

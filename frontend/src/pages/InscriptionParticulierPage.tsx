@@ -68,14 +68,17 @@ export default function InscriptionParticulierPage() {
             lead="Étudiant, parent, jeune diplômé ou curieux de l'industrie : inscrivez-vous. Votre QR arrive par e-mail et sur WhatsApp après validation."
           />
           <VisitDaysNote audience="public" />
-          <img
-            src="/images/inscription-particulier.jpg"
-            alt="Silhouette d’une technicienne en bleu de travail et casque, clé en main, dans une exposition sur les métiers de l’industrie"
-            loading="lazy"
-            width={880}
-            height={1168}
-            className="mt-8 aspect-[4/3] w-full rounded-sm object-cover object-top md:aspect-[3/4] md:max-w-sm"
-          />
+          <picture className="contents">
+            <source srcSet="/images/inscription-particulier.webp" type="image/webp" />
+            <img
+              src="/images/inscription-particulier.jpg"
+              alt="Silhouette d’une technicienne en bleu de travail et casque, clé en main, dans une exposition sur les métiers de l’industrie"
+              loading="lazy"
+              width={880}
+              height={1168}
+              className="mt-8 aspect-[4/3] w-full rounded-sm object-cover object-top md:aspect-[3/4] md:max-w-sm"
+            />
+          </picture>
         </div>
 
         {sent ? (

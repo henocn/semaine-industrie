@@ -373,14 +373,17 @@ export default function VueParVousPage() {
           </div>
 
           {!current && (
-            <img
-              src="/images/metiers.jpg"
-              alt="Hall d’exposition présentant en silhouettes grandeur nature les métiers de l’industrie, visité par des élèves"
-              loading="lazy"
-              width={1344}
-              height={752}
-              className="mt-8 aspect-[16/9] w-full rounded-sm object-cover sm:aspect-[21/8]"
-            />
+            <picture className="contents">
+              <source srcSet="/images/metiers.webp" type="image/webp" />
+              <img
+                src="/images/metiers.jpg"
+                alt="Hall d’exposition présentant en silhouettes grandeur nature les métiers de l’industrie, visité par des élèves"
+                loading="lazy"
+                width={1344}
+                height={752}
+                className="mt-8 aspect-[16/9] w-full rounded-sm object-cover sm:aspect-[21/8]"
+              />
+            </picture>
           )}
 
           {game === 'sondage' && <SurveyGame />}

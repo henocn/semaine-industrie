@@ -59,14 +59,18 @@ function Photo({
       {missing ? (
         <span className="absolute bottom-3 left-4 text-xs text-forest/50">images/{name}.jpg</span>
       ) : (
-        <img
-          src={`/images/${name}.jpg`}
-          alt={alt}
-          loading="lazy"
-          onError={() => setMissing(true)}
-          style={{ objectPosition: position }}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        <picture>
+          <source srcSet={`/images/${name}.webp`} type="image/webp" />
+          <img
+            src={`/images/${name}.jpg`}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            onError={() => setMissing(true)}
+            style={{ objectPosition: position }}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </picture>
       )}
     </div>
   )
@@ -83,12 +87,26 @@ const HERO_INTERVAL_MS = 4000
 /* Hero sobre : texte à gauche, photos qui défilent et se fondent de gauche à droite. */
 function Hero() {
   const [slide, setSlide] = useState(0)
+  const [restLoaded, setRestLoaded] = useState(false)
 
+  /* Les photos 2 et 3 du défilement se chargent une fois la page affichée. */
   useEffect(() => {
+    const load = () => setRestLoaded(true)
+    if (document.readyState === 'complete') {
+      const id = window.setTimeout(load, 300)
+      return () => window.clearTimeout(id)
+    }
+    window.addEventListener('load', load, { once: true })
+    return () => window.removeEventListener('load', load)
+  }, [])
+
+  /* Le défilement ne démarre qu'une fois les photos suivantes demandées (pas de vue vide). */
+  useEffect(() => {
+    if (!restLoaded) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const id = window.setInterval(() => setSlide((s) => (s + 1) % HERO_SLIDES.length), HERO_INTERVAL_MS)
     return () => window.clearInterval(id)
-  }, [])
+  }, [restLoaded])
 
   return (
     <section id="top" className="border-b border-forest/10 bg-sage">
@@ -115,19 +133,24 @@ function Hero() {
           </div>
         </div>
         <div className="hero-fade relative h-64 sm:h-80 md:absolute md:inset-0 md:h-auto">
-          {HERO_SLIDES.map((s, i) => (
-            <img
-              key={s.src}
-              src={s.src}
-              alt={i === slide ? s.alt : ''}
-              aria-hidden={i !== slide}
-              fetchPriority={i === 0 ? 'high' : 'low'}
-              decoding="async"
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-                i === slide ? 'opacity-100' : 'opacity-0'
-              }`}
-            />
-          ))}
+          {HERO_SLIDES.map((s, i) =>
+            /* Seule la 1re photo part au chargement ; les suivantes après coup (poids initial divisé). */
+            i === 0 || restLoaded ? (
+              <picture key={s.src}>
+                <source srcSet={s.src.replace(/\.jpg$/, '.webp')} type="image/webp" />
+                <img
+                  src={s.src}
+                  alt={i === slide ? s.alt : ''}
+                  aria-hidden={i !== slide}
+                  fetchPriority={i === 0 ? 'high' : 'low'}
+                  decoding="async"
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+                    i === slide ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              </picture>
+            ) : null,
+          )}
           <div className="absolute inset-0 bg-sage/25" aria-hidden="true" />
         </div>
       </div>
@@ -149,7 +172,7 @@ function Hero() {
 function Tools() {
   return (
     <section className="relative overflow-hidden py-12 sm:py-16">
-      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-robots.png)' }} aria-hidden="true" />
+      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-robots.webp)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal`}>
         <SectionHeader
           title={YOUTH_PILLAR.title}
@@ -207,7 +230,7 @@ function ProgrammeStrip() {
 
   return (
     <section className="relative overflow-hidden py-12 sm:py-16">
-      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-usine.png)' }} aria-hidden="true" />
+      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-usine.webp)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal max-w-3xl`}>
         <SectionHeader
           title="L’ouverture"
@@ -262,7 +285,7 @@ function Women() {
 function Places() {
   return (
     <section id="lieux" className="relative overflow-hidden bg-sage py-12 sm:py-16">
-      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-industrie.png)' }} aria-hidden="true" />
+      <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-industrie.webp)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal`}>
         <SectionHeader title="Les sites ouverts, du port aux régions" />
         <Photo

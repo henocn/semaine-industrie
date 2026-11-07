@@ -10,7 +10,7 @@ export default function NotFoundPage() {
       <Seo title="Page introuvable" path="/404" noIndex />
       <div
         className="section-soft-bg section-soft-bg--on-dark"
-        style={{ backgroundImage: 'url(/images/bg-industrie.png)' }}
+        style={{ backgroundImage: 'url(/images/bg-industrie.webp)' }}
         aria-hidden="true"
       />
       <div className="relative flex flex-col items-center">
