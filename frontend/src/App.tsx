@@ -6,7 +6,8 @@ import { ScrollToTop } from './components/ScrollToTop'
 import { PublicLayout } from './components/layout/PublicLayout'
 import { isBackofficeHost } from './lib/seo'
 import { peekOrgaUser } from './api/auth'
-import BusinessRegisterPage from './pages/BusinessRegisterPage'
+// Rencontres d'affaires et vote retirés du public (programme validé) ; pages conservées pour une reprise éventuelle.
+// import BusinessRegisterPage from './pages/BusinessRegisterPage'
 import FaqPage from './pages/FaqPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
@@ -32,7 +33,7 @@ import OrgaVisitsPage from './pages/OrgaVisitsPage'
 import PassagePage from './pages/PassagePage'
 import PrivacyPage from './pages/PrivacyPage'
 import ProgrammePage from './pages/ProgrammePage'
-import VotePage from './pages/VotePage'
+// import VotePage from './pages/VotePage'
 import VueParVousPage from './pages/VueParVousPage'
 
 /* Ancienne adresse du questionnaire (liens, QR) : garde phase / code. */
@@ -76,13 +77,13 @@ export default function App() {
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
             <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />
             <Route path="/mon-espace" element={<MonEspacePage />} />
-            <Route path="/affaires" element={<BusinessRegisterPage />} />
+            {/* <Route path="/affaires" element={<BusinessRegisterPage />} /> */}
             <Route path="/carte" element={<MapPage />} />
             <Route path="/industrie" element={<IndustriesPage />} />
             <Route path="/passeport/:code" element={<PassportRedirect />} />
             <Route path="/passage/:code" element={<PassagePage />} />
             <Route path="/questions" element={<Navigate to="/" replace />} />
-            <Route path="/vote" element={<VotePage />} />
+            {/* <Route path="/vote" element={<VotePage />} /> */}
             <Route path="/questionnaire" element={<SurveyRedirect />} />
             <Route path="/vue-par-vous" element={<VueParVousPage />} />
             <Route path="/faq" element={<FaqPage />} />

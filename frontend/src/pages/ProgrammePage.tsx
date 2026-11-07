@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
-import { DAYS, NATIONAL_THEME } from '../data'
+import { ALL_WEEK, DAYS, NATIONAL_THEME } from '../data'
 import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { publicSeo } from '../lib/seo'
 import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
 
-/* Page programme : intro courte, jours en liste. */
+/* Page programme : intro courte, les trois jours au Palais, puis ce qui dure toute la semaine. */
 export default function ProgrammePage() {
-  const [open, setOpen] = useState<number | null>(20)
+  const [open, setOpen] = useState<number | null>(16)
 
   return (
     <main className="bg-white pb-16 sm:pb-20">
@@ -20,7 +20,7 @@ export default function ProgrammePage() {
           <SectionHeader
             level={1}
             title="Le programme"
-            lead={`Thème : « ${NATIONAL_THEME} ». Un thème par jour, au Palais des Congrès de Lomé.`}
+            lead={`Thème : « ${NATIONAL_THEME} ». Trois rendez-vous au Palais des Congrès de Lomé, du lundi 16 au mercredi 18 novembre ; usines ouvertes jusqu’au vendredi 20.`}
           />
           <div className="mt-6 flex flex-wrap gap-2.5">
             <Button to="/carte" variant="primary">
@@ -43,7 +43,7 @@ export default function ProgrammePage() {
             return (
               <li
                 key={d.n}
-                id={phare ? 'vendredi' : undefined}
+                id={phare ? 'ouverture' : undefined}
                 className={phare ? 'border-b border-forest/15 border-l-2 border-l-sun' : 'border-b border-forest/15'}
               >
                 <button
@@ -91,10 +91,21 @@ export default function ProgrammePage() {
             )
           })}
         </ul>
-        <p className="mt-6 text-[14px] leading-relaxed text-ink/70">
-          En marge du programme : atelier de validation de l’étude sur la gestion des déchets industriels,
-          jeudi 19 novembre de 8h30 à 12h00, Hôtel Concorde.
-        </p>
+
+        <section className="mt-12 sm:mt-14">
+          <SectionHeader title="Toute la semaine" />
+          <ul className="mt-6 border-t border-forest/15">
+            {ALL_WEEK.map(([title, when, text]) => (
+              <li key={title} className="grid gap-1 border-b border-forest/15 py-4 md:grid-cols-[17rem_1fr] md:gap-6">
+                <span className="font-medium text-forest">
+                  {title}
+                  <span className="mt-0.5 block text-[13px] font-normal text-ink/65">{when}</span>
+                </span>
+                <span className="text-[14px] leading-relaxed text-ink/75">{text}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </main>
   )

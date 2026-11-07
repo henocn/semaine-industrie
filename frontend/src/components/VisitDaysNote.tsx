@@ -1,6 +1,6 @@
 const DAYS_LABEL = {
-  public: 'mardi 17 et jeudi 19 novembre',
-  industrie: 'lundi 16, mardi 17 et jeudi 19 novembre',
+  public: 'du lundi 16 au vendredi 20 novembre',
+  industrie: 'du lundi 16 au vendredi 20 novembre',
 }
 
 /* Rappel discret des jours de visite, sous l'introduction d'un formulaire d'inscription. */
