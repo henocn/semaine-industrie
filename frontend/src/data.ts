@@ -14,7 +14,7 @@ export const DAYS: Day[] = [
       ['9h00', 'Mot de bienvenue du Président du comité d’organisation'],
       ['9h10', 'Allocutions : Directeur général de l’ONUDI (diffusion), Secrétaire général de l’ONU, Président de la CCI-Togo'],
       ['9h45', 'Film de 3 minutes : « 2020-2025, ce que l’industrie togolaise a construit », et la vision 2026-2031'],
-      ['9h50-10h00', 'Discours de Monsieur le Ministre délégué'],
+      ['9h50-10h00', 'Discours de Monsieur le Ministre délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique'],
       ['10h00', 'Remise symbolique des labels aux entreprises et aux écoles partenaires ; photo de famille'],
       ['10h15-10h45', 'Pause-café'],
       ['10h45-11h00', 'Keynote sur le thème « Accélérer l’industrialisation togolaise : transformation productive, innovation et compétitivité »'],

@@ -461,7 +461,7 @@ const PROGRAMME_DAYS = [
       ['9h00', 'Mot de bienvenue'],
       ['9h10', 'Allocutions : ONUDI, ONU, CCI-Togo'],
       ['9h45', 'Film 2020-2025 et vision 2026-2031'],
-      ['9h50', 'Discours du Ministre délégué'],
+      ['9h50', 'Discours du Ministre délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique'],
       ['10h00', 'Remise des labels ; photo de famille'],
       ['10h45', 'Keynote sur le thème'],
       ['11h00', 'Panel sur le thème'],
