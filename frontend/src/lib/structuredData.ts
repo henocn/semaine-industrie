@@ -119,6 +119,6 @@ export function structuredData(path: string): JsonLd {
   const graph: JsonLd[] = [WEBSITE, ORGANIZER]
   if (path === '/' || path === '/programme') graph.push(EVENT)
   if (path === '/faq') graph.push(FAQ_PAGE)
-  if (path !== '/') graph.push(breadcrumb(path))
+  if (path !== '/' && !PUBLIC_SEO[path]?.noIndex) graph.push(breadcrumb(path))
   return { '@context': 'https://schema.org', '@graph': graph }
 }

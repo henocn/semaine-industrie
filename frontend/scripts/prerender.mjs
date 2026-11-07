@@ -49,6 +49,14 @@ function setCanonical(html, href) {
   return html.replace('</head>', `    ${tag}\n  </head>`)
 }
 
+/*
+ * Servie en repli pour une autre adresse (route dynamique, sous-domaine backoffice, ancienne conf Nginx),
+ * la page pré-rendue est masquée avant d'être peinte ; main.tsx la remplace par le bon rendu.
+ * Contenu figé : son empreinte sha256 figure dans la CSP de deploy/nginx-https-hsts.conf.
+ */
+const ROOT_GUARD =
+  "<script>(function(){var r=document.getElementById('root'),p=location.pathname.replace(/\\/+$/,'')||'/';if(r.getAttribute('data-prerendered')!==p)r.style.visibility='hidden'})()</script>"
+
 /* Injecte head + contenu rendu d'une route dans la coquille de build. */
 async function applyRoute(template, route) {
   const title = ssr.composeTitle(route.title, route.fullTitle)
@@ -69,7 +77,10 @@ async function applyRoute(template, route) {
   out = out.replace('</head>', `    ${jsonLd}\n  </head>`)
 
   const body = await ssr.render(route.path)
-  out = out.replace('<div id="root"></div>', `<div id="root" data-prerendered="${escapeHtml(route.path)}">${body}</div>`)
+  out = out.replace(
+    '<div id="root"></div>',
+    `<div id="root" data-prerendered="${escapeHtml(route.path)}">${body}</div>\n    ${ROOT_GUARD}`,
+  )
   return out
 }
 
@@ -106,7 +117,12 @@ if (!template.includes('<div id="root"></div>')) {
 
 console.log('==> Prerender des routes publiques')
 /* Coquille vide conservée : repli possible pour les routes dynamiques (voir deploy/nginx). */
-writeFileSync(join(dist, 'app.html'), template.replace('<meta name="robots" content="index, follow" />', '<meta name="robots" content="noindex, follow" />'))
+writeFileSync(
+  join(dist, 'app.html'),
+  template
+    .replace('<meta name="robots" content="index, follow" />', '<meta name="robots" content="noindex, follow" />')
+    .replace(/\s*<link rel="canonical"[^>]*>/, ''),
+)
 for (const route of routes) await writeRoute(template, route)
 writeSitemap()
 

@@ -78,8 +78,10 @@ server {
         return 302 /login;
     }
 
+    # Backoffice : coquille vide (l'index.html est désormais l'accueil public pré-rendu).
     location / {
-        try_files $uri $uri/ /index.html;
+        expires -1;
+        try_files $uri /app.html;
     }
 
     listen [::]:443 ssl; # managed by Certbot

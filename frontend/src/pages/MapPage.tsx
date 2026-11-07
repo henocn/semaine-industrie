@@ -13,6 +13,8 @@ export default function MapPage() {
   const [points, setPoints] = useState<MapPoint[]>([])
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
+  /* Tant que la liste n'est pas arrivée (et au pré-rendu), pas de message « aucune visite ». */
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     /* Charge les sites entreprises, ne garde que ceux avec visites. */
@@ -27,6 +29,8 @@ export default function MapPage() {
         )
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Carte indisponible')
+      } finally {
+        setLoaded(true)
       }
     }
     load()
@@ -50,7 +54,7 @@ export default function MapPage() {
 
         {error && <p className="mt-6 text-red-700">{error}</p>}
 
-        {!error && points.length === 0 && (
+        {loaded && !error && points.length === 0 && (
           <p className="mt-10 text-ink/50">Aucune visite arrangée pour le moment.</p>
         )}
 

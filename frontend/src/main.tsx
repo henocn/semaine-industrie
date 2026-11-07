@@ -20,11 +20,23 @@ function normalize(path: string) {
  * Même route que l'URL : on hydrate. Sinon (route dynamique servie par repli sur l'accueil,
  * sous-domaine backoffice…) : on vide et on rend côté client, comme avant.
  */
+/* Pages dont le premier rendu dépend du navigateur (code de suivi, jeux déjà joués) : rendu client. */
+const CLIENT_ONLY = new Set(['/mon-espace', '/vue-par-vous'])
+
 const prerendered = container.dataset.prerendered
-if (prerendered && normalize(prerendered) === normalize(window.location.pathname) && window.location.hostname !== 'backoffice.semaineindustrie.tg') {
+const path = normalize(window.location.pathname)
+const canHydrate =
+  prerendered &&
+  normalize(prerendered) === path &&
+  !window.location.search &&
+  !CLIENT_ONLY.has(path) &&
+  window.location.hostname !== 'backoffice.semaineindustrie.tg'
+
+if (canHydrate) {
   hydrateRoot(container, app)
 } else {
   container.textContent = ''
+  container.style.visibility = ''
   delete container.dataset.prerendered
   createRoot(container).render(app)
 }
