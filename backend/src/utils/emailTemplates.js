@@ -74,7 +74,7 @@ function buildEmail({
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid ${LINE}">
     <tr><td style="padding:28px 32px 12px">${body}</td></tr>
     <tr><td style="padding:18px 32px 26px;border-top:1px solid ${LINE};font:13px/1.5 ${FONT};color:${MUTED}">
-      Semaine de l’industrie 2026, du 16 au 20 novembre, au Togo.<br>
+      Semaine de l’industrie 2026, du 16 au 22 novembre, au Togo.<br>
       Une question ? <a href="mailto:${CONTACT}" style="color:${FOREST}">${CONTACT}</a>
     </td></tr>
   </table>
@@ -90,7 +90,7 @@ function buildEmail({
     ...(outro.length ? ['', ...outro.map(plain)] : []),
     ...(button ? ['', `${button.label} : ${button.url}`] : []),
     '',
-    `Semaine de l’industrie 2026, du 16 au 20 novembre, au Togo. Une question ? ${CONTACT}`,
+    `Semaine de l’industrie 2026, du 16 au 22 novembre, au Togo. Une question ? ${CONTACT}`,
   ].join('\n');
 
   const attachments = card

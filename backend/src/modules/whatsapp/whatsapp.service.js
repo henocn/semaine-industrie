@@ -664,7 +664,7 @@ function mainMenuPayload(to) {
     to,
     body:
       "Bienvenue dans la Semaine de l'industrie 2026.\n" +
-      '16-20 novembre, Togo.\n\n' +
+      '16-22 novembre, Togo.\n\n' +
       'Choisissez une option.',
     buttonLabel: 'Ouvrir le menu',
     header: "L'industrie à portée de main",

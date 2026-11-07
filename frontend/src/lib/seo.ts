@@ -38,7 +38,7 @@ export function isBackofficeHost() {
   return window.location.hostname === 'backoffice.semaineindustrie.tg'
 }
 export const DEFAULT_DESCRIPTION =
-  'Du 16 au 22 novembre 2026 au Togo : usines ouvertes, métiers, Journée de l’industrialisation de l’Afrique et rencontres d’affaires.'
+  'Du 16 au 22 novembre 2026 au Togo : rendez-vous au Palais des Congrès de Lomé, usines ouvertes, forum des métiers et exposition « Fabriqué au Togo ».'
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og.jpg`
 
 /* Met à jour ou crée une balise meta / link dans le head. */

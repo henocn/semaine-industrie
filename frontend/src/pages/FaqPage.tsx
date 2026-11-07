@@ -11,7 +11,7 @@ const FAQ = [
   },
   {
     q: 'Quand et où se déroule la Semaine de l’industrie 2026 ?',
-    a: 'La Semaine de l’industrie se déroule du 16 au 20 novembre 2026. Les rendez-vous au Palais des Congrès de Lomé ont lieu du lundi 16 au mercredi 18 novembre. Les visites d’usines se tiennent toute la semaine, directement dans les entreprises.',
+    a: 'La Semaine de l’industrie se déroule du 16 au 22 novembre 2026. Les rendez-vous au Palais des Congrès de Lomé ont lieu du lundi 16 au mercredi 18 novembre, et les visites d’usines du lundi 16 au vendredi 20 novembre, directement dans les entreprises.',
   },
   {
     q: 'Qui peut participer à la Semaine de l’industrie ?',
