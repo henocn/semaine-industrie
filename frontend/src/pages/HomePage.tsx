@@ -34,7 +34,7 @@ const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to
 /* Chiffres repères, sans KPI inventé. */
 const KEY_FIGURES: [string, string][] = [
   ['3 jours', 'Au Palais des Congrès de Lomé'],
-  ['16 au 20 nov.', 'Usines ouvertes toute la semaine'],
+  ['16 au 22 nov.', 'Usines ouvertes du 16 au 20'],
   ['19 stands', 'Exposition « Fabriqué au Togo »'],
 ]
 
