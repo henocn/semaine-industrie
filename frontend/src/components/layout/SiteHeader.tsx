@@ -14,7 +14,8 @@ const PARTICIPER_ITEMS: NavItem[] = [
   { label: 'En tant que particulier', to: '/inscription-particulier' },
   { label: 'En tant qu’école / université', to: '/inscription-groupe' },
   { label: 'Demande de label : industries', to: '/label' },
-  { label: 'Rencontres d’affaires', to: '/affaires' },
+  // Retiré du public : hors du programme validé. Les inscriptions déjà reçues restent au back-office.
+  // { label: 'Rencontres d’affaires', to: '/affaires' },
   { label: 'Mon espace', to: '/mon-espace', red: true },
 ]
 
@@ -30,7 +31,8 @@ const GROUPS: NavGroup[] = [
     label: 'Défis',
     items: [
       { label: 'L’industrie, vue par vous', to: '/vue-par-vous' },
-      { label: 'Vote coup de cœur', to: '/vote' },
+      // Retiré du public : le vote n'est plus au programme validé.
+      // { label: 'Vote coup de cœur', to: '/vote' },
     ],
   },
   {

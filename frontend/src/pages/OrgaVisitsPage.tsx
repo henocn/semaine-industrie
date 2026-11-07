@@ -39,15 +39,15 @@ const iconBtn =
 const iconBtnDanger =
   'grid h-9 w-9 place-items-center border border-black bg-white text-red-700 hover:bg-red-700 hover:text-white disabled:opacity-40'
 
-/* Semaine officielle SI 2026 (lundi 16 → dimanche 22 novembre). */
+/* Semaine officielle SI 2026 : usines ouvertes du lundi 16 au vendredi 20 novembre (programme validé). */
 const EVENT_WEEK = [
   { iso: '2026-11-16', weekday: 'Lundi', short: 'Lun' },
   { iso: '2026-11-17', weekday: 'Mardi', short: 'Mar' },
   { iso: '2026-11-18', weekday: 'Mercredi', short: 'Mer' },
   { iso: '2026-11-19', weekday: 'Jeudi', short: 'Jeu' },
   { iso: '2026-11-20', weekday: 'Vendredi', short: 'Ven' },
-  { iso: '2026-11-21', weekday: 'Samedi', short: 'Sam' },
-  { iso: '2026-11-22', weekday: 'Dimanche', short: 'Dim' },
+  // { iso: '2026-11-21', weekday: 'Samedi', short: 'Sam' },
+  // { iso: '2026-11-22', weekday: 'Dimanche', short: 'Dim' },
 ] as const
 
 const EVENT_WEEK_SET = new Set<string>(EVENT_WEEK.map((d) => d.iso))

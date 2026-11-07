@@ -154,7 +154,7 @@ async function replyAskCode(from, phoneNumberId, body) {
     phoneNumberId,
     body:
       body
-      || "Espace de suivi pour les industries, écoles / universités, particuliers et rencontres d'affaires. Entrez le code de suivi envoyé à l'inscription.",
+      || "Espace de suivi pour les industries, écoles / universités et particuliers. Entrez le code de suivi envoyé à l'inscription.",
   });
 }
 
@@ -451,77 +451,50 @@ function programmePdfPath() {
   return env.PROGRAMME_PDF_URL || '/uploads/docs/programme-si2026.pdf';
 }
 
-/* Jours officiels (16-22 novembre 2026), alignés sur la proposition MDPISE. */
+/* Programme validé : trois rendez-vous au Palais des Congrès ; usines ouvertes du 16 au 20 novembre. */
 const PROGRAMME_DAYS = [
   {
     n: 16, name: 'Lundi', theme: 'Ouverture',
-    where: 'Lieu de cérémonie ; visite PIA l’après-midi',
+    where: 'Palais des Congrès (grande salle) ; industries l’après-midi',
     slots: [
-      ['9h00', 'Accueil des invités et de la presse'],
-      ['9h30', 'Cérémonie d’ouverture'],
-      ['9h50', 'Film 2020-2025 et vision 2026-2031'],
-      ['10h10', 'Remise des premiers labels'],
-      ['15h00', 'Visite des entreprises de la PIA'],
+      ['8h30', 'Accueil des invités et des autorités'],
+      ['9h00', 'Mot de bienvenue'],
+      ['9h10', 'Allocutions : ONUDI, ONU, CCI-Togo'],
+      ['9h45', 'Film 2020-2025 et vision 2026-2031'],
+      ['9h50', 'Discours du Ministre délégué'],
+      ['10h00', 'Remise des labels ; photo de famille'],
+      ['10h45', 'Keynote sur le thème'],
+      ['11h00', 'Panel sur le thème'],
+      ['12h00', 'Lancement de l’exposition « Fabriqué au Togo »'],
+      ['15h00', 'Visite d’industries par le Ministre'],
     ],
   },
   {
-    n: 17, name: 'Mardi', theme: 'Jeunes, métiers et qualité',
-    where: 'Usines le matin ; lieu principal l’après-midi',
+    n: 17, name: 'Mardi', theme: 'Jeunes et métiers',
+    where: 'Usines le matin ; Palais des Congrès (grande salle)',
     slots: [
-      ['8h30', 'Visites d’usines, premier créneau'],
-      ['10h30', 'Visites d’usines, second créneau'],
-      ['9h00', 'HAUQE, Journées de la qualité'],
+      ['Matin', 'Usines ouvertes : premiers créneaux'],
       ['14h00', 'Forum d’orientation des métiers'],
       ['16h00', 'Ils ont commencé petit'],
     ],
   },
   {
-    n: 18, name: 'Mercredi', theme: 'Innovation et mise à niveau',
-    where: 'Lieu principal',
+    n: 18, name: 'Mercredi', theme: 'Femmes dans l’industrie',
+    where: 'Palais des Congrès (salle polyvalente) ; usines l’après-midi',
     slots: [
-      ['9h00', 'Accueil des participants'],
-      ['9h30', 'INPIT et vitrine des innovateurs'],
-      ['14h00', 'BRMN : mise à niveau'],
+      ['9h00', 'Portraits filmés de femmes de l’industrie'],
+      ['9h10', 'Panel des métiers au féminin'],
+      ['Après-midi', 'Visites d’usines dirigées par des femmes'],
     ],
   },
-  {
-    n: 19, name: 'Jeudi', theme: 'Femmes dans l’industrie',
-    where: 'Lieu principal le matin ; zone franche l’après-midi',
-    slots: [
-      ['9h00', 'Portraits de femmes de l’industrie'],
-      ['9h30', 'Panel des métiers au féminin'],
-      ['11h00', 'Cercle des industrielles'],
-      ['14h00', 'Visite d’entreprises de femmes en zone franche'],
-    ],
-  },
-  {
-    n: 20, name: 'Vendredi', theme: 'Journée phare',
-    where: 'Lieu principal',
-    slots: [
-      ['8h30', 'Accueil des invités'],
-      ['9h00', 'Ouverture et message de l’ONUDI'],
-      ['9h20', 'Opportunités d’investissement'],
-      ['9h35', 'Table ronde : produire au Togo'],
-      ['10h50', 'Recommandations et clôture'],
-      ['11h30', 'Inauguration de l’exposition'],
-      ['14h00', 'Rencontres d’affaires'],
-      ['14h00', 'Exposition et guichet Je me lance'],
-    ],
-  },
-  {
-    n: 21, name: 'Samedi', theme: 'Exposition, grand public',
-    where: 'Lieu principal',
-    slots: [
-      ['9h00', 'Ouverture de l’exposition, jeton de vote'],
-      ['14h00', 'Démonstrations et espace enfants'],
-      ['16h00', 'Résultat du coup de cœur'],
-    ],
-  },
-  {
-    n: 22, name: 'Dimanche', theme: 'Bilan',
-    where: 'Lieu principal / en ligne',
-    slots: [],
-  },
+];
+
+/* Rappel ajouté à chaque jour : ce qui dure toute la semaine. */
+const PROGRAMME_ALL_WEEK = [
+  'Toute la semaine :',
+  '• Usines ouvertes du 16 au 20 novembre, sur inscription',
+  '• Exposition « Fabriqué au Togo » et parcours des métiers, du lundi au mercredi',
+  '• Concours vidéo #SemaineIndustrieTogo2026 : 200 000 FCFA',
 ];
 
 /* Liste WhatsApp : toute la semaine, puis chaque jour. */
@@ -556,7 +529,7 @@ function formatProgrammeDay(day) {
       lines.push(`${time}  ${label}`);
     }
   }
-  lines.push('', `Lieu : ${day.where}`, '', `${SITE()}/programme`);
+  lines.push('', `Lieu : ${day.where}`, '', ...PROGRAMME_ALL_WEEK, '', `${SITE()}/programme`);
   return lines.join('\n').slice(0, 1000);
 }
 
@@ -608,7 +581,7 @@ async function replyProgramme(from, action, phoneNumberId) {
 function espaceMenuPayload(to) {
   return {
     to,
-    body: 'Suivi de label, ou rencontres d\'affaires.',
+    body: 'Suivi de label.',
     buttonLabel: 'Choisir',
     header: 'Suivi de participation',
     sections: [
@@ -616,7 +589,7 @@ function espaceMenuPayload(to) {
         title: 'Accès',
         rows: [
           { id: 'espace_label', title: 'Suivi de label' },
-          { id: 'espace_b2b', title: "Rencontres d'affaires" },
+          // { id: 'espace_b2b', title: "Rencontres d'affaires" },
           { id: 'menu_home', title: 'Menu' },
         ],
       },
@@ -667,8 +640,9 @@ function participateBody() {
     '',
     `3. *Particulier* : étudiant ou passionné de l'industrie, quel que soit votre domaine, inscrivez-vous et participez sur ${site}/inscription-particulier`,
     '',
-    `4. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
-    '',
+    // Rencontres d'affaires retirées du public (programme validé) ; les inscrits existants gardent leur code AF.
+    // `4. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
+    // '',
     '📩 Vous recevrez un *code de suivi* pour voir où en est votre participation dans « Suivi de participation ».',
   ].join('\n');
 }
@@ -690,7 +664,7 @@ function mainMenuPayload(to) {
     to,
     body:
       "Bienvenue dans la Semaine de l'industrie 2026.\n" +
-      '16-22 novembre, Togo.\n\n' +
+      '16-20 novembre, Togo.\n\n' +
       'Choisissez une option.',
     buttonLabel: 'Ouvrir le menu',
     header: "L'industrie à portée de main",

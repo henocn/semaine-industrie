@@ -33,9 +33,9 @@ const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to
 
 /* Chiffres repères, sans KPI inventé. */
 const KEY_FIGURES: [string, string][] = [
-  ['7 jours', 'Un thème par jour'],
-  ['16 au 22 nov.', 'Journée de l’industrialisation de l’Afrique le 20'],
-  ['Palais des Congrès', 'Lomé, et visites d’usines'],
+  ['3 jours', 'Au Palais des Congrès de Lomé'],
+  ['16 au 20 nov.', 'Usines ouvertes toute la semaine'],
+  ['19 stands', 'Exposition « Fabriqué au Togo »'],
 ]
 
 const CONTACT_INPUT =
@@ -179,10 +179,10 @@ function About() {
           <Photo name="atelier-textile" alt="Ouvrières à leurs machines dans un atelier de confection textile" className="aspect-[4/3]" />
           <div className="space-y-4 text-[15px] leading-relaxed text-ink/80">
             <p>
-              La Semaine de l’industrie fait découvrir les usines et leurs métiers aux jeunes et au grand public. Elle réunit aussi investisseurs, industriels et PME locales.
+              La Semaine de l’industrie fait découvrir les usines et leurs métiers aux jeunes et au grand public. Elle réunit aussi industriels, écoles et partenaires institutionnels.
             </p>
             <p>
-              Date repère : le <strong className="font-semibold text-forest">20 novembre</strong>, Journée de l’industrialisation de l’Afrique.
+              Rendez-vous au <strong className="font-semibold text-forest">Palais des Congrès de Lomé</strong> du lundi 16 au mercredi 18 novembre ; les usines restent ouvertes jusqu’au vendredi 20.
             </p>
             <p>
               Fil rouge : souveraineté économique par la transformation locale, avec une attention à la place des femmes dans l’industrie.
@@ -196,7 +196,7 @@ function About() {
 
 /* Accueil : aperçu du jour J uniquement, un seul lien vers /programme. */
 function ProgrammeStrip() {
-  const dayJ = DAYS.find((d) => d.phare) ?? DAYS.find((d) => d.n === 20)
+  const dayJ = DAYS.find((d) => d.phare) ?? DAYS[0]
   if (!dayJ) return null
 
   return (
@@ -204,8 +204,8 @@ function ProgrammeStrip() {
       <div className="section-soft-bg" style={{ backgroundImage: 'url(/images/bg-usine.png)' }} aria-hidden="true" />
       <div className={`${WRAP} reveal max-w-3xl`}>
         <SectionHeader
-          title="Journée de l’industrialisation de l’Afrique"
-          lead="Vendredi 20 novembre, au Palais des Congrès de Lomé."
+          title="L’ouverture"
+          lead="Lundi 16 novembre, au Palais des Congrès de Lomé."
         />
         <p className="mt-6 text-[15px] leading-relaxed text-ink/75">{dayJ.goal}</p>
         <p className="mt-2 text-[13px] text-ink/55">{dayJ.where}</p>
@@ -235,7 +235,7 @@ function Women() {
         <div className="reveal">
           <SectionHeader
             title="Les métiers de l’industrie au féminin"
-            lead="Panel du jeudi 19 novembre, à 9h40."
+            lead="Panel du mercredi 18 novembre, à 9h10."
           />
           <Photo name="atelier" alt="Ouvrières dans un atelier textile" className="mt-8 aspect-[4/3]" />
         </div>

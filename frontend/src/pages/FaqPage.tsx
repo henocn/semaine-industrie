@@ -11,7 +11,7 @@ const FAQ = [
   },
   {
     q: 'Quand et où se déroule la Semaine de l’industrie 2026 ?',
-    a: 'La Semaine de l’industrie se déroule du 16 au 22 novembre 2026, principalement au Palais des Congrès de Lomé. Certaines activités, comme les visites d’usines, se tiennent directement dans les entreprises et sur les sites industriels.',
+    a: 'La Semaine de l’industrie se déroule du 16 au 20 novembre 2026. Les rendez-vous au Palais des Congrès de Lomé ont lieu du lundi 16 au mercredi 18 novembre. Les visites d’usines se tiennent toute la semaine, directement dans les entreprises.',
   },
   {
     q: 'Qui peut participer à la Semaine de l’industrie ?',
@@ -19,11 +19,11 @@ const FAQ = [
   },
   {
     q: 'Quelles activités sont prévues pendant la Semaine de l’industrie ?',
-    a: 'Au programme : des visites d’usines, des rencontres avec des industriels, un forum d’orientation des métiers, des panels et des échanges, des activités autour de l’innovation et de la qualité, ainsi que l’exposition « Fabriqué au Togo ».',
+    a: 'Au programme : une cérémonie d’ouverture avec keynote et panel, un forum d’orientation des métiers, un panel sur les femmes dans l’industrie, l’exposition « Fabriqué au Togo », le parcours des métiers, des visites d’usines toute la semaine et un concours vidéo pour les élèves et les étudiants.',
   },
   {
     q: 'Les visites d’usines sont-elles ouvertes au public ?',
-    a: 'Oui ! Des visites d’usines ouvertes au grand public sont prévues les mardi 17 et jeudi 19 novembre 2026.\nPour vous inscrire et connaître les modalités de participation, rendez-vous dans la rubrique « Participer » du site.',
+    a: 'Oui ! Les industries labellisées « Usine ouverte » accueillent les écoles et les particuliers du lundi 16 au vendredi 20 novembre 2026, par petits groupes et sur plusieurs créneaux.\nPour vous inscrire et connaître les modalités de participation, rendez-vous dans la rubrique « Participer » du site.',
   },
   {
     q: 'Qu’est-ce que le Forum d’orientation des métiers de l’industrie ?',
@@ -31,7 +31,11 @@ const FAQ = [
   },
   {
     q: 'Quand se tient l’exposition « Fabriqué au Togo » et est-elle ouverte au public ?',
-    a: 'L’exposition « Fabriqué au Togo » se déroule du 20 au 22 novembre 2026, au Palais des Congrès de Lomé.\nOui, elle est ouverte au grand public ! C’est l’occasion de découvrir la diversité des produits fabriqués au Togo et de mieux connaître les entreprises qui les produisent.\nL’exposition ouvre ses portes le vendredi 20 novembre à partir de 14 h.',
+    a: 'L’exposition « Fabriqué au Togo » se tient du lundi 16 au mercredi 18 novembre 2026, au 1er étage du Palais des Congrès de Lomé.\nOui, elle est ouverte au public ! 19 industries togolaises y présentent leurs produits et leur savoir-faire.\nElle est lancée par le Ministre le lundi 16 novembre, à l’issue de la cérémonie d’ouverture.',
+  },
+  {
+    q: 'Comment participer au concours vidéo ?',
+    a: 'Le concours est ouvert aux élèves et aux étudiants. Filmez votre visite d’usine et publiez votre vidéo sur les réseaux sociaux avec le hashtag #SemaineIndustrieTogo2026.\nLa meilleure vidéo sur la semaine remporte 200 000 FCFA.',
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie en tant que particulier, école ou université ?',
