@@ -25,6 +25,7 @@ function limitPublic(req, res, next) {
 
 router.get('/public/capacity', controller.capacity);
 router.get('/public/palais/:code', controller.palaisPass);
+router.get('/public/media/:code', controller.mediaPass);
 router.post('/public', limitPublic, validate(publicSchema), controller.create);
 
 router.use(authenticate, authorize('orga'));

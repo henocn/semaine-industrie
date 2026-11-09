@@ -1,6 +1,6 @@
 import { apiFetch } from './client'
 
-export type ParticipationKind = 'ecole' | 'particulier' | 'palais'
+export type ParticipationKind = 'ecole' | 'particulier' | 'palais' | 'media'
 export type ParticipationStatus = 'pending' | 'approved' | 'rejected'
 
 export type ParticipationPassport = {
@@ -33,6 +33,18 @@ export type Participation = {
   /* Journées du Palais choisies (16, 17, 18) et entrées scannées, pour une inscription « palais ». */
   palais_days?: number[] | null
   palais_checkins?: Record<string, string> | null
+  /* Accréditation média : média ou chaîne, et profil. */
+  media_details?: { outlet?: string; profile?: string } | null
+}
+
+/* Ce que l'accueil voit au scan d'une accréditation média. */
+export type MediaPass = {
+  code: string
+  name: string
+  status: ParticipationStatus
+  outlet: string | null
+  profile: string
+  validity: string
 }
 
 /* Ce que l'accueil du Palais voit au scan du QR. */
@@ -67,6 +79,13 @@ export type ParticipationInput = {
   lng?: number | null
   headcount?: number | null
   palais_days?: number[]
+  media_outlet?: string
+  media_profile?: string
+}
+
+/* Accréditation média lue depuis le QR. */
+export function getMediaPass(code: string) {
+  return apiFetch<MediaPass>(`/participations/public/media/${encodeURIComponent(code)}`)
 }
 
 /* Inscription aux journées du Palais lue depuis le QR. */

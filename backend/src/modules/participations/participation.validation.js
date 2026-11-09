@@ -3,9 +3,11 @@
 const Joi = require('joi');
 const { phone } = require('../../utils/phone');
 const { DAY_NUMBERS } = require('./palais');
+const { PROFILE_VALUES } = require('./media');
 
-/* École / centre / université (« ecole »), personne seule aux visites (« particulier ») ou aux journées du Palais (« palais »). */
-const kind = Joi.string().valid('ecole', 'particulier', 'palais');
+/* École / université (« ecole »), particulier aux visites (« particulier »), au Palais (« palais ») ou accréditation média (« media »). */
+const kind = Joi.string().valid('ecole', 'particulier', 'palais', 'media');
+const OUTLET_MESSAGE = 'Indiquez le nom du média, de la chaîne ou du compte';
 const PALAIS_DAYS_MESSAGE = 'Choisissez au moins une journée';
 const status = Joi.string().valid('pending', 'approved', 'rejected');
 
@@ -21,7 +23,22 @@ const fields = {
   headcount: Joi.number().integer().min(1).max(5000).allow(null),
   palais_days: Joi.array().items(Joi.number().integer().valid(...DAY_NUMBERS)).unique().min(1).max(DAY_NUMBERS.length)
     .messages({ 'array.min': PALAIS_DAYS_MESSAGE, 'array.includesRequiredUnknowns': PALAIS_DAYS_MESSAGE }),
+  media_outlet: Joi.string().trim().min(2).max(160)
+    .messages({ 'string.empty': OUTLET_MESSAGE, 'string.min': OUTLET_MESSAGE }),
+  media_profile: Joi.string().valid(...PROFILE_VALUES),
 };
+
+/* Média et profil obligatoires pour une accréditation, ignorés sinon. */
+const mediaOutlet = Joi.any().when('kind', {
+  is: 'media',
+  then: fields.media_outlet.required().messages({ 'any.required': OUTLET_MESSAGE }),
+  otherwise: Joi.any().strip(),
+});
+const mediaProfile = Joi.any().when('kind', {
+  is: 'media',
+  then: fields.media_profile.required().messages({ 'any.required': 'Choisissez votre profil' }),
+  otherwise: Joi.any().strip(),
+});
 
 /* Journées obligatoires pour une inscription au Palais, ignorées sinon. */
 const palaisDays = fields.palais_days.when('kind', {
@@ -43,6 +60,8 @@ const createSchema = Joi.object({
   lng: fields.lng,
   headcount: fields.headcount,
   palais_days: palaisDays,
+  media_outlet: mediaOutlet,
+  media_profile: mediaProfile,
 });
 
 /* Champ obligatoire pour une école à l'inscription publique. */
@@ -79,6 +98,8 @@ const updateSchema = Joi.object({
   lng: fields.lng,
   headcount: fields.headcount,
   palais_days: fields.palais_days,
+  media_outlet: fields.media_outlet,
+  media_profile: fields.media_profile,
 }).min(1);
 
 /* Filtres de la liste. */

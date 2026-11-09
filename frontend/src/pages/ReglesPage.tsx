@@ -32,6 +32,11 @@ const FORMS: { title: string; to: string; who: string }[] = [
     who: 'Pour inscrire un établissement et ses groupes d’apprenants aux visites d’usines. Une seule inscription par établissement.',
   },
   {
+    title: 'Accréditation médias et créateurs de contenu',
+    to: '/accreditation-medias/',
+    who: 'Pour les journalistes, photographes, vidéastes et créateurs de contenu qui couvrent la semaine. Une seule accréditation, valable du 16 au 22 novembre.',
+  },
+  {
     title: 'Demande de labels pour les industries',
     to: '/label/',
     who: 'Pour une industrie qui souhaite ouvrir son usine aux visiteurs.',

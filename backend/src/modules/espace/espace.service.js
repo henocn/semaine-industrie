@@ -15,6 +15,7 @@ const passportService = require('../passports/passport.service');
 const labelService = require('../labels/label.service');
 const ApiError = require('../../utils/ApiError');
 const palais = require('../participations/palais');
+const media = require('../participations/media');
 
 const TIME_ZONE = 'Africa/Lome';
 
@@ -165,10 +166,37 @@ async function palaisSpace(passport, participation) {
   };
 }
 
+/* Espace d'une accréditation média (code MD-) : média, profil, validité et QR. */
+async function mediaSpace(passport, participation) {
+  const qr = await passportService.withQr(passport);
+  const details = participation.media_details || {};
+  return {
+    code: passport.code,
+    type: 'media',
+    name: participation.name,
+    status: participation.status,
+    qr_data_url: qr.qr_data_url,
+    page_url: null,
+    facts: facts([
+      ['Média', details.outlet],
+      ['Profil', media.profileLabel(details.profile)],
+      ['Validité', media.MEDIA_VALIDITY],
+      ['E-mail', maskEmail(participation.email)],
+      ['Téléphone', maskPhone(participation.phone)],
+      ['Demande', formatDay(participation.createdAt)],
+    ]),
+    documents: [],
+    stats: [],
+    passages: [],
+    planned: [],
+  };
+}
+
 /* Espace d'une inscription école ou particulier (code EC- ou PA-). */
 async function passportSpace(passport) {
   const participation = await Participation.findOne({ where: { passport_id: passport.id } });
   if (participation?.kind === 'palais') return palaisSpace(passport, participation);
+  if (participation?.kind === 'media') return mediaSpace(passport, participation);
   const isGroup = passport.kind === 'group';
   const headcount = isGroup ? (participation?.headcount || passport.headcount) : null;
   const name = participation?.name || passport.holder_name || passport.school_name || 'Participant';
@@ -380,6 +408,9 @@ function participationSpace(row, waitlisted = false) {
     status: waitlisted ? 'waitlist' : row.status,
     rows: [
       ['Palais des Congrès', row.kind === 'palais' ? palais.daysShort(row.palais_days) : null],
+      ['Média', row.kind === 'media' ? row.media_details?.outlet : null],
+      ['Profil', row.kind === 'media' ? media.profileLabel(row.media_details?.profile) : null],
+      ['Validité', row.kind === 'media' ? media.MEDIA_VALIDITY : null],
       ['Ville', row.city],
       ['Effectif déclaré', row.headcount ? `${row.headcount} personnes` : null],
       ['E-mail', maskEmail(row.email)],

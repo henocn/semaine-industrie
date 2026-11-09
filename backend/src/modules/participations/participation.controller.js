@@ -60,6 +60,15 @@ async function palaisPass(req, res, next) {
   }
 }
 
+/* Accréditation média lue depuis le QR (public). */
+async function mediaPass(req, res, next) {
+  try {
+    return ApiResponse.success(res, await service.mediaPass(req.params.code));
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Enregistre l'entrée du jour au Palais (accueil connecté). */
 async function palaisCheckin(req, res, next) {
   try {
@@ -166,6 +175,7 @@ async function remove(req, res, next) {
 
 module.exports = {
   capacity,
+  mediaPass,
   palaisPass,
   palaisCheckin,
   list,
