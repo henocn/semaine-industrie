@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
-import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
 
 const HASHTAG = '#SemaineIndustrieTogo2026'
@@ -41,11 +40,26 @@ export default function ConcoursVideoPage() {
           <SectionHeader
             level={1}
             title="Concours vidéo"
-            lead="Élèves et étudiants : filmez votre visite d’usine pendant la Semaine de l’industrie et publiez-la. La meilleure vidéo de la semaine gagne 200 000 FCFA."
+            lead="Élèves et étudiants : filmez votre visite d’usine pendant la Semaine de l’industrie et publiez-la sur les réseaux sociaux."
           />
+          <p className="mt-5 text-[16px] text-ink/80">
+            <span className="mr-2 whitespace-nowrap font-sans text-[32px] font-bold italic tracking-tight tabular-nums text-[#a87d00] sm:text-[38px]">200 000 FCFA</span>
+            pour la meilleure vidéo de la semaine.
+          </p>
         </div>
 
-        <ol className="mt-10 border-t border-forest/15">
+        <picture className="contents">
+          <source srcSet="/images/concours-video.webp" type="image/webp" />
+          <img
+            src="/images/concours-video.jpg"
+            alt="Deux élèves en casque et gilet de sécurité filment avec un téléphone pendant qu’un technicien leur explique une machine dans une usine"
+            width={1200}
+            height={900}
+            className="mt-6 aspect-[5/2] w-full rounded-sm object-cover object-[50%_5%]"
+          />
+        </picture>
+
+        <ol className="mt-8 border-t border-forest/15">
           {STEPS.map((step, index) => (
             <li key={step.title} className="grid grid-cols-[2.5rem_1fr] gap-3 border-b border-forest/15 py-5">
               <span className="text-xl font-semibold tabular-nums text-forest">{index + 1}</span>
@@ -59,7 +73,7 @@ export default function ConcoursVideoPage() {
 
         <section className="mt-10 space-y-2 text-[15px] leading-relaxed text-ink/75">
           <h2 className="text-xl font-semibold text-forest">Qui peut participer ?</h2>
-          <p>Le concours est ouvert aux élèves et aux étudiants qui visitent une usine pendant la Semaine de l’industrie 2026.</p>
+          <p>Tout élève ou étudiant présent lors d’une visite d’usine, inscrit à titre personnel ou venu avec son établissement.</p>
           <p>
             Hashtag à utiliser : <span className="font-mono font-semibold text-forest">{HASHTAG}</span>
           </p>
@@ -72,10 +86,6 @@ export default function ConcoursVideoPage() {
           </p>
         </section>
 
-        <div className="mt-10 flex flex-wrap gap-2.5">
-          <Button to="/inscription-groupe/" variant="primary">Inscrire mon établissement</Button>
-          <Button to="/inscription-particulier/" variant="outline">M’inscrire à une visite</Button>
-        </div>
       </div>
     </main>
   )
