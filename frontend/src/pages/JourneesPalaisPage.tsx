@@ -112,8 +112,8 @@ export default function JourneesPalaisPage() {
             <Field label="Nom et prénom" className="sm:col-span-2">
               <input required name="name" minLength={2} autoComplete="name" className={field} />
             </Field>
-            <Field label="E-mail" optional>
-              <input type="email" name="email" autoComplete="email" className={field} />
+            <Field label="E-mail">
+              <input required type="email" name="email" autoComplete="email" className={field} />
             </Field>
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <PhoneField required name="phone" className={field} />

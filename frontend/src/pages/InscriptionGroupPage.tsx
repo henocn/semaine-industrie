@@ -128,7 +128,7 @@ export default function InscriptionGroupPage() {
               />
             </div>
             <Field label="E-mail">
-              <input type="email" name="email" className={field} />
+              <input required type="email" name="email" autoComplete="email" className={field} />
             </Field>
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <PhoneField required name="phone" className={field} />
