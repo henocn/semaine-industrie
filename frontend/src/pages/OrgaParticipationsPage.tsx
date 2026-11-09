@@ -259,7 +259,14 @@ export default function OrgaParticipationsPage() {
 
   useEffect(() => {
     void loadPending().catch(() => undefined)
-  }, [])
+    /* Retour sur l'onglet du navigateur : compteurs et liste à jour, comme le menu latéral. */
+    function onVisible() {
+      if (document.visibilityState === 'visible') void load().catch(() => undefined)
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind])
 
   useEffect(() => {
     setRows([])

@@ -58,7 +58,6 @@ export default function AccreditationMediasPage() {
             lead="Journalistes, photographes, vidéastes et créateurs de contenu : demandez votre accréditation pour couvrir la Semaine de l’industrie, du lundi 16 au dimanche 22 novembre."
           />
           <ul className="mt-6 space-y-2 border-t border-forest/15 pt-5 text-[15px] leading-relaxed text-ink/75">
-            <li>Une seule accréditation, valable toute la semaine : conférences au Palais des Congrès et visites d’usines.</li>
             <li>Votre QR d’accréditation arrive par e-mail et sur WhatsApp après validation.</li>
           </ul>
         </div>
