@@ -18,6 +18,9 @@ import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 import { PhoneField } from '../components/ui/PhoneField'
 import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSelection'
 import { PendingBadge } from '../components/orga/PendingBadge'
+import { useConfirm } from '../lib/useConfirm'
+import { SortControl } from '../components/orga/SortControl'
+import { useTableSort, type SortAccessors } from '../lib/useTableSort'
 import { useRowSelection } from '../lib/useRowSelection'
 import { excelDate, type ExcelColumn } from '../lib/excel'
 import { PALAIS_DAYS } from '../data'
@@ -29,6 +32,17 @@ function statusLabel(status: Participation['status'], waitlisted = false) {
   if (status === 'approved') return 'Acceptée'
   if (status === 'rejected') return 'Refusée'
   return waitlisted ? 'Liste d’attente' : 'En attente'
+}
+
+/* Tri : date d'inscription, nom, puis statut (en attente, liste d'attente, acceptée, refusée). */
+const SORT: SortAccessors<Participation> = {
+  date: (r) => r.createdAt,
+  name: (r) => r.name,
+  status: (r) => {
+    if (r.status === 'approved') return 2
+    if (r.status === 'rejected') return 3
+    return r.waitlisted ? 1 : 0
+  },
 }
 
 /* Libellé de chaque onglet. */
@@ -137,16 +151,28 @@ function PalaisDaysField({ value = [] }: { value?: number[] }) {
 /* Compteurs par journée : inscrits (hors refus), acceptés, entrées. */
 function PalaisCounts({ rows }: { rows: Participation[] }) {
   return (
-    <div className="orga-panel mb-4 grid gap-3 sm:grid-cols-3">
-      {PALAIS_DAYS.map((d) => {
+    <div className="mb-4 grid border border-black bg-white sm:grid-cols-3">
+      {PALAIS_DAYS.map((d, index) => {
         const forDay = rows.filter((r) => r.status !== 'rejected' && palaisDays(r).includes(d.n))
         const approved = forDay.filter((r) => r.status === 'approved').length
         const entered = forDay.filter((r) => palaisEntry(r, d.n)).length
+        const stats: [number, string, string][] = [
+          [forDay.length, 'inscrit', 'inscrits'],
+          [approved, 'accepté', 'acceptés'],
+          [entered, 'entrée', 'entrées'],
+        ]
         return (
-          <div key={d.n} className="text-[14px] text-ink">
-            <p className="font-semibold text-forest">{d.label}</p>
+          <div key={d.n} className={`px-5 py-4 ${index > 0 ? 'border-t border-black sm:border-t-0 sm:border-l' : ''}`}>
+            <p className="text-[14px] font-semibold text-forest">{d.label}</p>
             <p className="text-[13px] text-ink/60">{d.title}</p>
-            <p className="mt-1">{forDay.length} inscrits · {approved} acceptés · {entered} entrées</p>
+            <p className="mt-2 text-[14px] text-ink/70">
+              {stats.map(([value, one, many], i) => (
+                <span key={many}>
+                  {i > 0 && <span className="mx-1.5 text-ink/30">·</span>}
+                  <strong className="text-[17px] font-bold tabular-nums text-forest">{value}</strong> {value > 1 ? many : one}
+                </span>
+              ))}
+            </p>
           </div>
         )
       })}
@@ -174,6 +200,7 @@ export default function OrgaParticipationsPage() {
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { confirm, modal } = useConfirm()
 
   /* Compte les inscriptions à traiter, pour les deux onglets. */
   async function loadPending() {
@@ -268,8 +295,19 @@ export default function OrgaParticipationsPage() {
     }
   }
 
-  /* Accepte et affiche le QR. */
+  /* Nom de la ligne, pour les fenêtres de confirmation. */
+  function rowName(id: string) {
+    return rows.find((row) => row.id === id)?.name || 'Cette inscription'
+  }
+
+  /* Accepte (après confirmation) et affiche le QR ; sans confirmation pour recréer le QR d'une inscription déjà acceptée. */
   async function onApprove(id: string) {
+    const row = rows.find((r) => r.id === id)
+    if (row?.status !== 'approved' && !(await confirm({
+      title: 'Accepter l’inscription ?',
+      message: `${rowName(id)} recevra son QR par e-mail et sur WhatsApp.`,
+      confirmLabel: 'Accepter',
+    }))) return
     setBusy(true)
     setError(null)
     try {
@@ -286,6 +324,12 @@ export default function OrgaParticipationsPage() {
 
   /* Refuse la participation. */
   async function onReject(id: string) {
+    if (!(await confirm({
+      title: 'Refuser l’inscription ?',
+      message: `${rowName(id)} sera prévenu par e-mail et sur WhatsApp. Il ne restera ensuite que la suppression.`,
+      confirmLabel: 'Refuser',
+      danger: true,
+    }))) return
     setBusy(true)
     setError(null)
     try {
@@ -301,7 +345,12 @@ export default function OrgaParticipationsPage() {
 
   /* Supprime la participation. */
   async function onDelete(id: string) {
-    if (!window.confirm('Supprimer cette participation ?')) return
+    if (!(await confirm({
+      title: 'Supprimer cette participation ?',
+      message: `${rowName(id)} sera retiré. Cette action est définitive.`,
+      confirmLabel: 'Supprimer',
+      danger: true,
+    }))) return
     setBusy(true)
     setError(null)
     try {
@@ -335,7 +384,8 @@ export default function OrgaParticipationsPage() {
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [rows, query])
-  const picked = useRowSelection(filtered)
+  const sort = useTableSort(filtered, SORT, kind)
+  const picked = useRowSelection(sort.sorted)
 
   const isSchool = kind === 'ecole'
   const isPalais = kind === 'palais'
@@ -360,6 +410,7 @@ export default function OrgaParticipationsPage() {
         </button>
       }
     >
+      {modal}
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <div className="mb-4 flex gap-0 border border-black">
@@ -432,7 +483,7 @@ export default function OrgaParticipationsPage() {
           <h2 className="text-[15px] font-semibold text-forest">
             {filtered.length} {noun}
           </h2>
-          <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
+          <SortControl order={sort.order} onChange={sort.setOrder} />
         </div>
         <table className="orga-table min-w-[720px]">
           <thead>
@@ -452,7 +503,7 @@ export default function OrgaParticipationsPage() {
                 <td colSpan={7}>Aucune participation</td>
               </tr>
             )}
-            {filtered.map((item) => {
+            {sort.sorted.map((item) => {
               const open = selectedId === item.id
               const shown = open && detail?.id === item.id ? detail : item
               return (
@@ -483,7 +534,7 @@ export default function OrgaParticipationsPage() {
                     )}
                     <td onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-1">
-                        {item.status !== 'approved' && (
+                        {item.status === 'pending' && (
                           <IconButton label="Accepter" variant="ok" disabled={busy} onClick={() => void onApprove(item.id)}>
                             <IconCheck />
                           </IconButton>
@@ -493,6 +544,7 @@ export default function OrgaParticipationsPage() {
                             <IconX />
                           </IconButton>
                         )}
+                        {item.status !== 'rejected' && (
                         <IconButton
                           label="Modifier"
                           disabled={busy}
@@ -505,6 +557,7 @@ export default function OrgaParticipationsPage() {
                         >
                           <IconEdit />
                         </IconButton>
+                        )}
                         <IconButton label="Supprimer" variant="danger" disabled={busy} onClick={() => void onDelete(item.id)}>
                           <IconTrash />
                         </IconButton>
