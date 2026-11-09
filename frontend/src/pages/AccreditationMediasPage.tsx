@@ -11,6 +11,14 @@ import { PhoneField } from '../components/ui/PhoneField'
 import { scrollToTopNow } from '../lib/scroll'
 import { MEDIA_PROFILES } from '../data'
 
+/* Nombre minimal de mots pour la couverture (même règle côté serveur ; non affiché, seul « texte trop court » l'est). */
+const COVERAGE_MIN_WORDS = 10
+
+/* Compte les mots d'un texte libre. */
+function wordCount(value: string) {
+  return value.trim().split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length
+}
+
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
 
@@ -20,20 +28,26 @@ export default function AccreditationMediasPage() {
   const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [coverageError, setCoverageError] = useState<string | null>(null)
 
-  /* Envoie la demande (téléphone, média et profil obligatoires). */
+  /* Envoie la demande (e-mail, téléphone, média, profil et couverture obligatoires). */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
-    setLoading(true)
     const fd = new FormData(e.currentTarget)
+    if (wordCount(String(fd.get('description') || '')) < COVERAGE_MIN_WORDS) {
+      setCoverageError('Texte trop court : décrivez un peu plus ce que vous prévoyez de couvrir.')
+      return
+    }
+    setCoverageError(null)
+    setLoading(true)
     try {
       const created = await registerParticipation({
         kind: 'media',
         name: String(fd.get('name') || '').trim(),
-        email: String(fd.get('email') || '').trim() || null,
+        email: String(fd.get('email') || '').trim(),
         phone: String(fd.get('phone') || '').trim() || null,
-        description: String(fd.get('description') || '').trim() || null,
+        description: String(fd.get('description') || '').trim(),
         media_outlet: String(fd.get('media_outlet') || '').trim(),
         media_profile: String(fd.get('media_profile') || ''),
       })
@@ -86,14 +100,21 @@ export default function AccreditationMediasPage() {
                 ))}
               </select>
             </Field>
-            <Field label="E-mail" optional>
-              <input type="email" name="email" autoComplete="email" className={field} />
+            <Field label="E-mail">
+              <input required type="email" name="email" autoComplete="email" className={field} />
             </Field>
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <PhoneField required name="phone" className={field} />
             </Field>
-            <Field label="Ce que vous prévoyez de couvrir" optional className="sm:col-span-2">
-              <textarea name="description" rows={3} maxLength={2000} className={`${field} resize-none`} />
+            <Field label="Ce que vous prévoyez de couvrir" error={coverageError || undefined} className="sm:col-span-2">
+              <textarea
+                required
+                name="description"
+                rows={3}
+                maxLength={2000}
+                onChange={() => coverageError && setCoverageError(null)}
+                className={`${field} resize-none`}
+              />
             </Field>
             {error && <p role="alert" className="sm:col-span-2 text-sm text-red-700">{error}</p>}
             <div className="sm:col-span-2">

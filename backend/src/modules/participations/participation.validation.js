@@ -64,15 +64,44 @@ const createSchema = Joi.object({
   media_profile: mediaProfile,
 });
 
+/* Nombre minimal de mots attendu pour décrire la couverture d'une accréditation média. */
+const MEDIA_COVERAGE_MIN_WORDS = 10;
+const SHORT_COVERAGE_MESSAGE = 'Texte trop court : décrivez un peu plus ce que vous prévoyez de couvrir.';
+
+/* Compte les mots d'un texte libre. */
+function wordCount(value) {
+  return String(value || '').trim().split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+}
+
+/* Couverture d'un média : obligatoire et assez détaillée ; texte libre facultatif pour les autres formulaires. */
+const publicDescription = Joi.when('kind', {
+  is: 'media',
+  then: Joi.string().trim().max(8000).required()
+    .custom((value, helpers) => (wordCount(value) < MEDIA_COVERAGE_MIN_WORDS ? helpers.error('coverage.short') : value))
+    .messages({
+      'any.required': 'Indiquez ce que vous prévoyez de couvrir',
+      'string.empty': 'Indiquez ce que vous prévoyez de couvrir',
+      'coverage.short': SHORT_COVERAGE_MESSAGE,
+    }),
+  otherwise: fields.description,
+});
+
 /* Champ obligatoire pour une école à l'inscription publique. */
 const requiredForSchool = (field, message) => field.when('kind', {
   is: 'ecole',
   then: Joi.number().invalid(null).required().messages({ 'any.required': message, 'any.invalid': message }),
 });
 
-/* Inscription publique : téléphone obligatoire ; position et effectif pour une école, adresse pour un particulier. */
+/* Inscription publique : e-mail et téléphone obligatoires ; position et effectif pour une école, adresse pour un particulier,
+   couverture détaillée pour un média. */
 const publicSchema = createSchema.keys({
+  email: Joi.string().trim().email().max(180).required().messages({
+    'any.required': 'Indiquez votre adresse e-mail',
+    'string.empty': 'Indiquez votre adresse e-mail',
+    'string.email': 'Adresse e-mail invalide',
+  }),
   phone: phone().required(),
+  description: publicDescription,
   lat: requiredForSchool(fields.lat, 'Placez votre établissement sur la carte'),
   lng: requiredForSchool(fields.lng, 'Placez votre établissement sur la carte'),
   headcount: requiredForSchool(fields.headcount, 'Indiquez l’effectif souhaité'),

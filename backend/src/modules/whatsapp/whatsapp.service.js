@@ -680,6 +680,7 @@ function infosBody() {
     '*Informations*',
     "La Semaine de l’Industrie 2026 est portée par le Ministère délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique.",
     'Thème : « Accélérer l’industrialisation togolaise : transformation productive, innovation et compétitivité »',
+    'Participation libre et gratuite, sur demande préalable (menu « Participer à la semaine »).',
     '✉️ infos@semaineindustrie.tg',
     `🌐 ${SITE()}`,
   ].join('\n');
