@@ -70,7 +70,7 @@ export default function InscriptionParticulierPage() {
           />
           <VisitDaysNote audience="public" />
           <p className="mt-3 text-[15px] leading-relaxed text-red-700">
-            Le code de cette inscription est différent de celui que vous avez reçu si vous êtes aussi inscrit aux conférences du Palais des Congrès ou aux rencontres d’affaires.
+            Le code de cette inscription est différent de celui que vous avez reçu si vous êtes aussi inscrit aux conférences du Palais des Congrès.
           </p>
           <picture className="contents">
             <source srcSet="/images/inscription-particulier.webp" type="image/webp" />
