@@ -32,6 +32,7 @@ const GROUPS: NavGroup[] = [
     label: 'Défis',
     items: [
       { label: 'L’industrie, vue par vous', to: '/vue-par-vous/' },
+      { label: 'Concours vidéo', to: '/concours-video/' },
       // Retiré du public : le vote n'est plus au programme validé.
       // { label: 'Vote coup de cœur', to: '/vote' },
     ],

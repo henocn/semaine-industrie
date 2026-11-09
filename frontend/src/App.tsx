@@ -8,6 +8,7 @@ import { isBackofficeHost } from './lib/seo'
 import { peekOrgaUser } from './api/auth'
 // Rencontres d'affaires et vote retirés du public (programme validé) ; pages conservées pour une reprise éventuelle.
 // import BusinessRegisterPage from './pages/BusinessRegisterPage'
+import ConcoursVideoPage from './pages/ConcoursVideoPage'
 import FaqPage from './pages/FaqPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
@@ -89,6 +90,7 @@ export function AppRoutes() {
             {/* <Route path="/vote" element={<VotePage />} /> */}
             <Route path="/questionnaire" element={<SurveyRedirect />} />
             <Route path="/vue-par-vous" element={<VueParVousPage />} />
+            <Route path="/concours-video" element={<ConcoursVideoPage />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/confidentialite" element={<PrivacyPage />} />
             <Route path="/regles-de-participation" element={<ReglesPage />} />
