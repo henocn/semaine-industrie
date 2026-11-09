@@ -12,9 +12,11 @@ const {
   VisitBooking,
   BusinessParticipant,
   BusinessMeeting,
+  Participation,
   Passport,
   PassportVisit,
 } = require('../../models');
+const palais = require('../participations/palais');
 const trackingService = require('../tracking/tracking.service');
 const resourceService = require('../resources/resource.service');
 const conversationService = require('./conversation.service');
@@ -154,7 +156,7 @@ async function replyAskCode(from, phoneNumberId, body) {
     phoneNumberId,
     body:
       body
-      || "Espace de suivi pour les industries, écoles / universités et particuliers. Entrez le code de suivi envoyé à l'inscription.",
+      || "Espace de suivi pour le Palais des Congrès, les visites d'industries (particuliers, écoles / universités) et les industries. Entrez le code de suivi envoyé à l'inscription.",
   });
 }
 
@@ -382,13 +384,19 @@ async function sendTrackingQr(from, phoneNumberId, linked) {
   });
 }
 
+/* Type de suivi d'un passeport : école (ec), Palais des Congrès (jp) ou particulier aux visites (pa). */
+function passportKind(passport) {
+  if (passport.kind === 'group') return 'ec';
+  return String(passport.code || '').startsWith('JP-') ? 'jp' : 'pa';
+}
+
 /* Actions du sous-menu selon le groupe (max 20 car. en bouton). */
 function suiviActions(kind, { includeRecap = true } = {}) {
   const third = kind === 'in'
     ? { id: 'suivi_programme', title: 'Programme' }
     : kind === 'af'
       ? { id: 'b2b_rdv', title: 'Mes rendez-vous' }
-      : { id: 'suivi_visites', title: 'Mes visites' };
+      : { id: 'suivi_visites', title: kind === 'jp' ? 'Mes journées' : 'Mes visites' };
   const actions = [];
   if (includeRecap) actions.push({ id: 'suivi_recap', title: 'Récapitulatif' });
   actions.push(
@@ -494,7 +502,7 @@ const PROGRAMME_ALL_WEEK = [
   'Toute la semaine :',
   '• Usines ouvertes du 16 au 20 novembre, sur inscription',
   '• Exposition « Fabriqué au Togo » et parcours des métiers, du lundi au mercredi',
-  '• Concours vidéo #SemaineIndustrieTogo2026 : 200 000 FCFA',
+  '• Concours vidéo : 200 000 FCFA pour la meilleure vidéo de visite',
 ];
 
 /* Liste WhatsApp : toute la semaine, puis chaque jour. */
@@ -529,7 +537,16 @@ function formatProgrammeDay(day) {
       lines.push(`${time}  ${label}`);
     }
   }
-  lines.push('', `Lieu : ${day.where}`, '', ...PROGRAMME_ALL_WEEK, '', `${SITE()}/programme`);
+  lines.push(
+    '',
+    `Lieu : ${day.where}`,
+    `Assister au Palais : ${SITE()}/journees-au-palais`,
+    '',
+    ...PROGRAMME_ALL_WEEK,
+    `Concours : ${SITE()}/concours-video`,
+    '',
+    `${SITE()}/programme`,
+  );
   return lines.join('\n').slice(0, 1000);
 }
 
@@ -632,20 +649,22 @@ async function sendList({ to, body, buttonLabel, sections, phoneNumberId, header
 function participateBody() {
   const site = SITE();
   return [
-    "*Participer à la Semaine de l'Industrie*",
+    "*Participer à la Semaine de l'industrie*",
     '',
-    `1. *Industrie* : demandez le label sur ${site}/label`,
+    `1. *Participation au Palais des Congrès* : assistez aux conférences et panels, l'ouverture (lundi 16), le forum des métiers (mardi 17) ou les femmes dans l'industrie (mercredi 18), sur ${site}/journees-au-palais`,
     '',
-    `2. *École, centre de formation ou université* : inscrivez en une seule fois vos filières, séries ou groupes d'apprenants sur ${site}/inscription-groupe`,
+    `2. *Visites d'industries : particuliers* : étudiant, parent ou passionné de l'industrie, visitez des usines du 16 au 20 novembre sur ${site}/inscription-particulier`,
     '',
-    `3. *Particulier* : étudiant ou passionné de l'industrie, quel que soit votre domaine, inscrivez-vous et participez sur ${site}/inscription-particulier`,
+    `3. *Visites d'industries : écoles / universités* : inscrivez en une seule fois vos filières, séries ou groupes d'apprenants sur ${site}/inscription-groupe`,
     '',
-    `4. *Participation au Palais des Congrès* : assistez à l'ouverture (lundi 16), au forum des métiers (mardi 17) ou au panel sur les femmes dans l'industrie (mercredi 18) sur ${site}/journees-au-palais`,
+    `4. *Demande de labels pour les industries* : ouvrez votre usine aux visiteurs sur ${site}/label`,
+    '',
+    "Chaque formulaire donne son propre code : pour deux activités, remplissez les deux formulaires.",
     '',
     // Rencontres d'affaires retirées du public (programme validé) ; les inscrits existants gardent leur code AF.
     // `4. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
     // '',
-    '📩 Vous recevrez un *code de suivi* pour voir où en est votre participation dans « Suivi de participation ».',
+    '📩 Avec votre *code de suivi*, voyez où en est votre participation dans « Suivi de participation ».',
   ].join('\n');
 }
 
@@ -931,7 +950,8 @@ async function openByTrackingCode(from, raw, phoneNumberId) {
 
 /* Texte d'intro du sous-menu. */
 function suiviIntro(kind, name) {
-  const label = kind === 'in' ? 'Industrie' : kind === 'af' ? 'Affaires' : kind === 'pa' ? 'Particulier' : 'École';
+  const labels = { in: 'Industrie', af: 'Affaires', pa: 'Particulier', jp: 'Palais des Congrès' };
+  const label = labels[kind] || 'École';
   return `${label} : ${name}\nQue souhaitez-vous ?`;
 }
 
@@ -949,7 +969,7 @@ async function openLinkedSuivi(from, phoneNumberId, patch, linked) {
 
 /* Récap passeport école (groupe) ou particulier (individuel). */
 async function replyPassportRecap(from, passport, phoneNumberId) {
-  const kind = passport.kind === 'group' ? 'ec' : 'pa';
+  const kind = passportKind(passport);
   const name = passport.holder_name || passport.school_name || 'Participant';
   return openLinkedSuivi(
     from,
@@ -998,7 +1018,7 @@ async function loadLinked(session) {
     const passport = await Passport.findByPk(session.passportId);
     if (!passport) return null;
     return {
-      kind: passport.kind === 'group' ? 'ec' : 'pa',
+      kind: passportKind(passport),
       code: passport.code,
       passport,
       name: passport.holder_name || passport.school_name || 'Participant',
@@ -1034,7 +1054,7 @@ async function loadLinked(session) {
       };
     }
     return {
-      kind: found.passport.kind === 'group' ? 'ec' : 'pa',
+      kind: passportKind(found.passport),
       code: found.passport.code,
       passport: found.passport,
       name: found.passport.holder_name || found.passport.school_name || 'Participant',
@@ -1220,6 +1240,23 @@ async function formatPassportVisites(passport) {
   return lines.join('\n').trim();
 }
 
+/* Journées du Palais choisies, avec l'heure d'entrée enregistrée à l'accueil. */
+async function formatPalaisJournees(passport) {
+  const row = await Participation.findOne({ where: { passport_id: passport.id, kind: 'palais' } });
+  const days = palais.normalizeDays(row?.palais_days);
+  if (!days.length) return 'Aucune journée enregistrée pour le moment.';
+  const checkins = row.palais_checkins || {};
+  const time = (iso) => new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Lome' }).format(new Date(iso));
+  const lines = ['Mes journées au Palais des Congrès', ''];
+  for (const n of days) {
+    const day = palais.dayInfo(n);
+    lines.push(`${day.label} : ${day.title}`, `${day.place}, ${day.hours}`);
+    lines.push(checkins[n] ? `Entrée enregistrée à ${time(checkins[n])}` : 'Présentez votre QR à l’accueil.');
+    lines.push('');
+  }
+  return lines.join('\n').trim();
+}
+
 /* Liste les prochaines visites liées à l'organisation (site ou école). */
 async function formatVisites(org) {
   if (org.type === 'entreprise') return formatIncomingVisites(org);
@@ -1365,6 +1402,9 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         }
         return replyLinkedContent(from, phoneNumberId, linked.kind, await formatIncomingVisites(linked.organization));
       }
+      if (action === 'suivi_visites' && linked.kind === 'jp' && linked.passport) {
+        return replyLinkedContent(from, phoneNumberId, linked.kind, await formatPalaisJournees(linked.passport));
+      }
       if (action === 'suivi_visites') {
         const visits = linked.passport
           ? await formatPassportVisites(linked.passport)
@@ -1408,7 +1448,7 @@ async function resolveIdent(from, text, phoneNumberId, intent) {
   return replyAskCode(
     from,
     phoneNumberId,
-    'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5 ou PA-3MXR).',
+    'Code introuvable. Vérifiez-le et renvoyez-le (JP-4KTW, PA-3MXR, EC-G7H5 ou IN-K7P4).',
   );
 }
 
@@ -1444,7 +1484,7 @@ async function handleText(from, text, phoneNumberId) {
     return replyAskCode(
       from,
       phoneNumberId,
-      'Code introuvable. Vérifiez-le et renvoyez-le (IN-K7P4, EC-G7H5 ou PA-3MXR).',
+      'Code introuvable. Vérifiez-le et renvoyez-le (JP-4KTW, PA-3MXR, EC-G7H5 ou IN-K7P4).',
     );
   }
 
