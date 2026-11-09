@@ -1,24 +1,24 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Award, Check, ClipboardList, Compass, Lightbulb, Share2, X } from 'lucide-react'
+// Compass servait à l'explorateur de talents (retiré du public).
+import { Award, Check, ClipboardList, Lightbulb, Share2, X } from 'lucide-react'
 import { Seo } from '../components/Seo'
 import { publicSeo, SITE_URL } from '../lib/seo'
-import { BrandLogoWhite, WRAP } from '../components/layout/Mark'
+// BrandLogoWhite servait à la carte de profil de l'explorateur de talents (retiré du public).
+import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import SurveyGame from '../components/SurveyGame'
 import { DAY_MS, hasStoreKey, readStore, writeStore } from '../lib/localStore'
 import { submitGameResult, type GameResultPayload } from '../api/surveys'
 import {
-  computeProfiles,
+  // computeProfiles, TALENT_DISCLAIMER et TALENT_QUESTIONS servaient à l'explorateur de talents (retiré du public).
   LETTERS,
   QUIZ,
   quizMessage,
   quizScore,
-  TALENT_DISCLAIMER,
-  TALENT_QUESTIONS,
   VUE_PAR_VOUS_TITLE,
-  type Letter,
+  // type Letter servait à l'explorateur de talents (retiré du public).
 } from '../lib/vueParVous'
 
 type Game = 'sondage' | 'quiz' | 'talents'
@@ -193,7 +193,7 @@ function QuizGame() {
 
   /* Partage le score avec le lien du jeu. */
   async function share() {
-    const text = `J'ai obtenu ${score}/5 au défi « Curieux de l'industrie » de la Semaine de l'industrie 2026. À vous de jouer !`
+    const text = `J'ai obtenu ${score}/5 au défi « À quel point connaissez-vous l'industrie ? » de la Semaine de l'industrie 2026. À vous de jouer !`
     if (await shareResult(text, `${PAGE_URL}?jeu=quiz`)) {
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
@@ -263,67 +263,71 @@ function QuizGame() {
   )
 }
 
-/* Jeu 2 : explorateur de talents, profil(s) en tête selon la grille. */
-function TalentGame() {
-  const [answers, setAnswers] = useState<(number | null)[]>(
-    () => savedAnswers('talents') || TALENT_QUESTIONS.map(() => null),
-  )
-  const [done, setDone] = useState(() => savedAnswers('talents') != null)
-  const [copied, setCopied] = useState(false)
-  const result = done ? computeProfiles(answers.map((a) => (a == null ? null : LETTERS[a])) as (Letter | null)[]) : null
-  const names = result ? result.profiles.map((p) => p.name).join(' + ') : ''
-
-  /* Partage le profil avec le lien du jeu. */
-  async function share() {
-    const text = `Mon profil de découverte « ${VUE_PAR_VOUS_TITLE} » : ${names}. Semaine de l'industrie 2026. Et vous ?`
-    if (await shareResult(text, `${PAGE_URL}?jeu=talents`)) {
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-    }
-  }
-
-  if (!result) {
-    return (
-      <Stepper
-        questions={TALENT_QUESTIONS}
-        answers={answers}
-        onAnswer={(step, choice) => setAnswers((prev) => prev.map((a, i) => (i === step ? choice : a)))}
-        onFinish={() => {
-          const picked = computeProfiles(answers.map((a) => LETTERS[a as number]))
-          recordGame({ game: 'talents', answers: answers as number[], profiles: picked.profiles.map((p) => p.code) })
-          setDone(true)
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-        }}
-        finishLabel="Voir mon profil"
-      />
-    )
-  }
-
-  return (
-    <div className="mt-8">
-      {/* Une seule carte résultat (à capturer ou partager) ; titre seulement en cas d'égalité. */}
-      <div className="bg-forest px-6 py-8 text-white sm:px-8">
-        <BrandLogoWhite className="h-8 w-auto" />
-        {result.tie && <p className="mt-6 text-[15px] text-white/75">Vos réponses se partagent entre deux univers.</p>}
-        {result.profiles.map((p, i) => (
-          <div key={p.code} className={i > 0 ? 'mt-6 border-t border-white/20 pt-6' : 'mt-6'}>
-            <p className="text-2xl font-bold">{p.name}</p>
-            <p className="mt-1 text-[15px] text-sun">{p.orientation}</p>
-            <p className="mt-3 text-[15px] leading-relaxed text-white/85">{p.description}</p>
-          </div>
-        ))}
-      </div>
-
-      <p className="mt-5 text-[13px] italic text-ink/60">{TALENT_DISCLAIMER}</p>
-
-      <div className="mt-6 flex flex-wrap gap-3">
-        <Button onClick={() => void share()}>
-          <Share2 className="h-4 w-4" aria-hidden /> {copied ? 'Lien copié' : 'Partager'}
-        </Button>
-      </div>
-    </div>
-  )
-}
+/*
+ * Explorateur de talents retiré du public : il sera remplacé par une page de pédagogie (texte, images, vidéos) dans Explorer.
+ * Code conservé pour une reprise éventuelle.
+ */
+// /* Jeu 2 : explorateur de talents, profil(s) en tête selon la grille. */
+// function TalentGame() {
+//   const [answers, setAnswers] = useState<(number | null)[]>(
+//     () => savedAnswers('talents') || TALENT_QUESTIONS.map(() => null),
+//   )
+//   const [done, setDone] = useState(() => savedAnswers('talents') != null)
+//   const [copied, setCopied] = useState(false)
+//   const result = done ? computeProfiles(answers.map((a) => (a == null ? null : LETTERS[a])) as (Letter | null)[]) : null
+//   const names = result ? result.profiles.map((p) => p.name).join(' + ') : ''
+//
+//   /* Partage le profil avec le lien du jeu. */
+//   async function share() {
+//     const text = `Mon profil de découverte « ${VUE_PAR_VOUS_TITLE} » : ${names}. Semaine de l'industrie 2026. Et vous ?`
+//     if (await shareResult(text, `${PAGE_URL}?jeu=talents`)) {
+//       setCopied(true)
+//       window.setTimeout(() => setCopied(false), 2000)
+//     }
+//   }
+//
+//   if (!result) {
+//     return (
+//       <Stepper
+//         questions={TALENT_QUESTIONS}
+//         answers={answers}
+//         onAnswer={(step, choice) => setAnswers((prev) => prev.map((a, i) => (i === step ? choice : a)))}
+//         onFinish={() => {
+//           const picked = computeProfiles(answers.map((a) => LETTERS[a as number]))
+//           recordGame({ game: 'talents', answers: answers as number[], profiles: picked.profiles.map((p) => p.code) })
+//           setDone(true)
+//           window.scrollTo({ top: 0, behavior: 'smooth' })
+//         }}
+//         finishLabel="Voir mon profil"
+//       />
+//     )
+//   }
+//
+//   return (
+//     <div className="mt-8">
+//       {/* Une seule carte résultat (à capturer ou partager) ; titre seulement en cas d'égalité. */}
+//       <div className="bg-forest px-6 py-8 text-white sm:px-8">
+//         <BrandLogoWhite className="h-8 w-auto" />
+//         {result.tie && <p className="mt-6 text-[15px] text-white/75">Vos réponses se partagent entre deux univers.</p>}
+//         {result.profiles.map((p, i) => (
+//           <div key={p.code} className={i > 0 ? 'mt-6 border-t border-white/20 pt-6' : 'mt-6'}>
+//             <p className="text-2xl font-bold">{p.name}</p>
+//             <p className="mt-1 text-[15px] text-sun">{p.orientation}</p>
+//             <p className="mt-3 text-[15px] leading-relaxed text-white/85">{p.description}</p>
+//           </div>
+//         ))}
+//       </div>
+//
+//       <p className="mt-5 text-[13px] italic text-ink/60">{TALENT_DISCLAIMER}</p>
+//
+//       <div className="mt-6 flex flex-wrap gap-3">
+//         <Button onClick={() => void share()}>
+//           <Share2 className="h-4 w-4" aria-hidden /> {copied ? 'Lien copié' : 'Partager'}
+//         </Button>
+//       </div>
+//     </div>
+//   )
+// }
 
 const GAMES: { key: Game; title: string; lead: string; card?: string; icon: typeof Award }[] = [
   {
@@ -335,16 +339,17 @@ const GAMES: { key: Game; title: string; lead: string; card?: string; icon: type
   },
   {
     key: 'quiz',
-    title: "Curieux de l'industrie",
+    title: "À quel point connaissez-vous l'industrie ?",
     lead: 'Prêt à relever le défi industriel ? À vous de jouer !',
     icon: Lightbulb,
   },
-  {
-    key: 'talents',
-    title: 'Explorateur de talents',
-    lead: "Et si vous aviez un talent pour l'industrie sans le savoir ? Cinq questions pour explorer vos intérêts et découvrir les univers industriels qui pourraient vous correspondre.",
-    icon: Compass,
-  },
+  // Explorateur de talents retiré du public (remplacé plus tard par une page de pédagogie dans Explorer).
+  // {
+  //   key: 'talents',
+  //   title: 'Explorateur de talents',
+  //   lead: "Et si vous aviez un talent pour l'industrie sans le savoir ? Cinq questions pour explorer vos intérêts et découvrir les univers industriels qui pourraient vous correspondre.",
+  //   icon: Compass,
+  // },
 ]
 
 /* « L'industrie, vue par vous ! » : choix de l'expérience puis jeu. */
@@ -367,7 +372,7 @@ export default function VueParVousPage() {
               <SectionHeader
                 level={1}
                 title={VUE_PAR_VOUS_TITLE}
-                lead="Un questionnaire pour donner son avis, et deux défis pour tester ses connaissances et explorer ses intérêts."
+                lead="Un questionnaire pour donner son avis, et un défi pour tester ses connaissances sur l’industrie."
               />
             )}
           </div>
@@ -388,10 +393,10 @@ export default function VueParVousPage() {
 
           {game === 'sondage' && <SurveyGame />}
           {game === 'quiz' && <QuizGame />}
-          {game === 'talents' && <TalentGame />}
+          {/* {game === 'talents' && <TalentGame />} */}
 
           {!current && (
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <div className="mt-10 grid gap-4 md:grid-cols-2">
               {GAMES.map((g) => {
                 const Icon = g.icon
                 /* Le sondage n'est pas un jeu : carte marquée, et fermée une fois fini (réponse unique). */
