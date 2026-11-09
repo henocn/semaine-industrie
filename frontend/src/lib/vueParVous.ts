@@ -5,7 +5,7 @@ export const VUE_PAR_VOUS_TITLE = "L'industrie, vue par vous !"
 export type Letter = 'A' | 'B' | 'C' | 'D'
 export const LETTERS: Letter[] = ['A', 'B', 'C', 'D']
 
-/* ---------- Jeu 1 : Curieux de l'industrie ---------- */
+/* ---------- Jeu 1 : À quel point connaissez-vous l'industrie ? ---------- */
 
 export type QuizQuestion = {
   label: string

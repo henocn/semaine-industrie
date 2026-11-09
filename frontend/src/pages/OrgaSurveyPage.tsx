@@ -335,7 +335,7 @@ export default function OrgaSurveyPage() {
       {tab === 'jeux' && (
         <section className="grid gap-4 md:grid-cols-2">
           <div className="orga-panel">
-            <h2 className="text-[15px] font-semibold text-forest">Curieux de l&apos;industrie</h2>
+            <h2 className="text-[15px] font-semibold text-forest">À quel point connaissez-vous l&apos;industrie ?</h2>
             {gameStats ? (
               <>
                 <p className="mt-2 text-[13px] text-ink/55">

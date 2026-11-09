@@ -234,7 +234,7 @@ function SurveyFlow({
             {loadError || "Le questionnaire n'est pas encore disponible. Revenez pendant la Semaine de l'industrie."}
           </p>
           <div className="mt-4">
-            <Button variant="link" to="/vue-par-vous/?jeu=quiz">En attendant, relevez le défi « Curieux de l&apos;industrie »</Button>
+            <Button variant="link" to="/vue-par-vous/?jeu=quiz">En attendant, relevez le défi « À quel point connaissez-vous l&apos;industrie ? »</Button>
           </div>
         </div>
       ) : screen === 'intro' ? (
