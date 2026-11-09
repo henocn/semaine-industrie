@@ -10,6 +10,8 @@ const {
   sequelize,
 } = require('../../models');
 
+const { getOverview } = require('./overview.service');
+
 /* Calcule les indicateurs agrégés de la semaine. */
 async function getStats() {
   const [
@@ -94,6 +96,7 @@ async function getStats() {
     by_sector: bySectorRows.map((r) => ({ name: r.sector, count: Number(r.count) })),
     by_type: byTypeRows.map((r) => ({ name: r.type, count: Number(r.count) })),
     recent_labels: recentLabels,
+    overview: await getOverview(),
     updated_at: new Date().toISOString(),
   };
 }

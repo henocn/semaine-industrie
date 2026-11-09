@@ -72,6 +72,16 @@ async function waitlistIds() {
   return new Set(rows.slice(env.PARTICULIER_LIMIT).map((row) => row.id));
 }
 
+/* Nombre de particuliers en liste d'attente (en attente de validation, au-delà des places). */
+async function waitlistSize() {
+  const rows = await Participation.findAll({
+    where: ACTIVE_PARTICULIERS,
+    attributes: ['id', 'status'],
+    order: [['created_at', 'ASC'], ['id', 'ASC']],
+  });
+  return rows.slice(env.PARTICULIER_LIMIT).filter((row) => row.status === 'pending').length;
+}
+
 /* Une inscription en attente de validation est-elle en liste d'attente ? */
 async function isWaitlisted(row) {
   if (!row || row.kind !== 'particulier' || row.status !== 'pending') return false;
@@ -315,6 +325,7 @@ async function mediaPass(rawCode) {
 }
 
 module.exports = {
+  waitlistSize,
   mediaPass,
   palaisPass,
   palaisCheckin,
