@@ -13,6 +13,7 @@ import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
 import InscriptionGroupPage from './pages/InscriptionGroupPage'
 import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
+import JourneesPalaisPage from './pages/JourneesPalaisPage'
 import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
@@ -75,6 +76,7 @@ export function AppRoutes() {
             <Route path="/inscription" element={<Navigate to="/inscription-groupe/" replace />} />
             <Route path="/inscription-groupe" element={<InscriptionGroupPage />} />
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
+            <Route path="/journees-au-palais" element={<JourneesPalaisPage />} />
             <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />
             <Route path="/mon-espace" element={<MonEspacePage />} />
             {/* <Route path="/affaires" element={<BusinessRegisterPage />} /> */}

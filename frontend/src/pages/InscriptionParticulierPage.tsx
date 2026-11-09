@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { getParticulierCapacity, registerParticipation } from '../api/participations'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
 import { VisitDaysNote } from '../components/VisitDaysNote'
@@ -91,6 +92,15 @@ export default function InscriptionParticulierPage() {
                 Toutes les places prévues pour les particuliers sont déjà attribuées. Nous vous préviendrons par e-mail et sur WhatsApp dès qu’une place se libère.
               </p>
             )}
+            {waitlisted && (
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
+                En attendant, vous pouvez assister aux{' '}
+                <Link to="/journees-au-palais/" className="font-semibold text-forest underline underline-offset-4">
+                  journées du Palais des Congrès
+                </Link>
+                , du 16 au 18 novembre.
+              </p>
+            )}
             <TrackingCodeNotice code={trackingCode} />
           </div>
         ) : (
@@ -117,6 +127,11 @@ export default function InscriptionParticulierPage() {
             {full && (
               <p className="sm:col-span-2 text-[15px] leading-relaxed text-red-700">
                 Les places prévues pour les particuliers sont toutes attribuées. Vous pouvez quand même vous inscrire : votre demande sera placée en liste d’attente et nous vous préviendrons dès qu’une place se libère.
+                Vous pouvez aussi assister aux{' '}
+                <Link to="/journees-au-palais/" className="font-semibold underline underline-offset-4">
+                  journées du Palais des Congrès
+                </Link>
+                .
               </p>
             )}
             {error && <p className="sm:col-span-2 text-sm text-red-700">{error}</p>}

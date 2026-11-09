@@ -1,6 +1,6 @@
 import { apiFetch } from './client'
 
-export type ParticipationKind = 'ecole' | 'particulier'
+export type ParticipationKind = 'ecole' | 'particulier' | 'palais'
 export type ParticipationStatus = 'pending' | 'approved' | 'rejected'
 
 export type ParticipationPassport = {
@@ -30,6 +30,29 @@ export type Participation = {
   createdAt?: string
   /* Particulier en attente de validation, au-delà des places prévues. */
   waitlisted?: boolean
+  /* Journées du Palais choisies (16, 17, 18) et entrées scannées, pour une inscription « palais ». */
+  palais_days?: number[] | null
+  palais_checkins?: Record<string, string> | null
+}
+
+/* Ce que l'accueil du Palais voit au scan du QR. */
+export type PalaisPass = {
+  code: string
+  name: string
+  status: ParticipationStatus
+  today: number | null
+  expected_today: boolean
+  checked_in_today: boolean
+  already?: boolean
+  days: {
+    n: number
+    label: string
+    title: string
+    place: string
+    hours: string
+    registered: boolean
+    checked_in_at: string | null
+  }[]
 }
 
 export type ParticipationInput = {
@@ -43,6 +66,17 @@ export type ParticipationInput = {
   lat?: number | null
   lng?: number | null
   headcount?: number | null
+  palais_days?: number[]
+}
+
+/* Inscription aux journées du Palais lue depuis le QR. */
+export function getPalaisPass(code: string) {
+  return apiFetch<PalaisPass>(`/participations/public/palais/${encodeURIComponent(code)}`)
+}
+
+/* Enregistre l'entrée du jour au Palais (accueil connecté). */
+export function checkinPalais(code: string) {
+  return apiFetch<PalaisPass>(`/participations/palais/${encodeURIComponent(code)}/checkin`, { method: 'POST' })
 }
 
 /* Liste les participations (école ou particulier). */

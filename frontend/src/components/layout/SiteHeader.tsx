@@ -12,6 +12,7 @@ type NavGroup = {
 
 const PARTICIPER_ITEMS: NavItem[] = [
   { label: 'En tant que particulier', to: '/inscription-particulier/' },
+  { label: 'Journées au Palais', to: '/journees-au-palais/' },
   { label: 'En tant qu’école / université', to: '/inscription-groupe/' },
   { label: 'Demande de label : industries', to: '/label/' },
   // Retiré du public : hors du programme validé. Les inscriptions déjà reçues restent au back-office.

@@ -11,6 +11,13 @@ const field =
   'mt-2 w-full border-0 border-b border-forest/25 bg-transparent px-0 py-3 text-lg text-ink placeholder:text-ink/35 focus:border-forest focus:outline-none focus:ring-0'
 
 /* Page de connexion, hors header public. */
+/* Retour après connexion (ex. scan d'accueil au Palais) : chemin interne seulement, sinon l'espace orga. */
+function returnPath() {
+  if (typeof window === 'undefined') return '/orga'
+  const target = new URLSearchParams(window.location.search).get('retour') || ''
+  return /^\/passage\/[A-Za-z0-9-]+$/.test(target) ? target : '/orga'
+}
+
 export default function LoginPage() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +36,7 @@ export default function LoginPage() {
       }
       const user = await ensureOrgaSession()
       if (!alive) return
-      if (user) navigate('/orga', { replace: true })
+      if (user) navigate(returnPath(), { replace: true })
       else setChecking(false)
     }
     void redirectIfAuthed()
@@ -46,7 +53,7 @@ export default function LoginPage() {
     const fd = new FormData(e.currentTarget)
     try {
       const session = await login(String(fd.get('email')), String(fd.get('password')))
-      if (isStaffRole(session.user.role)) navigate('/orga', { replace: true })
+      if (isStaffRole(session.user.role)) navigate(returnPath(), { replace: true })
       else navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connexion impossible')

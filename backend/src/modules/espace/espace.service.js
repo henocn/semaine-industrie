@@ -14,6 +14,7 @@ const trackingService = require('../tracking/tracking.service');
 const passportService = require('../passports/passport.service');
 const labelService = require('../labels/label.service');
 const ApiError = require('../../utils/ApiError');
+const palais = require('../participations/palais');
 
 const TIME_ZONE = 'Africa/Lome';
 
@@ -131,9 +132,43 @@ function kitDocuments(org) {
   }));
 }
 
+/* Espace d'une inscription aux journées du Palais (code JP-) : journées choisies et entrées scannées. */
+async function palaisSpace(passport, participation) {
+  const days = palais.normalizeDays(participation.palais_days);
+  const checkins = participation.palais_checkins || {};
+  const qr = await passportService.withQr(passport);
+  const row = (n, when) => {
+    const day = palais.dayInfo(n);
+    return { id: `palais-${n}`, title: `${day.label} : ${day.title}`, detail: `Palais des Congrès de Lomé, ${day.place.toLowerCase()}`, when };
+  };
+  const attended = days.filter((n) => checkins[n]);
+  return {
+    code: passport.code,
+    type: 'palais',
+    name: participation.name,
+    status: participation.status,
+    qr_data_url: qr.qr_data_url,
+    page_url: null,
+    facts: facts([
+      ['Journées choisies', palais.daysShort(days)],
+      ['E-mail', maskEmail(participation.email)],
+      ['Téléphone', maskPhone(participation.phone)],
+      ['Inscription', formatDay(participation.createdAt)],
+    ]),
+    documents: [],
+    stats: [
+      { label: 'Journées choisies', value: days.length },
+      { label: 'Entrées enregistrées', value: attended.length },
+    ],
+    passages: attended.map((n) => row(n, `Entrée ${formatDay(checkins[n])} à ${formatTime(checkins[n])}`)),
+    planned: days.filter((n) => !checkins[n]).map((n) => row(n, palais.dayInfo(n).hours)),
+  };
+}
+
 /* Espace d'une inscription école ou particulier (code EC- ou PA-). */
 async function passportSpace(passport) {
   const participation = await Participation.findOne({ where: { passport_id: passport.id } });
+  if (participation?.kind === 'palais') return palaisSpace(passport, participation);
   const isGroup = passport.kind === 'group';
   const headcount = isGroup ? (participation?.headcount || passport.headcount) : null;
   const name = participation?.name || passport.holder_name || passport.school_name || 'Participant';
@@ -344,6 +379,7 @@ function participationSpace(row, waitlisted = false) {
     name: row.name,
     status: waitlisted ? 'waitlist' : row.status,
     rows: [
+      ['Journées au Palais', row.kind === 'palais' ? palais.daysShort(row.palais_days) : null],
       ['Ville', row.city],
       ['Effectif déclaré', row.headcount ? `${row.headcount} personnes` : null],
       ['E-mail', maskEmail(row.email)],

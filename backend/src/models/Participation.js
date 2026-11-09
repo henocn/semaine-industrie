@@ -2,7 +2,7 @@
 
 const { DataTypes } = require('sequelize');
 
-/* Participation école ou particulier (QR du jour J, pas un label). */
+/* Participation école, particulier (visites d'usines) ou particulier aux journées du Palais (QR du jour J). */
 module.exports = (sequelize) => {
   const Participation = sequelize.define(
     'Participation',
@@ -13,7 +13,7 @@ module.exports = (sequelize) => {
         primaryKey: true,
       },
       kind: {
-        type: DataTypes.ENUM('ecole', 'particulier'),
+        type: DataTypes.ENUM('ecole', 'particulier', 'palais'),
         allowNull: false,
       },
       name: {
@@ -64,6 +64,16 @@ module.exports = (sequelize) => {
       },
       passport_id: {
         type: DataTypes.UUID,
+        allowNull: true,
+      },
+      /* Journées du Palais choisies (16, 17, 18), pour le type « palais ». */
+      palais_days: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
+      /* Entrées scannées au Palais : { "16": "2026-11-16T08:42:00.000Z" }. */
+      palais_checkins: {
+        type: DataTypes.JSONB,
         allowNull: true,
       },
       label_request_id: {

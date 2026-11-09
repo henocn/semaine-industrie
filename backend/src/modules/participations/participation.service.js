@@ -10,6 +10,9 @@ const mailService = require('../notifications/mail.service');
 const logger = require('../../utils/logger');
 const { renderQrCardDataUrl } = require('../../utils/qrCard');
 const { assertAvailable, duplicateError } = require('../../utils/uniqueContact');
+const palais = require('./palais');
+
+const KINDS = ['ecole', 'particulier', 'palais'];
 
 /* Vide une chaîne optionnelle. */
 function emptyToNull(value) {
@@ -30,6 +33,7 @@ function pickFields(payload) {
   if ('lat' in payload) data.lat = payload.lat ?? null;
   if ('lng' in payload) data.lng = payload.lng ?? null;
   if ('headcount' in payload) data.headcount = payload.headcount || null;
+  if ('palais_days' in payload) data.palais_days = palais.normalizeDays(payload.palais_days);
   return data;
 }
 
@@ -102,10 +106,12 @@ async function getById(id) {
   return { ...(await present(row, { withImage: true })), waitlisted: await isWaitlisted(row) };
 }
 
-/* Crée une participation en attente (école / centre / université, ou particulier). */
+/* Crée une participation en attente (école / centre / université, particulier, ou particulier au Palais). */
 async function create(payload) {
-  const kind = payload.kind === 'particulier' ? 'particulier' : 'ecole';
+  const kind = KINDS.includes(payload.kind) ? payload.kind : 'ecole';
   const fields = pickFields(payload);
+  if (kind !== 'palais') delete fields.palais_days;
+  else if (!fields.palais_days?.length) throw ApiError.badRequest('Choisissez au moins une journée');
   await assertAvailable('participations', { kind, email: fields.email, phone: fields.phone });
   const row = await Participation.create({
     kind,
@@ -135,6 +141,8 @@ async function update(id, payload) {
   const row = await Participation.findByPk(id);
   if (!row) throw ApiError.notFound('Participation introuvable');
   const fields = pickFields(payload);
+  if (row.kind !== 'palais') delete fields.palais_days;
+  else if (fields.palais_days && !fields.palais_days.length) throw ApiError.badRequest('Choisissez au moins une journée');
   await assertAvailable('participations', {
     kind: row.kind, excludeId: row.id, email: fields.email, phone: fields.phone,
   });
@@ -220,7 +228,65 @@ async function remove(id) {
   return { id };
 }
 
+/* Inscription au Palais retrouvée par son code (QR ou saisie). */
+async function findPalaisByCode(rawCode) {
+  const code = trackingService.normalizeCode(rawCode);
+  const row = code ? await Participation.findOne({ where: { kind: 'palais', tracking_code: code } }) : null;
+  if (!row) throw ApiError.notFound('Aucune inscription aux journées du Palais ne correspond à ce code');
+  return row;
+}
+
+/* Ce que l'accueil voit au scan : la personne, ses journées, et si elle est attendue aujourd'hui. */
+function palaisView(row) {
+  const days = palais.normalizeDays(row.palais_days);
+  const checkins = row.palais_checkins || {};
+  const today = palais.todayDay();
+  return {
+    code: row.tracking_code,
+    name: row.name,
+    status: row.status,
+    today,
+    expected_today: today !== null && days.includes(today),
+    checked_in_today: today !== null && Boolean(checkins[today]),
+    days: palais.PALAIS_DAYS.map((day) => ({
+      n: day.n,
+      label: day.label,
+      title: day.title,
+      place: day.place,
+      hours: day.hours,
+      registered: days.includes(day.n),
+      checked_in_at: checkins[day.n] || null,
+    })),
+  };
+}
+
+/* Fiche publique d'une inscription au Palais, ouverte par le QR. */
+async function palaisPass(code) {
+  return palaisView(await findPalaisByCode(code));
+}
+
+/* Enregistre l'entrée du jour au Palais (accueil connecté). */
+async function palaisCheckin(code) {
+  const row = await findPalaisByCode(code);
+  if (row.status !== 'approved') throw ApiError.conflict('Inscription pas encore validée : entrée non enregistrée');
+  const today = palais.todayDay();
+  if (today === null) throw ApiError.badRequest('Aucune journée du Palais n’a lieu aujourd’hui');
+  if (!palais.normalizeDays(row.palais_days).includes(today)) {
+    throw ApiError.conflict(`Inscrit pour : ${palais.daysShort(row.palais_days)}. Pas pour aujourd’hui.`);
+  }
+  const checkins = { ...(row.palais_checkins || {}) };
+  const already = Boolean(checkins[today]);
+  if (!already) {
+    checkins[today] = new Date().toISOString();
+    row.palais_checkins = checkins;
+    await row.save();
+  }
+  return { ...palaisView(row), already, id: row.id };
+}
+
 module.exports = {
+  palaisPass,
+  palaisCheckin,
   isWaitlisted,
   particulierCapacity,
   list,

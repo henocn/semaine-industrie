@@ -104,6 +104,15 @@ function buildEmail({
   return { subject, text, html, attachments };
 }
 
+/* Une ligne par journée du Palais choisie : jour à gauche, rendez-vous, salle et horaire à droite. */
+function palaisDetails(days) {
+  const palais = require('../modules/participations/palais');
+  return palais.normalizeDays(days).map((n) => {
+    const day = palais.dayInfo(n);
+    return [day.label, `${day.title}, ${day.place.toLowerCase()}, ${day.hours}`];
+  });
+}
+
 /* Modèles d'e-mails ; `site` permet de viser l'adresse de production depuis un test. */
 function emails(site = env.PUBLIC_APP_URL) {
   const base = String(site).replace(/\/$/, '');
@@ -175,6 +184,27 @@ function emails(site = env.PUBLIC_APP_URL) {
       code,
       card: { png: cardPng, fileCode: code },
       outro: ['Votre carte QR est jointe à ce message : présentez-la à l’entrée des sites.'],
+      button: space(code),
+    }),
+
+    /* Journées du Palais : inscription reçue, avec les journées choisies. */
+    palaisReceived: ({ name, code, days }) => buildEmail({
+      subject: 'Journées au Palais : inscription en cours de validation',
+      intro: [`Nous avons bien reçu l’inscription de **${name}** aux journées du Palais des Congrès de Lomé. Elle est **en cours de validation** par l’équipe d’organisation.`],
+      code,
+      details: palaisDetails(days),
+      outro: [FOLLOW, 'Vous recevrez une réponse par e-mail et sur WhatsApp.'],
+      button: space(code),
+    }),
+
+    /* Journées du Palais : inscription acceptée, avec la carte QR. */
+    palaisApproved: ({ name, code, cardPng, days }) => buildEmail({
+      subject: 'Journées au Palais : inscription acceptée',
+      intro: [`L’inscription de **${name}** aux journées du Palais des Congrès de Lomé a été **acceptée**.`],
+      code,
+      details: palaisDetails(days),
+      card: { png: cardPng, fileCode: code },
+      outro: ['Votre carte QR est jointe à ce message : présentez-la à l’accueil du Palais des Congrès, chaque journée choisie.'],
       button: space(code),
     }),
 
