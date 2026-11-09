@@ -66,6 +66,44 @@ function ToProcess({ o }: { o: Overview }) {
   )
 }
 
+/* Couleurs de statut de la barre de répartition (validées : contraste et daltonisme, avec les chiffres du tableau à côté). */
+const STATUS_COLORS = [
+  { key: 'approved', label: 'Acceptées', color: '#00a85a' },
+  { key: 'pending', label: 'En attente', color: '#e0a800' },
+  { key: 'rejected', label: 'Refusées', color: '#c2410c' },
+] as const
+
+/* Légende de la barre de répartition. */
+function StatusLegend() {
+  return (
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink/60">
+      {STATUS_COLORS.map((s) => (
+        <span key={s.key} className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: s.color }} aria-hidden />
+          {s.label}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/* Barre de répartition d'un formulaire : acceptées, en attente, refusées (2px de blanc entre les parts). */
+function StatusBar({ c }: { c: { total: number; pending: number; approved: number; rejected: number } }) {
+  if (!c.total) return <div className="h-2.5 rounded-[4px] bg-black/[0.06]" aria-hidden />
+  return (
+    <div className="flex h-2.5 gap-[2px]" role="img" aria-label={STATUS_COLORS.map((s) => `${s.label} : ${c[s.key]}`).join(', ')}>
+      {STATUS_COLORS.filter((s) => c[s.key] > 0).map((s) => (
+        <div
+          key={s.key}
+          title={`${s.label} : ${fmt(c[s.key])}`}
+          className="first:rounded-l-[4px] last:rounded-r-[4px]"
+          style={{ flexGrow: c[s.key], flexBasis: 0, background: s.color }}
+        />
+      ))}
+    </div>
+  )
+}
+
 /* Inscriptions par formulaire et par statut. */
 function RegistrationsTable({ o }: { o: Overview }) {
   const p = o.participations
@@ -78,16 +116,18 @@ function RegistrationsTable({ o }: { o: Overview }) {
   ]
   return (
     <section className="orga-panel !p-0 overflow-x-auto">
-      <div className="border-b border-black px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black px-4 py-3">
         <h2 className="text-[15px] font-semibold text-forest">Inscriptions par formulaire</h2>
+        <StatusLegend />
       </div>
-      <table className="orga-table min-w-[620px]">
+      <table className="orga-table min-w-[760px]">
         <thead>
           <tr>
             <th>Formulaire</th>
+            <th className="w-48">Répartition</th>
             <th className="w-24 text-right">Total</th>
-            <th className="w-28 text-right">En attente</th>
             <th className="w-28 text-right">Acceptées</th>
+            <th className="w-28 text-right">En attente</th>
             <th className="w-24 text-right">Refusées</th>
           </tr>
         </thead>
@@ -98,9 +138,10 @@ function RegistrationsTable({ o }: { o: Overview }) {
                 <Link to={r.to} className="font-medium text-forest hover:underline">{r.label}</Link>
                 {r.note && <span className="block text-[12px] text-ink/50">{r.note}</span>}
               </td>
+              <td className="align-middle"><StatusBar c={r.c} /></td>
               <td className="text-right font-bold tabular-nums text-forest">{fmt(r.c.total)}</td>
-              <td className={`text-right tabular-nums ${r.c.pending ? 'font-semibold text-ink' : 'text-ink/35'}`}>{fmt(r.c.pending)}</td>
               <td className="text-right tabular-nums text-ink">{fmt(r.c.approved)}</td>
+              <td className={`text-right tabular-nums ${r.c.pending ? 'font-semibold text-ink' : 'text-ink/35'}`}>{fmt(r.c.pending)}</td>
               <td className="text-right tabular-nums text-ink/60">{fmt(r.c.rejected)}</td>
             </tr>
           ))}
