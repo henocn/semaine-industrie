@@ -33,9 +33,9 @@ function statusLabel(status: Participation['status'], waitlisted = false) {
 
 /* Libellé de chaque onglet. */
 const KIND_TABS: { key: ParticipationKind; label: string }[] = [
-  { key: 'ecole', label: 'Écoles' },
-  { key: 'particulier', label: 'Particuliers' },
-  { key: 'palais', label: 'Journées au Palais' },
+  { key: 'ecole', label: 'Visites : Écoles' },
+  { key: 'particulier', label: 'Visites : Particuliers' },
+  { key: 'palais', label: 'Palais des Congrès' },
 ]
 
 /* Journées du Palais choisies, triées. */
@@ -347,7 +347,7 @@ export default function OrgaParticipationsPage() {
   if (isPalais) addLabel = 'Ajouter une inscription'
   let exportName = { filename: 'inscriptions-particuliers', sheet: 'Particuliers' }
   if (isSchool) exportName = { filename: 'inscriptions-ecoles', sheet: 'Écoles' }
-  if (isPalais) exportName = { filename: 'inscriptions-journees-palais', sheet: 'Journées au Palais' }
+  if (isPalais) exportName = { filename: 'inscriptions-journees-palais', sheet: 'Palais des Congrès' }
 
   return (
     <OrgaShell

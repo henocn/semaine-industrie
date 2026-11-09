@@ -79,8 +79,8 @@ export default function InscriptionGroupPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            title="Participer en tant qu’école / université"
-            lead="Écoles, centres de formation et universités : inscrivez votre groupe. Après validation, le QR du jour J suit."
+            title="Visiter les industries avec votre école ou université"
+            lead="Écoles, centres de formation et universités : inscrivez votre groupe pour visiter les usines labellisées « Usine ouverte ». Après validation, le QR de visite suit."
           />
           <VisitDaysNote audience="public" />
           <picture className="contents">
@@ -98,7 +98,7 @@ export default function InscriptionGroupPage() {
 
         {sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
-            <p className="text-xl text-forest">Merci. Votre inscription est enregistrée.</p>
+            <p className="text-xl text-forest">Merci. L’inscription de votre établissement aux visites d’industries est enregistrée.</p>
             <TrackingCodeNotice code={trackingCode} />
           </div>
         ) : (

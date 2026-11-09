@@ -190,7 +190,7 @@ function PalaisPassage({ code }: { code: string }) {
     <main className="py-16 sm:py-24">
       <Seo
         title="Accueil au Palais"
-        description="Contrôle d'une inscription aux journées du Palais des Congrès."
+        description="Contrôle d'une inscription aux rendez-vous au Palais des Congrès."
         path={`/passage/${code}`}
         noIndex
       />

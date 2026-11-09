@@ -379,7 +379,7 @@ function participationSpace(row, waitlisted = false) {
     name: row.name,
     status: waitlisted ? 'waitlist' : row.status,
     rows: [
-      ['Journées au Palais', row.kind === 'palais' ? palais.daysShort(row.palais_days) : null],
+      ['Palais des Congrès', row.kind === 'palais' ? palais.daysShort(row.palais_days) : null],
       ['Ville', row.city],
       ['Effectif déclaré', row.headcount ? `${row.headcount} personnes` : null],
       ['E-mail', maskEmail(row.email)],

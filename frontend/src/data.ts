@@ -146,15 +146,15 @@ export const FAQ = [
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie en tant que particulier, école ou université ?',
-    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « En tant que particulier » pour une inscription individuelle.\n• « En tant qu’école / université » pour inscrire un groupe.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
+    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\n• « Visites d’industries : écoles / universités » pour inscrire un groupe.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
   },
   {
-    q: 'Comment assister aux journées du Palais des Congrès ?',
-    a: 'Dans la rubrique « Participer », choisissez « Journées au Palais », puis cochez une ou plusieurs journées : l’ouverture le lundi 16 novembre, le forum des métiers le mardi 17, ou le panel sur les femmes dans l’industrie le mercredi 18.\nVous recevez un seul code de suivi et, après validation, un seul QR valable pour les journées choisies, à présenter à l’accueil du Palais des Congrès de Lomé.',
+    q: 'Comment participer aux rendez-vous au Palais des Congrès ?',
+    a: 'Dans la rubrique « Participer », choisissez « Participation au Palais des Congrès », puis cochez une ou plusieurs journées : l’ouverture le lundi 16 novembre, le forum des métiers le mardi 17, ou le panel sur les femmes dans l’industrie le mercredi 18.\nVous recevez un seul code de suivi et, après validation, un seul QR valable pour les journées choisies, à présenter à l’accueil du Palais des Congrès de Lomé.',
   },
   {
     q: 'Comment demander un label et suivre l’évolution de sa demande ?',
-    a: 'Pour demander un label, rendez-vous dans la rubrique « Participer », puis sélectionnez « Demande de label : industries ».\nDès l’envoi de votre demande, un code de suivi vous est remis. Ce code vous permet de suivre votre dossier depuis la rubrique « Mon espace » du site ou sur WhatsApp, en sélectionnant « Suivi de participation ».',
+    a: 'Pour demander un label, rendez-vous dans la rubrique « Participer », puis sélectionnez « Demande de labels pour les industries ».\nDès l’envoi de votre demande, un code de suivi vous est remis. Ce code vous permet de suivre votre dossier depuis la rubrique « Mon espace » du site ou sur WhatsApp, en sélectionnant « Suivi de participation ».',
   },
   {
     q: 'Où consulter le programme complet et obtenir des informations complémentaires ?',

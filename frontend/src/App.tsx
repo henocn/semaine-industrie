@@ -33,6 +33,7 @@ import OrgaUsersPage from './pages/OrgaUsersPage'
 import OrgaVisitsPage from './pages/OrgaVisitsPage'
 import PassagePage from './pages/PassagePage'
 import PrivacyPage from './pages/PrivacyPage'
+import ReglesPage from './pages/ReglesPage'
 import ProgrammePage from './pages/ProgrammePage'
 // import VotePage from './pages/VotePage'
 import VueParVousPage from './pages/VueParVousPage'
@@ -90,6 +91,7 @@ export function AppRoutes() {
             <Route path="/vue-par-vous" element={<VueParVousPage />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/confidentialite" element={<PrivacyPage />} />
+            <Route path="/regles-de-participation" element={<ReglesPage />} />
             <Route path="/o/:slug" element={<OrganizationPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />

@@ -10,7 +10,7 @@ import { publicSeo } from '../lib/seo'
 const TYPE_LABEL: Record<EspaceType, string> = {
   ecole: 'École / université',
   particulier: 'Particulier',
-  palais: 'Journées au Palais',
+  palais: 'Participation au Palais des Congrès',
   industrie: 'Industrie',
   affaires: 'Rencontres d’affaires',
 }

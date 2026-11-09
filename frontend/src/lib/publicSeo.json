@@ -16,18 +16,18 @@
   },
   {
     "path": "/inscription-groupe",
-    "title": "Inscrire une école ou une université",
-    "description": "Écoles, centres de formation et universités du Togo : inscrivez votre groupe aux visites d’usines de la Semaine de l’industrie 2026 et recevez votre QR de participation."
+    "title": "Visites d’industries pour les écoles et universités",
+    "description": "Écoles, centres de formation et universités du Togo : inscrivez votre groupe aux visites d’usines de la Semaine de l’industrie 2026 au Togo, du 16 au 20 novembre, et recevez votre QR de visite."
   },
   {
     "path": "/inscription-particulier",
-    "title": "S’inscrire en tant que particulier",
-    "description": "Inscrivez-vous à titre personnel à la Semaine de l’industrie 2026 au Togo : visites d’usines et rendez-vous au Palais des Congrès de Lomé, avec votre QR de participation."
+    "title": "Visiter les industries en tant que particulier",
+    "description": "Inscrivez-vous à titre personnel aux visites d’usines de la Semaine de l’industrie 2026 au Togo, du 16 au 20 novembre, et recevez votre QR de visite."
   },
   {
     "path": "/journees-au-palais",
-    "title": "Assister aux journées du Palais des Congrès",
-    "description": "Inscrivez-vous aux journées de la Semaine de l’industrie 2026 au Palais des Congrès de Lomé : ouverture le 16 novembre, forum des métiers le 17, femmes dans l’industrie le 18."
+    "title": "Assister aux conférences et panels du Palais des Congrès de Lomé",
+    "description": "Semaine de l’industrie 2026 : inscrivez-vous aux rendez-vous au Palais des Congrès de Lomé, l’ouverture le 16 novembre, le forum des métiers le 17, les femmes dans l’industrie le 18."
   },
   {
     "path": "/mon-espace",
@@ -54,6 +54,11 @@
     "path": "/faq",
     "title": "Questions fréquentes",
     "description": "Dates, lieux, label, inscriptions, visites d’usines et concours vidéo : les questions fréquentes de la Semaine de l’industrie 2026 au Togo."
+  },
+  {
+    "path": "/regles-de-participation",
+    "title": "Règles de participation",
+    "description": "Règles de participation à la Semaine de l’industrie 2026 au Togo : inscriptions, codes de suivi et QR, conférences au Palais des Congrès de Lomé et visites d’industries."
   },
   {
     "path": "/confidentialite",

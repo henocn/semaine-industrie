@@ -42,7 +42,7 @@ export default function PrivacyPage() {
       <div className={`${WRAP} max-w-2xl space-y-10 text-[15px] leading-relaxed text-ink/80`}>
         <div className="animate-rise">
           <SectionHeader level={1} title="Politique de confidentialité" />
-          <p className="mt-3 text-[14px] text-ink/60">Dernière mise à jour : 5 novembre 2026</p>
+          <p className="mt-3 text-[14px] text-ink/60">Dernière mise à jour : 9 novembre 2026</p>
           <p className="mt-4">
             Cette politique explique quelles données personnelles sont collectées sur semaineindustrie.tg
             et par le bot WhatsApp de la Semaine de l&apos;industrie 2026, à quoi elles servent, qui y a
@@ -63,7 +63,8 @@ export default function PrivacyPage() {
           <Bullets
             items={[
               <><strong>Inscription d&apos;une école ou d&apos;une université :</strong> nom de l&apos;établissement, e-mail, téléphone, position sur la carte, effectif souhaité, spécialités ou filières. Aucun nom d&apos;élève n&apos;est demandé.</>,
-              <><strong>Inscription d&apos;un particulier :</strong> nom et prénom, e-mail, téléphone, ville et quartier, et note éventuelle.</>,
+              <><strong>Inscription d&apos;un particulier aux visites d&apos;industries :</strong> nom et prénom, e-mail, téléphone, ville et quartier, et note éventuelle.</>,
+              <><strong>Inscription aux conférences du Palais des Congrès :</strong> nom et prénom, e-mail, téléphone, journées choisies, ce qui vous amène, et date et heure des entrées enregistrées à l&apos;accueil.</>,
               <><strong>Demande de label d&apos;une industrie :</strong> nom et secteur de la structure, position sur la carte, photos, e-mail, téléphone, capacité d&apos;accueil, produits, description et règles de sécurité.</>,
               <><strong>Rencontres d&apos;affaires :</strong> profil, nom, e-mail, téléphone, secteur d&apos;activité et notes.</>,
               <><strong>Formulaire de contact :</strong> nom, e-mail et message, transmis par e-mail à l&apos;équipe d&apos;organisation.</>,

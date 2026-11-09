@@ -640,7 +640,7 @@ function participateBody() {
     '',
     `3. *Particulier* : étudiant ou passionné de l'industrie, quel que soit votre domaine, inscrivez-vous et participez sur ${site}/inscription-particulier`,
     '',
-    `4. *Journées au Palais des Congrès* : assistez à l'ouverture (lundi 16), au forum des métiers (mardi 17) ou au panel sur les femmes dans l'industrie (mercredi 18) sur ${site}/journees-au-palais`,
+    `4. *Participation au Palais des Congrès* : assistez à l'ouverture (lundi 16), au forum des métiers (mardi 17) ou au panel sur les femmes dans l'industrie (mercredi 18) sur ${site}/journees-au-palais`,
     '',
     // Rencontres d'affaires retirées du public (programme validé) ; les inscrits existants gardent leur code AF.
     // `4. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
@@ -969,7 +969,7 @@ async function replyPassportRecap(from, passport, phoneNumberId) {
 /* Formate le récap passeport école ou particulier. */
 function formatPassportRecap(passport) {
   let kind = passport.kind === 'group' ? 'École' : 'Particulier';
-  if (String(passport.code || '').startsWith('JP-')) kind = 'Journées au Palais';
+  if (String(passport.code || '').startsWith('JP-')) kind = 'Palais des Congrès';
   const url = `${SITE()}/mon-espace?code=${passport.code}`;
   return [
     'Récapitulatif',
@@ -1610,7 +1610,7 @@ async function notifyLabelRejected(request) {
 function palaisFallback(participation) {
   if (participation?.kind !== 'palais') return [];
   const palais = require('../participations/palais');
-  return [`Journées au Palais des Congrès : ${palais.daysShort(participation.palais_days)}.`];
+  return [`Palais des Congrès : ${palais.daysShort(participation.palais_days)}.`];
 }
 
 /* Accusé de réception d'une inscription école / centre / université. */

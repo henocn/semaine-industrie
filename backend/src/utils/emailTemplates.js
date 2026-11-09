@@ -189,8 +189,8 @@ function emails(site = env.PUBLIC_APP_URL) {
 
     /* Journées du Palais : inscription reçue, avec les journées choisies. */
     palaisReceived: ({ name, code, days }) => buildEmail({
-      subject: 'Journées au Palais : inscription en cours de validation',
-      intro: [`Nous avons bien reçu l’inscription de **${name}** aux journées du Palais des Congrès de Lomé. Elle est **en cours de validation** par l’équipe d’organisation.`],
+      subject: 'Palais des Congrès : inscription en cours de validation',
+      intro: [`Nous avons bien reçu l’inscription de **${name}** aux rendez-vous de la Semaine de l’industrie au Palais des Congrès de Lomé. Elle est **en cours de validation** par l’équipe d’organisation.`],
       code,
       details: palaisDetails(days),
       outro: [FOLLOW, 'Vous recevrez une réponse par e-mail et sur WhatsApp.'],
@@ -199,8 +199,8 @@ function emails(site = env.PUBLIC_APP_URL) {
 
     /* Journées du Palais : inscription acceptée, avec la carte QR. */
     palaisApproved: ({ name, code, cardPng, days }) => buildEmail({
-      subject: 'Journées au Palais : inscription acceptée',
-      intro: [`L’inscription de **${name}** aux journées du Palais des Congrès de Lomé a été **acceptée**.`],
+      subject: 'Palais des Congrès : inscription acceptée',
+      intro: [`L’inscription de **${name}** aux rendez-vous de la Semaine de l’industrie au Palais des Congrès de Lomé a été **acceptée**.`],
       code,
       details: palaisDetails(days),
       card: { png: cardPng, fileCode: code },

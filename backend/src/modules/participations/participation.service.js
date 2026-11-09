@@ -232,7 +232,7 @@ async function remove(id) {
 async function findPalaisByCode(rawCode) {
   const code = trackingService.normalizeCode(rawCode);
   const row = code ? await Participation.findOne({ where: { kind: 'palais', tracking_code: code } }) : null;
-  if (!row) throw ApiError.notFound('Aucune inscription aux journées du Palais ne correspond à ce code');
+  if (!row) throw ApiError.notFound('Aucune inscription au Palais des Congrès ne correspond à ce code');
   return row;
 }
 

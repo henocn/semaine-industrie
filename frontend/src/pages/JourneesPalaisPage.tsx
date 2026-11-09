@@ -81,12 +81,11 @@ export default function JourneesPalaisPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            title="Assister aux journées du Palais des Congrès"
-            lead="Trois rendez-vous au Palais des Congrès de Lomé, du lundi 16 au mercredi 18 novembre. Cochez une ou plusieurs journées : vous recevez un seul code et un seul QR, valable pour les journées choisies."
+            title="Assister aux conférences et panels du Palais des Congrès"
+            lead="Du lundi 16 au mercredi 18 novembre, la Semaine de l’industrie tient ses rendez-vous au Palais des Congrès de Lomé. Cochez une ou plusieurs journées : vous recevez un seul code et un seul QR, valable pour les journées choisies."
           />
           <ul className="mt-6 space-y-2 border-t border-forest/15 pt-5 text-[15px] leading-relaxed text-ink/75">
-            <li>Votre QR arrive par e-mail et sur WhatsApp après validation par l’équipe d’organisation.</li>
-            <li>Présentez-le à l’accueil du Palais : il indique les journées pour lesquelles vous êtes inscrit.</li>
+            <li className="text-red-700">Le code de cette inscription est différent de celui que vous avez reçu si vous êtes aussi inscrit aux visites d’industries ou aux rencontres d’affaires.</li>
             <li>Les places sont limitées.</li>
           </ul>
         </div>
