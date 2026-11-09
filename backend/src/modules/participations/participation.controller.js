@@ -51,6 +51,34 @@ async function capacity(req, res, next) {
   }
 }
 
+/* Inscription aux journées du Palais lue depuis le QR (public). */
+async function palaisPass(req, res, next) {
+  try {
+    return ApiResponse.success(res, await service.palaisPass(req.params.code));
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Enregistre l'entrée du jour au Palais (accueil connecté). */
+async function palaisCheckin(req, res, next) {
+  try {
+    const { id, ...data } = await service.palaisCheckin(req.params.code);
+    if (!data.already) {
+      await audit(req, {
+        action: 'update',
+        entityType: 'participation',
+        entityId: id,
+        summary: `Entrée au Palais le ${data.today} novembre : « ${data.name} » (${data.code})`,
+      });
+      emitParticipation('update', { id, name: data.name, status: data.status, kind: 'palais' });
+    }
+    return ApiResponse.success(res, data, data.already ? 'Entrée déjà enregistrée' : 'Entrée enregistrée');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Crée une participation. */
 async function create(req, res, next) {
   try {
@@ -138,6 +166,8 @@ async function remove(req, res, next) {
 
 module.exports = {
   capacity,
+  palaisPass,
+  palaisCheckin,
   list,
   getOne,
   create,

@@ -8,11 +8,13 @@ import { isBackofficeHost } from './lib/seo'
 import { peekOrgaUser } from './api/auth'
 // Rencontres d'affaires et vote retirés du public (programme validé) ; pages conservées pour une reprise éventuelle.
 // import BusinessRegisterPage from './pages/BusinessRegisterPage'
+import ConcoursVideoPage from './pages/ConcoursVideoPage'
 import FaqPage from './pages/FaqPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
 import InscriptionGroupPage from './pages/InscriptionGroupPage'
 import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
+import JourneesPalaisPage from './pages/JourneesPalaisPage'
 import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
@@ -32,6 +34,7 @@ import OrgaUsersPage from './pages/OrgaUsersPage'
 import OrgaVisitsPage from './pages/OrgaVisitsPage'
 import PassagePage from './pages/PassagePage'
 import PrivacyPage from './pages/PrivacyPage'
+import ReglesPage from './pages/ReglesPage'
 import ProgrammePage from './pages/ProgrammePage'
 // import VotePage from './pages/VotePage'
 import VueParVousPage from './pages/VueParVousPage'
@@ -75,6 +78,7 @@ export function AppRoutes() {
             <Route path="/inscription" element={<Navigate to="/inscription-groupe/" replace />} />
             <Route path="/inscription-groupe" element={<InscriptionGroupPage />} />
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
+            <Route path="/journees-au-palais" element={<JourneesPalaisPage />} />
             <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />
             <Route path="/mon-espace" element={<MonEspacePage />} />
             {/* <Route path="/affaires" element={<BusinessRegisterPage />} /> */}
@@ -86,8 +90,10 @@ export function AppRoutes() {
             {/* <Route path="/vote" element={<VotePage />} /> */}
             <Route path="/questionnaire" element={<SurveyRedirect />} />
             <Route path="/vue-par-vous" element={<VueParVousPage />} />
+            <Route path="/concours-video" element={<ConcoursVideoPage />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/confidentialite" element={<PrivacyPage />} />
+            <Route path="/regles-de-participation" element={<ReglesPage />} />
             <Route path="/o/:slug" element={<OrganizationPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />

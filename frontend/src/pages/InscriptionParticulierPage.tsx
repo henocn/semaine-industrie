@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { getParticulierCapacity, registerParticipation } from '../api/participations'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
 import { VisitDaysNote } from '../components/VisitDaysNote'
@@ -64,10 +65,13 @@ export default function InscriptionParticulierPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            title="Participer en tant que particulier"
-            lead="Étudiant, parent, jeune diplômé ou curieux de l'industrie : inscrivez-vous. Votre QR arrive par e-mail et sur WhatsApp après validation."
+            title="Visiter les industries en tant que particulier"
+            lead="Étudiant, parent, jeune diplômé ou curieux de l'industrie : inscrivez-vous pour visiter les usines labellisées « Usine ouverte ». Votre QR de visite arrive par e-mail et sur WhatsApp après validation."
           />
           <VisitDaysNote audience="public" />
+          <p className="mt-3 text-[15px] leading-relaxed text-red-700">
+            Le code de cette inscription est différent de celui que vous avez reçu si vous êtes aussi inscrit aux conférences du Palais des Congrès ou aux rencontres d’affaires.
+          </p>
           <picture className="contents">
             <source srcSet="/images/inscription-particulier.webp" type="image/webp" />
             <img
@@ -84,11 +88,20 @@ export default function InscriptionParticulierPage() {
         {sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
             <p className="text-xl text-forest">
-              {waitlisted ? 'Merci. Votre inscription est enregistrée en liste d’attente.' : 'Merci. Votre inscription est enregistrée.'}
+              {waitlisted ? 'Merci. Votre inscription aux visites est enregistrée en liste d’attente.' : 'Merci. Votre inscription aux visites d’industries est enregistrée.'}
             </p>
             {waitlisted && (
               <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
                 Toutes les places prévues pour les particuliers sont déjà attribuées. Nous vous préviendrons par e-mail et sur WhatsApp dès qu’une place se libère.
+              </p>
+            )}
+            {waitlisted && (
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
+                En attendant, vous pouvez participer aux{' '}
+                <Link to="/journees-au-palais/" className="font-semibold text-forest underline underline-offset-4">
+                  rendez-vous au Palais des Congrès
+                </Link>
+                , du 16 au 18 novembre.
               </p>
             )}
             <TrackingCodeNotice code={trackingCode} />
@@ -117,6 +130,11 @@ export default function InscriptionParticulierPage() {
             {full && (
               <p className="sm:col-span-2 text-[15px] leading-relaxed text-red-700">
                 Les places prévues pour les particuliers sont toutes attribuées. Vous pouvez quand même vous inscrire : votre demande sera placée en liste d’attente et nous vous préviendrons dès qu’une place se libère.
+                Vous pouvez aussi participer aux{' '}
+                <Link to="/journees-au-palais/" className="font-semibold underline underline-offset-4">
+                  rendez-vous au Palais des Congrès
+                </Link>
+                .
               </p>
             )}
             {error && <p className="sm:col-span-2 text-sm text-red-700">{error}</p>}

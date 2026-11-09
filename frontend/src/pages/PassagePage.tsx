@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { getPassport, recordPassage, type Passport } from '../api/passports'
+import { checkinPalais, getPalaisPass, type PalaisPass } from '../api/participations'
+import { peekOrgaUser } from '../api/auth'
 import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { Button } from '../components/ui/Button'
@@ -29,10 +31,16 @@ function storeCode(code: string) {
   }
 }
 
-/* Page ouverte par le QR visiteur : l'industrie confirme le passage. */
+/* Page ouverte par le QR : accueil du Palais pour un code JP-, sinon l'industrie confirme le passage. */
 export default function PassagePage() {
   const { code = '' } = useParams()
   const visitorCode = code.trim().toUpperCase()
+  if (visitorCode.startsWith('JP-')) return <PalaisPassage code={visitorCode} />
+  return <IndustryPassage visitorCode={visitorCode} />
+}
+
+/* Passage chez une industrie : elle saisit son code de suivi. */
+function IndustryPassage({ visitorCode }: { visitorCode: string }) {
   const [passport, setPassport] = useState<Passport | null>(null)
   const [industryCode, setIndustryCode] = useState(readStoredCode)
   const [error, setError] = useState<string | null>(null)
@@ -125,6 +133,121 @@ export default function PassagePage() {
               {busy ? 'Validation…' : 'OK'}
             </Button>
           </form>
+        )}
+      </div>
+    </main>
+  )
+}
+
+/* Heure d'entrée à Lomé (ex. 08:42). */
+function entryTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Lome' })
+}
+
+/* Verdict affiché en grand à l'accueil : couleur et texte. */
+function palaisVerdict(pass: PalaisPass) {
+  if (pass.status !== 'approved') return { tone: 'text-red-700', text: 'Inscription pas encore validée' }
+  if (pass.today === null) return { tone: 'text-ink/70', text: 'Aucune journée du Palais aujourd’hui' }
+  if (!pass.expected_today) return { tone: 'text-red-700', text: 'Pas inscrit pour aujourd’hui' }
+  if (pass.checked_in_today) return { tone: 'text-forest', text: 'Attendu aujourd’hui · entrée déjà enregistrée' }
+  return { tone: 'text-forest', text: 'Attendu aujourd’hui' }
+}
+
+/* Accueil du Palais : la personne, ses journées, et l'entrée du jour pour l'équipe connectée. */
+function PalaisPassage({ code }: { code: string }) {
+  const [pass, setPass] = useState<PalaisPass | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  /* Page non pré-rendue (adresse dynamique) : la session locale se lit dès le premier rendu. */
+  const [staff] = useState(() => typeof window !== 'undefined' && Boolean(peekOrgaUser()))
+
+  useEffect(() => {
+    getPalaisPass(code)
+      .then(setPass)
+      .catch((err) => setError(err instanceof Error ? err.message : 'QR introuvable'))
+  }, [code])
+
+  /* Enregistre l'entrée du jour. */
+  async function onCheckin() {
+    setBusy(true)
+    setError(null)
+    try {
+      const updated = await checkinPalais(code)
+      setPass(updated)
+      setNotice(updated.already ? 'Entrée déjà enregistrée aujourd’hui.' : 'Entrée enregistrée.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Enregistrement impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const verdict = pass ? palaisVerdict(pass) : null
+  const canCheckin = Boolean(pass && staff && pass.status === 'approved' && pass.expected_today && !pass.checked_in_today)
+
+  return (
+    <main className="py-16 sm:py-24">
+      <Seo
+        title="Accueil au Palais"
+        description="Contrôle d'une inscription aux rendez-vous au Palais des Congrès."
+        path={`/passage/${code}`}
+        noIndex
+      />
+      <div className={`${WRAP} max-w-lg`}>
+        <SectionHeader level={1} title="Accueil au Palais des Congrès" />
+
+        {error && <p role="alert" className="mt-8 text-[15px] font-medium text-red-700">{error}</p>}
+
+        {pass && verdict && (
+          <div className="mt-8 space-y-6">
+            <div>
+              <p className="text-[18px] font-semibold text-forest">{pass.name}</p>
+              <p className="mt-0.5 font-mono text-[14px] text-ink/55">{pass.code}</p>
+              <p className={`mt-4 text-[20px] font-semibold ${verdict.tone}`}>{verdict.text}</p>
+            </div>
+
+            <ul className="divide-y divide-forest/10 border-y border-forest/10">
+              {pass.days.map((day) => (
+                <li
+                  key={day.n}
+                  className={`flex items-start justify-between gap-4 py-3 ${day.n === pass.today ? 'font-semibold' : ''}`}
+                >
+                  <span className={day.registered ? 'text-forest' : 'text-ink/40'}>
+                    {day.label}
+                    <span className="block text-[13px] font-normal">{day.title} · {day.place}</span>
+                  </span>
+                  <span className={`shrink-0 text-right text-[14px] ${day.registered ? 'text-forest' : 'text-ink/40'}`}>
+                    {day.registered ? 'Inscrit' : 'Non inscrit'}
+                    {day.checked_in_at && (
+                      <span className="block text-[13px] font-normal">Entrée à {entryTime(day.checked_in_at)}</span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            {notice && <p className="text-[15px] font-semibold text-forest">{notice}</p>}
+
+            {canCheckin && (
+              <Button type="button" disabled={busy} onClick={() => void onCheckin()}>
+                {busy ? 'Enregistrement…' : 'Enregistrer l’entrée'}
+              </Button>
+            )}
+
+            {!staff && (
+              <p className="text-[14px] text-ink/60">
+                Équipe d’accueil :{' '}
+                <Link
+                  to={`/login?retour=${encodeURIComponent(`/passage/${pass.code}`)}`}
+                  className="font-semibold text-forest underline underline-offset-4"
+                >
+                  connectez-vous
+                </Link>{' '}
+                pour enregistrer les entrées.
+              </p>
+            )}
+          </div>
         )}
       </div>
     </main>

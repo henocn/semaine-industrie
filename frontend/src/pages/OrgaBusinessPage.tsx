@@ -20,6 +20,9 @@ import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 import { PhoneField } from '../components/ui/PhoneField'
 import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSelection'
 import { useRowSelection } from '../lib/useRowSelection'
+import { useConfirm } from '../lib/useConfirm'
+import { SortControl } from '../components/orga/SortControl'
+import { useTableSort, type SortAccessors } from '../lib/useTableSort'
 import { excelDate, type ExcelColumn } from '../lib/excel'
 
 const field =
@@ -61,6 +64,13 @@ function meetingParticipantIds(m: BusinessMeeting) {
     : ([m.participantA?.id, m.participantB?.id].filter(Boolean) as string[])
 }
 
+/* Tri des participants : date d'inscription, nom, puis statut (en attente, accepté, refusé). */
+const PEOPLE_SORT: SortAccessors<BusinessParticipant> = {
+  date: (p) => p.createdAt,
+  name: (p) => businessParticipantLabel(p),
+  status: (p) => ({ pending: 0, approved: 1, rejected: 2 } as Record<string, number>)[p.status] ?? 3,
+}
+
 /* Backoffice : participants B2B + rendez-vous. */
 export default function OrgaBusinessPage() {
   const [participants, setParticipants] = useState<BusinessParticipant[]>([])
@@ -70,6 +80,7 @@ export default function OrgaBusinessPage() {
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | ''>('')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const { confirm, modal } = useConfirm()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [showAddMeeting, setShowAddMeeting] = useState(false)
   const [showAddPerson, setShowAddPerson] = useState(false)
@@ -146,7 +157,8 @@ export default function OrgaBusinessPage() {
     })
   }, [meetings, query, approvedPool, participants])
 
-  const pickedPeople = useRowSelection(filteredParticipants)
+  const peopleSort = useTableSort(filteredParticipants, PEOPLE_SORT, `${tab}-${filter}`)
+  const pickedPeople = useRowSelection(peopleSort.sorted)
   const pickedMeetings = useRowSelection(filteredMeetings)
 
   /* Colonnes des exports Excel (personnes, rendez-vous). */
@@ -206,6 +218,17 @@ export default function OrgaBusinessPage() {
 
   /* Approuve / refuse. */
   async function onReview(id: string, status: 'approved' | 'rejected') {
+    const person = participants.find((x) => x.id === id)
+    const name = person ? businessParticipantLabel(person) : 'Ce participant'
+    const ok = status === 'approved'
+      ? await confirm({ title: 'Accepter l’inscription ?', message: `${name} sera prévenu par e-mail et sur WhatsApp.`, confirmLabel: 'Accepter' })
+      : await confirm({
+        title: 'Refuser l’inscription ?',
+        message: `${name} sera prévenu par e-mail et sur WhatsApp. Il ne restera ensuite que la suppression.`,
+        confirmLabel: 'Refuser',
+        danger: true,
+      })
+    if (!ok) return
     setBusyId(id)
     try {
       await reviewParticipant(id, status)
@@ -244,7 +267,12 @@ export default function OrgaBusinessPage() {
 
   /* Supprime un participant (refusé côté serveur s'il a des rendez-vous). */
   async function onDeletePerson(p: BusinessParticipant) {
-    if (!window.confirm(`Supprimer ${businessParticipantLabel(p)} ?`)) return
+    if (!(await confirm({
+      title: 'Supprimer ce participant ?',
+      message: `${businessParticipantLabel(p)} sera retiré. Cette action est définitive.`,
+      confirmLabel: 'Supprimer',
+      danger: true,
+    }))) return
     setBusyId(p.id)
     setError(null)
     try {
@@ -429,6 +457,7 @@ export default function OrgaBusinessPage() {
         </div>
       }
     >
+      {modal}
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <div className="mb-4 flex gap-0 border border-black">
@@ -505,7 +534,7 @@ export default function OrgaBusinessPage() {
               <h2 className="text-[15px] font-semibold text-forest">
                 {filteredParticipants.length} personne{filteredParticipants.length > 1 ? 's' : ''}
               </h2>
-              <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
+              <SortControl order={peopleSort.order} onChange={peopleSort.setOrder} />
             </div>
             <table className="orga-table min-w-[720px]">
               <thead>
@@ -523,7 +552,7 @@ export default function OrgaBusinessPage() {
                 {filteredParticipants.length === 0 && (
                   <tr><td colSpan={7} className="py-10 text-ink/40">Aucune personne</td></tr>
                 )}
-                {filteredParticipants.map((p) => {
+                {peopleSort.sorted.map((p) => {
                   const busy = busyId === p.id
                   return (
                     <Fragment key={p.id}>
@@ -565,9 +594,11 @@ export default function OrgaBusinessPage() {
                                 </IconButton>
                               </>
                             )}
-                            <IconButton label="Modifier" disabled={busy} onClick={() => editParticipant(p.id)}>
-                              <IconEdit />
-                            </IconButton>
+                            {p.status !== 'rejected' && (
+                              <IconButton label="Modifier" disabled={busy} onClick={() => editParticipant(p.id)}>
+                                <IconEdit />
+                              </IconButton>
+                            )}
                             <IconButton label="Supprimer" variant="danger" disabled={busy} onClick={() => void onDeletePerson(p)}>
                               <IconTrash />
                             </IconButton>

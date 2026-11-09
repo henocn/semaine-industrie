@@ -640,6 +640,8 @@ function participateBody() {
     '',
     `3. *Particulier* : étudiant ou passionné de l'industrie, quel que soit votre domaine, inscrivez-vous et participez sur ${site}/inscription-particulier`,
     '',
+    `4. *Participation au Palais des Congrès* : assistez à l'ouverture (lundi 16), au forum des métiers (mardi 17) ou au panel sur les femmes dans l'industrie (mercredi 18) sur ${site}/journees-au-palais`,
+    '',
     // Rencontres d'affaires retirées du public (programme validé) ; les inscrits existants gardent leur code AF.
     // `4. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
     // '',
@@ -908,6 +910,7 @@ async function replyRequestStatus(from, found, phoneNumberId) {
     body: [
       `Dossier : ${item.name || item.structure_name}`,
       `Statut : ${status}`,
+      ...palaisFallback(found.participation),
       `Code de suivi : ${item.tracking_code}`,
       `Mon espace : ${SITE()}/mon-espace?code=${item.tracking_code}`,
     ].join('\n'),
@@ -965,7 +968,8 @@ async function replyPassportRecap(from, passport, phoneNumberId) {
 
 /* Formate le récap passeport école ou particulier. */
 function formatPassportRecap(passport) {
-  const kind = passport.kind === 'group' ? 'École' : 'Particulier';
+  let kind = passport.kind === 'group' ? 'École' : 'Particulier';
+  if (String(passport.code || '').startsWith('JP-')) kind = 'Palais des Congrès';
   const url = `${SITE()}/mon-espace?code=${passport.code}`;
   return [
     'Récapitulatif',
@@ -1602,6 +1606,13 @@ async function notifyLabelRejected(request) {
   });
 }
 
+/* Journées du Palais choisies, pour les messages de secours (une inscription « palais » seulement). */
+function palaisFallback(participation) {
+  if (participation?.kind !== 'palais') return [];
+  const palais = require('../participations/palais');
+  return [`Palais des Congrès : ${palais.daysShort(participation.palais_days)}.`];
+}
+
 /* Accusé de réception d'une inscription école / centre / université. */
 async function notifyParticipationReceived(participation) {
   const { name, tracking_code: code } = participation;
@@ -1609,13 +1620,14 @@ async function notifyParticipationReceived(participation) {
     phone: participation?.phone,
     templates: [
       {
-        name: participation.kind === 'particulier' ? 'si26_particulier_encours' : 'si26_inscription_encours2',
+        name: participation.kind === 'ecole' ? 'si26_inscription_encours2' : 'si26_particulier_encours',
         bodyParams: [name, code],
       },
       { name: 'si26_inscription_encours', bodyParams: [name] },
     ],
     fallback: [
       `Bonjour, la participation pour le compte de ${name} est en cours de validation.`,
+      ...palaisFallback(participation),
       `Code de suivi : ${code}.`,
       'Vous recevrez bientôt une confirmation.',
     ],
@@ -1641,7 +1653,7 @@ async function notifyParticipationWaitlisted(participation) {
 async function notifyParticipationApproved(participation) {
   const code = participation?.passport?.code;
   if (!code) return { ok: false, reason: 'no_code' };
-  const individual = participation.kind === 'particulier';
+  const individual = participation.kind !== 'ecole';
   const places = individual ? 1 : participation.headcount || '-';
   return sendTemplateOrText({
     phone: participation?.phone,
@@ -1652,6 +1664,7 @@ async function notifyParticipationApproved(participation) {
     fallback: [
       `Bonjour, la participation pour le compte de ${participation.name} est acceptée.`,
       ...(individual ? [] : [`Nombre de places accordées : ${places}.`]),
+      ...palaisFallback(participation),
       `Code de suivi : ${code}.`,
       ...(individual ? [] : ["Vous serez prévenu dès qu'une visite sera arrangée."]),
     ],
@@ -1663,7 +1676,7 @@ async function notifyParticipationRejected(participation) {
   return sendTemplateOrText({
     phone: participation?.phone,
     templates: [
-      ...(participation.kind === 'particulier' ? [{ name: 'si26_particulier_refusee', bodyParams: [participation.name] }] : []),
+      ...(participation.kind !== 'ecole' ? [{ name: 'si26_particulier_refusee', bodyParams: [participation.name] }] : []),
       { name: 'si26_inscription_refusee', bodyParams: [participation.name] },
     ],
     fallback: [

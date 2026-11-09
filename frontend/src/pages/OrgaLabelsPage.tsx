@@ -22,6 +22,9 @@ import { IconButton, IconCheck, IconX, IconEdit, IconTrash } from '../components
 import { PhoneField } from '../components/ui/PhoneField'
 import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSelection'
 import { useRowSelection } from '../lib/useRowSelection'
+import { useConfirm } from '../lib/useConfirm'
+import { SortControl } from '../components/orga/SortControl'
+import { useTableSort, type SortAccessors } from '../lib/useTableSort'
 import { excelDate, statusLabel, type ExcelColumn } from '../lib/excel'
 
 /* Colonnes de l'export Excel des demandes de label. */
@@ -57,12 +60,20 @@ function kitExtLabel(name: string, mime?: string | null) {
 
 type FormMode = 'create' | 'edit'
 
+/* Tri : date de la demande, nom de la structure, puis statut (en attente, approuvée, refusée). */
+const LABEL_SORT: SortAccessors<LabelRequest> = {
+  date: (r) => r.createdAt || r.created_at,
+  name: (r) => r.structure_name,
+  status: (r) => ({ pending: 0, approved: 1, rejected: 2 } as Record<string, number>)[r.status] ?? 3,
+}
+
 /* Écran orga : validation et gestion des labels. */
 export default function OrgaLabelsPage() {
   const [items, setItems] = useState<LabelRequest[]>([])
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | ''>('')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const { confirm, modal } = useConfirm()
   const [info, setInfo] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [formMode, setFormMode] = useState<FormMode | null>(null)
@@ -159,7 +170,8 @@ export default function OrgaLabelsPage() {
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [items, query])
-  const picked = useRowSelection(filtered)
+  const sort = useTableSort(filtered, LABEL_SORT, filter)
+  const picked = useRowSelection(sort.sorted)
 
   const selected = useMemo(
     () => filtered.find((x) => x.id === selectedId) || items.find((x) => x.id === selectedId) || null,
@@ -187,6 +199,13 @@ export default function OrgaLabelsPage() {
 
   /* Rejette une demande. */
   async function onReject(id: string) {
+    const name = items.find((row) => row.id === id)?.structure_name || 'Cette demande'
+    if (!(await confirm({
+      title: 'Refuser la demande ?',
+      message: `${name} sera prévenu par e-mail et sur WhatsApp. Il ne restera ensuite que la suppression.`,
+      confirmLabel: 'Refuser',
+      danger: true,
+    }))) return
     setBusyId(id)
     try {
       await reviewLabelRequest(id, 'rejected')
@@ -356,7 +375,7 @@ export default function OrgaLabelsPage() {
           <h2 className="text-[15px] font-semibold text-forest">
             {filtered.length} demande{filtered.length > 1 ? 's' : ''} de label
           </h2>
-          <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
+          <SortControl order={sort.order} onChange={sort.setOrder} />
         </div>
 
         <table className="orga-table min-w-[640px]">
@@ -374,7 +393,7 @@ export default function OrgaLabelsPage() {
             {filtered.length === 0 && (
               <tr><td colSpan={6}>Aucune demande pour ce filtre</td></tr>
             )}
-            {filtered.map((item) => (
+            {sort.sorted.map((item) => (
               <Fragment key={item.id}>
               <tr
                 className={`${rowClass(item.status)} cursor-pointer ${
@@ -419,13 +438,15 @@ export default function OrgaLabelsPage() {
                         </IconButton>
                       </>
                     )}
-                    <IconButton
-                      label="Modifier"
-                      disabled={busyId === item.id}
-                      onClick={() => openEdit(item)}
-                    >
-                      <IconEdit />
-                    </IconButton>
+                    {item.status !== 'rejected' && (
+                      <IconButton
+                        label="Modifier"
+                        disabled={busyId === item.id}
+                        onClick={() => openEdit(item)}
+                      >
+                        <IconEdit />
+                      </IconButton>
+                    )}
                     <IconButton
                       label="Supprimer"
                       variant="danger"
@@ -572,6 +593,8 @@ export default function OrgaLabelsPage() {
           </form>
         </div>
       )}
+
+      {modal}
 
       {approveTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

@@ -24,10 +24,12 @@ function limitPublic(req, res, next) {
 }
 
 router.get('/public/capacity', controller.capacity);
+router.get('/public/palais/:code', controller.palaisPass);
 router.post('/public', limitPublic, validate(publicSchema), controller.create);
 
 router.use(authenticate, authorize('orga'));
 
+router.post('/palais/:code/checkin', controller.palaisCheckin);
 router.get('/', controller.list);
 router.get('/:id', controller.getOne);
 router.post('/', validate(createSchema), controller.create);

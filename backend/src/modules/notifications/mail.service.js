@@ -40,6 +40,9 @@ function visitHour(value) {
 
 /* Inscription école ou particulier reçue. */
 function participationReceived(row) {
+  if (row.kind === 'palais') {
+    return deliver(row.email, (mail) => mail.palaisReceived({ name: row.name, code: row.tracking_code, days: row.palais_days }));
+  }
   return deliver(row.email, (mail) => (row.kind === 'ecole'
     ? mail.schoolReceived({
       name: row.name,
@@ -60,6 +63,7 @@ function participationWaitlisted(row) {
 function participationApproved(row, code) {
   return deliver(row.email, async (mail) => {
     const cardPng = await renderQrCard({ payload: passportService.passageQrPayload(code), name: row.name, code });
+    if (row.kind === 'palais') return mail.palaisApproved({ name: row.name, code, cardPng, days: row.palais_days });
     return row.kind === 'ecole'
       ? mail.schoolApproved({ name: row.name, code, places: row.headcount || '-', cardPng })
       : mail.individualApproved({ name: row.name, code, cardPng });

@@ -18,8 +18,12 @@ import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 import { PhoneField } from '../components/ui/PhoneField'
 import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSelection'
 import { PendingBadge } from '../components/orga/PendingBadge'
+import { useConfirm } from '../lib/useConfirm'
+import { SortControl } from '../components/orga/SortControl'
+import { useTableSort, type SortAccessors } from '../lib/useTableSort'
 import { useRowSelection } from '../lib/useRowSelection'
 import { excelDate, type ExcelColumn } from '../lib/excel'
+import { PALAIS_DAYS } from '../data'
 
 const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
@@ -30,7 +34,35 @@ function statusLabel(status: Participation['status'], waitlisted = false) {
   return waitlisted ? 'Liste d’attente' : 'En attente'
 }
 
-/* Nombre de passages (0 tant qu'aucun scan). */
+/* Tri : date d'inscription, nom, puis statut (en attente, liste d'attente, acceptée, refusée). */
+const SORT: SortAccessors<Participation> = {
+  date: (r) => r.createdAt,
+  name: (r) => r.name,
+  status: (r) => {
+    if (r.status === 'approved') return 2
+    if (r.status === 'rejected') return 3
+    return r.waitlisted ? 1 : 0
+  },
+}
+
+/* Libellé de chaque onglet. */
+const KIND_TABS: { key: ParticipationKind; label: string }[] = [
+  { key: 'ecole', label: 'Visites : Écoles' },
+  { key: 'particulier', label: 'Visites : Particuliers' },
+  { key: 'palais', label: 'Palais des Congrès' },
+]
+
+/* Journées du Palais choisies, triées. */
+function palaisDays(item: Participation) {
+  return (item.palais_days || []).map(Number).sort((a, b) => a - b)
+}
+
+/* Heure d'entrée au Palais, ou rien. */
+function palaisEntry(item: Participation, n: number) {
+  const at = item.palais_checkins?.[String(n)]
+  return at ? new Date(at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Lome' }) : null
+}
+
 /* Colonnes de l'export Excel des inscriptions. */
 const EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
   { header: 'Code de suivi', width: 14, value: (r) => r.passport?.code || r.tracking_code || '' },
@@ -46,6 +78,19 @@ const EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
   { header: 'Date de demande', width: 18, value: (r) => excelDate(r.createdAt) },
 ]
 
+/* Export des inscriptions au Palais : une colonne par journée (inscrit, puis heure d'entrée). */
+const PALAIS_EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
+  ...EXPORT_COLUMNS.slice(0, 5),
+  ...PALAIS_DAYS.map((d): ExcelColumn<Participation> => ({
+    header: `${d.n} nov.`,
+    width: 12,
+    value: (r) => (palaisDays(r).includes(d.n) ? (palaisEntry(r, d.n) ? `Entré ${palaisEntry(r, d.n)}` : 'Inscrit') : ''),
+  })),
+  { header: 'Ce qui l’amène', width: 36, value: (r) => r.description },
+  { header: 'Date de demande', width: 18, value: (r) => excelDate(r.createdAt) },
+]
+
+/* Nombre de passages (0 tant qu'aucun scan). */
 function passageCount(item: Participation) {
   return item.passport?.passages ?? 0
 }
@@ -75,7 +120,64 @@ function readForm(fd: FormData, kind: ParticipationKind) {
     description: String(fd.get('description') || '').trim() || null,
     headcount: kind === 'ecole' && headcountRaw ? Number(headcountRaw) : null,
     address: String(fd.get('address') || '').trim() || null,
+    ...(kind === 'palais' ? { palais_days: fd.getAll('palais_days').map(Number) } : {}),
   }
+}
+
+/* Libellé du champ libre selon l'onglet. */
+function descriptionLabel(kind: ParticipationKind) {
+  if (kind === 'ecole') return 'Spécialités / séries ou filières'
+  if (kind === 'palais') return 'Ce qui l’amène'
+  return 'Note'
+}
+
+/* Cases des journées du Palais, pour l'ajout et la modification. */
+function PalaisDaysField({ value = [] }: { value?: number[] }) {
+  return (
+    <fieldset className="text-[13px] font-medium text-forest sm:col-span-2">
+      <legend>Journées</legend>
+      <div className="mt-1 flex flex-wrap gap-4">
+        {PALAIS_DAYS.map((d) => (
+          <label key={d.n} className="flex items-center gap-2 font-normal text-ink">
+            <input type="checkbox" name="palais_days" value={d.n} defaultChecked={value.includes(d.n)} className="h-4 w-4 accent-forest" />
+            {d.label} · {d.title}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+/* Compteurs par journée : inscrits (hors refus), acceptés, entrées. */
+function PalaisCounts({ rows }: { rows: Participation[] }) {
+  return (
+    <div className="mb-4 grid border border-black bg-white sm:grid-cols-3">
+      {PALAIS_DAYS.map((d, index) => {
+        const forDay = rows.filter((r) => r.status !== 'rejected' && palaisDays(r).includes(d.n))
+        const approved = forDay.filter((r) => r.status === 'approved').length
+        const entered = forDay.filter((r) => palaisEntry(r, d.n)).length
+        const stats: [number, string, string][] = [
+          [forDay.length, 'inscrit', 'inscrits'],
+          [approved, 'accepté', 'acceptés'],
+          [entered, 'entrée', 'entrées'],
+        ]
+        return (
+          <div key={d.n} className={`px-5 py-4 ${index > 0 ? 'border-t border-black sm:border-t-0 sm:border-l' : ''}`}>
+            <p className="text-[14px] font-semibold text-forest">{d.label}</p>
+            <p className="text-[13px] text-ink/60">{d.title}</p>
+            <p className="mt-2 text-[14px] text-ink/70">
+              {stats.map(([value, one, many], i) => (
+                <span key={many}>
+                  {i > 0 && <span className="mx-1.5 text-ink/30">·</span>}
+                  <strong className="text-[17px] font-bold tabular-nums text-forest">{value}</strong> {value > 1 ? many : one}
+                </span>
+              ))}
+            </p>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 /* Coordonnée lue depuis l'API, ou rien si elle est absente. */
@@ -93,11 +195,12 @@ export default function OrgaParticipationsPage() {
   const [detail, setDetail] = useState<Participation | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
-  const [pendingByKind, setPendingByKind] = useState<Record<ParticipationKind, number>>({ ecole: 0, particulier: 0 })
+  const [pendingByKind, setPendingByKind] = useState<Record<ParticipationKind, number>>({ ecole: 0, particulier: 0, palais: 0 })
   const [position, setPosition] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null })
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { confirm, modal } = useConfirm()
 
   /* Compte les inscriptions à traiter, pour les deux onglets. */
   async function loadPending() {
@@ -105,6 +208,7 @@ export default function OrgaParticipationsPage() {
     setPendingByKind({
       ecole: pending.filter((row) => row.kind === 'ecole').length,
       particulier: pending.filter((row) => row.kind === 'particulier').length,
+      palais: pending.filter((row) => row.kind === 'palais').length,
     })
   }
 
@@ -191,8 +295,19 @@ export default function OrgaParticipationsPage() {
     }
   }
 
-  /* Accepte et affiche le QR. */
+  /* Nom de la ligne, pour les fenêtres de confirmation. */
+  function rowName(id: string) {
+    return rows.find((row) => row.id === id)?.name || 'Cette inscription'
+  }
+
+  /* Accepte (après confirmation) et affiche le QR ; sans confirmation pour recréer le QR d'une inscription déjà acceptée. */
   async function onApprove(id: string) {
+    const row = rows.find((r) => r.id === id)
+    if (row?.status !== 'approved' && !(await confirm({
+      title: 'Accepter l’inscription ?',
+      message: `${rowName(id)} recevra son QR par e-mail et sur WhatsApp.`,
+      confirmLabel: 'Accepter',
+    }))) return
     setBusy(true)
     setError(null)
     try {
@@ -209,6 +324,12 @@ export default function OrgaParticipationsPage() {
 
   /* Refuse la participation. */
   async function onReject(id: string) {
+    if (!(await confirm({
+      title: 'Refuser l’inscription ?',
+      message: `${rowName(id)} sera prévenu par e-mail et sur WhatsApp. Il ne restera ensuite que la suppression.`,
+      confirmLabel: 'Refuser',
+      danger: true,
+    }))) return
     setBusy(true)
     setError(null)
     try {
@@ -224,7 +345,12 @@ export default function OrgaParticipationsPage() {
 
   /* Supprime la participation. */
   async function onDelete(id: string) {
-    if (!window.confirm('Supprimer cette participation ?')) return
+    if (!(await confirm({
+      title: 'Supprimer cette participation ?',
+      message: `${rowName(id)} sera retiré. Cette action est définitive.`,
+      confirmLabel: 'Supprimer',
+      danger: true,
+    }))) return
     setBusy(true)
     setError(null)
     try {
@@ -258,12 +384,20 @@ export default function OrgaParticipationsPage() {
         .some((v) => String(v).toLowerCase().includes(q)),
     )
   }, [rows, query])
-  const picked = useRowSelection(filtered)
+  const sort = useTableSort(filtered, SORT, kind)
+  const picked = useRowSelection(sort.sorted)
 
   const isSchool = kind === 'ecole'
-  const noun = isSchool
-    ? (filtered.length > 1 ? 'écoles' : 'école')
-    : (filtered.length > 1 ? 'particuliers' : 'particulier')
+  const isPalais = kind === 'palais'
+  let noun = filtered.length > 1 ? 'particuliers' : 'particulier'
+  if (isSchool) noun = filtered.length > 1 ? 'écoles' : 'école'
+  if (isPalais) noun = filtered.length > 1 ? 'inscrits au Palais' : 'inscrit au Palais'
+  let addLabel = 'Ajouter un particulier'
+  if (isSchool) addLabel = 'Ajouter une école'
+  if (isPalais) addLabel = 'Ajouter une inscription'
+  let exportName = { filename: 'inscriptions-particuliers', sheet: 'Particuliers' }
+  if (isSchool) exportName = { filename: 'inscriptions-ecoles', sheet: 'Écoles' }
+  if (isPalais) exportName = { filename: 'inscriptions-journees-palais', sheet: 'Palais des Congrès' }
 
   return (
     <OrgaShell
@@ -272,27 +406,30 @@ export default function OrgaParticipationsPage() {
       onSearch={setQuery}
       actions={
         <button type="button" className="orga-btn" onClick={() => setShowAdd((v) => !v)}>
-          {showAdd ? 'Fermer' : `Ajouter ${isSchool ? 'une école' : 'un particulier'}`}
+          {showAdd ? 'Fermer' : addLabel}
         </button>
       }
     >
+      {modal}
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <div className="mb-4 flex gap-0 border border-black">
-        {(['ecole', 'particulier'] as const).map((key) => (
+        {KIND_TABS.map(({ key, label }, index) => (
           <button
             key={key}
             type="button"
             onClick={() => setKind(key)}
             className={`flex flex-1 items-center justify-center gap-2 px-4 py-2.5 text-[14px] font-semibold ${
               kind === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
-            } ${key === 'particulier' ? 'border-l border-black' : ''}`}
+            } ${index > 0 ? 'border-l border-black' : ''}`}
           >
-            {key === 'ecole' ? 'Écoles' : 'Particuliers'}
+            {label}
             <PendingBadge count={pendingByKind[key]} />
           </button>
         ))}
       </div>
+
+      {isPalais && <PalaisCounts rows={rows} />}
 
       {showAdd && (
         <form onSubmit={(e) => void onCreate(e)} className="orga-panel mb-4 grid gap-3 sm:grid-cols-2">
@@ -320,14 +457,15 @@ export default function OrgaParticipationsPage() {
               <LocationField lat={position.lat} lng={position.lng} onPick={(lat, lng) => setPosition({ lat, lng })} />
             </div>
           )}
-          {!isSchool && (
+          {kind === 'particulier' && (
             <label className="text-[13px] font-medium text-forest sm:col-span-2">
               Ville Quartier
               <input name="address" maxLength={500} className={field} />
             </label>
           )}
+          {isPalais && <PalaisDaysField />}
           <label className="text-[13px] font-medium text-forest sm:col-span-2">
-            {isSchool ? 'Spécialités / séries ou filières' : 'Note'}
+            {descriptionLabel(kind)}
             <textarea name="description" rows={3} className={`${field} resize-none`} />
           </label>
           <div className="sm:col-span-2">
@@ -338,14 +476,14 @@ export default function OrgaParticipationsPage() {
         </form>
       )}
 
-      <ExportBar selection={picked} filename={isSchool ? 'inscriptions-ecoles' : 'inscriptions-particuliers'}
-        sheet={isSchool ? 'Écoles' : 'Particuliers'} columns={EXPORT_COLUMNS} />
+      <ExportBar selection={picked} filename={exportName.filename}
+        sheet={exportName.sheet} columns={isPalais ? PALAIS_EXPORT_COLUMNS : EXPORT_COLUMNS} />
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">
             {filtered.length} {noun}
           </h2>
-          <p className="text-[12px] text-ink/45">Cliquez une ligne pour le détail</p>
+          <SortControl order={sort.order} onChange={sort.setOrder} />
         </div>
         <table className="orga-table min-w-[720px]">
           <thead>
@@ -355,7 +493,7 @@ export default function OrgaParticipationsPage() {
               <th>Nom</th>
               <th className="w-40">Contact</th>
               <th className="w-28">Statut</th>
-              <th className="w-24">Passage</th>
+              <th className={isPalais ? 'w-36' : 'w-24'}>{isPalais ? 'Journées' : 'Passage'}</th>
               <th className="w-40">Actions</th>
             </tr>
           </thead>
@@ -365,7 +503,7 @@ export default function OrgaParticipationsPage() {
                 <td colSpan={7}>Aucune participation</td>
               </tr>
             )}
-            {filtered.map((item) => {
+            {sort.sorted.map((item) => {
               const open = selectedId === item.id
               const shown = open && detail?.id === item.id ? detail : item
               return (
@@ -381,12 +519,22 @@ export default function OrgaParticipationsPage() {
                     <td className="font-medium text-forest">{item.name}</td>
                     <td>{item.phone || item.email || '…'}</td>
                     <td>{statusLabel(item.status, item.waitlisted)}</td>
-                    <td className={passageCount(item) > 0 ? 'font-semibold text-forest' : 'text-ink/45'}>
-                      {passageCount(item)}
-                    </td>
+                    {isPalais ? (
+                      <td className="whitespace-nowrap">
+                        {palaisDays(item).map((n, i) => (
+                          <span key={n} className={palaisEntry(item, n) ? 'font-semibold text-forest' : ''}>
+                            {i > 0 ? ' · ' : ''}{n}{palaisEntry(item, n) ? ' ✓' : ''}
+                          </span>
+                        ))}
+                      </td>
+                    ) : (
+                      <td className={passageCount(item) > 0 ? 'font-semibold text-forest' : 'text-ink/45'}>
+                        {passageCount(item)}
+                      </td>
+                    )}
                     <td onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-1">
-                        {item.status !== 'approved' && (
+                        {item.status === 'pending' && (
                           <IconButton label="Accepter" variant="ok" disabled={busy} onClick={() => void onApprove(item.id)}>
                             <IconCheck />
                           </IconButton>
@@ -396,6 +544,7 @@ export default function OrgaParticipationsPage() {
                             <IconX />
                           </IconButton>
                         )}
+                        {item.status !== 'rejected' && (
                         <IconButton
                           label="Modifier"
                           disabled={busy}
@@ -408,6 +557,7 @@ export default function OrgaParticipationsPage() {
                         >
                           <IconEdit />
                         </IconButton>
+                        )}
                         <IconButton label="Supprimer" variant="danger" disabled={busy} onClick={() => void onDelete(item.id)}>
                           <IconTrash />
                         </IconButton>
@@ -448,14 +598,15 @@ export default function OrgaParticipationsPage() {
                                 />
                               </div>
                             )}
-                            {!isSchool && (
+                            {kind === 'particulier' && (
                               <label className="text-[13px] font-medium text-forest sm:col-span-2">
                                 Ville Quartier
                                 <input name="address" maxLength={500} defaultValue={shown.address || ''} className={field} />
                               </label>
                             )}
+                            {isPalais && <PalaisDaysField value={palaisDays(shown)} />}
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
-                              {isSchool ? 'Spécialités / séries ou filières' : 'Note'}
+                              {descriptionLabel(kind)}
                               <textarea name="description" rows={3} defaultValue={shown.description || ''} className={`${field} resize-none`} />
                             </label>
                             <div className="sm:col-span-2 flex gap-2">
@@ -488,6 +639,18 @@ export default function OrgaParticipationsPage() {
                               {shown.email && <p>{shown.email}</p>}
                               {shown.phone && <p>{shown.phone}</p>}
                               {shown.headcount ? <p>{shown.headcount} personnes</p> : null}
+                              {isPalais && (
+                                <ul className="my-2">
+                                  {PALAIS_DAYS.filter((d) => palaisDays(shown).includes(d.n)).map((d) => (
+                                    <li key={d.n}>
+                                      {d.label} · {d.title}
+                                      {palaisEntry(shown, d.n) && (
+                                        <span className="font-semibold text-forest"> · entrée à {palaisEntry(shown, d.n)}</span>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
                               {shown.description && <p className="mt-2 whitespace-pre-wrap text-ink/80">{shown.description}</p>}
                               {!shown.description && !shown.email && !shown.phone && !shown.city && (
                                 <p className="text-ink/50">Complétez la fiche avant le jour J.</p>

@@ -45,6 +45,24 @@ export const DAYS: Day[] = [
   },
 ]
 
+/* Journées du Palais des Congrès ouvertes à l'inscription des particuliers (mêmes numéros côté serveur). */
+export type PalaisDay = { n: number; label: string; title: string; place: string; hours: string; text: string }
+
+export const PALAIS_DAYS: PalaisDay[] = [
+  {
+    n: 16, label: 'Lundi 16 novembre', title: 'L’ouverture', place: 'Grande salle', hours: 'à partir de 8h30',
+    text: 'Cérémonie d’ouverture avec le discours du Ministre, remise des labels aux entreprises et aux écoles, keynote et panel sur le thème de l’édition. À 12h, lancement de l’exposition « Fabriqué au Togo » au 1er étage.',
+  },
+  {
+    n: 17, label: 'Mardi 17 novembre', title: 'Le forum des métiers', place: 'Grande salle', hours: 'de 14h à 16h45',
+    text: 'Écoles et entreprises présentent les métiers de l’industrie et les formations qui y mènent, avec des questions de la salle. Puis « Ils ont commencé petit » : des industriels racontent leurs débuts.',
+  },
+  {
+    n: 18, label: 'Mercredi 18 novembre', title: 'Les femmes dans l’industrie', place: 'Salle polyvalente', hours: 'de 9h à 10h45',
+    text: 'Portraits filmés de femmes de l’industrie, puis le panel « Les métiers de l’industrie au féminin », avec des industrielles et une jeune femme qui démarre son activité.',
+  },
+]
+
 /* Ce qui se déroule sur plusieurs jours : titre, période et lieu, description. */
 export const ALL_WEEK: [string, string, string][] = [
   ['Les usines ouvrent leurs portes', 'Du lundi 16 au vendredi 20 novembre', 'Écoles et particuliers visitent les industries labellisées « Usine ouverte », par petits groupes et sur plusieurs créneaux, sur inscription.'],
@@ -128,11 +146,15 @@ export const FAQ = [
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie en tant que particulier, école ou université ?',
-    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « En tant que particulier » pour une inscription individuelle.\n• « En tant qu’école / université » pour inscrire un groupe.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
+    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\n• « Visites d’industries : écoles / universités » pour inscrire un groupe.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
+  },
+  {
+    q: 'Comment participer aux rendez-vous au Palais des Congrès ?',
+    a: 'Dans la rubrique « Participer », choisissez « Participation au Palais des Congrès », puis cochez une ou plusieurs journées : l’ouverture le lundi 16 novembre, le forum des métiers le mardi 17, ou le panel sur les femmes dans l’industrie le mercredi 18.\nVous recevez un seul code de suivi et, après validation, un seul QR valable pour les journées choisies, à présenter à l’accueil du Palais des Congrès de Lomé.',
   },
   {
     q: 'Comment demander un label et suivre l’évolution de sa demande ?',
-    a: 'Pour demander un label, rendez-vous dans la rubrique « Participer », puis sélectionnez « Demande de label : industries ».\nDès l’envoi de votre demande, un code de suivi vous est remis. Ce code vous permet de suivre votre dossier depuis la rubrique « Mon espace » du site ou sur WhatsApp, en sélectionnant « Suivi de participation ».',
+    a: 'Pour demander un label, rendez-vous dans la rubrique « Participer », puis sélectionnez « Demande de labels pour les industries ».\nDès l’envoi de votre demande, un code de suivi vous est remis. Ce code vous permet de suivre votre dossier depuis la rubrique « Mon espace » du site ou sur WhatsApp, en sélectionnant « Suivi de participation ».',
   },
   {
     q: 'Où consulter le programme complet et obtenir des informations complémentaires ?',

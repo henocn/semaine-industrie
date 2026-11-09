@@ -10,6 +10,7 @@
 | port.jpg            | Accueil, « Les sites ouverts »                         | 1600 px |
 | hall.jpg            | Page de connexion du backoffice                        | 2000 px (agrandie ×3) |
 | inscription-particulier.jpg | Participer en tant que particulier (colonne de gauche) | 880 px |
+| concours-video.jpg  | Page Concours vidéo, sous le titre (image générée)     | 1200 px |
 | inscription-groupe.jpg | Inscription écoles / universités (colonne de gauche) | 1344 px |
 | metiers.jpg         | L’industrie, vue par vous (bandeau sous le titre)      | 1344 px |
 | bg-*.webp           | Fonds discrets des sections et du pied de page (WebP)  | — |

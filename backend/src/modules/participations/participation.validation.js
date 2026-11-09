@@ -2,9 +2,11 @@
 
 const Joi = require('joi');
 const { phone } = require('../../utils/phone');
+const { DAY_NUMBERS } = require('./palais');
 
-/* École / centre / université (« ecole ») ou personne seule (« particulier »). */
-const kind = Joi.string().valid('ecole', 'particulier');
+/* École / centre / université (« ecole »), personne seule aux visites (« particulier ») ou aux journées du Palais (« palais »). */
+const kind = Joi.string().valid('ecole', 'particulier', 'palais');
+const PALAIS_DAYS_MESSAGE = 'Choisissez au moins une journée';
 const status = Joi.string().valid('pending', 'approved', 'rejected');
 
 const fields = {
@@ -17,7 +19,16 @@ const fields = {
   lat: Joi.number().min(-90).max(90).allow(null),
   lng: Joi.number().min(-180).max(180).allow(null),
   headcount: Joi.number().integer().min(1).max(5000).allow(null),
+  palais_days: Joi.array().items(Joi.number().integer().valid(...DAY_NUMBERS)).unique().min(1).max(DAY_NUMBERS.length)
+    .messages({ 'array.min': PALAIS_DAYS_MESSAGE, 'array.includesRequiredUnknowns': PALAIS_DAYS_MESSAGE }),
 };
+
+/* Journées obligatoires pour une inscription au Palais, ignorées sinon. */
+const palaisDays = fields.palais_days.when('kind', {
+  is: 'palais',
+  then: Joi.required().messages({ 'any.required': PALAIS_DAYS_MESSAGE }),
+  otherwise: Joi.any().strip(),
+});
 
 /* Création d'une participation depuis le backoffice. */
 const createSchema = Joi.object({
@@ -31,6 +42,7 @@ const createSchema = Joi.object({
   lat: fields.lat,
   lng: fields.lng,
   headcount: fields.headcount,
+  palais_days: palaisDays,
 });
 
 /* Champ obligatoire pour une école à l'inscription publique. */
@@ -66,6 +78,7 @@ const updateSchema = Joi.object({
   lat: fields.lat,
   lng: fields.lng,
   headcount: fields.headcount,
+  palais_days: fields.palais_days,
 }).min(1);
 
 /* Filtres de la liste. */

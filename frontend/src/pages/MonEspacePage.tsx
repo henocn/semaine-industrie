@@ -10,6 +10,7 @@ import { publicSeo } from '../lib/seo'
 const TYPE_LABEL: Record<EspaceType, string> = {
   ecole: 'École / université',
   particulier: 'Particulier',
+  palais: 'Participation au Palais des Congrès',
   industrie: 'Industrie',
   affaires: 'Rencontres d’affaires',
 }
@@ -32,6 +33,7 @@ const STATUS_NOTICE: Partial<Record<Espace['status'], string>> = {
 const LISTS: Record<EspaceType, { done: string; next: string; empty: string }> = {
   ecole: { done: 'Sites visités', next: 'Visites à venir', empty: 'Aucun passage enregistré pour le moment.' },
   particulier: { done: 'Sites visités', next: 'Visites à venir', empty: 'Aucun passage enregistré pour le moment.' },
+  palais: { done: 'Journées suivies', next: 'Journées à venir', empty: 'Aucune entrée enregistrée pour le moment.' },
   industrie: { done: 'Passages reçus', next: 'Visites à venir', empty: 'Aucun passage reçu pour le moment.' },
   affaires: { done: 'Rendez-vous tenus', next: 'Rendez-vous à venir', empty: 'Aucun rendez-vous tenu pour le moment.' },
 }
@@ -84,7 +86,9 @@ function EspaceView({ space }: { space: Espace }) {
         {space.qr_data_url && (
           <figure className="justify-self-start md:justify-self-end">
             <img src={space.qr_data_url} alt={`QR de participation ${space.code}`} width={144} height={144} className="h-36 w-36 border border-forest/15" />
-            <figcaption className="mt-2 max-w-36 text-[13px] text-ink/60">À présenter à l’entrée des sites</figcaption>
+            <figcaption className="mt-2 max-w-36 text-[13px] text-ink/60">
+              {space.type === 'palais' ? 'À présenter à l’accueil du Palais des Congrès' : 'À présenter à l’entrée des sites'}
+            </figcaption>
           </figure>
         )}
       </section>
