@@ -11,8 +11,9 @@ const logger = require('../../utils/logger');
 const { renderQrCardDataUrl } = require('../../utils/qrCard');
 const { assertAvailable, duplicateError } = require('../../utils/uniqueContact');
 const palais = require('./palais');
+const media = require('./media');
 
-const KINDS = ['ecole', 'particulier', 'palais'];
+const KINDS = ['ecole', 'particulier', 'palais', 'media'];
 
 /* Vide une chaîne optionnelle. */
 function emptyToNull(value) {
@@ -112,6 +113,10 @@ async function create(payload) {
   const fields = pickFields(payload);
   if (kind !== 'palais') delete fields.palais_days;
   else if (!fields.palais_days?.length) throw ApiError.badRequest('Choisissez au moins une journée');
+  if (kind === 'media') {
+    fields.media_details = media.pickDetails(payload);
+    if (fields.media_details.outlet.length < 2) throw ApiError.badRequest('Indiquez le nom du média, de la chaîne ou du compte');
+  }
   await assertAvailable('participations', { kind, email: fields.email, phone: fields.phone });
   const row = await Participation.create({
     kind,
@@ -143,6 +148,15 @@ async function update(id, payload) {
   const fields = pickFields(payload);
   if (row.kind !== 'palais') delete fields.palais_days;
   else if (fields.palais_days && !fields.palais_days.length) throw ApiError.badRequest('Choisissez au moins une journée');
+  if (row.kind === 'media' && ('media_outlet' in payload || 'media_profile' in payload)) {
+    const current = row.media_details || {};
+    const next = media.pickDetails({
+      media_outlet: 'media_outlet' in payload ? payload.media_outlet : current.outlet,
+      media_profile: 'media_profile' in payload ? payload.media_profile : current.profile,
+    });
+    if (next.outlet.length < 2) throw ApiError.badRequest('Indiquez le nom du média, de la chaîne ou du compte');
+    fields.media_details = next;
+  }
   await assertAvailable('participations', {
     kind: row.kind, excludeId: row.id, email: fields.email, phone: fields.phone,
   });
@@ -284,7 +298,24 @@ async function palaisCheckin(code) {
   return { ...palaisView(row), already, id: row.id };
 }
 
+/* Fiche publique d'une accréditation média, ouverte par le QR (accueil du Palais, industries). */
+async function mediaPass(rawCode) {
+  const code = trackingService.normalizeCode(rawCode);
+  const row = code ? await Participation.findOne({ where: { kind: 'media', tracking_code: code } }) : null;
+  if (!row) throw ApiError.notFound('Aucune accréditation média ne correspond à ce code');
+  const details = row.media_details || {};
+  return {
+    code: row.tracking_code,
+    name: row.name,
+    status: row.status,
+    outlet: details.outlet || null,
+    profile: media.profileLabel(details.profile),
+    validity: media.MEDIA_VALIDITY,
+  };
+}
+
 module.exports = {
+  mediaPass,
   palaisPass,
   palaisCheckin,
   isWaitlisted,

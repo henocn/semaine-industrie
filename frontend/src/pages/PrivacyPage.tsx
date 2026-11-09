@@ -64,6 +64,7 @@ export default function PrivacyPage() {
             items={[
               <><strong>Inscription d&apos;une école ou d&apos;une université :</strong> nom de l&apos;établissement, e-mail, téléphone, position sur la carte, effectif souhaité, spécialités ou filières. Aucun nom d&apos;élève n&apos;est demandé.</>,
               <><strong>Inscription d&apos;un particulier aux visites d&apos;industries :</strong> nom et prénom, e-mail, téléphone, ville et quartier, et note éventuelle.</>,
+              <><strong>Accréditation médias :</strong> nom et prénom, e-mail, téléphone, média ou chaîne, profil et ce que vous prévoyez de couvrir.</>,
               <><strong>Inscription aux conférences du Palais des Congrès :</strong> nom et prénom, e-mail, téléphone, journées choisies, ce qui vous amène, et date et heure des entrées enregistrées à l&apos;accueil.</>,
               <><strong>Demande de label d&apos;une industrie :</strong> nom et secteur de la structure, position sur la carte, photos, e-mail, téléphone, capacité d&apos;accueil, produits, description et règles de sécurité.</>,
               <><strong>Rencontres d&apos;affaires :</strong> profil, nom, e-mail, téléphone, secteur d&apos;activité et notes.</>,

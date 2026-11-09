@@ -63,6 +63,20 @@ export const PALAIS_DAYS: PalaisDay[] = [
   },
 ]
 
+/* Profils de l'accréditation médias (mêmes valeurs côté serveur). */
+export const MEDIA_PROFILES: { value: string; label: string }[] = [
+  { value: 'journaliste', label: 'Journaliste' },
+  { value: 'photographe', label: 'Photographe' },
+  { value: 'videaste', label: 'Vidéaste' },
+  { value: 'createur', label: 'Créateur de contenu' },
+  { value: 'autre', label: 'Autre' },
+]
+
+/* Libellé d'un profil média. */
+export function mediaProfileLabel(value?: string | null) {
+  return MEDIA_PROFILES.find((p) => p.value === value)?.label || 'Autre'
+}
+
 /* Ce qui se déroule sur plusieurs jours : titre, période et lieu, description. */
 export const ALL_WEEK: [string, string, string][] = [
   ['Les usines ouvrent leurs portes', 'Du lundi 16 au vendredi 20 novembre', 'Écoles et particuliers visitent les industries labellisées « Usine ouverte », par petits groupes et sur plusieurs créneaux, sur inscription.'],
@@ -146,11 +160,15 @@ export const FAQ = [
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie en tant que particulier, école ou université ?',
-    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\n• « Visites d’industries : écoles / universités » pour inscrire un groupe.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
+    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\n• « Visites d’industries : écoles / universités » pour inscrire un groupe.\n• « Accréditation médias et créateurs de contenu » pour couvrir la semaine en tant que média.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
   },
   {
     q: 'Comment participer aux rendez-vous au Palais des Congrès ?',
     a: 'Dans la rubrique « Participer », choisissez « Participation au Palais des Congrès », puis cochez une ou plusieurs journées : l’ouverture le lundi 16 novembre, le forum des métiers le mardi 17, ou le panel sur les femmes dans l’industrie le mercredi 18.\nVous recevez un seul code de suivi et, après validation, un seul QR valable pour les journées choisies, à présenter à l’accueil du Palais des Congrès de Lomé.',
+  },
+  {
+    q: 'Comment obtenir une accréditation média ?',
+    a: 'Journalistes, photographes, vidéastes et créateurs de contenu : dans la rubrique « Participer », choisissez « Accréditation médias et créateurs de contenu ». Indiquez votre média ou votre chaîne et votre profil.\nAprès validation, vous recevez un QR d’accréditation par e-mail et sur WhatsApp, valable toute la semaine, du 16 au 22 novembre : conférences au Palais des Congrès et visites d’usines.',
   },
   {
     q: 'Comment demander un label et suivre l’évolution de sa demande ?',

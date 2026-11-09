@@ -1,6 +1,6 @@
 import { apiFetch } from './client'
 
-export type EspaceType = 'ecole' | 'particulier' | 'palais' | 'industrie' | 'affaires'
+export type EspaceType = 'ecole' | 'particulier' | 'palais' | 'media' | 'industrie' | 'affaires'
 
 export type EspaceRow = {
   id: string

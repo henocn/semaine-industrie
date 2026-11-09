@@ -43,6 +43,9 @@ function participationReceived(row) {
   if (row.kind === 'palais') {
     return deliver(row.email, (mail) => mail.palaisReceived({ name: row.name, code: row.tracking_code, days: row.palais_days }));
   }
+  if (row.kind === 'media') {
+    return deliver(row.email, (mail) => mail.mediaReceived({ name: row.name, code: row.tracking_code, details: row.media_details }));
+  }
   return deliver(row.email, (mail) => (row.kind === 'ecole'
     ? mail.schoolReceived({
       name: row.name,
@@ -64,6 +67,7 @@ function participationApproved(row, code) {
   return deliver(row.email, async (mail) => {
     const cardPng = await renderQrCard({ payload: passportService.passageQrPayload(code), name: row.name, code });
     if (row.kind === 'palais') return mail.palaisApproved({ name: row.name, code, cardPng, days: row.palais_days });
+    if (row.kind === 'media') return mail.mediaApproved({ name: row.name, code, cardPng, details: row.media_details });
     return row.kind === 'ecole'
       ? mail.schoolApproved({ name: row.name, code, places: row.headcount || '-', cardPng })
       : mail.individualApproved({ name: row.name, code, cardPng });
@@ -72,6 +76,7 @@ function participationApproved(row, code) {
 
 /* Inscription refusée. */
 function participationRejected(row) {
+  if (row.kind === 'media') return deliver(row.email, (mail) => mail.mediaRejected({ name: row.name }));
   return deliver(row.email, (mail) => (row.kind === 'ecole'
     ? mail.schoolRejected({ name: row.name })
     : mail.individualRejected({ name: row.name })));

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getPassport, recordPassage, type Passport } from '../api/passports'
-import { checkinPalais, getPalaisPass, type PalaisPass } from '../api/participations'
+import { checkinPalais, getMediaPass, getPalaisPass, type MediaPass, type PalaisPass } from '../api/participations'
 import { peekOrgaUser } from '../api/auth'
 import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
@@ -36,6 +36,7 @@ export default function PassagePage() {
   const { code = '' } = useParams()
   const visitorCode = code.trim().toUpperCase()
   if (visitorCode.startsWith('JP-')) return <PalaisPassage code={visitorCode} />
+  if (visitorCode.startsWith('MD-')) return <MediaPassage code={visitorCode} />
   return <IndustryPassage visitorCode={visitorCode} />
 }
 
@@ -247,6 +248,69 @@ function PalaisPassage({ code }: { code: string }) {
                 pour enregistrer les entrées.
               </p>
             )}
+          </div>
+        )}
+      </div>
+    </main>
+  )
+}
+
+/* Verdict d'une accréditation média au contrôle. */
+function mediaVerdict(pass: MediaPass) {
+  if (pass.status === 'approved') return { tone: 'text-forest', text: 'Accréditation valide' }
+  if (pass.status === 'rejected') return { tone: 'text-red-700', text: 'Accréditation refusée' }
+  return { tone: 'text-red-700', text: 'Accréditation pas encore validée' }
+}
+
+/* Contrôle d'une accréditation média : la personne, son média, son profil et la validité. */
+function MediaPassage({ code }: { code: string }) {
+  const [pass, setPass] = useState<MediaPass | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    getMediaPass(code)
+      .then(setPass)
+      .catch((err) => setError(err instanceof Error ? err.message : 'QR introuvable'))
+  }, [code])
+
+  const verdict = pass ? mediaVerdict(pass) : null
+
+  return (
+    <main className="py-16 sm:py-24">
+      <Seo
+        title="Accréditation médias"
+        description="Contrôle d'une accréditation média de la Semaine de l'industrie."
+        path={`/passage/${code}`}
+        noIndex
+      />
+      <div className={`${WRAP} max-w-lg`}>
+        <SectionHeader level={1} title="Accréditation médias" />
+
+        {error && <p role="alert" className="mt-8 text-[15px] font-medium text-red-700">{error}</p>}
+
+        {pass && verdict && (
+          <div className="mt-8 space-y-5">
+            <div>
+              <p className="text-[18px] font-semibold text-forest">{pass.name}</p>
+              <p className="mt-0.5 font-mono text-[14px] text-ink/55">{pass.code}</p>
+              <p className={`mt-4 text-[20px] font-semibold ${verdict.tone}`}>{verdict.text}</p>
+            </div>
+            <dl className="divide-y divide-forest/10 border-y border-forest/10 text-[15px]">
+              {pass.outlet && (
+                <div className="flex justify-between gap-4 py-3">
+                  <dt className="text-ink/60">Média</dt>
+                  <dd className="text-right font-semibold text-forest">{pass.outlet}</dd>
+                </div>
+              )}
+              <div className="flex justify-between gap-4 py-3">
+                <dt className="text-ink/60">Profil</dt>
+                <dd className="text-right text-forest">{pass.profile}</dd>
+              </div>
+              <div className="flex justify-between gap-4 py-3">
+                <dt className="text-ink/60">Validité</dt>
+                <dd className="text-right text-forest">{pass.validity}</dd>
+              </div>
+            </dl>
           </div>
         )}
       </div>

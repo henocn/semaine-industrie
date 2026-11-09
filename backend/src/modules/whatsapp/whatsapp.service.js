@@ -17,6 +17,7 @@ const {
   PassportVisit,
 } = require('../../models');
 const palais = require('../participations/palais');
+const media = require('../participations/media');
 const trackingService = require('../tracking/tracking.service');
 const resourceService = require('../resources/resource.service');
 const conversationService = require('./conversation.service');
@@ -156,7 +157,7 @@ async function replyAskCode(from, phoneNumberId, body) {
     phoneNumberId,
     body:
       body
-      || "Espace de suivi pour le Palais des Congrès, les visites d'industries (particuliers, écoles / universités) et les industries. Entrez le code de suivi envoyé à l'inscription.",
+      || "Espace de suivi pour le Palais des Congrès, les visites d'industries (particuliers, écoles / universités), les médias et les industries. Entrez le code de suivi envoyé à l'inscription.",
   });
 }
 
@@ -387,7 +388,10 @@ async function sendTrackingQr(from, phoneNumberId, linked) {
 /* Type de suivi d'un passeport : école (ec), Palais des Congrès (jp) ou particulier aux visites (pa). */
 function passportKind(passport) {
   if (passport.kind === 'group') return 'ec';
-  return String(passport.code || '').startsWith('JP-') ? 'jp' : 'pa';
+  const code = String(passport.code || '');
+  if (code.startsWith('JP-')) return 'jp';
+  if (code.startsWith('MD-')) return 'md';
+  return 'pa';
 }
 
 /* Actions du sous-menu selon le groupe (max 20 car. en bouton). */
@@ -396,7 +400,7 @@ function suiviActions(kind, { includeRecap = true } = {}) {
     ? { id: 'suivi_programme', title: 'Programme' }
     : kind === 'af'
       ? { id: 'b2b_rdv', title: 'Mes rendez-vous' }
-      : { id: 'suivi_visites', title: kind === 'jp' ? 'Mes journées' : 'Mes visites' };
+      : { id: 'suivi_visites', title: ({ jp: 'Mes journées', md: 'Mon accréditation' })[kind] || 'Mes visites' };
   const actions = [];
   if (includeRecap) actions.push({ id: 'suivi_recap', title: 'Récapitulatif' });
   actions.push(
@@ -651,13 +655,15 @@ function participateBody() {
   return [
     "*Participer à la Semaine de l'industrie*",
     '',
-    `1. *Participation au Palais des Congrès* : assistez aux conférences et panels, l'ouverture (lundi 16), le forum des métiers (mardi 17) ou les femmes dans l'industrie (mercredi 18), sur ${site}/journees-au-palais`,
+    `1. *Participation au Palais des Congrès* : conférences et panels du 16 au 18 novembre sur ${site}/journees-au-palais`,
     '',
-    `2. *Visites d'industries : particuliers* : étudiant, parent ou passionné de l'industrie, visitez des usines du 16 au 20 novembre sur ${site}/inscription-particulier`,
+    `2. *Visites d'industries : particuliers* : visitez des usines du 16 au 20 novembre sur ${site}/inscription-particulier`,
     '',
-    `3. *Visites d'industries : écoles / universités* : inscrivez en une seule fois vos filières, séries ou groupes d'apprenants sur ${site}/inscription-groupe`,
+    `3. *Visites d'industries : écoles / universités* : inscrivez vos filières ou groupes d'apprenants sur ${site}/inscription-groupe`,
     '',
-    `4. *Demande de labels pour les industries* : ouvrez votre usine aux visiteurs sur ${site}/label`,
+    `4. *Accréditation médias et créateurs de contenu* : couvrez la semaine sur ${site}/accreditation-medias`,
+    '',
+    `5. *Demande de labels pour les industries* : ouvrez votre usine aux visiteurs sur ${site}/label`,
     '',
     "Chaque formulaire donne son propre code : pour deux activités, remplissez les deux formulaires.",
     '',
@@ -950,7 +956,7 @@ async function openByTrackingCode(from, raw, phoneNumberId) {
 
 /* Texte d'intro du sous-menu. */
 function suiviIntro(kind, name) {
-  const labels = { in: 'Industrie', af: 'Affaires', pa: 'Particulier', jp: 'Palais des Congrès' };
+  const labels = { in: 'Industrie', af: 'Affaires', pa: 'Particulier', jp: 'Palais des Congrès', md: 'Accréditation médias' };
   const label = labels[kind] || 'École';
   return `${label} : ${name}\nQue souhaitez-vous ?`;
 }
@@ -990,6 +996,7 @@ async function replyPassportRecap(from, passport, phoneNumberId) {
 function formatPassportRecap(passport) {
   let kind = passport.kind === 'group' ? 'École' : 'Particulier';
   if (String(passport.code || '').startsWith('JP-')) kind = 'Palais des Congrès';
+  if (String(passport.code || '').startsWith('MD-')) kind = 'Accréditation médias';
   const url = `${SITE()}/mon-espace?code=${passport.code}`;
   return [
     'Récapitulatif',
@@ -1257,6 +1264,22 @@ async function formatPalaisJournees(passport) {
   return lines.join('\n').trim();
 }
 
+/* Accréditation média : média, profil et période de validité. */
+async function formatMediaAccreditation(passport) {
+  const row = await Participation.findOne({ where: { passport_id: passport.id, kind: 'media' } });
+  const details = row?.media_details || {};
+  return [
+    'Mon accréditation',
+    '',
+    `Nom : ${row?.name || passport.holder_name || 'Participant'}`,
+    ...(details.outlet ? [`Média : ${details.outlet}`] : []),
+    `Profil : ${media.profileLabel(details.profile)}`,
+    `Validité : ${media.MEDIA_VALIDITY}`,
+    '',
+    'Présentez votre QR à l’accueil du Palais des Congrès et lors des visites d’usines.',
+  ].join('\n');
+}
+
 /* Liste les prochaines visites liées à l'organisation (site ou école). */
 async function formatVisites(org) {
   if (org.type === 'entreprise') return formatIncomingVisites(org);
@@ -1402,6 +1425,9 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         }
         return replyLinkedContent(from, phoneNumberId, linked.kind, await formatIncomingVisites(linked.organization));
       }
+      if (action === 'suivi_visites' && linked.kind === 'md' && linked.passport) {
+        return replyLinkedContent(from, phoneNumberId, linked.kind, await formatMediaAccreditation(linked.passport));
+      }
       if (action === 'suivi_visites' && linked.kind === 'jp' && linked.passport) {
         return replyLinkedContent(from, phoneNumberId, linked.kind, await formatPalaisJournees(linked.passport));
       }
@@ -1448,7 +1474,7 @@ async function resolveIdent(from, text, phoneNumberId, intent) {
   return replyAskCode(
     from,
     phoneNumberId,
-    'Code introuvable. Vérifiez-le et renvoyez-le (JP-4KTW, PA-3MXR, EC-G7H5 ou IN-K7P4).',
+    'Code introuvable. Vérifiez-le et renvoyez-le (JP-4KTW, PA-3MXR, EC-G7H5, MD-7RQA ou IN-K7P4).',
   );
 }
 
@@ -1484,7 +1510,7 @@ async function handleText(from, text, phoneNumberId) {
     return replyAskCode(
       from,
       phoneNumberId,
-      'Code introuvable. Vérifiez-le et renvoyez-le (JP-4KTW, PA-3MXR, EC-G7H5 ou IN-K7P4).',
+      'Code introuvable. Vérifiez-le et renvoyez-le (JP-4KTW, PA-3MXR, EC-G7H5, MD-7RQA ou IN-K7P4).',
     );
   }
 
@@ -1648,6 +1674,9 @@ async function notifyLabelRejected(request) {
 
 /* Journées du Palais choisies, pour les messages de secours (une inscription « palais » seulement). */
 function palaisFallback(participation) {
+  if (participation?.kind === 'media') {
+    return [`Accréditation médias (${media.summary(participation.media_details)}), valable ${media.MEDIA_VALIDITY}.`];
+  }
   if (participation?.kind !== 'palais') return [];
   const palais = require('../participations/palais');
   return [`Palais des Congrès : ${palais.daysShort(participation.palais_days)}.`];

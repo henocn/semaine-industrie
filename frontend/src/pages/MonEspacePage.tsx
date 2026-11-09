@@ -11,6 +11,7 @@ const TYPE_LABEL: Record<EspaceType, string> = {
   ecole: 'École / université',
   particulier: 'Particulier',
   palais: 'Participation au Palais des Congrès',
+  media: 'Accréditation médias',
   industrie: 'Industrie',
   affaires: 'Rencontres d’affaires',
 }
@@ -34,6 +35,7 @@ const LISTS: Record<EspaceType, { done: string; next: string; empty: string }> =
   ecole: { done: 'Sites visités', next: 'Visites à venir', empty: 'Aucun passage enregistré pour le moment.' },
   particulier: { done: 'Sites visités', next: 'Visites à venir', empty: 'Aucun passage enregistré pour le moment.' },
   palais: { done: 'Journées suivies', next: 'Journées à venir', empty: 'Aucune entrée enregistrée pour le moment.' },
+  media: { done: 'Passages', next: 'À venir', empty: 'Aucun passage enregistré pour le moment.' },
   industrie: { done: 'Passages reçus', next: 'Visites à venir', empty: 'Aucun passage reçu pour le moment.' },
   affaires: { done: 'Rendez-vous tenus', next: 'Rendez-vous à venir', empty: 'Aucun rendez-vous tenu pour le moment.' },
 }
@@ -87,13 +89,13 @@ function EspaceView({ space }: { space: Espace }) {
           <figure className="justify-self-start md:justify-self-end">
             <img src={space.qr_data_url} alt={`QR de participation ${space.code}`} width={144} height={144} className="h-36 w-36 border border-forest/15" />
             <figcaption className="mt-2 max-w-36 text-[13px] text-ink/60">
-              {space.type === 'palais' ? 'À présenter à l’accueil du Palais des Congrès' : 'À présenter à l’entrée des sites'}
+              {space.type === 'palais' ? 'À présenter à l’accueil du Palais des Congrès' : space.type === 'media' ? 'Accréditation valable du 16 au 22 novembre' : 'À présenter à l’entrée des sites'}
             </figcaption>
           </figure>
         )}
       </section>
 
-      {space.status === 'approved' && (
+      {space.status === 'approved' && space.stats.length > 0 && (
         <section aria-labelledby="bilan">
           <h2 id="bilan" className="display h3">Mon bilan</h2>
           <dl className="mt-4 flex flex-wrap gap-px border border-forest/15 bg-forest/15">

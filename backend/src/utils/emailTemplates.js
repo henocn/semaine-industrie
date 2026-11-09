@@ -113,6 +113,17 @@ function palaisDetails(days) {
   });
 }
 
+/* Lignes d'une accréditation média : média, profil et validité. */
+function mediaDetails(details) {
+  const media = require('../modules/participations/media');
+  const d = details || {};
+  return [
+    ...(d.outlet ? [['Média', d.outlet]] : []),
+    ['Profil', media.profileLabel(d.profile)],
+    ['Validité', media.MEDIA_VALIDITY],
+  ];
+}
+
 /* Modèles d'e-mails ; `site` permet de viser l'adresse de production depuis un test. */
 function emails(site = env.PUBLIC_APP_URL) {
   const base = String(site).replace(/\/$/, '');
@@ -206,6 +217,34 @@ function emails(site = env.PUBLIC_APP_URL) {
       card: { png: cardPng, fileCode: code },
       outro: ['Votre carte QR est jointe à ce message : présentez-la à l’accueil du Palais des Congrès, chaque journée choisie.'],
       button: space(code),
+    }),
+
+    /* Accréditation média : demande reçue. */
+    mediaReceived: ({ name, code, details }) => buildEmail({
+      subject: 'Accréditation médias : demande en cours de validation',
+      intro: [`Nous avons bien reçu la demande d’accréditation de **${name}** pour la Semaine de l’industrie 2026. Elle est **en cours de validation** par l’équipe d’organisation.`],
+      code,
+      details: mediaDetails(details),
+      outro: [FOLLOW, 'Vous recevrez une réponse par e-mail et sur WhatsApp.'],
+      button: space(code),
+    }),
+
+    /* Accréditation média : acceptée, avec la carte QR. */
+    mediaApproved: ({ name, code, cardPng, details }) => buildEmail({
+      subject: 'Accréditation médias : demande acceptée',
+      intro: [`L’accréditation de **${name}** pour la Semaine de l’industrie 2026 a été **acceptée**.`],
+      code,
+      details: mediaDetails(details),
+      card: { png: cardPng, fileCode: code },
+      outro: ['Votre carte QR d’accréditation est jointe à ce message : présentez-la à l’accueil du Palais des Congrès et lors des visites d’usines.'],
+      button: space(code),
+    }),
+
+    /* Accréditation média : refusée. */
+    mediaRejected: ({ name }) => buildEmail({
+      subject: 'Accréditation médias : demande non retenue',
+      intro: [`La demande d’accréditation de **${name}** pour la Semaine de l’industrie 2026 **n’a pas été acceptée**.`],
+      outro: refusedOutro,
     }),
 
     /* Particulier : inscription refusée. */

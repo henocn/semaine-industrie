@@ -7,7 +7,7 @@ const {
 } = require('../../models');
 
 const START = 2001;
-const PREFIXES = ['EC', 'PA', 'JP', 'AF', 'IN'];
+const PREFIXES = ['EC', 'PA', 'JP', 'MD', 'AF', 'IN'];
 /* Sans 0/O ni 1/I pour éviter les confusions ; 32 signes = tirage uniforme sur un octet. */
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const SUFFIX_LENGTH = 4;
@@ -22,7 +22,7 @@ function normalizeCode(raw) {
 function isKnownCodeShape(raw) {
   const code = normalizeCode(raw);
   return (
-    /^(?:EC|PA|JP|AF|IN)-[A-Z0-9]{4}$/.test(code)
+    /^(?:EC|PA|JP|MD|AF|IN)-[A-Z0-9]{4}$/.test(code)
     || /^SI\d{2}-\d{4}$/.test(code)
     || /^P[A-F0-9]{6}$/.test(code)
     || /^SI-DEMO-[A-Z0-9]+$/.test(code)
@@ -32,18 +32,19 @@ function isKnownCodeShape(raw) {
 /* Extrait le premier code de suivi d'un texte libre. */
 function extractCode(text) {
   const upper = String(text || '').toUpperCase();
-  const match = upper.match(/\b(?:EC|PA|JP|AF|IN)-[A-Z0-9]{4}\b/)
+  const match = upper.match(/\b(?:EC|PA|JP|MD|AF|IN)-[A-Z0-9]{4}\b/)
     || upper.match(/\bSI\d{2}-\d{4}\b/)
     || upper.match(/\bP[A-F0-9]{6}\b/)
     || upper.match(/\bSI-DEMO-[A-Z0-9]+\b/);
   return match ? match[0] : null;
 }
 
-/* Préfixe selon le groupe (écoles, particuliers, journées du Palais, affaires, industrie). */
+/* Préfixe selon le groupe (écoles, particuliers, Palais, médias, affaires, industrie). */
 function prefixFor(group) {
   if (group === 'ecole' || group === 'group') return 'EC';
   if (group === 'particulier' || group === 'individual') return 'PA';
   if (group === 'palais') return 'JP';
+  if (group === 'media') return 'MD';
   if (group === 'affaires' || group === 'business') return 'AF';
   return 'IN';
 }

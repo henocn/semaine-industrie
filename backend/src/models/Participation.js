@@ -13,7 +13,7 @@ module.exports = (sequelize) => {
         primaryKey: true,
       },
       kind: {
-        type: DataTypes.ENUM('ecole', 'particulier', 'palais'),
+        type: DataTypes.ENUM('ecole', 'particulier', 'palais', 'media'),
         allowNull: false,
       },
       name: {
@@ -73,6 +73,11 @@ module.exports = (sequelize) => {
       },
       /* Entrées scannées au Palais : { "16": "2026-11-16T08:42:00.000Z" }. */
       palais_checkins: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
+      /* Accréditation média : { outlet: "Radio Lomé", profile: "journaliste" }, pour le type « media ». */
+      media_details: {
         type: DataTypes.JSONB,
         allowNull: true,
       },

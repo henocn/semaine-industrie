@@ -23,7 +23,7 @@ import { SortControl } from '../components/orga/SortControl'
 import { useTableSort, type SortAccessors } from '../lib/useTableSort'
 import { useRowSelection } from '../lib/useRowSelection'
 import { excelDate, type ExcelColumn } from '../lib/excel'
-import { PALAIS_DAYS } from '../data'
+import { MEDIA_PROFILES, PALAIS_DAYS, mediaProfileLabel } from '../data'
 
 const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
@@ -50,6 +50,7 @@ const KIND_TABS: { key: ParticipationKind; label: string }[] = [
   { key: 'ecole', label: 'Visites : Écoles' },
   { key: 'particulier', label: 'Visites : Particuliers' },
   { key: 'palais', label: 'Palais des Congrès' },
+  { key: 'media', label: 'Médias' },
 ]
 
 /* Journées du Palais choisies, triées. */
@@ -90,6 +91,21 @@ const PALAIS_EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
   { header: 'Date de demande', width: 18, value: (r) => excelDate(r.createdAt) },
 ]
 
+/* Média et profil d'une accréditation : « Radio Lomé · Journaliste ». */
+function mediaSummary(item: Participation) {
+  const d = item.media_details || {}
+  return [d.outlet, d.profile ? mediaProfileLabel(d.profile) : null].filter(Boolean).join(' · ')
+}
+
+/* Export des accréditations médias. */
+const MEDIA_EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
+  ...EXPORT_COLUMNS.slice(0, 5),
+  { header: 'Média', width: 28, value: (r) => r.media_details?.outlet || '' },
+  { header: 'Profil', width: 20, value: (r) => (r.media_details?.profile ? mediaProfileLabel(r.media_details.profile) : '') },
+  { header: 'Ce qu’il prévoit de couvrir', width: 36, value: (r) => r.description },
+  { header: 'Date de demande', width: 18, value: (r) => excelDate(r.createdAt) },
+]
+
 /* Nombre de passages (0 tant qu'aucun scan). */
 function passageCount(item: Participation) {
   return item.passport?.passages ?? 0
@@ -121,6 +137,9 @@ function readForm(fd: FormData, kind: ParticipationKind) {
     headcount: kind === 'ecole' && headcountRaw ? Number(headcountRaw) : null,
     address: String(fd.get('address') || '').trim() || null,
     ...(kind === 'palais' ? { palais_days: fd.getAll('palais_days').map(Number) } : {}),
+    ...(kind === 'media'
+      ? { media_outlet: String(fd.get('media_outlet') || '').trim(), media_profile: String(fd.get('media_profile') || 'autre') }
+      : {}),
   }
 }
 
@@ -128,7 +147,26 @@ function readForm(fd: FormData, kind: ParticipationKind) {
 function descriptionLabel(kind: ParticipationKind) {
   if (kind === 'ecole') return 'Spécialités / séries ou filières'
   if (kind === 'palais') return 'Ce qui l’amène'
+  if (kind === 'media') return 'Ce qu’il prévoit de couvrir'
   return 'Note'
+}
+
+/* Média et profil d'une accréditation, pour l'ajout et la modification. */
+function MediaFields({ outlet = '', profile = '' }: { outlet?: string; profile?: string }) {
+  return (
+    <>
+      <label className="text-[13px] font-medium text-forest">
+        Média, chaîne ou compte
+        <input required name="media_outlet" minLength={2} maxLength={160} defaultValue={outlet} className={field} />
+      </label>
+      <label className="text-[13px] font-medium text-forest">
+        Profil
+        <select name="media_profile" defaultValue={profile || 'journaliste'} className={field}>
+          {MEDIA_PROFILES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+      </label>
+    </>
+  )
 }
 
 /* Cases des journées du Palais, pour l'ajout et la modification. */
@@ -195,7 +233,7 @@ export default function OrgaParticipationsPage() {
   const [detail, setDetail] = useState<Participation | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
-  const [pendingByKind, setPendingByKind] = useState<Record<ParticipationKind, number>>({ ecole: 0, particulier: 0, palais: 0 })
+  const [pendingByKind, setPendingByKind] = useState<Record<ParticipationKind, number>>({ ecole: 0, particulier: 0, palais: 0, media: 0 })
   const [position, setPosition] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null })
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
@@ -209,6 +247,7 @@ export default function OrgaParticipationsPage() {
       ecole: pending.filter((row) => row.kind === 'ecole').length,
       particulier: pending.filter((row) => row.kind === 'particulier').length,
       palais: pending.filter((row) => row.kind === 'palais').length,
+      media: pending.filter((row) => row.kind === 'media').length,
     })
   }
 
@@ -220,7 +259,14 @@ export default function OrgaParticipationsPage() {
 
   useEffect(() => {
     void loadPending().catch(() => undefined)
-  }, [])
+    /* Retour sur l'onglet du navigateur : compteurs et liste à jour, comme le menu latéral. */
+    function onVisible() {
+      if (document.visibilityState === 'visible') void load().catch(() => undefined)
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind])
 
   useEffect(() => {
     setRows([])
@@ -389,15 +435,19 @@ export default function OrgaParticipationsPage() {
 
   const isSchool = kind === 'ecole'
   const isPalais = kind === 'palais'
+  const isMedia = kind === 'media'
   let noun = filtered.length > 1 ? 'particuliers' : 'particulier'
   if (isSchool) noun = filtered.length > 1 ? 'écoles' : 'école'
   if (isPalais) noun = filtered.length > 1 ? 'inscrits au Palais' : 'inscrit au Palais'
+  if (isMedia) noun = filtered.length > 1 ? 'accréditations médias' : 'accréditation média'
   let addLabel = 'Ajouter un particulier'
   if (isSchool) addLabel = 'Ajouter une école'
   if (isPalais) addLabel = 'Ajouter une inscription'
+  if (isMedia) addLabel = 'Ajouter une accréditation'
   let exportName = { filename: 'inscriptions-particuliers', sheet: 'Particuliers' }
   if (isSchool) exportName = { filename: 'inscriptions-ecoles', sheet: 'Écoles' }
   if (isPalais) exportName = { filename: 'inscriptions-journees-palais', sheet: 'Palais des Congrès' }
+  if (isMedia) exportName = { filename: 'accreditations-medias', sheet: 'Médias' }
 
   return (
     <OrgaShell
@@ -464,6 +514,7 @@ export default function OrgaParticipationsPage() {
             </label>
           )}
           {isPalais && <PalaisDaysField />}
+          {isMedia && <MediaFields />}
           <label className="text-[13px] font-medium text-forest sm:col-span-2">
             {descriptionLabel(kind)}
             <textarea name="description" rows={3} className={`${field} resize-none`} />
@@ -477,7 +528,7 @@ export default function OrgaParticipationsPage() {
       )}
 
       <ExportBar selection={picked} filename={exportName.filename}
-        sheet={exportName.sheet} columns={isPalais ? PALAIS_EXPORT_COLUMNS : EXPORT_COLUMNS} />
+        sheet={exportName.sheet} columns={isPalais ? PALAIS_EXPORT_COLUMNS : isMedia ? MEDIA_EXPORT_COLUMNS : EXPORT_COLUMNS} />
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">
@@ -493,7 +544,7 @@ export default function OrgaParticipationsPage() {
               <th>Nom</th>
               <th className="w-40">Contact</th>
               <th className="w-28">Statut</th>
-              <th className={isPalais ? 'w-36' : 'w-24'}>{isPalais ? 'Journées' : 'Passage'}</th>
+              <th className={isPalais ? 'w-36' : isMedia ? 'w-56' : 'w-24'}>{isPalais ? 'Journées' : isMedia ? 'Média' : 'Passage'}</th>
               <th className="w-40">Actions</th>
             </tr>
           </thead>
@@ -527,6 +578,8 @@ export default function OrgaParticipationsPage() {
                           </span>
                         ))}
                       </td>
+                    ) : isMedia ? (
+                      <td>{mediaSummary(item) || '—'}</td>
                     ) : (
                       <td className={passageCount(item) > 0 ? 'font-semibold text-forest' : 'text-ink/45'}>
                         {passageCount(item)}
@@ -605,6 +658,7 @@ export default function OrgaParticipationsPage() {
                               </label>
                             )}
                             {isPalais && <PalaisDaysField value={palaisDays(shown)} />}
+                            {isMedia && <MediaFields outlet={shown.media_details?.outlet || ''} profile={shown.media_details?.profile || ''} />}
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
                               {descriptionLabel(kind)}
                               <textarea name="description" rows={3} defaultValue={shown.description || ''} className={`${field} resize-none`} />
@@ -639,6 +693,7 @@ export default function OrgaParticipationsPage() {
                               {shown.email && <p>{shown.email}</p>}
                               {shown.phone && <p>{shown.phone}</p>}
                               {shown.headcount ? <p>{shown.headcount} personnes</p> : null}
+                              {isMedia && mediaSummary(shown) && <p className="font-semibold text-forest">{mediaSummary(shown)}</p>}
                               {isPalais && (
                                 <ul className="my-2">
                                   {PALAIS_DAYS.filter((d) => palaisDays(shown).includes(d.n)).map((d) => (
