@@ -11,6 +11,7 @@ import { Field } from '../components/ui/Field'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { scrollToTopNow } from '../lib/scroll'
 import { PhoneField } from '../components/ui/PhoneField'
+import { PARTICULIER_VISITS_OPEN } from '../data'
 
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
@@ -26,6 +27,7 @@ export default function InscriptionParticulierPage() {
 
   /* Prévient avant l'envoi si les places sont toutes prises ; le formulaire reste ouvert. */
   useEffect(() => {
+    if (!PARTICULIER_VISITS_OPEN) return
     getParticulierCapacity()
       .then((capacity) => setFull(capacity.full))
       .catch(() => setFull(false))
@@ -66,12 +68,18 @@ export default function InscriptionParticulierPage() {
           <SectionHeader
             level={1}
             title="Visiter les industries en tant que particulier"
-            lead="Étudiant, parent, jeune diplômé ou curieux de l'industrie : inscrivez-vous pour visiter les usines labellisées « Usine ouverte ». Votre QR de visite arrive par e-mail et sur WhatsApp après validation."
+            lead={
+              PARTICULIER_VISITS_OPEN
+                ? "Étudiant, parent, jeune diplômé ou curieux de l'industrie : inscrivez-vous pour visiter les usines labellisées « Usine ouverte ». Votre QR de visite arrive par e-mail et sur WhatsApp après validation."
+                : 'Étudiant, parent, jeune diplômé ou curieux de l’industrie : les usines labellisées « Usine ouverte » accueillent les particuliers inscrits, par petits groupes.'
+            }
           />
           <VisitDaysNote audience="public" />
-          <p className="mt-3 text-[15px] leading-relaxed text-red-700">
-            Le code de cette inscription est différent de celui que vous avez reçu si vous êtes aussi inscrit aux conférences du Palais des Congrès.
-          </p>
+          {PARTICULIER_VISITS_OPEN && (
+            <p className="mt-3 text-[15px] leading-relaxed text-red-700">
+              Le code de cette inscription est différent de celui que vous avez reçu si vous êtes aussi inscrit aux conférences du Palais des Congrès.
+            </p>
+          )}
           <picture className="contents">
             <source srcSet="/images/inscription-particulier.webp" type="image/webp" />
             <img
@@ -85,7 +93,28 @@ export default function InscriptionParticulierPage() {
           </picture>
         </div>
 
-        {sent ? (
+        {!PARTICULIER_VISITS_OPEN ? (
+          <div className="self-start rounded-sm border-2 border-sun bg-sage p-6">
+            <p className="text-xl text-forest">Complet : les inscriptions sont closes.</p>
+            <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
+              Toutes les places prévues pour les particuliers aux visites d’industries sont attribuées.
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
+              Déjà inscrit ? Retrouvez votre dossier et votre QR dans{' '}
+              <Link to="/mon-espace/" className="font-semibold text-forest underline underline-offset-4">
+                Mon espace
+              </Link>
+              , avec votre code de suivi.
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
+              Vous pouvez aussi assister aux{' '}
+              <Link to="/journees-au-palais/" className="font-semibold text-forest underline underline-offset-4">
+                conférences et panels du Palais des Congrès
+              </Link>
+              , du 16 au 18 novembre.
+            </p>
+          </div>
+        ) : sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
             <p className="text-xl text-forest">
               {waitlisted ? 'Merci. Votre inscription aux visites est enregistrée en liste d’attente.' : 'Merci. Votre inscription aux visites d’industries est enregistrée.'}

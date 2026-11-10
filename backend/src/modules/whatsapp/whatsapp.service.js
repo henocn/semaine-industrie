@@ -657,7 +657,8 @@ function participateBody() {
     '',
     `1. *Participation au Palais des Congrès* : conférences et panels du 16 au 18 novembre sur ${site}/journees-au-palais`,
     '',
-    `2. *Visites d'industries : particuliers* : visitez des usines du 16 au 20 novembre sur ${site}/inscription-particulier`,
+    // Formulaire des particuliers fermé (complet) ; rouvrir : `visitez des usines du 16 au 20 novembre sur ${site}/inscription-particulier`.
+    "2. *Visites d'industries : particuliers* : complet, les inscriptions sont closes.",
     '',
     `3. *Visites d'industries : écoles / universités* : inscrivez vos filières ou groupes d'apprenants sur ${site}/inscription-groupe`,
     '',
@@ -680,7 +681,7 @@ function infosBody() {
     '*Informations*',
     "La Semaine de l’Industrie 2026 est portée par le Ministère délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique.",
     'Thème : « Accélérer l’industrialisation togolaise : transformation productive, innovation et compétitivité »',
-    'Participation libre et gratuite, sur demande préalable (menu « Participer à la semaine »).',
+    'La participation est gratuite. Les formulaires sont dans le menu « Participer à la semaine ».',
     '✉️ infos@semaineindustrie.tg',
     `🌐 ${SITE()}`,
   ].join('\n');
