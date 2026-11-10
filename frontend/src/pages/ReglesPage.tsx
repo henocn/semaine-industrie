@@ -24,7 +24,7 @@ const FORMS: { title: string; to: string; who: string }[] = [
   {
     title: 'Visites d’industries : particuliers',
     to: '/inscription-particulier/',
-    who: 'Pour visiter des usines à titre personnel, du lundi 16 au vendredi 20 novembre.',
+    who: 'Complet : toutes les places sont attribuées, les inscriptions sont closes.',
   },
   {
     title: 'Visites d’industries : écoles / universités',

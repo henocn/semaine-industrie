@@ -6,6 +6,7 @@ const validate = require('../../middlewares/validate.middleware');
 const { authenticate, authorize } = require('../../middlewares/auth.middleware');
 const { createSchema, publicSchema, updateSchema } = require('./participation.validation');
 const ApiError = require('../../utils/ApiError');
+const env = require('../../config/env');
 
 const router = Router();
 const publicHits = new Map();
@@ -23,10 +24,18 @@ function limitPublic(req, res, next) {
   return next();
 }
 
+/* Refuse les formulaires publics fermés (visites des particuliers : complet). Le backoffice peut toujours ajouter. */
+function closedForms(req, res, next) {
+  if (req.body?.kind === 'particulier' && !env.PARTICULIER_OPEN) {
+    return next(ApiError.badRequest('Les inscriptions des particuliers aux visites d’industries sont closes : toutes les places sont attribuées.'));
+  }
+  return next();
+}
+
 router.get('/public/capacity', controller.capacity);
 router.get('/public/palais/:code', controller.palaisPass);
 router.get('/public/media/:code', controller.mediaPass);
-router.post('/public', limitPublic, validate(publicSchema), controller.create);
+router.post('/public', closedForms, limitPublic, validate(publicSchema), controller.create);
 
 router.use(authenticate, authorize('orga'));
 
