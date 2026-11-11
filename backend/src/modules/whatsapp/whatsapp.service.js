@@ -141,7 +141,7 @@ async function sendWithMenu({ to, phoneNumberId, body }) {
   });
 }
 
-/* Invite à saisir un code de suivi. */
+/* Invite à saisir un code de suivi : texte court, sans bouton (le bouton Menu troublait les utilisateurs). */
 async function replyAskCode(from, phoneNumberId, body) {
   setSession(from, {
     mode: 'await_code',
@@ -152,12 +152,10 @@ async function replyAskCode(from, phoneNumberId, body) {
     passportId: null,
     b2bId: null,
   });
-  return sendWithMenu({
+  return sendText({
     to: from,
     phoneNumberId,
-    body:
-      body
-      || "Espace de suivi pour le Palais des Congrès, les visites d'industries (particuliers, écoles / universités), les médias et les industries. Entrez le code de suivi envoyé à l'inscription.",
+    body: body || 'Veuillez entrer votre code de suivi reçu à l’inscription :',
   });
 }
 
