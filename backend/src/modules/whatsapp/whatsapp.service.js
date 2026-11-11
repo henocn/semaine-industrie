@@ -656,9 +656,13 @@ function participateBody() {
     "*Participer à la Semaine de l'industrie*",
     '',
     `1. *Palais des Congrès* (16-18 nov.) : ${site}/journees-au-palais`,
+    '',
     `2. *Visites d'usines, particuliers* : ${site}/inscription-particulier`,
+    '',
     `3. *Visites d'usines, écoles / universités* : ${site}/inscription-groupe`,
+    '',
     `4. *Médias et créateurs de contenu* : ${site}/accreditation-medias`,
+    '',
     `5. *Labels pour les industries* : ${site}/label`,
     // Rencontres d'affaires retirées du public (programme validé) ; les inscrits existants gardent leur code AF.
     // `*Rencontres d'affaires* : ${site}/affaires`,
