@@ -40,8 +40,8 @@ const env = cleanEnv(process.env, {
   PROGRAMME_PDF_URL: str({ default: '/uploads/docs/programme-si2026.pdf' }),
   /* Places pour les particuliers ; au-delà, l'inscription reste ouverte en liste d'attente. */
   PARTICULIER_LIMIT: num({ default: 80 }),
-  /* Inscriptions publiques des particuliers aux visites : fermées (complet). true pour rouvrir. */
-  PARTICULIER_OPEN: bool({ default: false }),
+  /* Inscriptions publiques des particuliers aux visites : ouvertes. false pour les fermer. */
+  PARTICULIER_OPEN: bool({ default: true }),
 
   /* SMTP SiteGround — mot de passe à renseigner en prod (laisser vide ici si besoin). */
   SMTP_HOST: str({ default: 'mail.semaineindustrie.tg' }),

@@ -14,8 +14,7 @@ import FaqPage from './pages/FaqPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
 import InscriptionGroupPage from './pages/InscriptionGroupPage'
-// Visites des particuliers retirées du public (complet) ; page conservée pour une reprise éventuelle.
-// import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
+import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
 import JourneesPalaisPage from './pages/JourneesPalaisPage'
 import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
@@ -79,7 +78,7 @@ export function AppRoutes() {
             <Route path="/label" element={<LabelRequestPage />} />
             <Route path="/inscription" element={<Navigate to="/inscription-groupe/" replace />} />
             <Route path="/inscription-groupe" element={<InscriptionGroupPage />} />
-            {/* <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} /> */}
+            <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
             <Route path="/journees-au-palais" element={<JourneesPalaisPage />} />
             <Route path="/accreditation-medias" element={<AccreditationMediasPage />} />
             <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />

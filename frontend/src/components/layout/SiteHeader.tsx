@@ -12,8 +12,7 @@ type NavGroup = {
 
 const PARTICIPER_ITEMS: NavItem[] = [
   { label: 'Participation au Palais des Congrès', to: '/journees-au-palais/' },
-  // Retiré du public : complet. Les inscriptions déjà reçues restent au back-office.
-  // { label: 'Visites d’industries : particuliers', to: '/inscription-particulier/' },
+  { label: 'Visites d’industries : particuliers', to: '/inscription-particulier/' },
   { label: 'Visites d’industries : écoles / universités', to: '/inscription-groupe/' },
   { label: 'Accréditation médias et créateurs de contenu', to: '/accreditation-medias/' },
   { label: 'Demande de labels pour les industries', to: '/label/' },

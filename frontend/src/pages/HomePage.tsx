@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { sendContactMessage } from '../api/contact'
 import { listResources, type GlobalResource } from '../api/resources'
 import { ResourceCard } from '../components/ResourceCard'
-import { DAYS, NATIONAL_THEME, SPEAKERS, PLACES, PARTNERS, YOUTH_PILLAR } from '../data'
+// SPEAKERS retiré de l'accueil : liste interne des intervenantes pressenties.
+import { DAYS, NATIONAL_THEME, PLACES, PARTNERS, YOUTH_PILLAR } from '../data'
 import { Seo } from '../components/Seo'
 import { CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
 import { publicSeo } from '../lib/seo'
@@ -256,18 +257,19 @@ function ProgrammeStrip() {
   )
 }
 
-/* Intervenantes pressenties. */
+/* Panel des femmes dans l'industrie (la liste des intervenantes pressenties reste interne). */
 function Women() {
   return (
     <section className="border-t border-forest/10 py-12 sm:py-16">
-      <div className={`${WRAP} grid gap-10 md:grid-cols-[1fr_1.1fr]`}>
+      <div className={`${WRAP} grid items-center gap-10 md:grid-cols-[1fr_1.1fr]`}>
         <div className="reveal">
           <SectionHeader
             title="Les métiers de l’industrie au féminin"
-            lead="Panel du mercredi 18 novembre, à 9h10."
+            lead="Panel du mercredi 18 novembre, à 9h10, au Palais des Congrès : des industrielles et une jeune femme qui démarre son activité, après la projection de portraits filmés de femmes de l’industrie."
           />
-          <Photo name="atelier" alt="Ouvrières dans un atelier textile" className="mt-8 aspect-[4/3]" />
         </div>
+        <Photo name="atelier" alt="Ouvrières dans un atelier textile" className="reveal aspect-[4/3]" />
+        {/* Intervenantes pressenties : détail interne, retiré du public.
         <ul className="reveal self-start border-t border-forest/15" style={{ transitionDelay: '60ms' }}>
           {SPEAKERS.map(([name, org]) => (
             <li key={name} className="border-b border-forest/15 py-4">
@@ -276,6 +278,7 @@ function Women() {
             </li>
           ))}
         </ul>
+        */}
       </div>
     </section>
   )
