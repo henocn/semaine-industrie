@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { getParticulierCapacity, registerParticipation } from '../api/participations'
+import { registerParticipation } from '../api/participations'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
 import { VisitDaysNote } from '../components/VisitDaysNote'
 import { Seo } from '../components/Seo'
@@ -22,16 +22,17 @@ export default function InscriptionParticulierPage() {
   const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [full, setFull] = useState(false)
   const [waitlisted, setWaitlisted] = useState(false)
 
-  /* Prévient avant l'envoi si les places sont toutes prises ; le formulaire reste ouvert. */
+  /* Avertissement avant l'envoi retiré : la liste d'attente s'annonce seulement après l'inscription.
+  const [full, setFull] = useState(false)
   useEffect(() => {
     if (!PARTICULIER_VISITS_OPEN) return
     getParticulierCapacity()
       .then((capacity) => setFull(capacity.full))
       .catch(() => setFull(false))
   }, [])
+  */
 
   /* Envoie l'inscription (téléphone obligatoire). */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -156,6 +157,7 @@ export default function InscriptionParticulierPage() {
             <Field label="Ce qui vous intéresse" className="sm:col-span-2">
               <textarea name="description" rows={3} className={`${field} resize-none`} />
             </Field>
+            {/* Avertissement « places toutes attribuées » retiré du formulaire.
             {full && (
               <p className="sm:col-span-2 text-[15px] leading-relaxed text-red-700">
                 Les places prévues pour les particuliers sont toutes attribuées. Vous pouvez quand même vous inscrire : votre demande sera placée en liste d’attente et nous vous préviendrons dès qu’une place se libère.
@@ -166,6 +168,7 @@ export default function InscriptionParticulierPage() {
                 .
               </p>
             )}
+            */}
             {error && <p className="sm:col-span-2 text-sm text-red-700">{error}</p>}
             <div className="sm:col-span-2">
               <Button type="submit" disabled={loading}>
