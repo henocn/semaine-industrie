@@ -14,6 +14,8 @@ const STEPS: { title: string; text: ReactNode }[] = [
       <>
         Avec votre établissement (
         <Link to="/inscription-groupe/" className="font-semibold text-forest underline underline-offset-2">visites d’industries : écoles / universités</Link>
+        ) ou à titre personnel (
+        <Link to="/inscription-particulier/" className="font-semibold text-forest underline underline-offset-2">visites d’industries : particuliers</Link>
         ). Les visites ont lieu du lundi 16 au vendredi 20 novembre.
       </>
     ),

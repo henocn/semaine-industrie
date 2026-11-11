@@ -655,23 +655,15 @@ function participateBody() {
   return [
     "*Participer à la Semaine de l'industrie*",
     '',
-    `1. *Participation au Palais des Congrès* : conférences et panels du 16 au 18 novembre sur ${site}/journees-au-palais`,
-    '',
-    // Visites des particuliers retirées du public (complet).
-    // `2. *Visites d'industries : particuliers* : visitez des usines du 16 au 20 novembre sur ${site}/inscription-particulier`,
-    // '',
-    `2. *Visites d'industries : écoles / universités* : inscrivez vos filières ou groupes d'apprenants sur ${site}/inscription-groupe`,
-    '',
-    `3. *Accréditation médias et créateurs de contenu* : couvrez la semaine sur ${site}/accreditation-medias`,
-    '',
-    `4. *Demande de labels pour les industries* : ouvrez votre usine aux visiteurs sur ${site}/label`,
-    '',
-    "Chaque formulaire donne son propre code : pour deux activités, remplissez les deux formulaires.",
-    '',
+    `1. *Palais des Congrès* (16-18 nov.) : ${site}/journees-au-palais`,
+    `2. *Visites d'usines, particuliers* : ${site}/inscription-particulier`,
+    `3. *Visites d'usines, écoles / universités* : ${site}/inscription-groupe`,
+    `4. *Médias et créateurs de contenu* : ${site}/accreditation-medias`,
+    `5. *Labels pour les industries* : ${site}/label`,
     // Rencontres d'affaires retirées du public (programme validé) ; les inscrits existants gardent leur code AF.
-    // `4. *Rencontres d'affaires* : entreprises ou investisseurs sur ${site}/affaires`,
-    // '',
-    '📩 Avec votre *code de suivi*, voyez où en est votre participation dans « Suivi de participation ».',
+    // `*Rencontres d'affaires* : ${site}/affaires`,
+    '',
+    'Chaque formulaire donne un code, à suivre dans « Suivi de participation ».',
   ].join('\n');
 }
 

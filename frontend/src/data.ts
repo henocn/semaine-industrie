@@ -45,8 +45,8 @@ export const DAYS: Day[] = [
   },
 ]
 
-/* Formulaire des particuliers aux visites : retiré du public (complet). Pour rouvrir : true ici, route et menu décommentés, PARTICULIER_OPEN=true côté serveur. */
-export const PARTICULIER_VISITS_OPEN = false
+/* Formulaire des particuliers aux visites : ouvert. Pour le fermer : false ici et PARTICULIER_OPEN=false côté serveur. */
+export const PARTICULIER_VISITS_OPEN = true
 
 /* Journées du Palais des Congrès ouvertes à l'inscription des particuliers (mêmes numéros côté serveur). */
 export type PalaisDay = { n: number; label: string; title: string; place: string; hours: string; text: string }
@@ -147,7 +147,7 @@ export const FAQ = [
   },
   {
     q: 'Les visites d’usines sont-elles ouvertes au public ?',
-    a: 'Oui ! Les industries labellisées « Usine ouverte » accueillent les écoles et les particuliers du lundi 16 au vendredi 20 novembre 2026, par petits groupes et sur plusieurs créneaux.\nLes écoles et universités inscrivent leurs groupes dans la rubrique « Participer » du site.',
+    a: 'Oui ! Les industries labellisées « Usine ouverte » accueillent les écoles et les particuliers du lundi 16 au vendredi 20 novembre 2026, par petits groupes et sur plusieurs créneaux.\nPour vous inscrire et connaître les modalités de participation, rendez-vous dans la rubrique « Participer » du site.',
   },
   {
     q: 'Qu’est-ce que le Forum d’orientation des métiers de l’industrie ?',
@@ -163,7 +163,7 @@ export const FAQ = [
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie en tant que particulier, école ou université ?',
-    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : écoles / universités » pour inscrire un groupe.\n• « Accréditation médias et créateurs de contenu » pour couvrir la semaine en tant que média.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
+    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\n• « Visites d’industries : écoles / universités » pour inscrire un groupe.\n• « Accréditation médias et créateurs de contenu » pour couvrir la semaine en tant que média.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
   },
   {
     q: 'Comment participer aux rendez-vous au Palais des Congrès ?',

@@ -21,12 +21,11 @@ const FORMS: { title: string; to: string; who: string }[] = [
     to: '/journees-au-palais/',
     who: 'Pour assister aux conférences et panels du lundi 16 au mercredi 18 novembre, au Palais des Congrès de Lomé.',
   },
-  // Retiré du public (complet).
-  // {
-  //   title: 'Visites d’industries : particuliers',
-  //   to: '/inscription-particulier/',
-  //   who: 'Pour visiter des usines à titre personnel, du lundi 16 au vendredi 20 novembre.',
-  // },
+  {
+    title: 'Visites d’industries : particuliers',
+    to: '/inscription-particulier/',
+    who: 'Pour visiter des usines à titre personnel, du lundi 16 au vendredi 20 novembre.',
+  },
   {
     title: 'Visites d’industries : écoles / universités',
     to: '/inscription-groupe/',
