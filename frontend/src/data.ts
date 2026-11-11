@@ -103,11 +103,14 @@ export const SPEAKERS = [
 
 export const PLACES = [
   ['Zone portuaire de Lomé', 'Plastique, pharmacie, agro-alimentaire, métal, bois, cosmétique.'],
-  ['Zone franche', '141 entreprises agréées depuis 1994 et environ 19 000 emplois directs.'],
-  ['Plateforme d’Adétikopé (PIA)', 'Textile, soja, engrais, bois, brasserie, assemblage ; plus de 3 000 emplois.'],
-  ['Matières premières', 'Phosphates, calcaire et clinker.'],
-  ['Agro-industrie', 'Environ 46 % de la valeur ajoutée manufacturière.'],
-  ['Régions', 'Agbélouvé (parc éco-industriel à l’étude) et Kara (pôle en gestation).'],
+  ['Zone franche', 'Entreprises industrielles agréées au régime de zone franche.'],
+  ['Plateforme d’Adétikopé (PIA)', 'Textile, soja, engrais, bois, brasserie, assemblage.'],
+  // Retirés de l'accueil : chiffres sans source et projets non décidés.
+  // ['Zone franche', '141 entreprises agréées depuis 1994 et environ 19 000 emplois directs.'],
+  // ['Plateforme d’Adétikopé (PIA)', 'Textile, soja, engrais, bois, brasserie, assemblage ; plus de 3 000 emplois.'],
+  // ['Matières premières', 'Phosphates, calcaire et clinker.'],
+  // ['Agro-industrie', 'Environ 46 % de la valeur ajoutée manufacturière.'],
+  // ['Régions', 'Agbélouvé (parc éco-industriel à l’étude) et Kara (pôle en gestation).'],
 ]
 
 export const PARTNERS = [

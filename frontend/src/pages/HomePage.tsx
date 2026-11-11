@@ -4,7 +4,8 @@ import { sendContactMessage } from '../api/contact'
 import { listResources, type GlobalResource } from '../api/resources'
 import { ResourceCard } from '../components/ResourceCard'
 // SPEAKERS retiré de l'accueil : liste interne des intervenantes pressenties.
-import { DAYS, NATIONAL_THEME, PLACES, PARTNERS, YOUTH_PILLAR } from '../data'
+// PARTNERS retiré de l'accueil : partenaires pas tous confirmés.
+import { DAYS, NATIONAL_THEME, PLACES, YOUTH_PILLAR } from '../data'
 import { Seo } from '../components/Seo'
 import { CAMPAIGN_TAGLINE, WRAP } from '../components/layout/Mark'
 import { publicSeo } from '../lib/seo'
@@ -305,10 +306,12 @@ function Places() {
             </div>
           ))}
         </dl>
+        {/* Partenaires retirés de l'accueil tant qu'ils ne sont pas tous confirmés.
         <p className="mt-12 text-[14px] leading-relaxed text-ink/70">
           <span className="font-semibold text-forest">Avec </span>
           {PARTNERS.join(', ')}.
         </p>
+        */}
       </div>
     </section>
   )
