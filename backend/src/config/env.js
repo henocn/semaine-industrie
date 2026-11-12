@@ -39,7 +39,7 @@ const env = cleanEnv(process.env, {
   /* PDF programme officiel (chemin public ou URL absolue). */
   PROGRAMME_PDF_URL: str({ default: '/uploads/docs/programme-si2026.pdf' }),
   /* Places pour les particuliers ; au-delà, l'inscription reste ouverte en liste d'attente. */
-  PARTICULIER_LIMIT: num({ default: 80 }),
+  PARTICULIER_LIMIT: num({ default: 400 }),
   /* Inscriptions publiques des particuliers aux visites : ouvertes. false pour les fermer. */
   PARTICULIER_OPEN: bool({ default: true }),
 
