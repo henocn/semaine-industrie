@@ -685,10 +685,13 @@ function infosBody() {
 function mainMenuPayload(to) {
   return {
     to,
+    /* Dit clairement que c'est un assistant automatique : les gens croyaient écrire à une personne. */
     body:
-      "Bienvenue dans la Semaine de l'industrie 2026.\n" +
-      '16-22 novembre, Togo.\n\n' +
-      'Choisissez une option.',
+      "Bonjour, je suis l'assistant WhatsApp de la Semaine de l'industrie 2026 (16-22 novembre, Togo).\n\n" +
+      'Je fonctionne uniquement avec le menu ci-dessous. Pour une question personnalisée, ' +
+      `échangez avec l'assistant du site ${SITE()} (icône 🤖 en bas à droite) ` +
+      "ou écrivez à l'équipe : infos@semaineindustrie.tg\n\n" +
+      'Sélectionnez une option.',
     buttonLabel: 'Ouvrir le menu',
     header: "L'industrie à portée de main",
     sections: [
