@@ -12,6 +12,7 @@ import { SectionHeader } from '../components/ui/SectionHeader'
 import { checkGalleryFiles } from '../lib/imageQuality'
 import { scrollToTopNow } from '../lib/scroll'
 import { PhoneField } from '../components/ui/PhoneField'
+import { SendingSteps } from '../components/ui/SendingSteps'
 
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
@@ -210,6 +211,7 @@ export default function LabelRequestPage() {
               <Button type="submit" disabled={loading}>
                 {loading ? 'Envoi…' : 'Envoyer la demande'}
               </Button>
+              {loading && <SendingSteps />}
             </div>
           </form>
         )}
