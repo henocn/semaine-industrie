@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
@@ -16,28 +15,20 @@ const MINISTRY_TAGS: { handle: string; networks: string }[] = [
 
 const STEPS: { title: string; text: ReactNode }[] = [
   {
-    title: 'Inscrivez-vous à une visite',
+    title: 'Vis pleinement la Semaine de l’industrie',
+    text: 'Participe à toutes les activités de la Semaine de l’industrie, du 16 au 22 novembre 2026, et trouve ton inspiration.',
+  },
+  {
+    title: 'Réalise ta vidéo',
+    text: 'Raconte ton expérience à ta manière. Laisse libre cours à ta créativité !',
+  },
+  {
+    title: 'Publie et mobilise ta communauté !',
     text: (
       <>
-        À titre personnel (
-        <Link to="/inscription-particulier/" className="font-semibold text-forest underline underline-offset-2">visites d’industries : particuliers</Link>
-        ), ou avec votre établissement s’il est déjà inscrit. Les visites ont lieu du lundi 16 au vendredi 20 novembre.
-      </>
-    ),
-  },
-  {
-    title: 'Filmez votre visite',
-    text: 'Montrez ce que vous découvrez : les machines, les métiers, les personnes qui fabriquent. Filmez uniquement là où l’industrie l’autorise et suivez ses consignes de sécurité.',
-  },
-  {
-    title: 'Publiez votre vidéo',
-    text: `Partagez-la sur les réseaux sociaux avec le hashtag ${HASHTAG}, pour qu’elle soit vue et prise en compte.`,
-  },
-  {
-    title: 'Taguez le Ministère',
-    text: (
-      <>
-        Dans votre publication, taguez le compte du Ministère selon le réseau :
+        Partage ta vidéo sur les réseaux sociaux avec le hashtag{' '}
+        <span className="whitespace-nowrap font-semibold text-forest">{HASHTAG}</span> et tague les comptes officiels du
+        Ministère délégué chargé de la Promotion des Investissements, de l’Industrie et de la Souveraineté économique :
         <span className="mt-2 block space-y-1">
           {MINISTRY_TAGS.map((tag) => (
             <span key={tag.handle} className="block">
@@ -45,29 +36,35 @@ const STEPS: { title: string; text: ReactNode }[] = [
             </span>
           ))}
         </span>
+        <span className="mt-3 block">
+          <span className="font-semibold text-forest">Le nombre de likes compte :</span> plus ta vidéo en reçoit, plus elle a
+          de chances de remporter le concours !
+        </span>
       </>
     ),
   },
 ]
 
-/* Concours vidéo : élèves et étudiants filment leur visite d'usine. */
+/* Concours vidéo : élèves et étudiants racontent la Semaine de l'industrie en vidéo. */
 export default function ConcoursVideoPage() {
   return (
     <main className="py-16 sm:py-24">
       <Seo {...publicSeo('/concours-video')} />
       <div className={`${WRAP} max-w-2xl`}>
         <div className="animate-rise">
-          <SectionHeader
-            level={1}
-            title="Concours vidéo"
-            lead="Élèves et étudiants : filmez votre visite d’usine pendant la Semaine de l’industrie et publiez-la sur les réseaux sociaux."
-          />
+          <SectionHeader level={1} title="Relève le challenge !" lead="Et si ta vidéo faisait la différence ?" />
           <p className="mt-5 text-[16px] text-ink/80">
             <span className="mr-2 whitespace-nowrap font-sans text-[32px] font-bold italic tracking-tight tabular-nums text-[#a87d00] sm:text-[38px]">200 000 FCFA</span>
-            pour la meilleure vidéo de la semaine.
+            à remporter !
+          </p>
+          <p className="mt-4 text-[15px] leading-relaxed text-ink/75">
+            À l’occasion de la Semaine de l’industrie 2026, réalise la meilleure vidéo de l’événement et tente de remporter le
+            grand prix ! Reportage, vlog, résumé de tes découvertes ou création originale… À toi de raconter la Semaine de
+            l’industrie comme tu l’entends !
           </p>
         </div>
 
+        {/* Image retirée de la page (nouvelle présentation du concours) ; fichiers conservés dans public/images.
         <picture className="contents">
           <source srcSet="/images/concours-video.webp" type="image/webp" />
           <img
@@ -78,13 +75,15 @@ export default function ConcoursVideoPage() {
             className="mt-6 aspect-[5/2] w-full rounded-sm object-cover object-[50%_5%]"
           />
         </picture>
+        */}
 
-        <ol className="mt-8 border-t border-forest/15">
+        <h2 className="mt-10 text-xl font-semibold text-forest">Comment participer ?</h2>
+        <ol className="mt-4 border-t border-forest/15">
           {STEPS.map((step, index) => (
             <li key={step.title} className="grid grid-cols-[2.5rem_1fr] gap-3 border-b border-forest/15 py-5">
               <span className="text-xl font-semibold tabular-nums text-forest">{index + 1}</span>
               <div>
-                <h2 className="font-semibold text-forest">{step.title}</h2>
+                <h3 className="font-semibold text-forest">{step.title}</h3>
                 <p className="mt-1 text-[15px] leading-relaxed text-ink/75">{step.text}</p>
               </div>
             </li>
@@ -92,20 +91,24 @@ export default function ConcoursVideoPage() {
         </ol>
 
         <section className="mt-10 space-y-2 text-[15px] leading-relaxed text-ink/75">
-          <h2 className="text-xl font-semibold text-forest">Qui peut participer ?</h2>
-          <p>Tout élève ou étudiant présent lors d’une visite d’usine, inscrit à titre personnel ou venu avec son établissement.</p>
+          <h2 className="text-xl font-semibold text-forest">Et si c’était toi le grand gagnant ?</h2>
           <p>
-            Hashtag à utiliser : <span className="font-mono font-semibold text-forest">{HASHTAG}</span>
+            Un jury désignera la vidéo gagnante. Son auteur remportera 200 000 FCFA et verra sa création mise à l’honneur sur
+            les réseaux sociaux officiels du Ministère.
           </p>
+          <p className="font-semibold text-forest">Concours réservé aux élèves et aux étudiants.</p>
+        </section>
+
+        <section className="mt-10 space-y-2 text-[15px] leading-relaxed text-ink/75">
+          <h2 className="text-xl font-semibold text-forest">Alors, prêt à relever le challenge ?</h2>
+          <p>Deviens le créateur vedette de la Semaine de l’industrie 2026 !</p>
           <p>
-            Pour toute question :{' '}
+            Une question ?{' '}
             <a href="mailto:infos@semaineindustrie.tg" className="font-semibold text-forest underline underline-offset-2">
               infos@semaineindustrie.tg
             </a>
-            .
           </p>
         </section>
-
       </div>
     </main>
   )

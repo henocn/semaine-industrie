@@ -86,7 +86,7 @@ export const ALL_WEEK: [string, string, string][] = [
   ['Exposition « Fabriqué au Togo »', 'Du lundi au mercredi, au 1er étage du Palais des Congrès', '19 stands d’industries togolaises, lancés par le Ministre le lundi 16 à l’issue de l’ouverture.'],
   ['Le parcours des métiers', 'Du lundi au mercredi, dans le hall du Palais des Congrès', 'Des silhouettes grandeur nature, chacune avec sa fiche métier : missions, formations, débouchés.'],
   ['« Ça se fabrique au Togo »', 'Toute la semaine, sur les réseaux du Ministère', 'Chaque jour, une usine ouverte présentée en vidéo dans la rubrique « L’usine du jour ».'],
-  ['Concours vidéo', 'Sur les réseaux, pour les élèves et les étudiants', 'Filmez votre visite et publiez-la avec #SemaineIndustrieTogo2026 : la meilleure vidéo gagne 200 000 FCFA.'],
+  ['Concours vidéo', 'Sur les réseaux, pour les élèves et les étudiants', 'Racontez la semaine en vidéo et publiez-la avec #SemaineIndustrieTogo2026 : la meilleure vidéo gagne 200 000 FCFA.'],
 ]
 
 /* Thème national de l'édition 2026 ; « L'industrie à portée de main » reste le slogan. */
@@ -162,7 +162,7 @@ export const FAQ = [
   },
   {
     q: 'Comment participer au concours vidéo ?',
-    a: 'Le concours est ouvert aux élèves et aux étudiants. Filmez votre visite d’usine et publiez votre vidéo sur les réseaux sociaux avec le hashtag #SemaineIndustrieTogo2026, en taguant le Ministère : @ministre_mdpise sur Instagram et Facebook, @ministere.invest sur TikTok, @Promo_InvestTg sur X.\nLa meilleure vidéo sur la semaine remporte 200 000 FCFA.',
+    a: 'Le concours est réservé aux élèves et aux étudiants. Vivez la Semaine de l’industrie du 16 au 22 novembre, réalisez votre vidéo et publiez-la sur les réseaux sociaux avec le hashtag #SemaineIndustrieTogo2026, en taguant le Ministère : @ministre_mdpise sur Instagram et Facebook, @ministere.invest sur TikTok, @Promo_InvestTg sur X.\nLe nombre de likes compte. Un jury désigne la vidéo gagnante : 200 000 FCFA et une mise à l’honneur sur les réseaux sociaux officiels du Ministère.',
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie ?',
