@@ -373,7 +373,18 @@ export default function OrgaLabelsPage() {
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
       {info && <p className="mb-4 text-[14px] text-forest">{info}</p>}
 
-      <ExportBar selection={picked} filename="labels" sheet="Demandes de label" columns={EXPORT_COLUMNS} />
+      <ExportBar
+        selection={picked}
+        filename="labels"
+        sheet="Demandes de label"
+        columns={EXPORT_COLUMNS}
+        review={{
+          eligible: (row) => row.status === 'pending',
+          run: (row, status) => reviewLabelRequest(row.id, status),
+          name: (row) => row.structure_name,
+          onDone: load,
+        }}
+      />
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">

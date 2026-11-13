@@ -528,7 +528,18 @@ export default function OrgaBusinessPage() {
             </section>
           )}
 
-          <ExportBar selection={pickedPeople} filename="rencontres-personnes" sheet="Personnes" columns={peopleColumns} />
+          <ExportBar
+            selection={pickedPeople}
+            filename="rencontres-personnes"
+            sheet="Personnes"
+            columns={peopleColumns}
+            review={{
+              eligible: (p) => p.status === 'pending',
+              run: (p, status) => reviewParticipant(p.id, status),
+              name: (p) => businessParticipantLabel(p),
+              onDone: load,
+            }}
+          />
           <section className="orga-panel !p-0 overflow-x-auto">
             <div className="flex items-center justify-between border-b border-black px-4 py-3">
               <h2 className="text-[15px] font-semibold text-forest">

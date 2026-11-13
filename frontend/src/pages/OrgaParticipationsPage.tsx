@@ -536,8 +536,21 @@ export default function OrgaParticipationsPage() {
         </form>
       )}
 
-      <ExportBar selection={picked} filename={exportName.filename}
-        sheet={exportName.sheet} columns={isPalais ? PALAIS_EXPORT_COLUMNS : isMedia ? MEDIA_EXPORT_COLUMNS : EXPORT_COLUMNS} />
+      <ExportBar
+        selection={picked}
+        filename={exportName.filename}
+        sheet={exportName.sheet}
+        columns={isPalais ? PALAIS_EXPORT_COLUMNS : isMedia ? MEDIA_EXPORT_COLUMNS : EXPORT_COLUMNS}
+        review={{
+          eligible: (row) => row.status === 'pending',
+          run: (row, status) => (status === 'approved' ? approveParticipation(row.id) : rejectParticipation(row.id)),
+          name: (row) => row.name,
+          onDone: async () => {
+            setDetail(null)
+            await load()
+          },
+        }}
+      />
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">
