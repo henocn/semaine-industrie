@@ -693,6 +693,11 @@ export default function OrgaParticipationsPage() {
                               {shown.email && <p>{shown.email}</p>}
                               {shown.phone && <p>{shown.phone}</p>}
                               {shown.headcount ? <p>{shown.headcount} personnes</p> : null}
+                              {item.departure_scan && (
+                                <p className="font-semibold text-forest">
+                                  Départ scanné · {item.departure_scan.point} · {new Date(item.departure_scan.scanned_at).toLocaleString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              )}
                               {isMedia && mediaSummary(shown) && <p className="font-semibold text-forest">{mediaSummary(shown)}</p>}
                               {isPalais && (
                                 <ul className="my-2">

@@ -29,7 +29,8 @@ import OrgaChatbotPage from './pages/OrgaChatbotPage'
 import OrgaChatbotDetailPage from './pages/OrgaChatbotDetailPage'
 import OrgaBusinessPage from './pages/OrgaBusinessPage'
 import OrgaDashboardPage from './pages/OrgaDashboardPage'
-import OrgaResourcesPage from './pages/OrgaResourcesPage'
+import OrgaScanPage from './pages/OrgaScanPage'
+import OrgaSettingsPage from './pages/OrgaSettingsPage'
 import OrgaLabelsPage from './pages/OrgaLabelsPage'
 import OrgaParticipationsPage from './pages/OrgaParticipationsPage'
 import OrgaSurveyPage from './pages/OrgaSurveyPage'
@@ -118,7 +119,10 @@ export function AppRoutes() {
             <Route path="/orga/visites" element={<OrgaVisitsPage />} />
             <Route path="/orga/affaires" element={<OrgaBusinessPage />} />
             <Route path="/orga/enquete" element={<OrgaSurveyPage />} />
-            <Route path="/orga/ressources" element={<OrgaResourcesPage />} />
+            <Route path="/orga/scan" element={<OrgaScanPage />} />
+            <Route path="/orga/parametres" element={<OrgaSettingsPage />} />
+            {/* Ressources : déplacées dans Paramètres. */}
+            <Route path="/orga/ressources" element={<Navigate to="/orga/parametres?onglet=ressources" replace />} />
             <Route element={<RequireAdmin />}>
               <Route path="/orga/chatbot" element={<OrgaChatbotPage />} />
               <Route path="/orga/chatbot/:phone" element={<OrgaChatbotDetailPage />} />

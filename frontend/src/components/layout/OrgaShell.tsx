@@ -13,7 +13,7 @@ import { listParticipations } from '../../api/participations'
 import { LABEL_PENDING_EVENT } from '../../lib/labelPending'
 import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
 import { joinRoom, onRealtime } from '../../lib/socket'
-import { isAdminRole, isStaffRole } from '../../lib/roles'
+import { isAdminRole, isScanRole, isStaffRole } from '../../lib/roles'
 import { PendingBadge } from '../orga/PendingBadge'
 import { Seo } from '../Seo'
 import { BrandLogo } from './Mark'
@@ -87,7 +87,8 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
 
   /* Charge le badge (navigation + focus + événement local + sockets). */
   useEffect(() => {
-    if (!user || !isStaffRole(user.role)) return
+    /* Le compte de scan n'a accès à aucune liste : pas de compteurs. */
+    if (!user || !isStaffRole(user.role) || isScanRole(user.role)) return
     void refreshPending()
 
     const onLocal = () => {
@@ -223,7 +224,12 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
       </a>
 
       <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
+        {isScanRole(user?.role) ? (
+          <NavLink to="/orga/scan" className={linkClass}>Scan</NavLink>
+        ) : (
+        <>
         <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
+        <NavLink to="/orga/scan" className={linkClass}>Scan</NavLink>
         <NavLink to="/orga/visites" className={linkClass}>Planning visites</NavLink>
         <NavLink to="/orga/labels" className={linkClass}>
           <span className="flex w-full items-center justify-between gap-2">
@@ -244,13 +250,16 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
           </span>
         </NavLink>
         <NavLink to="/orga/enquete" className={linkClass}>Sondage</NavLink>
-        <NavLink to="/orga/ressources" className={linkClass}>Ressources</NavLink>
+        {/* Ressources : déplacées dans Paramètres. */}
+        <NavLink to="/orga/parametres" className={linkClass}>Paramètres</NavLink>
         {isAdminRole(user?.role) && (
           <>
             <NavLink to="/orga/chatbot" className={linkClass}>Chatbot</NavLink>
             <NavLink to="/orga/audit" className={linkClass}>Audit et logs</NavLink>
             <NavLink to="/orga/utilisateurs" className={linkClass}>Utilisateurs</NavLink>
           </>
+        )}
+        </>
         )}
       </nav>
 

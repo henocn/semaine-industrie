@@ -23,6 +23,7 @@ const iconBtn =
 function roleLabel(role: string) {
   if (role === 'admin') return 'Admin'
   if (role === 'simple' || role === 'orga') return 'Simple'
+  if (role === 'scan') return 'Scan'
   return role
 }
 
@@ -157,6 +158,7 @@ export default function OrgaUsersPage() {
               <select name="role" defaultValue="simple" className={field}>
                 <option value="simple">Simple</option>
                 <option value="admin">Admin</option>
+                <option value="scan">Scan (scan des QR seulement)</option>
               </select>
             </label>
             <label className="text-[13px] font-medium text-forest">
@@ -293,11 +295,12 @@ export default function OrgaUsersPage() {
                 Rôle
                 <select
                   name="role"
-                  defaultValue={editing.role === 'admin' ? 'admin' : 'simple'}
+                  defaultValue={editing.role === 'admin' || editing.role === 'scan' ? editing.role : 'simple'}
                   className={field}
                 >
                   <option value="simple">Simple</option>
                   <option value="admin">Admin</option>
+                  <option value="scan">Scan (scan des QR seulement)</option>
                 </select>
               </label>
               <label className="text-[13px] font-medium text-forest">

@@ -6,14 +6,13 @@ import {
   uploadResource,
   type GlobalResource,
 } from '../api/resources'
-import { OrgaShell } from '../components/layout/OrgaShell'
 import { useOrgaRealtime } from '../lib/useOrgaRealtime'
 
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
-/* Backoffice : fichiers partagés, dont le programme WhatsApp. */
-export default function OrgaResourcesPage() {
+/* Ressources (documents publics, programme) : affichées dans Paramètres. */
+export function ResourcesPanel() {
   const [items, setItems] = useState<GlobalResource[]>([])
   const [title, setTitle] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -71,7 +70,7 @@ export default function OrgaResourcesPage() {
   }
 
   return (
-    <OrgaShell title="Ressources">
+    <>
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <section className="orga-panel mb-6">
@@ -148,6 +147,6 @@ export default function OrgaResourcesPage() {
           ))}
         </ul>
       </section>
-    </OrgaShell>
+    </>
   )
 }

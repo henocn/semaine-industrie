@@ -1,6 +1,6 @@
 import { apiFetch } from './client'
 
-export type StaffRole = 'admin' | 'simple'
+export type StaffRole = 'admin' | 'simple' | 'scan'
 
 export type OrgaUser = {
   id: string

@@ -1,7 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { Participation, Passport } = require('../../models');
+const { Participation, Passport, DepartureScan } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const passportService = require('../passports/passport.service');
@@ -104,9 +104,16 @@ async function list({ kind, status } = {}) {
     order: [['created_at', 'DESC']],
   });
   const waitlist = await waitlistIds();
+  /* Particuliers et médias : point de départ et heure du scan, s'ils ont été scannés. */
+  const particulierIds = rows.filter((row) => row.kind === 'particulier' || row.kind === 'media').map((row) => row.id);
+  const scans = particulierIds.length
+    ? await DepartureScan.findAll({ where: { participation_id: particulierIds }, attributes: ['participation_id', 'point_name', 'scanned_at'] })
+    : [];
+  const scanOf = new Map(scans.map((scan) => [scan.participation_id, { point: scan.point_name, scanned_at: scan.scanned_at }]));
   return Promise.all(rows.map(async (row) => ({
     ...(await present(row)),
     waitlisted: row.status === 'pending' && waitlist.has(row.id),
+    departure_scan: scanOf.get(row.id) || null,
   })));
 }
 
