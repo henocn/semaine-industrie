@@ -42,6 +42,9 @@ const EXPORT_COLUMNS: ExcelColumn<LabelRequest>[] = [
   { header: 'Date de demande', width: 18, value: (r) => excelDate(r.createdAt || r.created_at) },
 ]
 
+/* Kit et carte QR des industries : plus envoyés ni affichés (true pour les remettre). */
+const SHOW_KIT_AND_QR = false
+
 const KIT_ACCEPT =
   '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp'
 
@@ -180,6 +183,7 @@ export default function OrgaLabelsPage() {
 
   /* Charge le QR quand une ligne acceptée est ouverte. */
   useEffect(() => {
+    if (!SHOW_KIT_AND_QR) return
     if (!selected || selected.status !== 'approved') {
       setSelectedQr(null)
       return
@@ -763,6 +767,7 @@ function LabelDetail({
             )}
           </div>
 
+          {SHOW_KIT_AND_QR && (
           <div className="mt-5 border-t border-black pt-4">
             <h3 className="text-[14px] font-semibold text-forest">Kit</h3>
             {selected.status !== 'approved' ? (
@@ -835,8 +840,9 @@ function LabelDetail({
               </div>
             )}
           </div>
+          )}
 
-          {selected.status === 'approved' && (
+          {SHOW_KIT_AND_QR && selected.status === 'approved' && (
             <div className="mt-5 border-t border-black pt-4">
               <h3 className="text-[14px] font-semibold text-forest">Carte QR</h3>
               {selectedQr ? (

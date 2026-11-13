@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { BadgeCheck, Navigation } from 'lucide-react'
+import { BadgeCheck, Navigation, X } from 'lucide-react'
 import { listIndustries, type IndustryCard } from '../api/labels'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
-import { Button } from '../components/ui/Button'
 
 /* Image commune tant qu'une industrie n'a pas sa propre photo. */
 const DEFAULT_IMAGE = '/images/industrie-defaut.jpg'
+
+/* Remplissage de l'image : une vraie photo couvre tout le cadre (pas de bandes) ; l'illustration commune, sur fond blanc, reste entière. */
+function fitOf(item: IndustryCard) {
+  return item.photo_url || item.gallery_urls?.[0] ? 'object-cover' : 'object-contain'
+}
 
 /* Photo de l'industrie, sinon l'image commune. */
 function imageOf(item: IndustryCard) {
@@ -41,30 +45,35 @@ function IndustryDialog({ item, onClose }: { item: IndustryCard; onClose: () => 
         if (e.target === e.currentTarget) onClose()
       }}
       aria-labelledby="industrie-titre"
-      className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-sm bg-white p-0 shadow-xl backdrop:bg-black/50"
+      className="m-auto w-[calc(100%-2rem)] max-w-lg overflow-hidden rounded-sm bg-white p-0 shadow-xl backdrop:bg-black/50"
     >
-      <img src={imageOf(item)} alt="" className="aspect-[3/2] w-full bg-white object-cover" />
-      <div className="p-5 sm:p-6">
-        <h2 id="industrie-titre" className="font-display text-2xl font-bold text-forest">
+      <div className="relative">
+        <img src={imageOf(item)} alt="" className={`h-36 w-full bg-white sm:h-44 ${fitOf(item)}`} />
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fermer"
+          className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-forest shadow-sm transition-colors hover:bg-forest hover:text-white"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+      <div className="px-5 pb-5 pt-3 sm:px-6">
+        <h2 id="industrie-titre" className="font-display text-xl font-bold text-forest">
           {item.name}
         </h2>
-        {item.description && <p className="mt-3 text-[15px] leading-relaxed text-ink/80">{item.description}</p>}
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          {gps && (
-            <a
-              href={gps}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"
-            >
-              <Navigation className="h-4 w-4" aria-hidden="true" />
-              Localisation
-            </a>
-          )}
-          <Button type="button" variant="outline" onClick={onClose}>
-            Fermer
-          </Button>
-        </div>
+        {item.description && <p className="mt-2 text-[14px] leading-relaxed text-ink/80">{item.description}</p>}
+        {gps && (
+          <a
+            href={gps}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"
+          >
+            <Navigation className="h-4 w-4" aria-hidden="true" />
+            Localisation
+          </a>
+        )}
       </div>
     </dialog>
   )
@@ -126,7 +135,7 @@ export default function IndustriesPage() {
                       src={imageOf(item)}
                       alt=""
                       loading="lazy"
-                      className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                      className={`h-full w-full ${fitOf(item)} transition-transform duration-500 group-hover:scale-105`}
                     />
                     <span
                       title="Labellisée « Usine ouverte »"

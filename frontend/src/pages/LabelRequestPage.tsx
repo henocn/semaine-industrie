@@ -97,7 +97,7 @@ export default function LabelRequestPage() {
           <SectionHeader
             level={1}
             title="Demander le label"
-            lead="Industries : déposez votre dossier en ligne. L’équipe valide, puis le kit et la fiche publique suivent."
+            lead="Industries : déposez votre dossier en ligne. Après validation par l’équipe, votre industrie apparaît sur le site et sur la carte."
           />
           <VisitDaysNote audience="industrie" />
         </div>
@@ -175,7 +175,7 @@ export default function LabelRequestPage() {
               <input required type="checkbox" name="contact_opt_in" className="mt-1 accent-forest" />
               <span>
                 J&apos;accepte d&apos;être contacté pour la suite par e-mail et/ou WhatsApp
-                (validation, kit, visites).
+                (validation, visites).
               </span>
             </label>
 
