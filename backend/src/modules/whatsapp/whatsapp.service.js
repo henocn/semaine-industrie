@@ -657,11 +657,12 @@ function participateBody() {
     '',
     `2. *Visites d'usines, particuliers* : ${site}/inscription-particulier`,
     '',
-    `3. *Visites d'usines, écoles / universités* : ${site}/inscription-groupe`,
+    // Visites des écoles / universités retirées du public (inscriptions closes).
+    // `*Visites d'usines, écoles / universités* : ${site}/inscription-groupe`,
+    // '',
+    `3. *Médias et créateurs de contenu* : ${site}/accreditation-medias`,
     '',
-    `4. *Médias et créateurs de contenu* : ${site}/accreditation-medias`,
-    '',
-    `5. *Labels pour les industries* : ${site}/label`,
+    `4. *Labels pour les industries* : ${site}/label`,
     // Rencontres d'affaires retirées du public (programme validé) ; les inscrits existants gardent leur code AF.
     // `*Rencontres d'affaires* : ${site}/affaires`,
     '',

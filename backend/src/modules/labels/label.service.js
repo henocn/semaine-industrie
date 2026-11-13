@@ -471,7 +471,7 @@ async function listPublicIndustries() {
     },
     attributes: [
       'id', 'name', 'slug', 'sector', 'region', 'city',
-      'description', 'products', 'photo_url', 'gallery_urls',
+      'description', 'products', 'photo_url', 'gallery_urls', 'lat', 'lng',
     ],
     order: [['name', 'ASC']],
   });

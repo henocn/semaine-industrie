@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import type { MapPoint } from '../../api/labels'
-import { createTogoMap, showTogo } from './togoMap'
+import { createTogoMap, showArea, showTogo } from './togoMap'
 
 type Props = {
   points: MapPoint[]
   selectedId: string | null
   onSelect: (id: string) => void
   tall?: boolean
+  /* Cadre les sites (le sud du pays) au lieu du Togo entier. */
+  focusPoints?: boolean
 }
 
 /* Marqueur circulaire brand. */
@@ -22,7 +24,7 @@ function makeIcon(active: boolean, hasVisits: boolean) {
 }
 
 /* Carte des sites, limitée au Togo. */
-export function SitesMap({ points, selectedId, onSelect, tall }: Props) {
+export function SitesMap({ points, selectedId, onSelect, tall, focusPoints }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const layerRef = useRef<L.LayerGroup | null>(null)
@@ -71,10 +73,13 @@ export function SitesMap({ points, selectedId, onSelect, tall }: Props) {
       markersRef.current.set(p.id, marker)
     }
 
+    const placed = Array.from(markersRef.current.values(), (m) => m.getLatLng())
     requestAnimationFrame(() => {
-      if (mapRef.current === map) showTogo(map)
+      if (mapRef.current !== map) return
+      if (focusPoints && placed.length) showArea(map, L.latLngBounds(placed).pad(0.25))
+      else showTogo(map)
     })
-  }, [points])
+  }, [points, focusPoints])
 
   useEffect(() => {
     const map = mapRef.current

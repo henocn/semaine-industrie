@@ -57,6 +57,8 @@ export type IndustryCard = {
   products: string[]
   photo_url: string | null
   gallery_urls: string[]
+  lat?: string | number | null
+  lng?: string | number | null
 }
 
 /* Upload la photo de l'industrie (multipart, champ gallery). */

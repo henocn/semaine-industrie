@@ -14,23 +14,35 @@ const trackingService = require('../tracking/tracking.service');
 const passportService = require('../passports/passport.service');
 const labelService = require('../labels/label.service');
 const ApiError = require('../../utils/ApiError');
+const { renderQrCardDataUrl } = require('../../utils/qrCard');
+const { parsePhoneNumberFromString } = require('libphonenumber-js');
 const palais = require('../participations/palais');
 const media = require('../participations/media');
 
 const TIME_ZONE = 'Africa/Lome';
 
-/* Masque un e-mail : le code de suivi seul ne doit pas révéler le contact complet. */
+/* Masque un e-mail : première lettre et dernière lettre avant @, le domaine reste lisible. */
 function maskEmail(email) {
   const [local, domain] = String(email || '').split('@');
   if (!local || !domain) return null;
-  return `${local[0]}•••@${domain}`;
+  return local.length > 1 ? `${local[0]}•••${local.slice(-1)}@${domain}` : `${local}•••@${domain}`;
 }
 
-/* Masque un téléphone : garde l'indicatif et les deux derniers chiffres. */
+/* Masque un téléphone : indicatif, deux premiers et deux derniers chiffres du numéro. */
 function maskPhone(phone) {
   const text = String(phone || '').replace(/\s+/g, '');
   if (text.length < 6) return null;
-  return `${text.slice(0, 4)} •• •• •• ${text.slice(-2)}`;
+  const parsed = parsePhoneNumberFromString(text);
+  const national = parsed ? String(parsed.nationalNumber) : text.replace(/\D/g, '');
+  const prefix = parsed ? `+${parsed.countryCallingCode} ` : '';
+  if (national.length < 5) return null;
+  return `${prefix}${national.slice(0, 2)} •• •• ${national.slice(-2)}`;
+}
+
+/* Carte QR comme au back-office et dans les e-mails : logo, nom et code autour du QR. */
+function qrCardFor(passport, name) {
+  if (!passport) return null;
+  return renderQrCardDataUrl({ payload: passportService.passageQrPayload(passport.code), name, code: passport.code });
 }
 
 /* Date lisible à l'heure de Lomé. */
@@ -137,7 +149,7 @@ function kitDocuments(org) {
 async function palaisSpace(passport, participation) {
   const days = palais.normalizeDays(participation.palais_days);
   const checkins = participation.palais_checkins || {};
-  const qr = await passportService.withQr(passport);
+  const qr_data_url = await qrCardFor(passport, participation.name);
   const row = (n, when) => {
     const day = palais.dayInfo(n);
     return { id: `palais-${n}`, title: `${day.label} : ${day.title}`, detail: `Palais des Congrès de Lomé, ${day.place.toLowerCase()}`, when };
@@ -148,7 +160,7 @@ async function palaisSpace(passport, participation) {
     type: 'palais',
     name: participation.name,
     status: participation.status,
-    qr_data_url: qr.qr_data_url,
+    qr_data_url,
     page_url: null,
     facts: facts([
       ['Journées choisies', palais.daysShort(days)],
@@ -168,14 +180,14 @@ async function palaisSpace(passport, participation) {
 
 /* Espace d'une accréditation média (code MD-) : média, profil, validité et QR. */
 async function mediaSpace(passport, participation) {
-  const qr = await passportService.withQr(passport);
+  const qr_data_url = await qrCardFor(passport, participation.name);
   const details = participation.media_details || {};
   return {
     code: passport.code,
     type: 'media',
     name: participation.name,
     status: participation.status,
-    qr_data_url: qr.qr_data_url,
+    qr_data_url,
     page_url: null,
     facts: facts([
       ['Média', details.outlet],
@@ -207,14 +219,14 @@ async function passportSpace(passport) {
       ? { school_organization_id: passport.school_organization_id }
       : { [Op.and]: [whereFn(fn('lower', fn('trim', col('school_name'))), name.trim().toLowerCase())] };
   }
-  const qr = await passportService.withQr(passport);
+  const qr_data_url = await qrCardFor(passport, name);
 
   return {
     code: passport.code,
     type: isGroup ? 'ecole' : 'particulier',
     name,
     status: participation?.status || 'approved',
-    qr_data_url: qr.qr_data_url,
+    qr_data_url,
     page_url: null,
     facts: facts([
       ['Ville', participation?.city],
@@ -233,13 +245,13 @@ async function schoolSpace(org) {
     where: { kind: 'group', school_organization_id: org.id, is_active: true },
     order: [['created_at', 'ASC']],
   });
-  const qr = passports[0] ? await passportService.withQr(passports[0]) : null;
+  const qr_data_url = await qrCardFor(passports[0], org.name);
   return {
     code: org.label_code,
     type: 'ecole',
     name: org.name,
     status: 'approved',
-    qr_data_url: qr?.qr_data_url || null,
+    qr_data_url,
     page_url: null,
     facts: facts([
       ['Lieu', place(org)],

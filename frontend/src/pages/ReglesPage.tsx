@@ -26,11 +26,12 @@ const FORMS: { title: string; to: string; who: string }[] = [
     to: '/inscription-particulier/',
     who: 'Pour visiter des usines à titre personnel, du lundi 16 au vendredi 20 novembre.',
   },
-  {
-    title: 'Visites d’industries : écoles / universités',
-    to: '/inscription-groupe/',
-    who: 'Pour inscrire un établissement et ses groupes d’apprenants aux visites d’usines. Une seule inscription par établissement.',
-  },
+  // Retiré du public (inscriptions des écoles closes).
+  // {
+  //   title: 'Visites d’industries : écoles / universités',
+  //   to: '/inscription-groupe/',
+  //   who: 'Pour inscrire un établissement et ses groupes d’apprenants aux visites d’usines. Une seule inscription par établissement.',
+  // },
   {
     title: 'Accréditation médias et créateurs de contenu',
     to: '/accreditation-medias/',
