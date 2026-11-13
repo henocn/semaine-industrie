@@ -114,7 +114,7 @@ export default function MapPage() {
                   </ul>
 
                   <Link
-                    to={`/o/${active.slug}`}
+                    to={`/industrie/?o=${encodeURIComponent(active.slug)}`}
                     className="mt-6 inline-block text-[15px] font-medium text-forest underline decoration-forest/30 underline-offset-4"
                   >
                     Voir la fiche

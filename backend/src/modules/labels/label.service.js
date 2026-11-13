@@ -76,8 +76,8 @@ async function createRequest(payload) {
   }
   if (data.structure_type === 'entreprise') {
     const gallery = Array.isArray(data.gallery_urls) ? data.gallery_urls : [];
-    if (gallery.length !== 3) {
-      throw ApiError.badRequest('Trois images sont obligatoires pour une industrie');
+    if (gallery.length !== 1) {
+      throw ApiError.badRequest('Une photo est obligatoire pour une industrie');
     }
   }
   await assertAvailable('labels', { email: data.contact_email, phone: data.contact_phone });

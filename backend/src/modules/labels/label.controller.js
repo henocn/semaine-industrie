@@ -164,12 +164,12 @@ async function reviewRequest(req, res, next) {
   }
 }
 
-/* Upload de 3 images pour une demande entreprise. */
+/* Upload de la photo d'une demande entreprise. */
 async function uploadGallery(req, res, next) {
   try {
     const files = req.files || [];
-    if (files.length !== 3) {
-      throw ApiError.badRequest('Exactement 3 images sont requises');
+    if (files.length !== 1) {
+      throw ApiError.badRequest('Une photo est requise');
     }
     const urls = files.map((f) => `/uploads/labels/${f.filename}`);
     return ApiResponse.created(res, { urls }, 'Images enregistrées');

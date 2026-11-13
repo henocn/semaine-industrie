@@ -94,8 +94,8 @@ const uploadKit = multer({
   limits: { fileSize: 15 * 1024 * 1024, files: 1 },
 });
 
-/* Middleware : exactement 3 images (champ gallery). */
-const uploadGallery = uploadImages.array('gallery', 3);
+/* Middleware : une photo (champ gallery). */
+const uploadGallery = uploadImages.array('gallery', 1);
 
 /* Middleware : fichier kit à l'approbation (champ label_pdf, rétrocompat). */
 const uploadLabelPdf = uploadKit.single('label_pdf');

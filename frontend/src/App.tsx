@@ -21,7 +21,8 @@ import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
 import MonEspacePage from './pages/MonEspacePage'
 import NotFoundPage from './pages/NotFoundPage'
-import OrganizationPage from './pages/OrganizationPage'
+// Fiche détaillée retirée : les industries s'ouvrent en carte sur /industrie (QR /o/:slug redirigés).
+// import OrganizationPage from './pages/OrganizationPage'
 import OrgaAuditPage from './pages/OrgaAuditPage'
 import OrgaChatbotPage from './pages/OrgaChatbotPage'
 import OrgaChatbotDetailPage from './pages/OrgaChatbotDetailPage'
@@ -51,6 +52,12 @@ function SurveyRedirect() {
 function PassportRedirect() {
   const { code = '' } = useParams()
   return <Navigate to={`/mon-espace?code=${encodeURIComponent(code)}`} replace />
+}
+
+/* Ancienne fiche d'une industrie (QR des labels, messages) : ouvre sa carte dans la liste des industries. */
+function OrganizationRedirect() {
+  const { slug = '' } = useParams()
+  return <Navigate to={`/industrie/?o=${encodeURIComponent(slug)}`} replace />
 }
 
 /* Sur le sous-domaine backoffice, n'autorise que login + espace orga. */
@@ -96,7 +103,7 @@ export function AppRoutes() {
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/confidentialite" element={<PrivacyPage />} />
             <Route path="/regles-de-participation" element={<ReglesPage />} />
-            <Route path="/o/:slug" element={<OrganizationPage />} />
+            <Route path="/o/:slug" element={<OrganizationRedirect />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
 

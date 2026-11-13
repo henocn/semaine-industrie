@@ -20,7 +20,7 @@ const entrepriseOnly = {
   sector: Joi.string().trim().max(120).allow('', null),
   products: Joi.array().items(Joi.string().trim().max(120)).default([]),
   safety_rules: Joi.string().trim().allow('', null),
-  gallery_urls: Joi.array().items(imagePath).length(3).required(),
+  gallery_urls: Joi.array().items(imagePath).length(1).required(),
 };
 
 /* Schéma de création d'une demande de label. */

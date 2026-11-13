@@ -29,7 +29,7 @@ export default function LabelRequestPage() {
   const [fileNames, setFileNames] = useState<string[]>([])
   const galleryInputId = useId()
 
-  /* Prévisualise les 3 images choisies et mémorise leurs noms. */
+  /* Prévisualise la photo choisie et mémorise son nom. */
   function onGalleryChange(files: FileList | null) {
     setPreviews((prev) => {
       for (const url of prev) URL.revokeObjectURL(url)
@@ -39,7 +39,7 @@ export default function LabelRequestPage() {
       setFileNames([])
       return
     }
-    const list = Array.from(files).slice(0, 3)
+    const list = Array.from(files).slice(0, 1)
     setFileNames(list.map((f) => f.name))
     setPreviews(list.map((f) => URL.createObjectURL(f)))
   }
@@ -59,11 +59,6 @@ export default function LabelRequestPage() {
       return
     }
     setLoading(true)
-    const productsRaw = String(fd.get('products') || '')
-    const products = productsRaw
-      .split(',')
-      .map((p) => p.trim())
-      .filter(Boolean)
 
     try {
       const input = form.elements.namedItem('gallery') as HTMLInputElement
@@ -80,9 +75,6 @@ export default function LabelRequestPage() {
         contact_phone: String(fd.get('contact_phone') || '').trim() || undefined,
         contact_opt_in: fd.get('contact_opt_in') === 'on',
         description: String(fd.get('description') || '') || undefined,
-        products,
-        max_visitors: fd.get('max_visitors') ? Number(fd.get('max_visitors')) : null,
-        safety_rules: String(fd.get('safety_rules') || '') || undefined,
         lat,
         lng,
         gallery_urls,
@@ -137,7 +129,7 @@ export default function LabelRequestPage() {
             </div>
 
             <div className="sm:col-span-2">
-              <p className="text-sm font-semibold text-forest">3 photos en bonne qualité de votre installation ou produits, 4 Mo maximum par photo.</p>
+              <p className="text-sm font-semibold text-forest">Une photo en bonne qualité de votre installation ou de vos produits, 4 Mo maximum.</p>
               <div className="mt-1.5">
                 <input
                   id={galleryInputId}
@@ -145,7 +137,6 @@ export default function LabelRequestPage() {
                   name="gallery"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                  multiple
                   className="sr-only"
                   onChange={(e) => onGalleryChange(e.target.files)}
                 />
@@ -153,18 +144,14 @@ export default function LabelRequestPage() {
                   htmlFor={galleryInputId}
                   className="inline-flex cursor-pointer items-center border border-forest bg-forest px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-ink"
                 >
-                  Choisir des photos
+                  Choisir une photo
                 </label>
                 <p className="mt-2 text-[13px] text-ink/70" aria-live="polite">
-                  {fileNames.length === 0
-                    ? 'Aucun fichier choisi'
-                    : fileNames.length === 1
-                      ? `1 fichier : ${fileNames[0]}`
-                      : `${fileNames.length} fichiers : ${fileNames.join(', ')}`}
+                  {fileNames.length === 0 ? 'Aucun fichier choisi' : fileNames[0]}
                 </p>
               </div>
               {previews.length > 0 && (
-                <div className="mt-4 grid grid-cols-3 gap-2">
+                <div className="mt-4 max-w-xs">
                   {previews.map((src) => (
                     <div key={src} className="aspect-[4/3] overflow-hidden bg-sage">
                       <img src={src} alt="" className="h-full w-full object-cover" />
@@ -180,17 +167,8 @@ export default function LabelRequestPage() {
             <Field label="Téléphone" hint="De préférence un numéro WhatsApp.">
               <PhoneField required name="contact_phone" className={field} />
             </Field>
-            <Field label="Capacité max. visiteurs par créneau" className="sm:col-span-2">
-              <input type="number" min={1} name="max_visitors" className={field} />
-            </Field>
-            <Field label="Produits phares" hint="Séparés par des virgules" className="sm:col-span-2">
-              <input name="products" placeholder="farine, huile…" className={field} />
-            </Field>
             <Field label="Description" className="sm:col-span-2">
               <textarea name="description" rows={3} className={`${field} resize-none`} />
-            </Field>
-            <Field label="Règles de sécurité" className="sm:col-span-2">
-              <textarea name="safety_rules" rows={3} className={`${field} resize-none`} />
             </Field>
 
             <label className="flex items-start gap-3 text-[14px] text-ink/80 sm:col-span-2">
