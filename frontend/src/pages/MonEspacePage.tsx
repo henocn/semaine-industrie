@@ -87,20 +87,16 @@ function EspaceView({ space }: { space: Espace }) {
           )}
         </div>
         {space.qr_data_url && (
-          <figure className="w-56 justify-self-start md:justify-self-end">
-            <img src={space.qr_data_url} alt={`QR de participation ${space.code}`} className="h-auto w-full border border-forest/15" />
-            <figcaption className="mt-2 text-[13px] text-ink/60">
-              {space.type === 'palais' ? 'À présenter à l’accueil du Palais des Congrès' : space.type === 'media' ? 'Accréditation valable du 16 au 22 novembre' : 'À présenter à l’entrée des sites'}
-            </figcaption>
+          <div className="justify-self-start md:justify-self-end">
             <a
               href={space.qr_data_url}
               download={`qr-${space.code}.png`}
-              className="mt-3 inline-flex items-center gap-2 border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"
+              className="inline-flex items-center gap-2 border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
-              Télécharger
+              Télécharger le QR
             </a>
-          </figure>
+          </div>
         )}
       </section>
 
