@@ -543,7 +543,12 @@ export default function OrgaParticipationsPage() {
         columns={isPalais ? PALAIS_EXPORT_COLUMNS : isMedia ? MEDIA_EXPORT_COLUMNS : EXPORT_COLUMNS}
         review={{
           eligible: (row) => row.status === 'pending',
-          run: (row, status) => (status === 'approved' ? approveParticipation(row.id) : rejectParticipation(row.id)),
+          /* Le serveur ne bloque pas une participation déjà traitée : on revérifie juste avant (un collègue a pu agir entre-temps). */
+          run: async (row, status) => {
+            const fresh = await getParticipation(row.id)
+            if (fresh.status !== 'pending') throw new Error('Déjà traitée entre-temps, ignorée')
+            return status === 'approved' ? approveParticipation(row.id) : rejectParticipation(row.id)
+          },
           name: (row) => row.name,
           onDone: async () => {
             setDetail(null)

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RowSelection as Selection } from '../../lib/useRowSelection'
 import { exportToExcel, type ExcelColumn } from '../../lib/excel'
+import { runReviewBatch, type BatchResult, type ReviewStatus } from '../../lib/reviewBatch'
 
 /* En-tête de la colonne à cocher : tout cocher (état intermédiaire si partiel). */
 export function SelectAllHeader({ selection }: { selection: Selection }) {
@@ -37,8 +38,6 @@ export function SelectCell({ selection, id }: { selection: Selection; id: string
   )
 }
 
-type ReviewStatus = 'approved' | 'rejected'
-
 /* Acceptation / refus groupés : lignes concernées, action unitaire (avec ses notifications), rechargement. */
 export type BulkReview<T> = {
   /* Ligne encore à traiter (en attente). */
@@ -52,11 +51,10 @@ export type BulkReview<T> = {
 }
 
 type Progress = { status: ReviewStatus; done: number; total: number }
-type Outcome = { status: ReviewStatus; ok: number; total: number; failed: { name: string; message: string }[] }
 
-const VERB: Record<ReviewStatus, { button: string; noun: string }> = {
-  approved: { button: 'Accepter', noun: 'Acceptation' },
-  rejected: { button: 'Refuser', noun: 'Refus' },
+const VERB: Record<ReviewStatus, { button: string; noun: string; finished: string }> = {
+  approved: { button: 'Accepter', noun: 'Acceptation', finished: 'Acceptation terminée' },
+  rejected: { button: 'Refuser', noun: 'Refus', finished: 'Refus terminé' },
 }
 
 /* Barre affichée dès qu'une ligne est cochée : compte, export Excel, acceptation / refus groupés, désélection. */
@@ -76,7 +74,8 @@ export function ExportBar<T extends { id: string | number }>({
   const [busy, setBusy] = useState(false)
   const [asking, setAsking] = useState<ReviewStatus | null>(null)
   const [progress, setProgress] = useState<Progress | null>(null)
-  const [outcome, setOutcome] = useState<Outcome | null>(null)
+  const [outcome, setOutcome] = useState<BatchResult | null>(null)
+  const runningRef = useRef(false)
   const count = selection.selected.length
   const pending = review ? selection.selected.filter(review.eligible) : []
   const skipped = count - pending.length
@@ -103,26 +102,25 @@ export function ExportBar<T extends { id: string | number }>({
 
   /* Traite les lignes une à une (les notifications partent comme pour une action unitaire). */
   async function runBatch(status: ReviewStatus) {
-    if (!review || !pending.length) return
-    const rows = [...pending]
-    const failed: Outcome['failed'] = []
+    /* Un seul lot à la fois, même en cas de double clic. */
+    if (!review || !pending.length || runningRef.current) return
+    runningRef.current = true
     setAsking(null)
     setOutcome(null)
-    setProgress({ status, done: 0, total: rows.length })
-    for (let i = 0; i < rows.length; i += 1) {
-      try {
-        await review.run(rows[i], status)
-      } catch (err) {
-        failed.push({ name: review.name(rows[i]), message: err instanceof Error ? err.message : 'Action impossible' })
-      }
-      setProgress({ status, done: i + 1, total: rows.length })
-    }
-    selection.clear()
     try {
-      await review.onDone()
+      const result = await runReviewBatch(pending, status, review.run, review.name, (done, total) =>
+        setProgress({ status, done, total }),
+      )
+      selection.clear()
+      try {
+        await review.onDone()
+      } catch {
+        /* Rechargement raté : le bilan reste juste, le tableau se met à jour au prochain chargement. */
+      }
+      setOutcome(result)
     } finally {
       setProgress(null)
-      setOutcome({ status, ok: rows.length - failed.length, total: rows.length, failed })
+      runningRef.current = false
     }
   }
 
@@ -193,7 +191,7 @@ export function ExportBar<T extends { id: string | number }>({
           {outcome && (
             <span className={`flex flex-wrap items-center gap-2 ${count > 0 ? 'w-full border-t border-black/10 pt-2' : ''}`}>
               <span className={outcome.failed.length ? 'font-semibold text-red-700' : 'font-semibold text-forest'}>
-                {VERB[outcome.status].noun} terminé : <span className="tabular-nums">{outcome.ok}/{outcome.total}</span>
+                {VERB[outcome.status].finished} : <span className="tabular-nums">{outcome.ok}/{outcome.total}</span>
                 {outcome.failed.length > 0 && ` · ${outcome.failed.length} échec${outcome.failed.length > 1 ? 's' : ''}`}
               </span>
               <button type="button" className="text-ink/50 hover:text-forest" onClick={() => setOutcome(null)}>
