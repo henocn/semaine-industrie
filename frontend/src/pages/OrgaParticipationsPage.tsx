@@ -102,6 +102,7 @@ const MEDIA_EXPORT_COLUMNS: ExcelColumn<Participation>[] = [
   ...EXPORT_COLUMNS.slice(0, 5),
   { header: 'Média', width: 28, value: (r) => r.media_details?.outlet || '' },
   { header: 'Profil', width: 20, value: (r) => (r.media_details?.profile ? mediaProfileLabel(r.media_details.profile) : '') },
+  { header: 'Lien officiel', width: 36, value: (r) => r.media_details?.link || '' },
   { header: 'Ce qu’il prévoit de couvrir', width: 36, value: (r) => r.description },
   { header: 'Date de demande', width: 18, value: (r) => excelDate(r.createdAt) },
 ]
@@ -138,7 +139,11 @@ function readForm(fd: FormData, kind: ParticipationKind) {
     address: String(fd.get('address') || '').trim() || null,
     ...(kind === 'palais' ? { palais_days: fd.getAll('palais_days').map(Number) } : {}),
     ...(kind === 'media'
-      ? { media_outlet: String(fd.get('media_outlet') || '').trim(), media_profile: String(fd.get('media_profile') || 'autre') }
+      ? {
+          media_outlet: String(fd.get('media_outlet') || '').trim(),
+          media_profile: String(fd.get('media_profile') || 'autre'),
+          media_link: String(fd.get('media_link') || '').trim(),
+        }
       : {}),
   }
 }
@@ -151,8 +156,8 @@ function descriptionLabel(kind: ParticipationKind) {
   return 'Note'
 }
 
-/* Média et profil d'une accréditation, pour l'ajout et la modification. */
-function MediaFields({ outlet = '', profile = '' }: { outlet?: string; profile?: string }) {
+/* Média, profil et lien officiel d'une accréditation, pour l'ajout et la modification. */
+function MediaFields({ outlet = '', profile = '', link = '' }: { outlet?: string; profile?: string; link?: string }) {
   return (
     <>
       <label className="text-[13px] font-medium text-forest">
@@ -164,6 +169,10 @@ function MediaFields({ outlet = '', profile = '' }: { outlet?: string; profile?:
         <select name="media_profile" defaultValue={profile || 'journaliste'} className={field}>
           {MEDIA_PROFILES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
         </select>
+      </label>
+      <label className="text-[13px] font-medium text-forest sm:col-span-2">
+        Lien officiel
+        <input name="media_link" type="text" inputMode="url" maxLength={300} defaultValue={link} placeholder="Page de réseau social, site web" className={field} />
       </label>
     </>
   )
@@ -658,7 +667,13 @@ export default function OrgaParticipationsPage() {
                               </label>
                             )}
                             {isPalais && <PalaisDaysField value={palaisDays(shown)} />}
-                            {isMedia && <MediaFields outlet={shown.media_details?.outlet || ''} profile={shown.media_details?.profile || ''} />}
+                            {isMedia && (
+                              <MediaFields
+                                outlet={shown.media_details?.outlet || ''}
+                                profile={shown.media_details?.profile || ''}
+                                link={shown.media_details?.link || ''}
+                              />
+                            )}
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
                               {descriptionLabel(kind)}
                               <textarea name="description" rows={3} defaultValue={shown.description || ''} className={`${field} resize-none`} />
@@ -699,6 +714,13 @@ export default function OrgaParticipationsPage() {
                                 </p>
                               )}
                               {isMedia && mediaSummary(shown) && <p className="font-semibold text-forest">{mediaSummary(shown)}</p>}
+                              {isMedia && shown.media_details?.link && (
+                                <p>
+                                  <a href={shown.media_details.link} target="_blank" rel="noopener noreferrer" className="break-all font-semibold text-forest underline underline-offset-2">
+                                    {shown.media_details.link}
+                                  </a>
+                                </p>
+                              )}
                               {isPalais && (
                                 <ul className="my-2">
                                   {PALAIS_DAYS.filter((d) => palaisDays(shown).includes(d.n)).map((d) => (

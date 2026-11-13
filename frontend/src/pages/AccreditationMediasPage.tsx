@@ -50,6 +50,7 @@ export default function AccreditationMediasPage() {
         description: String(fd.get('description') || '').trim(),
         media_outlet: String(fd.get('media_outlet') || '').trim(),
         media_profile: String(fd.get('media_profile') || ''),
+        media_link: String(fd.get('media_link') || '').trim(),
       })
       setTrackingCode(created.tracking_code ?? null)
       setSent(true)
@@ -91,6 +92,9 @@ export default function AccreditationMediasPage() {
             </Field>
             <Field label="Média, chaîne ou compte" hint="Exemple : Radio Lomé, TVT, ou le nom de votre chaîne." className="sm:col-span-2">
               <input required name="media_outlet" minLength={2} maxLength={160} className={field} />
+            </Field>
+            <Field label="Lien officiel" hint="Page de réseau social, site web." className="sm:col-span-2">
+              <input required name="media_link" type="text" inputMode="url" maxLength={300} placeholder="https://" autoComplete="url" className={field} />
             </Field>
             <Field label="Profil" className="sm:col-span-2">
               <select required name="media_profile" defaultValue="" className={field}>
