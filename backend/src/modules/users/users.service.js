@@ -25,10 +25,18 @@ function toUser(u, onlineMap) {
   };
 }
 
-/* Liste les comptes staff (admin / simple / orga legacy). */
+/* Rôles des comptes du back-office : scan ne fait que scanner les QR. */
+const STAFF_ROLES = ['admin', 'simple', 'orga', 'scan'];
+
+/* Rôle accepté à la création ou à la modification (simple par défaut). */
+function staffRole(role) {
+  return ['admin', 'scan'].includes(role) ? role : 'simple';
+}
+
+/* Liste les comptes staff (admin / simple / scan / orga legacy). */
 async function listUsers() {
   const rows = await User.findAll({
-    where: { role: { [Op.in]: ['admin', 'simple', 'orga'] } },
+    where: { role: { [Op.in]: STAFF_ROLES } },
     order: [
       ['role', 'ASC'],
       ['last_name', 'ASC'],
@@ -45,12 +53,11 @@ async function createUser({ email, first_name, last_name, role, password }) {
   const exists = await User.findOne({ where: { email: normalized } });
   if (exists) throw ApiError.conflict('Cet e-mail est déjà utilisé');
 
-  const staffRole = role === 'admin' ? 'admin' : 'simple';
   const row = await User.create({
     email: normalized,
     first_name: String(first_name || '').trim(),
     last_name: String(last_name || '').trim(),
-    role: staffRole,
+    role: staffRole(role),
     password_hash: await bcrypt.hash(password, 10),
     is_active: true,
   });
@@ -65,7 +72,7 @@ async function updateUser(id, payload) {
   if (payload.first_name != null) row.first_name = String(payload.first_name).trim();
   if (payload.last_name != null) row.last_name = String(payload.last_name).trim();
   if (payload.role != null) {
-    row.role = payload.role === 'admin' ? 'admin' : 'simple';
+    row.role = staffRole(payload.role);
   }
   if (payload.is_active != null) row.is_active = Boolean(payload.is_active);
   const pwd = payload.password != null ? String(payload.password) : '';
@@ -83,7 +90,7 @@ async function deleteUser(id, actorId) {
   }
   const row = await User.findByPk(id);
   if (!row) throw ApiError.notFound('Utilisateur introuvable');
-  if (!['admin', 'simple', 'orga'].includes(row.role)) {
+  if (!STAFF_ROLES.includes(row.role)) {
     throw ApiError.badRequest('Ce compte ne peut pas être supprimé ici');
   }
   await row.destroy();

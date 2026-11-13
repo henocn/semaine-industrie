@@ -39,6 +39,9 @@ function IconGrip() {
 }
 
 /* Backoffice : questions d'enquête + aperçu des réponses. */
+/* Jeux retirés du programme (coup de cœur, explorateur de talents) : true pour les réafficher. */
+const SHOW_RETIRED_GAMES = false
+
 export default function OrgaSurveyPage() {
   const [questions, setQuestions] = useState<SurveyQuestion[]>([])
   const [stats, setStats] = useState<SurveyStats | null>(null)
@@ -244,7 +247,8 @@ export default function OrgaSurveyPage() {
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <div className="mb-4 flex gap-0 border border-black">
-        {(['sondage', 'jeux', 'coeur'] as const).map((key) => (
+        {/* Coup de cœur et Explorateur de talents retirés du programme : onglet et tableau masqués. */}
+        {(['sondage', 'jeux'] as const).map((key) => (
           <button
             key={key}
             type="button"
@@ -258,7 +262,7 @@ export default function OrgaSurveyPage() {
         ))}
       </div>
 
-      {tab === 'coeur' && (
+      {SHOW_RETIRED_GAMES && tab === 'coeur' && (
         <section className="space-y-4">
           <form key={productId || 'new'} onSubmit={(e) => void onSaveProduct(e)} className="orga-panel grid gap-3 sm:grid-cols-2">
             <h2 className="text-[15px] font-semibold text-forest sm:col-span-2">
@@ -363,6 +367,7 @@ export default function OrgaSurveyPage() {
               <p className="mt-2 text-[13px] text-ink/40">Chargement…</p>
             )}
           </div>
+          {SHOW_RETIRED_GAMES && (
           <div className="orga-panel">
             <h2 className="text-[15px] font-semibold text-forest">Explorateur de talents</h2>
             {gameStats ? (
@@ -392,6 +397,7 @@ export default function OrgaSurveyPage() {
               <p className="mt-2 text-[13px] text-ink/40">Chargement…</p>
             )}
           </div>
+          )}
         </section>
       )}
 

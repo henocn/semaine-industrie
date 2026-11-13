@@ -37,6 +37,8 @@ const GlobalResource = require('./GlobalResource')(sequelize);
 const Participation = require('./Participation')(sequelize);
 const GameResult = require('./GameResult')(sequelize);
 const WhatsappMessage = require('./WhatsappMessage')(sequelize);
+const DeparturePoint = require('./DeparturePoint')(sequelize);
+const DepartureScan = require('./DepartureScan')(sequelize);
 
 LabelRequest.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 Organization.hasMany(LabelRequest, { foreignKey: 'organization_id', as: 'labelRequests' });
@@ -67,6 +69,11 @@ VoteBallot.belongsTo(VoteOption, { foreignKey: 'option_id', as: 'option' });
 VoteOption.hasMany(VoteBallot, { foreignKey: 'option_id', as: 'ballots' });
 VoteOption.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
 
+DeparturePoint.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
+DepartureScan.belongsTo(DeparturePoint, { foreignKey: 'departure_point_id', as: 'point' });
+DepartureScan.belongsTo(Participation, { foreignKey: 'participation_id', as: 'participation' });
+Participation.hasOne(DepartureScan, { foreignKey: 'participation_id', as: 'departureScan' });
+
 AuditEvent.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(AuditEvent, { foreignKey: 'user_id', as: 'auditEvents' });
 
@@ -92,4 +99,6 @@ module.exports = {
   Participation,
   GameResult,
   WhatsappMessage,
+  DeparturePoint,
+  DepartureScan,
 };

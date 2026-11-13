@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { ensureOrgaSession, peekOrgaUser } from '../../api/auth'
+import { isScanRole } from '../../lib/roles'
 
 /* Garde centralisée des pages backoffice orga. */
 export function RequireOrga() {
@@ -33,6 +34,11 @@ export function RequireOrga() {
         Vérification de la session…
       </div>
     )
+  }
+
+  /* Compte de scan : uniquement la page Scan. */
+  if (isScanRole(peekOrgaUser()?.role) && location.pathname !== '/orga/scan') {
+    return <Navigate to="/orga/scan" replace />
   }
 
   return <Outlet />

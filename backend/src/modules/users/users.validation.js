@@ -2,7 +2,8 @@
 
 const Joi = require('joi');
 
-const staffRoles = Joi.string().valid('admin', 'simple');
+/* scan : compte qui ne fait que scanner les QR (page Scan du back-office). */
+const staffRoles = Joi.string().valid('admin', 'simple', 'scan');
 
 const createUserSchema = Joi.object({
   email: Joi.string().email().trim().lowercase().max(180).required(),
