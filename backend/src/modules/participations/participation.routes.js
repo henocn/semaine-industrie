@@ -24,10 +24,14 @@ function limitPublic(req, res, next) {
   return next();
 }
 
-/* Refuse les formulaires publics fermés (visites des particuliers : complet). Le backoffice peut toujours ajouter. */
+/* Refuse les formulaires publics fermés. Le backoffice peut toujours ajouter. */
 function closedForms(req, res, next) {
   if (req.body?.kind === 'particulier' && !env.PARTICULIER_OPEN) {
     return next(ApiError.badRequest('Les inscriptions des particuliers aux visites d’industries sont closes : toutes les places sont attribuées.'));
+  }
+  /* Écoles / universités : inscriptions closes (le formulaire public envoie kind « ecole » ou rien). */
+  if (!req.body?.kind || req.body.kind === 'ecole') {
+    return next(ApiError.badRequest('Les inscriptions des écoles et universités aux visites d’industries sont closes.'));
   }
   return next();
 }

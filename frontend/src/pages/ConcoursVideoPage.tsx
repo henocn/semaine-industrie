@@ -12,11 +12,9 @@ const STEPS: { title: string; text: ReactNode }[] = [
     title: 'Inscrivez-vous à une visite',
     text: (
       <>
-        Avec votre établissement (
-        <Link to="/inscription-groupe/" className="font-semibold text-forest underline underline-offset-2">visites d’industries : écoles / universités</Link>
-        ) ou à titre personnel (
+        À titre personnel (
         <Link to="/inscription-particulier/" className="font-semibold text-forest underline underline-offset-2">visites d’industries : particuliers</Link>
-        ). Les visites ont lieu du lundi 16 au vendredi 20 novembre.
+        ), ou avec votre établissement s’il est déjà inscrit. Les visites ont lieu du lundi 16 au vendredi 20 novembre.
       </>
     ),
   },

@@ -13,7 +13,8 @@ import ConcoursVideoPage from './pages/ConcoursVideoPage'
 import FaqPage from './pages/FaqPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
-import InscriptionGroupPage from './pages/InscriptionGroupPage'
+// Visites des écoles / universités retirées du public (inscriptions closes) ; page conservée pour une reprise éventuelle.
+// import InscriptionGroupPage from './pages/InscriptionGroupPage'
 import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
 import JourneesPalaisPage from './pages/JourneesPalaisPage'
 import LabelRequestPage from './pages/LabelRequestPage'
@@ -83,8 +84,8 @@ export function AppRoutes() {
             <Route path="/" element={<HomePage />} />
             <Route path="/programme" element={<ProgrammePage />} />
             <Route path="/label" element={<LabelRequestPage />} />
-            <Route path="/inscription" element={<Navigate to="/inscription-groupe/" replace />} />
-            <Route path="/inscription-groupe" element={<InscriptionGroupPage />} />
+            {/* <Route path="/inscription" element={<Navigate to="/inscription-groupe/" replace />} /> */}
+            {/* <Route path="/inscription-groupe" element={<InscriptionGroupPage />} /> */}
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
             <Route path="/journees-au-palais" element={<JourneesPalaisPage />} />
             <Route path="/accreditation-medias" element={<AccreditationMediasPage />} />

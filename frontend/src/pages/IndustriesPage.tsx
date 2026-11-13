@@ -15,12 +15,12 @@ function imageOf(item: IndustryCard) {
   return item.photo_url || item.gallery_urls?.[0] || DEFAULT_IMAGE
 }
 
-/* Itinéraire vers l'industrie dans l'application GPS (Google Maps), ou rien sans position. */
+/* Emplacement de l'industrie sur Google Maps (simple lien, pas d'itinéraire), ou rien sans position. */
 function directionsUrl(item: IndustryCard) {
   const lat = Number(item.lat)
   const lng = Number(item.lng)
   if (item.lat == null || item.lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) return null
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+  return `https://www.google.com/maps?q=${lat},${lng}`
 }
 
 /* Fenêtre d'une industrie : image, nom et description. */

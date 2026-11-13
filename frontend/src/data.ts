@@ -165,8 +165,8 @@ export const FAQ = [
     a: 'Le concours est ouvert aux élèves et aux étudiants. Filmez votre visite d’usine et publiez votre vidéo sur les réseaux sociaux avec le hashtag #SemaineIndustrieTogo2026.\nLa meilleure vidéo sur la semaine remporte 200 000 FCFA.',
   },
   {
-    q: 'Comment s’inscrire à la Semaine de l’industrie en tant que particulier, école ou université ?',
-    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\n• « Visites d’industries : écoles / universités » pour inscrire un groupe.\n• « Accréditation médias et créateurs de contenu » pour couvrir la semaine en tant que média.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
+    q: 'Comment s’inscrire à la Semaine de l’industrie ?',
+    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\n• « Accréditation médias et créateurs de contenu » pour couvrir la semaine en tant que média.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
   },
   {
     q: 'Comment participer aux rendez-vous au Palais des Congrès ?',
