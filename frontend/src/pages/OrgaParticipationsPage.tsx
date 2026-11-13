@@ -536,8 +536,26 @@ export default function OrgaParticipationsPage() {
         </form>
       )}
 
-      <ExportBar selection={picked} filename={exportName.filename}
-        sheet={exportName.sheet} columns={isPalais ? PALAIS_EXPORT_COLUMNS : isMedia ? MEDIA_EXPORT_COLUMNS : EXPORT_COLUMNS} />
+      <ExportBar
+        selection={picked}
+        filename={exportName.filename}
+        sheet={exportName.sheet}
+        columns={isPalais ? PALAIS_EXPORT_COLUMNS : isMedia ? MEDIA_EXPORT_COLUMNS : EXPORT_COLUMNS}
+        review={{
+          eligible: (row) => row.status === 'pending',
+          /* Le serveur ne bloque pas une participation déjà traitée : on revérifie juste avant (un collègue a pu agir entre-temps). */
+          run: async (row, status) => {
+            const fresh = await getParticipation(row.id)
+            if (fresh.status !== 'pending') throw new Error('Déjà traitée entre-temps, ignorée')
+            return status === 'approved' ? approveParticipation(row.id) : rejectParticipation(row.id)
+          },
+          name: (row) => row.name,
+          onDone: async () => {
+            setDetail(null)
+            await load()
+          },
+        }}
+      />
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">
