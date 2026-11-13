@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Navigation } from 'lucide-react'
+import { BadgeCheck, Navigation } from 'lucide-react'
 import { listIndustries, type IndustryCard } from '../api/labels'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
@@ -119,15 +119,22 @@ export default function IndustriesPage() {
                 <button
                   type="button"
                   onClick={() => show(item.slug)}
-                  className="group block h-full w-full overflow-hidden rounded-sm border border-forest/25 bg-white text-left transition-colors hover:border-forest focus-visible:outline-offset-4"
+                  className="group block h-full w-full overflow-hidden rounded-sm border border-energy bg-white text-left transition-colors hover:border-forest focus-visible:outline-offset-4"
                 >
-                  <div className="aspect-[16/9] overflow-hidden bg-white">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-white">
                     <img
                       src={imageOf(item)}
                       alt=""
                       loading="lazy"
                       className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
                     />
+                    <span
+                      title="Labellisée « Usine ouverte »"
+                      className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border-2 border-sun bg-energy text-white shadow-sm"
+                    >
+                      <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+                      <span className="sr-only">Labellisée « Usine ouverte »</span>
+                    </span>
                   </div>
                   <div className="px-4 pb-4 pt-3">
                     <h2 className="font-display text-lg font-bold text-forest group-hover:text-ink">{item.name}</h2>
