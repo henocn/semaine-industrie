@@ -162,7 +162,7 @@ export const FAQ = [
   },
   {
     q: 'Comment participer au concours vidéo ?',
-    a: 'Le concours est ouvert aux élèves et aux étudiants. Filmez votre visite d’usine et publiez votre vidéo sur les réseaux sociaux avec le hashtag #SemaineIndustrieTogo2026.\nLa meilleure vidéo sur la semaine remporte 200 000 FCFA.',
+    a: 'Le concours est ouvert aux élèves et aux étudiants. Filmez votre visite d’usine et publiez votre vidéo sur les réseaux sociaux avec le hashtag #SemaineIndustrieTogo2026, en taguant le Ministère : @ministre_mdpise sur Instagram et Facebook, @ministere.invest sur TikTok, @Promo_InvestTg sur X.\nLa meilleure vidéo sur la semaine remporte 200 000 FCFA.',
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie ?',
