@@ -60,26 +60,29 @@ async function removeCustom(id) {
   return settings();
 }
 
-/* Ce que le scanneur voit d'un particulier. */
+/* Inscriptions scannables aux points de départ : particuliers et accréditations médias. */
+const DEPARTURE_KINDS = ['particulier', 'media'];
+
+/* Ce que le scanneur voit d'un particulier ou d'un média. */
 function personView(row, code) {
-  return { code: row.tracking_code || code, name: row.name, status: row.status };
+  return { code: row.tracking_code || code, name: row.name, status: row.status, kind: row.kind };
 }
 
-/* Scan d'un particulier à un point de départ : un seul scan par inscription. */
+/* Scan d'un particulier ou d'un média à un point de départ : un seul scan par inscription. */
 async function scanDeparture({ code: rawCode, point_id: pointId }, user) {
   const code = trackingService.normalizeCode(rawCode);
-  if (/^(?:EC|JP|MD|AF|IN)-[A-Z0-9]{4}$/.test(code)) {
-    throw ApiError.badRequest('Ce QR n’est pas celui d’un particulier inscrit aux visites (code PA-…)');
+  if (/^(?:EC|JP|AF|IN)-[A-Z0-9]{4}$/.test(code)) {
+    throw ApiError.badRequest('Ce QR n’est pas celui d’un particulier (PA-…) ou d’un média (MD-…) inscrit aux visites');
   }
   const point = await DeparturePoint.findByPk(pointId);
   if (!point) throw ApiError.notFound('Point de départ introuvable : revoyez les réglages du scan');
-  /* Le QR porte le code du passeport, identique au code de suivi PA- ; les anciens passeports sont aussi reconnus. */
-  let row = await Participation.findOne({ where: { kind: 'particulier', tracking_code: code } });
+  /* Le QR porte le code du passeport, identique au code de suivi (PA-, MD-) ; les anciens passeports sont aussi reconnus. */
+  let row = await Participation.findOne({ where: { kind: DEPARTURE_KINDS, tracking_code: code } });
   if (!row) {
     const passport = await Passport.findOne({ where: { code }, attributes: ['id'] });
-    if (passport) row = await Participation.findOne({ where: { kind: 'particulier', passport_id: passport.id } });
+    if (passport) row = await Participation.findOne({ where: { kind: DEPARTURE_KINDS, passport_id: passport.id } });
   }
-  if (!row) throw ApiError.notFound('Aucun particulier ne correspond à ce code');
+  if (!row) throw ApiError.notFound('Aucun particulier ni média ne correspond à ce code');
   if (row.status !== 'approved') {
     throw ApiError.conflict(`Inscription ${row.status === 'rejected' ? 'refusée' : 'pas encore validée'} : départ non enregistré`);
   }

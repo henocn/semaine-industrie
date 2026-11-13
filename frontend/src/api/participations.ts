@@ -30,7 +30,7 @@ export type Participation = {
   createdAt?: string
   /* Particulier en attente de validation, au-delà des places prévues. */
   waitlisted?: boolean
-  /* Particulier scanné à un point de départ (liste seulement). */
+  /* Particulier ou média scanné à un point de départ (liste seulement). */
   departure_scan?: { point: string; scanned_at: string } | null
   /* Journées du Palais choisies (16, 17, 18) et entrées scannées, pour une inscription « palais ». */
   palais_days?: number[] | null

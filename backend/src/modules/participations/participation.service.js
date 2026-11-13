@@ -104,8 +104,8 @@ async function list({ kind, status } = {}) {
     order: [['created_at', 'DESC']],
   });
   const waitlist = await waitlistIds();
-  /* Particuliers : point de départ et heure du scan, s'ils ont été scannés. */
-  const particulierIds = rows.filter((row) => row.kind === 'particulier').map((row) => row.id);
+  /* Particuliers et médias : point de départ et heure du scan, s'ils ont été scannés. */
+  const particulierIds = rows.filter((row) => row.kind === 'particulier' || row.kind === 'media').map((row) => row.id);
   const scans = particulierIds.length
     ? await DepartureScan.findAll({ where: { participation_id: particulierIds }, attributes: ['participation_id', 'point_name', 'scanned_at'] })
     : [];

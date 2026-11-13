@@ -295,7 +295,7 @@ export default function OrgaScanPage() {
           <form onSubmit={onManual} className="flex gap-2">
             <input
               name="code"
-              placeholder={settings.mode === 'visite' ? 'Code PA-…' : 'Code JP-…'}
+              placeholder={settings.mode === 'visite' ? 'Code PA-… ou MD-…' : 'Code JP-…'}
               autoComplete="off"
               autoCapitalize="characters"
               className="orga-input flex-1 uppercase"

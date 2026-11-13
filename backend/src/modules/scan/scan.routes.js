@@ -46,7 +46,7 @@ router.post('/departure', authorize('orga', 'scan'), validate(departureSchema), 
       entityId: id,
       summary: `Départ scanné à « ${data.point} » : « ${data.name} » (${data.code})`,
     });
-    emitRealtime('participation:changed', { action: 'update', id, name: data.name, status: data.status, kind: 'particulier' }, 'orga');
+    emitRealtime('participation:changed', { action: 'update', id, name: data.name, status: data.status, kind: data.kind }, 'orga');
   }
   return ApiResponse.success(res, data, data.already ? 'Départ déjà enregistré' : 'Départ enregistré');
 }));
