@@ -3,7 +3,7 @@
 /* Ajoute les industries labellisées fournies par l'organisation (nom, position, description).
    Sans option, liste seulement ce qui serait ajouté ; --apply écrit en base.
    Une industrie déjà présente (même nom) est ignorée : le script peut être relancé sans doublon. */
-const { sequelize, Organization } = require('../src/models');
+const { sequelize, Organization, LabelRequest } = require('../src/models');
 const trackingService = require('../src/modules/tracking/tracking.service');
 
 const apply = process.argv.includes('--apply');
@@ -52,7 +52,8 @@ async function main() {
     console.log(`${known.has(name.toLowerCase()) ? 'déjà présente' : apply ? 'ajoutée     ' : 'à ajouter   '}  ${name}`);
   }
   if (!apply) {
-    console.log(`\n${todo.length} industrie(s) à ajouter. Relancer avec --apply pour écrire en base.`);
+    console.log(`\n${todo.length} industrie(s) à ajouter. Relancer avec --apply pour écrire en base.\n`);
+    await ensureRequests();
     return;
   }
 
@@ -77,6 +78,43 @@ async function main() {
     }
   });
   console.log(`\n${todo.length} industrie(s) ajoutée(s).`);
+  await ensureRequests();
+}
+
+/* Chaque industrie importée apparaît aussi dans « Demandes de labels » (statut accepté, sans contact connu). */
+async function ensureRequests() {
+  const names = INDUSTRIES.map(([name]) => name);
+  const orgs = await Organization.findAll({ where: { name: names, type: 'entreprise' } });
+  const linked = await LabelRequest.findAll({ where: { organization_id: orgs.map((o) => o.id) }, attributes: ['organization_id'] });
+  const has = new Set(linked.map((r) => r.organization_id));
+  const missing = orgs.filter((o) => !has.has(o.id));
+  for (const org of orgs) console.log(`${has.has(org.id) ? 'demande déjà là' : apply ? 'demande créée  ' : 'demande à créer'}  ${org.name}`);
+  if (!apply) {
+    console.log(`\n${missing.length} demande(s) de label à créer.`);
+    return;
+  }
+  await sequelize.transaction(async (transaction) => {
+    for (const org of missing) {
+      await LabelRequest.create({
+        structure_name: org.name,
+        structure_type: 'entreprise',
+        lat: org.lat,
+        lng: org.lng,
+        description: org.description,
+        contact_name: org.name,
+        contact_email: '',
+        contact_opt_in: false,
+        products: [],
+        gallery_urls: [],
+        visit_slots: [],
+        status: 'approved',
+        reviewed_at: org.labeled_at || new Date(),
+        organization_id: org.id,
+        tracking_code: org.label_code,
+      }, { transaction });
+    }
+  });
+  console.log(`\n${missing.length} demande(s) de label créée(s).`);
 }
 
 main()
