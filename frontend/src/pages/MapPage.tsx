@@ -8,32 +8,19 @@ import { WRAP } from '../components/layout/Mark'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { Button } from '../components/ui/Button'
 
-/* Carte des sites qui ont des visites arrangées + panneau détail. */
+/* Carte des industries labellisées (avec ou sans visite arrangée), cadrée sur le sud du Togo, + panneau détail. */
 export default function MapPage() {
   const [points, setPoints] = useState<MapPoint[]>([])
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
-  /* Tant que la liste n'est pas arrivée (et au pré-rendu), pas de message « aucune visite ». */
+  /* Tant que la liste n'est pas arrivée (et au pré-rendu), pas de message « aucun site ». */
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    /* Charge les sites entreprises, ne garde que ceux avec visites. */
-    async function load() {
-      try {
-        setError(null)
-        const data = await listMapPoints({ type: 'entreprise' })
-        const withVisits = data.filter((p) => (p.visits?.groups ?? 0) > 0)
-        setPoints(withVisits)
-        setSelected((prev) =>
-          prev && withVisits.some((p) => p.id === prev) ? prev : withVisits[0]?.id || null,
-        )
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Carte indisponible')
-      } finally {
-        setLoaded(true)
-      }
-    }
-    load()
+    listMapPoints({ type: 'entreprise' })
+      .then((data) => setPoints(data))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Carte indisponible'))
+      .finally(() => setLoaded(true))
   }, [])
 
   const active = useMemo(() => points.find((p) => p.id === selected) || null, [points, selected])
@@ -55,63 +42,54 @@ export default function MapPage() {
         {error && <p className="mt-6 text-red-700">{error}</p>}
 
         {loaded && !error && points.length === 0 && (
-          <p className="mt-10 text-ink/50">Aucune visite arrangée pour le moment.</p>
+          <p className="mt-10 text-ink/50">Aucun site sur la carte pour le moment.</p>
         )}
 
         {points.length > 0 && (
-          <div className="mt-8 grid gap-5 lg:h-[720px] lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch lg:overflow-hidden">
-            <div className="mx-auto h-[624px] w-[260px] overflow-hidden border border-forest/15 lg:h-full lg:w-full">
-              <SitesMap
-                points={points}
-                selectedId={selected}
-                onSelect={setSelected}
-                tall
-              />
+          <div className="mt-8 grid gap-5 lg:h-[560px] lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="h-[380px] overflow-hidden border border-forest/15 sm:h-[480px] lg:h-full">
+              <SitesMap points={points} selectedId={selected} onSelect={setSelected} tall focusPoints />
             </div>
 
             <aside className="min-h-0 min-w-0 overflow-y-auto border border-forest/15 p-5">
-              {!active && <p className="text-ink/50">Sélectionnez un site sur la carte.</p>}
+              {!active && <p className="text-ink/50">Cliquez sur un point de la carte pour voir l’industrie.</p>}
 
               {active && (
                 <>
                   <h2 className="display text-3xl text-forest">{active.name}</h2>
-                  <p className="mt-2 text-[15px] text-ink/60">
-                    {[active.city, active.region, active.sector].filter(Boolean).join(' · ')}
-                  </p>
+                  {active.description && (
+                    <p className="mt-3 text-[15px] leading-relaxed text-ink/75">{active.description}</p>
+                  )}
 
-                  <div className="mt-6 grid grid-cols-2 gap-3 border-y border-forest/15 py-4">
-                    <div>
-                      <p className="text-[28px] font-semibold tracking-tight text-forest">
-                        {visits?.groups ?? 0}
-                      </p>
-                      <p className="text-[13px] text-ink/55">groupes</p>
-                    </div>
-                    <div>
-                      <p className="text-[28px] font-semibold tracking-tight text-forest">
-                        {visits?.headcount ?? 0}
-                      </p>
-                      <p className="text-[13px] text-ink/55">visiteurs</p>
-                    </div>
-                  </div>
+                  {(visits?.groups ?? 0) > 0 && (
+                    <>
+                      <div className="mt-6 grid grid-cols-2 gap-3 border-y border-forest/15 py-4">
+                        <div>
+                          <p className="text-[28px] font-semibold tracking-tight text-forest">{visits!.groups}</p>
+                          <p className="text-[13px] text-ink/55">groupes</p>
+                        </div>
+                        <div>
+                          <p className="text-[28px] font-semibold tracking-tight text-forest">{visits!.headcount}</p>
+                          <p className="text-[13px] text-ink/55">visiteurs</p>
+                        </div>
+                      </div>
 
-                  <h3 className="mt-6 text-[15px] font-semibold text-forest">Qui vient</h3>
-                  <ul className="mt-3 space-y-3">
-                    {visits!.items.map((v, i) => (
-                      <li
-                        key={`${v.school_name}-${v.visit_day}-${v.visit_start}-${i}`}
-                        className="border border-forest/10 p-3"
-                      >
-                        <p className="font-semibold text-forest">{v.school_name}</p>
-                        <p className="mt-1 text-[14px] text-ink/65">
-                          {v.visit_day} · {v.visit_start}–{v.visit_end}
-                        </p>
-                        <p className="mt-1 text-[14px] text-ink/55">
-                          <span className="font-semibold text-forest">{v.headcount}</span> élèves /
-                          étudiants
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
+                      <h3 className="mt-6 text-[15px] font-semibold text-forest">Qui vient</h3>
+                      <ul className="mt-3 space-y-3">
+                        {visits!.items.map((v, i) => (
+                          <li key={`${v.school_name}-${v.visit_day}-${v.visit_start}-${i}`} className="border border-forest/10 p-3">
+                            <p className="font-semibold text-forest">{v.school_name}</p>
+                            <p className="mt-1 text-[14px] text-ink/65">
+                              {v.visit_day} · {v.visit_start}–{v.visit_end}
+                            </p>
+                            <p className="mt-1 text-[14px] text-ink/55">
+                              <span className="font-semibold text-forest">{v.headcount}</span> élèves / étudiants
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
 
                   <Link
                     to={`/industrie/?o=${encodeURIComponent(active.slug)}`}

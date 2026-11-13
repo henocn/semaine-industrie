@@ -64,6 +64,12 @@ export function showTogo(map: L.Map) {
   map.fitBounds(TOGO_BOUNDS, { padding: FIT_PADDING, animate: false })
 }
 
+/* Cadre une zone du Togo (ex. les sites du sud), sans sortir du pays ; on peut toujours dézoomer jusqu'au pays entier. */
+export function showArea(map: L.Map, area: L.LatLngBounds) {
+  lockToTogo(map)
+  map.fitBounds(area, { padding: FIT_PADDING, animate: false })
+}
+
 /* Cache tout ce qui est hors du Togo et trace sa frontière. */
 function drawBorder(map: L.Map, ring: L.LatLngTuple[]) {
   /* Rendu large : le masque couvre aussi ce qui apparaît pendant un déplacement. */
