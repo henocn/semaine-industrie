@@ -35,8 +35,8 @@ export type Participation = {
   /* Journées du Palais choisies (16, 17, 18) et entrées scannées, pour une inscription « palais ». */
   palais_days?: number[] | null
   palais_checkins?: Record<string, string> | null
-  /* Accréditation média : média ou chaîne, et profil. */
-  media_details?: { outlet?: string; profile?: string } | null
+  /* Accréditation média : média ou chaîne, profil et lien officiel. */
+  media_details?: { outlet?: string; profile?: string; link?: string } | null
 }
 
 /* Ce que l'accueil voit au scan d'une accréditation média. */
@@ -83,6 +83,7 @@ export type ParticipationInput = {
   palais_days?: number[]
   media_outlet?: string
   media_profile?: string
+  media_link?: string
 }
 
 /* Accréditation média lue depuis le QR. */

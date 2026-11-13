@@ -3,12 +3,13 @@
 const Joi = require('joi');
 const { phone } = require('../../utils/phone');
 const { DAY_NUMBERS } = require('./palais');
-const { PROFILE_VALUES } = require('./media');
+const { PROFILE_VALUES, normalizeLink } = require('./media');
 
 /* École / université (« ecole »), particulier aux visites (« particulier »), au Palais (« palais ») ou accréditation média (« media »). */
 const kind = Joi.string().valid('ecole', 'particulier', 'palais', 'media');
 const OUTLET_MESSAGE = 'Indiquez le nom du média, de la chaîne ou du compte';
 const PALAIS_DAYS_MESSAGE = 'Choisissez au moins une journée';
+const LINK_MESSAGE = 'Indiquez le lien officiel : page de réseau social ou site web';
 const status = Joi.string().valid('pending', 'approved', 'rejected');
 
 const fields = {
@@ -26,6 +27,12 @@ const fields = {
   media_outlet: Joi.string().trim().min(2).max(160)
     .messages({ 'string.empty': OUTLET_MESSAGE, 'string.min': OUTLET_MESSAGE }),
   media_profile: Joi.string().valid(...PROFILE_VALUES),
+  media_link: Joi.string().trim().max(300).allow('', null)
+    .custom((value, helpers) => {
+      const link = normalizeLink(value);
+      return link === null ? helpers.error('link.invalid') : link;
+    })
+    .messages({ 'link.invalid': 'Lien officiel invalide : collez l’adresse de la page ou du site' }),
 };
 
 /* Média et profil obligatoires pour une accréditation, ignorés sinon. */
@@ -37,6 +44,13 @@ const mediaOutlet = Joi.any().when('kind', {
 const mediaProfile = Joi.any().when('kind', {
   is: 'media',
   then: fields.media_profile.required().messages({ 'any.required': 'Choisissez votre profil' }),
+  otherwise: Joi.any().strip(),
+});
+
+/* Lien officiel d'un média (facultatif au backoffice, obligatoire en ligne), ignoré sinon. */
+const mediaLink = Joi.any().when('kind', {
+  is: 'media',
+  then: fields.media_link,
   otherwise: Joi.any().strip(),
 });
 
@@ -62,6 +76,7 @@ const createSchema = Joi.object({
   palais_days: palaisDays,
   media_outlet: mediaOutlet,
   media_profile: mediaProfile,
+  media_link: mediaLink,
 });
 
 /* Nombre minimal de mots attendu pour décrire la couverture d'une accréditation média. */
@@ -102,6 +117,12 @@ const publicSchema = createSchema.keys({
   }),
   phone: phone().required(),
   description: publicDescription,
+  media_link: Joi.any().when('kind', {
+    is: 'media',
+    then: fields.media_link.required().invalid('', null)
+      .messages({ 'any.required': LINK_MESSAGE, 'any.invalid': LINK_MESSAGE, 'string.empty': LINK_MESSAGE }),
+    otherwise: Joi.any().strip(),
+  }),
   lat: requiredForSchool(fields.lat, 'Placez votre établissement sur la carte'),
   lng: requiredForSchool(fields.lng, 'Placez votre établissement sur la carte'),
   headcount: requiredForSchool(fields.headcount, 'Indiquez l’effectif souhaité'),
@@ -129,6 +150,7 @@ const updateSchema = Joi.object({
   palais_days: fields.palais_days,
   media_outlet: fields.media_outlet,
   media_profile: fields.media_profile,
+  media_link: fields.media_link,
 }).min(1);
 
 /* Filtres de la liste. */
