@@ -7,6 +7,13 @@ import { SectionHeader } from '../components/ui/SectionHeader'
 
 const HASHTAG = '#SemaineIndustrieTogo2026'
 
+/* Compte du Ministère à taguer, selon le réseau où la vidéo est publiée. */
+const MINISTRY_TAGS: { handle: string; networks: string }[] = [
+  { handle: '@ministre_mdpise', networks: 'Instagram, Facebook' },
+  { handle: '@ministere.invest', networks: 'TikTok' },
+  { handle: '@Promo_InvestTg', networks: 'X' },
+]
+
 const STEPS: { title: string; text: ReactNode }[] = [
   {
     title: 'Inscrivez-vous à une visite',
@@ -25,6 +32,21 @@ const STEPS: { title: string; text: ReactNode }[] = [
   {
     title: 'Publiez votre vidéo',
     text: `Partagez-la sur les réseaux sociaux avec le hashtag ${HASHTAG}, pour qu’elle soit vue et prise en compte.`,
+  },
+  {
+    title: 'Taguez le Ministère',
+    text: (
+      <>
+        Dans votre publication, taguez le compte du Ministère selon le réseau :
+        <span className="mt-2 block space-y-1">
+          {MINISTRY_TAGS.map((tag) => (
+            <span key={tag.handle} className="block">
+              <span className="font-semibold text-forest">{tag.handle}</span> · {tag.networks}
+            </span>
+          ))}
+        </span>
+      </>
+    ),
   },
 ]
 
