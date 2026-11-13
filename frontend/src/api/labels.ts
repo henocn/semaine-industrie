@@ -59,7 +59,7 @@ export type IndustryCard = {
   gallery_urls: string[]
 }
 
-/* Upload les 3 images galerie (multipart). */
+/* Upload la photo de l'industrie (multipart, champ gallery). */
 export async function uploadLabelGallery(files: File[]) {
   const body = new FormData()
   for (const file of files) body.append('gallery', file)

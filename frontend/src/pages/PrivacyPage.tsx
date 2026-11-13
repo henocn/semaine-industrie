@@ -66,7 +66,7 @@ export default function PrivacyPage() {
               <><strong>Inscription d&apos;un particulier aux visites d&apos;industries :</strong> nom et prénom, e-mail, téléphone, ville et quartier, et note éventuelle.</>,
               <><strong>Accréditation médias :</strong> nom et prénom, e-mail, téléphone, média ou chaîne, profil et ce que vous prévoyez de couvrir.</>,
               <><strong>Inscription aux conférences du Palais des Congrès :</strong> nom et prénom, e-mail, téléphone, journées choisies, ce qui vous amène, et date et heure des entrées enregistrées à l&apos;accueil.</>,
-              <><strong>Demande de label d&apos;une industrie :</strong> nom et secteur de la structure, position sur la carte, photos, e-mail, téléphone, capacité d&apos;accueil, produits, description et règles de sécurité.</>,
+              <><strong>Demande de label d&apos;une industrie :</strong> nom et secteur de la structure, position sur la carte, une photo, e-mail, téléphone et description.</>,
               <><strong>Rencontres d&apos;affaires :</strong> profil, nom, e-mail, téléphone, secteur d&apos;activité et notes.</>,
               <><strong>Formulaire de contact :</strong> nom, e-mail et message, transmis par e-mail à l&apos;équipe d&apos;organisation.</>,
               <><strong>Chatbot du site :</strong> contenu des messages que vous y écrivez, date et heure. Il ne vous demande aucune donnée personnelle : évitez d&apos;y en écrire.</>,
