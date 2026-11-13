@@ -68,6 +68,10 @@ export function SitesMap({ points, selectedId, onSelect, tall, focusPoints }: Pr
         title: p.name,
         alt: p.name,
       }).on('click', () => onSelectRef.current(p.id))
+      /* Carte publique : le nom de chaque site reste affiché à côté de son point. */
+      if (focusPoints) {
+        marker.bindTooltip(p.name, { permanent: true, direction: 'right', offset: [8, 0], className: 'site-label' })
+      }
 
       marker.addTo(layer)
       markersRef.current.set(p.id, marker)

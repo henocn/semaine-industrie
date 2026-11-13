@@ -297,3 +297,20 @@ select.orga-input {
     bottom: 11.5rem;
   }
 }
+
+/* Nom des sites affiché en permanence sur la carte publique. */
+.leaflet-tooltip.site-label {
+  padding: 1px 5px;
+  border: 1px solid color-mix(in oklab, var(--color-forest) 25%, white);
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: none;
+  color: var(--color-forest);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.leaflet-tooltip.site-label::before {
+  display: none;
+}
