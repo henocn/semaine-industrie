@@ -10,11 +10,6 @@
     "description": "Programme officiel de la Semaine de l’industrie 2026 au Togo : trois rendez-vous au Palais des Congrès de Lomé du 16 au 18 novembre, usines ouvertes jusqu’au 20."
   },
   {
-    "path": "/label",
-    "title": "Label « Usine ouverte » pour les industries",
-    "description": "Industries togolaises : demandez le label officiel pour ouvrir votre usine aux écoles et au public pendant la Semaine de l’industrie 2026 au Togo."
-  },
-  {
     "path": "/inscription-particulier",
     "title": "Visiter les industries en tant que particulier",
     "description": "Inscrivez-vous à titre personnel aux visites d’usines de la Semaine de l’industrie 2026 au Togo, du 16 au 20 novembre, et recevez votre QR de visite."
@@ -23,11 +18,6 @@
     "path": "/journees-au-palais",
     "title": "Assister aux conférences et panels du Palais des Congrès de Lomé",
     "description": "Semaine de l’industrie 2026 : inscrivez-vous aux rendez-vous au Palais des Congrès de Lomé, l’ouverture le 16 novembre, le forum des métiers le 17, les femmes dans l’industrie le 18."
-  },
-  {
-    "path": "/accreditation-medias",
-    "title": "Accréditation médias et créateurs de contenu",
-    "description": "Journalistes, photographes, vidéastes et créateurs de contenu : demandez votre accréditation pour couvrir la Semaine de l’industrie 2026 au Palais des Congrès de Lomé, du 16 au 18 novembre."
   },
   {
     "path": "/mon-espace",

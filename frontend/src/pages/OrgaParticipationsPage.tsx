@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   approveParticipation,
   createParticipation,
@@ -236,7 +237,14 @@ function coordinate(value: string | number | null | undefined) {
 
 /* Backoffice : écoles (centres, univ) et particuliers, avec QR à l'acceptation. */
 export default function OrgaParticipationsPage() {
-  const [kind, setKind] = useState<ParticipationKind>('ecole')
+  /* Onglet dans l'adresse (?onglet=media…) : les notifications ouvrent le bon onglet. */
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('onglet')
+  const kind: ParticipationKind = KIND_TABS.find((t) => t.key === tabParam)?.key ?? 'ecole'
+  const focusId = searchParams.get('id')
+  function setKind(next: ParticipationKind) {
+    setSearchParams({ onglet: next }, { replace: true })
+  }
   const [rows, setRows] = useState<Participation[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<Participation | null>(null)
@@ -312,6 +320,14 @@ export default function OrgaParticipationsPage() {
       setError(err instanceof Error ? err.message : 'Détail indisponible')
     }
   }
+
+  /* Lien d'une notification (?id=…) : ouvre la ligne dès qu'elle est chargée, une seule fois. */
+  useEffect(() => {
+    if (!focusId || !rows.some((row) => row.id === focusId)) return
+    setSearchParams({ onglet: kind }, { replace: true })
+    if (selectedId !== focusId) void openRow(focusId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusId, rows])
 
   /* Enregistre une nouvelle participation dans l'onglet ouvert. */
   async function onCreate(e: FormEvent<HTMLFormElement>) {

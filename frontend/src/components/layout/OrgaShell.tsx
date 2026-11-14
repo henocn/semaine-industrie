@@ -9,7 +9,7 @@ import {
 } from '../../api/auth'
 import { listParticipants } from '../../api/business'
 import { listLabelRequests, type LabelRequest } from '../../api/labels'
-import { listParticipations } from '../../api/participations'
+import { listParticipations, type ParticipationKind } from '../../api/participations'
 import { LABEL_PENDING_EVENT } from '../../lib/labelPending'
 import { ensureNotifyPermission, pushNotify } from '../../lib/notifications'
 import { joinRoom, onRealtime } from '../../lib/socket'
@@ -36,6 +36,22 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 const field =
   'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
+/* Type d'inscription → libellé de l'alerte (même nom que l'onglet). */
+const PARTICIPATION_ALERT: Record<ParticipationKind, string> = {
+  ecole: 'Visites : nouvelle inscription d’école',
+  particulier: 'Visites : nouveau particulier',
+  palais: 'Palais des Congrès : nouvelle inscription',
+  media: 'Médias : nouvelle demande d’accréditation',
+}
+
+/* Lien vers l'onglet du type, avec la ligne ouverte. */
+function participationHref(kind: ParticipationKind | undefined, id: string) {
+  const params = new URLSearchParams({ onglet: kind || 'ecole', id })
+  return `/orga/participations?${params.toString()}`
+}
+
+type Banner = { text: string; to: string }
+
 /* Shell backoffice : sidebar nette + contenu sans coins IA. */
 export function OrgaShell({ title, children, actions, searchPlaceholder, onSearch }: OrgaShellProps) {
   const location = useLocation()
@@ -46,7 +62,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
   const [pendingCount, setPendingCount] = useState(0)
   const [participationCount, setParticipationCount] = useState(0)
   const [businessCount, setBusinessCount] = useState(0)
-  const [banner, setBanner] = useState<string | null>(null)
+  const [banner, setBanner] = useState<Banner | null>(null)
 
   /* Dans le backoffice le scroll est sur <main>, pas sur la fenêtre. */
   useEffect(() => {
@@ -106,11 +122,12 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
     const offLabelCreated = onRealtime<LabelRequest>('label:created', (row) => {
       const kind = row.structure_type === 'ecole' ? 'École' : 'Industrie'
       const msg = `${row.structure_name} · ${row.contact_phone || 'sans tél.'}`
-      setBanner(`Nouvelle demande (${kind}) : ${msg}`)
+      const to = `/orga/labels?id=${encodeURIComponent(row.id)}`
+      setBanner({ text: `Labels : nouvelle demande (${kind}) : ${msg}`, to })
       void refreshPending()
-      pushNotify('Nouvelle demande de label', msg, {
+      pushNotify(`Labels : nouvelle demande (${kind})`, msg, {
         tag: `label-${row.id}`,
-        href: '/orga/labels',
+        href: to,
       })
     })
     const offLabelUpdated = onRealtime<LabelRequest>('label:updated', () => {
@@ -124,14 +141,17 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
       name?: string
       status?: string
       action?: string
+      kind?: ParticipationKind
     }>('participation:changed', (row) => {
       void refreshPending()
       if (row.action === 'create' && row.status === 'pending') {
         const msg = row.name || 'Nouvelle inscription'
-        setBanner(`Nouvelle inscription école : ${msg}`)
-        pushNotify('Nouvelle inscription', msg, {
+        const title = (row.kind && PARTICIPATION_ALERT[row.kind]) || 'Nouvelle inscription'
+        const to = participationHref(row.kind, row.id)
+        setBanner({ text: `${title} : ${msg}`, to })
+        pushNotify(title, msg, {
           tag: `participation-${row.id}`,
-          href: '/orga/participations',
+          href: to,
         })
       }
     })
@@ -144,7 +164,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
       void refreshPending()
       if (row.action === 'create' && row.status === 'pending') {
         const msg = row.label || 'Nouveau profil'
-        setBanner(`Nouvelle rencontre d'affaires : ${msg}`)
+        setBanner({ text: `Nouvelle rencontre d'affaires : ${msg}`, to: '/orga/affaires' })
         pushNotify("Nouvelle inscription d'affaires", msg, {
           tag: `business-${row.id || 'new'}`,
           href: '/orga/affaires',
@@ -335,10 +355,10 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
             <div className="flex items-center justify-between gap-3 border-b border-black bg-sun/40 px-4 py-2.5 text-[13px] text-ink sm:px-8">
               <p>
                 <span className="font-semibold">Alerte · </span>
-                {banner}
+                {banner.text}
               </p>
               <div className="flex shrink-0 items-center gap-3">
-                <Link to="/orga/labels" className="font-semibold text-forest underline underline-offset-2" onClick={() => setBanner(null)}>
+                <Link to={banner.to} className="font-semibold text-forest underline underline-offset-2" onClick={() => setBanner(null)}>
                   Voir
                 </Link>
                 <button type="button" className="text-ink/50 hover:text-forest" onClick={() => setBanner(null)}>

@@ -33,6 +33,10 @@ function closedForms(req, res, next) {
   if (!req.body?.kind || req.body.kind === 'ecole') {
     return next(ApiError.badRequest('Les inscriptions des écoles et universités aux visites d’industries sont closes.'));
   }
+  /* Accréditations médias : demandes closes. */
+  if (req.body.kind === 'media') {
+    return next(ApiError.badRequest('Les demandes d’accréditation médias sont closes.'));
+  }
   return next();
 }
 

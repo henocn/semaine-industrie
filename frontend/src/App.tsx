@@ -8,7 +8,8 @@ import { isBackofficeHost } from './lib/seo'
 import { peekOrgaUser } from './api/auth'
 // Rencontres d'affaires et vote retirés du public (programme validé) ; pages conservées pour une reprise éventuelle.
 // import BusinessRegisterPage from './pages/BusinessRegisterPage'
-import AccreditationMediasPage from './pages/AccreditationMediasPage'
+// Accréditations médias et demandes de label closes ; pages conservées pour une reprise éventuelle.
+// import AccreditationMediasPage from './pages/AccreditationMediasPage'
 import ConcoursVideoPage from './pages/ConcoursVideoPage'
 // Points de départ désactivés en attendant les infos de l'organisation ; page conservée.
 // import DeparturePointsPage from './pages/DeparturePointsPage'
@@ -19,7 +20,7 @@ import IndustriesPage from './pages/IndustriesPage'
 // import InscriptionGroupPage from './pages/InscriptionGroupPage'
 import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
 import JourneesPalaisPage from './pages/JourneesPalaisPage'
-import LabelRequestPage from './pages/LabelRequestPage'
+// import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
 import MonEspacePage from './pages/MonEspacePage'
@@ -86,12 +87,12 @@ export function AppRoutes() {
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/programme" element={<ProgrammePage />} />
-            <Route path="/label" element={<LabelRequestPage />} />
+            {/* <Route path="/label" element={<LabelRequestPage />} /> */}
             {/* <Route path="/inscription" element={<Navigate to="/inscription-groupe/" replace />} /> */}
             {/* <Route path="/inscription-groupe" element={<InscriptionGroupPage />} /> */}
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
             <Route path="/journees-au-palais" element={<JourneesPalaisPage />} />
-            <Route path="/accreditation-medias" element={<AccreditationMediasPage />} />
+            {/* <Route path="/accreditation-medias" element={<AccreditationMediasPage />} /> */}
             <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />
             <Route path="/mon-espace" element={<MonEspacePage />} />
             {/* <Route path="/affaires" element={<BusinessRegisterPage />} /> */}

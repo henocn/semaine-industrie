@@ -14,6 +14,7 @@ import {
   type LabelRequest,
   type QrBatchItem,
 } from '../api/labels'
+import { useSearchParams } from 'react-router-dom'
 import { OrgaShell } from '../components/layout/OrgaShell'
 import { LocationField } from '../components/map/LocationField'
 import { notifyLabelPendingChanged } from '../lib/labelPending'
@@ -88,6 +89,15 @@ export default function OrgaLabelsPage() {
   const [deleteTarget, setDeleteTarget] = useState<LabelRequest | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedQr, setSelectedQr] = useState<QrBatchItem | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const focusId = searchParams.get('id')
+
+  /* Lien d'une notification (?id=…) : ouvre la demande dès qu'elle est dans la liste. */
+  useEffect(() => {
+    if (!focusId || !items.some((x) => x.id === focusId)) return
+    setSelectedId(focusId)
+    setSearchParams({}, { replace: true })
+  }, [focusId, items, setSearchParams])
 
   /* Ouvre le formulaire d'ajout. */
   function openCreate() {

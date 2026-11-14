@@ -32,7 +32,9 @@ function withUpload(middleware, nextHandler) {
 
 // Public
 router.post('/upload-gallery', withUpload(uploadGallery, controller.uploadGallery));
-router.post('/requests', validate(createRequestSchema), controller.createRequest);
+/* Demandes de label publiques closes ; le backoffice peut toujours en créer (/requests/orga). */
+router.post('/requests', (req, res, next) => next(ApiError.badRequest('Les demandes de label sont closes.')));
+// router.post('/requests', validate(createRequestSchema), controller.createRequest);
 router.post('/verify-code', controller.verifyCode);
 router.get('/organizations', controller.listIndustries);
 router.get('/organizations/map', controller.listMap);
