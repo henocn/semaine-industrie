@@ -192,7 +192,7 @@ export const FAQ = [
   },
   {
     q: 'Comment obtenir une accréditation média ?',
-    a: 'Journalistes, photographes, vidéastes et créateurs de contenu : dans la rubrique « Participer », choisissez « Accréditation médias et créateurs de contenu ». Indiquez votre média ou votre chaîne et votre profil.\nAprès validation, vous recevez un QR d’accréditation par e-mail et sur WhatsApp, valable toute la semaine, du 16 au 22 novembre, au Palais des Congrès.',
+    a: 'Journalistes, photographes, vidéastes et créateurs de contenu : dans la rubrique « Participer », choisissez « Accréditation médias et créateurs de contenu ». Indiquez votre média ou votre chaîne et votre profil.\nAprès validation, vous recevez un QR d’accréditation par e-mail et sur WhatsApp, valable les trois jours du Palais des Congrès, du 16 au 18 novembre.',
   },
   {
     q: 'Comment demander un label et suivre l’évolution de sa demande ?',

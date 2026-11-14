@@ -35,7 +35,7 @@ const FORMS: { title: string; to: string; who: string }[] = [
   {
     title: 'Accréditation médias et créateurs de contenu',
     to: '/accreditation-medias/',
-    who: 'Pour les journalistes, photographes, vidéastes et créateurs de contenu qui couvrent la semaine. Une seule accréditation, valable du 16 au 22 novembre.',
+    who: 'Pour les journalistes, photographes, vidéastes et créateurs de contenu qui couvrent la semaine. Une seule accréditation, valable du 16 au 18 novembre au Palais des Congrès.',
   },
   {
     title: 'Demande de labels pour les industries',
