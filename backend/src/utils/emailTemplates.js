@@ -236,7 +236,7 @@ function emails(site = env.PUBLIC_APP_URL) {
       code,
       details: mediaDetails(details),
       card: { png: cardPng, fileCode: code },
-      outro: ['Votre carte QR d’accréditation est jointe à ce message : présentez-la à l’accueil du Palais des Congrès et lors des visites d’usines.'],
+      outro: ['Votre carte QR d’accréditation est jointe à ce message : présentez-la à l’accueil du Palais des Congrès.'],
       button: space(code),
     }),
 

@@ -22,7 +22,7 @@ function wordCount(value: string) {
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
 
-/* Demande d'accréditation des médias et créateurs de contenu : une accréditation, valable toute la semaine. */
+/* Demande d'accréditation des médias et créateurs de contenu : une accréditation, valable les trois jours du Palais des Congrès. */
 export default function AccreditationMediasPage() {
   const [sent, setSent] = useState(false)
   const [trackingCode, setTrackingCode] = useState<string | null>(null)
@@ -70,7 +70,7 @@ export default function AccreditationMediasPage() {
           <SectionHeader
             level={1}
             title="Accréditation médias et créateurs de contenu"
-            lead="Journalistes, photographes, vidéastes et créateurs de contenu : demandez votre accréditation pour couvrir la Semaine de l’industrie, du lundi 16 au dimanche 22 novembre."
+            lead="Journalistes, photographes, vidéastes et créateurs de contenu : demandez votre accréditation pour couvrir la Semaine de l’industrie au Palais des Congrès, du lundi 16 au mercredi 18 novembre."
           />
           <ul className="mt-6 space-y-2 border-t border-forest/15 pt-5 text-[15px] leading-relaxed text-ink/75">
             <li>Votre QR d’accréditation arrive par e-mail et sur WhatsApp après validation.</li>

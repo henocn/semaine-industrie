@@ -28,6 +28,7 @@ const GROUPS: NavGroup[] = [
     items: [
       { label: 'Industrie', to: '/industrie/' },
       { label: 'Carte & visites', to: '/carte/' },
+      { label: 'Points de départ des visites', to: '/points-de-depart/' },
     ],
   },
   {

@@ -45,6 +45,24 @@ export const DAYS: Day[] = [
   },
 ]
 
+/* Jours de visite d'usines (colonnes du tableau des points de départ). */
+export const VISIT_DAYS: { n: number; label: string }[] = [
+  { n: 16, label: 'Lun. 16' },
+  { n: 17, label: 'Mar. 17' },
+  { n: 18, label: 'Mer. 18' },
+  { n: 19, label: 'Jeu. 19' },
+  { n: 20, label: 'Ven. 20' },
+]
+
+/*
+ * Points de départ des visites (page /points-de-depart) : heure de départ par jour.
+ * Un jour absent = pas de départ ce jour-là. Exemple :
+ * { point: 'Lycée technique de Lomé', place: 'Tokoin, Lomé', times: { 16: '7h30', 17: '7h30', 19: '13h00' } },
+ */
+export type DeparturePoint = { point: string; place?: string; times: Partial<Record<number, string>> }
+
+export const DEPARTURE_POINTS: DeparturePoint[] = []
+
 /* Formulaire des particuliers aux visites : ouvert. Pour le fermer : false ici et PARTICULIER_OPEN=false côté serveur. */
 export const PARTICULIER_VISITS_OPEN = true
 
@@ -174,7 +192,7 @@ export const FAQ = [
   },
   {
     q: 'Comment obtenir une accréditation média ?',
-    a: 'Journalistes, photographes, vidéastes et créateurs de contenu : dans la rubrique « Participer », choisissez « Accréditation médias et créateurs de contenu ». Indiquez votre média ou votre chaîne et votre profil.\nAprès validation, vous recevez un QR d’accréditation par e-mail et sur WhatsApp, valable toute la semaine, du 16 au 22 novembre : conférences au Palais des Congrès et visites d’usines.',
+    a: 'Journalistes, photographes, vidéastes et créateurs de contenu : dans la rubrique « Participer », choisissez « Accréditation médias et créateurs de contenu ». Indiquez votre média ou votre chaîne et votre profil.\nAprès validation, vous recevez un QR d’accréditation par e-mail et sur WhatsApp, valable les trois jours du Palais des Congrès, du 16 au 18 novembre.',
   },
   {
     q: 'Comment demander un label et suivre l’évolution de sa demande ?',

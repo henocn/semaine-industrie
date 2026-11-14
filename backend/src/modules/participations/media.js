@@ -12,7 +12,7 @@ const MEDIA_PROFILES = {
 const PROFILE_VALUES = Object.keys(MEDIA_PROFILES);
 
 /* Période couverte par l'accréditation. */
-const MEDIA_VALIDITY = 'du lundi 16 au dimanche 22 novembre 2026';
+const MEDIA_VALIDITY = 'du lundi 16 au mercredi 18 novembre 2026, au Palais des Congrès';
 
 /* Libellé d'un profil. */
 function profileLabel(value) {

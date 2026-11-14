@@ -27,13 +27,18 @@
   {
     "path": "/accreditation-medias",
     "title": "Accréditation médias et créateurs de contenu",
-    "description": "Journalistes, photographes, vidéastes et créateurs de contenu : demandez votre accréditation pour couvrir la Semaine de l’industrie 2026 au Togo, du 16 au 22 novembre."
+    "description": "Journalistes, photographes, vidéastes et créateurs de contenu : demandez votre accréditation pour couvrir la Semaine de l’industrie 2026 au Palais des Congrès de Lomé, du 16 au 18 novembre."
   },
   {
     "path": "/mon-espace",
     "title": "Mon espace",
     "description": "Entrez votre code de suivi pour retrouver votre dossier, le bilan de vos passages et vos documents de la Semaine de l’industrie 2026.",
     "noIndex": true
+  },
+  {
+    "path": "/points-de-depart",
+    "title": "Points de départ des visites",
+    "description": "Points de départ des visites d’usines de la Semaine de l’industrie 2026 au Togo et heures de départ, du lundi 16 au vendredi 20 novembre."
   },
   {
     "path": "/carte",

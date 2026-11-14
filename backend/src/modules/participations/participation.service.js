@@ -316,7 +316,7 @@ async function palaisCheckin(code) {
   return { ...palaisView(row), already, id: row.id };
 }
 
-/* Fiche publique d'une accréditation média, ouverte par le QR (accueil du Palais, industries). */
+/* Fiche publique d'une accréditation média, ouverte par le QR (accueil du Palais). */
 async function mediaPass(rawCode) {
   const code = trackingService.normalizeCode(rawCode);
   const row = code ? await Participation.findOne({ where: { kind: 'media', tracking_code: code } }) : null;
