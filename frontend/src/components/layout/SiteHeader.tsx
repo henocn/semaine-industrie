@@ -28,7 +28,8 @@ const GROUPS: NavGroup[] = [
     items: [
       { label: 'Industries à visiter', to: '/industrie/' },
       { label: 'Carte des visites', to: '/carte/' },
-      { label: 'Points de départ des visites', to: '/points-de-depart/' },
+      // Désactivé en attendant les infos de l'organisation.
+      // { label: 'Points de départ des visites', to: '/points-de-depart/' },
       { label: 'Galerie photo', href: 'https://galerie.semaineindustrie.tg/', external: true },
     ],
   },
