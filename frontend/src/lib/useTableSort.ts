@@ -7,6 +7,7 @@ export const SORT_ORDERS = [
   { value: 'az', label: 'Nom de A à Z' },
   { value: 'za', label: 'Nom de Z à A' },
   { value: 'status', label: 'Statut : en attente d’abord' },
+  { value: 'status-approved', label: 'Statut : acceptés d’abord' },
   { value: 'status-desc', label: 'Statut : refusés d’abord' },
 ] as const
 
@@ -18,6 +19,8 @@ export type SortAccessors<T> = {
   date: (row: T) => string | null | undefined
   name: (row: T) => string
   status: (row: T) => number
+  /* Ligne acceptée : passe en tête avec « acceptés d'abord ». */
+  accepted: (row: T) => boolean
 }
 
 const collator = new Intl.Collator('fr', { sensitivity: 'base', numeric: true })
@@ -44,6 +47,8 @@ export function useTableSort<T>(rows: T[], get: SortAccessors<T>, scope = '') {
         case 'az': return collator.compare(get.name(a), get.name(b)) || byDate(a, b)
         case 'za': return collator.compare(get.name(b), get.name(a)) || byDate(a, b)
         case 'status': return get.status(a) - get.status(b) || byDate(a, b)
+        case 'status-approved':
+          return Number(get.accepted(b)) - Number(get.accepted(a)) || get.status(a) - get.status(b) || byDate(a, b)
         case 'status-desc': return get.status(b) - get.status(a) || byDate(a, b)
         default: return byDate(a, b)
       }

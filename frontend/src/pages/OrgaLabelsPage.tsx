@@ -69,6 +69,7 @@ const LABEL_SORT: SortAccessors<LabelRequest> = {
   date: (r) => r.createdAt || r.created_at,
   name: (r) => r.structure_name,
   status: (r) => ({ pending: 0, approved: 1, rejected: 2 } as Record<string, number>)[r.status] ?? 3,
+  accepted: (r) => r.status === 'approved',
 }
 
 /* Écran orga : validation et gestion des labels. */

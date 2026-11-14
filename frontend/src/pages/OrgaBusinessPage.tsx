@@ -69,6 +69,7 @@ const PEOPLE_SORT: SortAccessors<BusinessParticipant> = {
   date: (p) => p.createdAt,
   name: (p) => businessParticipantLabel(p),
   status: (p) => ({ pending: 0, approved: 1, rejected: 2 } as Record<string, number>)[p.status] ?? 3,
+  accepted: (p) => p.status === 'approved',
 }
 
 /* Backoffice : participants B2B + rendez-vous. */

@@ -1475,7 +1475,7 @@ async function resolveIdent(from, text, phoneNumberId, intent) {
   return replyAskCode(
     from,
     phoneNumberId,
-    'Code introuvable. Vérifiez-le et renvoyez-le (JP-4KTW, PA-3MXR, EC-G7H5, MD-7RQA ou IN-K7P4).',
+    'Code introuvable. Vérifiez-le et réessayez.',
   );
 }
 
@@ -1511,7 +1511,7 @@ async function handleText(from, text, phoneNumberId) {
     return replyAskCode(
       from,
       phoneNumberId,
-      'Code introuvable. Vérifiez-le et renvoyez-le (JP-4KTW, PA-3MXR, EC-G7H5, MD-7RQA ou IN-K7P4).',
+      'Code introuvable. Vérifiez-le et réessayez.',
     );
   }
 
