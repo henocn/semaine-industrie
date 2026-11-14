@@ -64,5 +64,29 @@
     "path": "/confidentialite",
     "title": "Confidentialité",
     "description": "Politique de confidentialité et cookies du site semaineindustrie.tg, Semaine de l’industrie 2026 au Togo."
+  },
+  {
+    "path": "/label",
+    "title": "Inscriptions clôturées",
+    "description": "Les demandes de label pour les industries sont closes. Déjà inscrit ? Retrouvez votre dossier dans Mon espace.",
+    "noIndex": true
+  },
+  {
+    "path": "/accreditation-medias",
+    "title": "Inscriptions clôturées",
+    "description": "Les demandes d’accréditation médias sont closes. Déjà inscrit ? Retrouvez votre dossier dans Mon espace.",
+    "noIndex": true
+  },
+  {
+    "path": "/inscription-groupe",
+    "title": "Inscriptions clôturées",
+    "description": "Les inscriptions des écoles et universités aux visites d’usines sont closes. Déjà inscrit ? Retrouvez votre dossier dans Mon espace.",
+    "noIndex": true
+  },
+  {
+    "path": "/affaires",
+    "title": "Inscriptions clôturées",
+    "description": "Les inscriptions aux rencontres d’affaires sont closes. Déjà inscrit ? Retrouvez votre dossier dans Mon espace.",
+    "noIndex": true
   }
 ]
