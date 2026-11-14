@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { WRAP, BrandLogo } from './Mark'
 
-type NavItem = { label: string; href?: string; to?: string; red?: boolean }
+type NavItem = { label: string; href?: string; to?: string; red?: boolean; external?: boolean }
 
 type NavGroup = {
   label: string
@@ -26,9 +26,10 @@ const GROUPS: NavGroup[] = [
   {
     label: 'Explorer',
     items: [
-      { label: 'Industrie', to: '/industrie/' },
-      { label: 'Carte & visites', to: '/carte/' },
+      { label: 'Industries à visiter', to: '/industrie/' },
+      { label: 'Carte des visites', to: '/carte/' },
       { label: 'Points de départ des visites', to: '/points-de-depart/' },
+      { label: 'Galerie photo', href: 'https://galerie.semaineindustrie.tg/', external: true },
     ],
   },
   {
@@ -64,7 +65,12 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
     )
   }
   return (
-    <a href={item.href} className={className} onClick={onNavigate}>
+    <a
+      href={item.href}
+      className={className}
+      onClick={onNavigate}
+      {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+    >
       {item.label}
     </a>
   )
