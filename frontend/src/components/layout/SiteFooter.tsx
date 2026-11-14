@@ -36,7 +36,7 @@ export function SiteFooter() {
           <ul className="mt-4 space-y-2.5">
             <li><Link to="/programme/" className={LINK}>Programme</Link></li>
             <li><Link to="/carte/" className={LINK}>Carte des usines</Link></li>
-            <li><Link to="/points-de-depart/" className={LINK}>Points de départ des visites</Link></li>
+            {/* <li><Link to="/points-de-depart/" className={LINK}>Points de départ des visites</Link></li> */}
             <li><Link to="/mon-espace/" className={LINK}>Mon espace</Link></li>
             <li><Link to="/faq/" className={LINK}>Questions fréquentes</Link></li>
             <li><Link to="/#contact" className={LINK}>Contact</Link></li>
