@@ -27,6 +27,7 @@ const participationRoutes = require('./modules/participations/participation.rout
 const scanRoutes = require('./modules/scan/scan.routes');
 const espaceRoutes = require('./modules/espace/espace.routes');
 const chatbotRoutes = require('./modules/chatbot/chatbot.routes');
+const galleryRoutes = require('./modules/gallery/gallery.routes');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use(`${env.API_PREFIX}/participations`, participationRoutes);
 app.use(`${env.API_PREFIX}/scan`, scanRoutes);
 app.use(`${env.API_PREFIX}/espace`, espaceRoutes);
 app.use(`${env.API_PREFIX}/chatbot`, chatbotRoutes);
+app.use(`${env.API_PREFIX}/gallery`, galleryRoutes);
 
 /* 404 JSON pour les routes API inconnues. */
 app.use((req, res, next) => {
