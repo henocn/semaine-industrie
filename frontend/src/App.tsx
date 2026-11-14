@@ -10,6 +10,7 @@ import { peekOrgaUser } from './api/auth'
 // import BusinessRegisterPage from './pages/BusinessRegisterPage'
 // Accréditations médias et demandes de label closes ; pages conservées pour une reprise éventuelle.
 // import AccreditationMediasPage from './pages/AccreditationMediasPage'
+import ClosedFormPage from './pages/ClosedFormPage'
 import ConcoursVideoPage from './pages/ConcoursVideoPage'
 // Points de départ désactivés en attendant les infos de l'organisation ; page conservée.
 // import DeparturePointsPage from './pages/DeparturePointsPage'
@@ -90,6 +91,11 @@ export function AppRoutes() {
             {/* <Route path="/label" element={<LabelRequestPage />} /> */}
             {/* <Route path="/inscription" element={<Navigate to="/inscription-groupe/" replace />} /> */}
             {/* <Route path="/inscription-groupe" element={<InscriptionGroupPage />} /> */}
+            {/* Formulaires fermés : « Inscriptions clôturées » au lieu d'une 404. */}
+            <Route path="/label" element={<ClosedFormPage path="/label" subject="Les demandes de label pour les industries" />} />
+            <Route path="/accreditation-medias" element={<ClosedFormPage path="/accreditation-medias" subject="Les demandes d’accréditation médias" />} />
+            <Route path="/inscription-groupe" element={<ClosedFormPage path="/inscription-groupe" subject="Les inscriptions des écoles et universités aux visites d’usines" />} />
+            <Route path="/affaires" element={<ClosedFormPage path="/affaires" subject="Les inscriptions aux rencontres d’affaires" />} />
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
             <Route path="/journees-au-palais" element={<JourneesPalaisPage />} />
             {/* <Route path="/accreditation-medias" element={<AccreditationMediasPage />} /> */}

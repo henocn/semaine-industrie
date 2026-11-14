@@ -15,9 +15,9 @@ const PARTICIPER_ITEMS: NavItem[] = [
   { label: 'Visites d’industries : particuliers', to: '/inscription-particulier/' },
   // Retiré du public : inscriptions des écoles closes. Les inscriptions déjà reçues restent au back-office.
   // { label: 'Visites d’industries : écoles / universités', to: '/inscription-groupe/' },
-  // Retirés du public : accréditations médias et demandes de label closes.
-  // { label: 'Accréditation médias et créateurs de contenu', to: '/accreditation-medias/' },
-  // { label: 'Demande de labels pour les industries', to: '/label/' },
+  // Demandes closes : les pages affichent « Inscriptions clôturées ».
+  { label: 'Accréditation médias et créateurs de contenu', to: '/accreditation-medias/' },
+  { label: 'Demande de labels pour les industries', to: '/label/' },
   // Retiré du public : hors du programme validé. Les inscriptions déjà reçues restent au back-office.
   // { label: 'Rencontres d’affaires', to: '/affaires' },
   { label: 'Mon espace', to: '/mon-espace/', red: true },
