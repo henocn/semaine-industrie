@@ -184,7 +184,7 @@ export const FAQ = [
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie ?',
-    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\n• « Accréditation médias et créateurs de contenu » pour couvrir la semaine en tant que média.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
+    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
   },
   {
     q: 'Comment participer aux rendez-vous au Palais des Congrès ?',
@@ -192,11 +192,11 @@ export const FAQ = [
   },
   {
     q: 'Comment obtenir une accréditation média ?',
-    a: 'Journalistes, photographes, vidéastes et créateurs de contenu : dans la rubrique « Participer », choisissez « Accréditation médias et créateurs de contenu ». Indiquez votre média ou votre chaîne et votre profil.\nAprès validation, vous recevez un QR d’accréditation par e-mail et sur WhatsApp, valable les trois jours du Palais des Congrès, du 16 au 18 novembre.',
+    a: 'Les demandes d’accréditation médias sont closes.\nLes médias déjà accrédités retrouvent leur QR dans « Mon espace » avec leur code de suivi. Il est valable les trois jours du Palais des Congrès, du 16 au 18 novembre.',
   },
   {
     q: 'Comment demander un label et suivre l’évolution de sa demande ?',
-    a: 'Pour demander un label, rendez-vous dans la rubrique « Participer », puis sélectionnez « Demande de labels pour les industries ».\nDès l’envoi de votre demande, un code de suivi vous est remis. Ce code vous permet de suivre votre dossier depuis la rubrique « Mon espace » du site ou sur WhatsApp, en sélectionnant « Suivi de participation ».',
+    a: 'Les demandes de label sont closes.\nSi vous avez déjà envoyé une demande, votre code de suivi vous permet de suivre votre dossier depuis la rubrique « Mon espace » du site ou sur WhatsApp, en sélectionnant « Suivi de participation ».',
   },
   {
     q: 'Où consulter le programme complet et obtenir des informations complémentaires ?',

@@ -27,9 +27,11 @@ const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to
     cta: 'Ressources',
   },
   Commencer: {
-    text: 'Industries : demandez le label et rejoignez la semaine.',
-    to: '/label/',
-    cta: 'Demander le label',
+    // Demandes de label closes : l'étape renvoie vers les inscriptions encore ouvertes.
+    // text: 'Industries : demandez le label et rejoignez la semaine.', to: '/label/', cta: 'Demander le label',
+    text: 'Inscrivez-vous aux rendez-vous du Palais des Congrès ou aux visites d’usines.',
+    to: '/regles-de-participation/',
+    cta: 'Participer',
   },
 }
 
@@ -128,9 +130,10 @@ function Hero() {
             </p>
             <div className="mt-7 flex flex-wrap gap-2.5">
               <Button to="/programme/">Programme</Button>
+              {/* Demandes de label closes.
               <Button to="/label/" variant="outline">
                 Demander un label
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>

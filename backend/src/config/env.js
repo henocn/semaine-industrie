@@ -36,6 +36,9 @@ const env = cleanEnv(process.env, {
   WHATSAPP_WABA_ID: str({ default: '2387848361959787' }),
   WHATSAPP_TEMPLATE_LANG: str({ default: 'fr' }),
 
+  /* Galerie photo : clé partagée avec son serveur pour vérifier les codes. Vide : vérification désactivée. */
+  GALLERY_API_KEY: str({ default: '' }),
+
   /* PDF programme officiel (chemin public ou URL absolue). */
   PROGRAMME_PDF_URL: str({ default: '/uploads/docs/programme-si2026.pdf' }),
   /* Places pour les particuliers ; au-delà, l'inscription reste ouverte en liste d'attente. */

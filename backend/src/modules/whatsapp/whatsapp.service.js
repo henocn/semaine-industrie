@@ -660,12 +660,13 @@ function participateBody() {
     // Visites des écoles / universités retirées du public (inscriptions closes).
     // `*Visites d'usines, écoles / universités* : ${site}/inscription-groupe`,
     // '',
-    `3. *Médias et créateurs de contenu* : ${site}/accreditation-medias`,
-    '',
-    `4. *Labels pour les industries* : ${site}/label`,
+    // Accréditations médias et demandes de label closes.
+    // `3. *Médias et créateurs de contenu* : ${site}/accreditation-medias`,
+    // '',
+    // `4. *Labels pour les industries* : ${site}/label`,
     // Rencontres d'affaires retirées du public (programme validé) ; les inscrits existants gardent leur code AF.
     // `*Rencontres d'affaires* : ${site}/affaires`,
-    '',
+    // '',
     'Chaque formulaire donne un code, à suivre dans « Suivi de participation ».',
   ].join('\n');
 }
