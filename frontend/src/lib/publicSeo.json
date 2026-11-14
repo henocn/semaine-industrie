@@ -36,6 +36,11 @@
     "noIndex": true
   },
   {
+    "path": "/points-de-depart",
+    "title": "Points de départ des visites",
+    "description": "Points de départ des visites d’usines de la Semaine de l’industrie 2026 au Togo et heures de départ, du lundi 16 au vendredi 20 novembre."
+  },
+  {
     "path": "/carte",
     "title": "Carte des usines ouvertes au Togo",
     "description": "Carte des usines ouvertes au Togo pendant la Semaine de l’industrie 2026 : sites industriels, visites d’établissements et accès."

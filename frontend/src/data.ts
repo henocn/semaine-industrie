@@ -45,6 +45,24 @@ export const DAYS: Day[] = [
   },
 ]
 
+/* Jours de visite d'usines (colonnes du tableau des points de départ). */
+export const VISIT_DAYS: { n: number; label: string }[] = [
+  { n: 16, label: 'Lun. 16' },
+  { n: 17, label: 'Mar. 17' },
+  { n: 18, label: 'Mer. 18' },
+  { n: 19, label: 'Jeu. 19' },
+  { n: 20, label: 'Ven. 20' },
+]
+
+/*
+ * Points de départ des visites (page /points-de-depart) : heure de départ par jour.
+ * Un jour absent = pas de départ ce jour-là. Exemple :
+ * { point: 'Lycée technique de Lomé', place: 'Tokoin, Lomé', times: { 16: '7h30', 17: '7h30', 19: '13h00' } },
+ */
+export type DeparturePoint = { point: string; place?: string; times: Partial<Record<number, string>> }
+
+export const DEPARTURE_POINTS: DeparturePoint[] = []
+
 /* Formulaire des particuliers aux visites : ouvert. Pour le fermer : false ici et PARTICULIER_OPEN=false côté serveur. */
 export const PARTICULIER_VISITS_OPEN = true
 

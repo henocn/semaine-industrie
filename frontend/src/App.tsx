@@ -10,6 +10,7 @@ import { peekOrgaUser } from './api/auth'
 // import BusinessRegisterPage from './pages/BusinessRegisterPage'
 import AccreditationMediasPage from './pages/AccreditationMediasPage'
 import ConcoursVideoPage from './pages/ConcoursVideoPage'
+import DeparturePointsPage from './pages/DeparturePointsPage'
 import FaqPage from './pages/FaqPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
@@ -94,6 +95,7 @@ export function AppRoutes() {
             <Route path="/mon-espace" element={<MonEspacePage />} />
             {/* <Route path="/affaires" element={<BusinessRegisterPage />} /> */}
             <Route path="/carte" element={<MapPage />} />
+            <Route path="/points-de-depart" element={<DeparturePointsPage />} />
             <Route path="/industrie" element={<IndustriesPage />} />
             <Route path="/passeport/:code" element={<PassportRedirect />} />
             <Route path="/passage/:code" element={<PassagePage />} />
