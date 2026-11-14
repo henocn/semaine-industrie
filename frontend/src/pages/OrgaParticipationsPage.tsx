@@ -44,6 +44,7 @@ const SORT: SortAccessors<Participation> = {
     if (r.status === 'rejected') return 3
     return r.waitlisted ? 1 : 0
   },
+  accepted: (r) => r.status === 'approved',
 }
 
 /* Libellé de chaque onglet. */
