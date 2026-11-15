@@ -167,9 +167,14 @@ async function sendTemplate({
   languageCode,
   bodyParams,
   buttonParams,
+  headerImage,
+  quickReplies,
   phoneNumberId,
 }) {
   const components = [];
+  if (headerImage) {
+    components.push({ type: 'header', parameters: [{ type: 'image', image: { link: String(headerImage) } }] });
+  }
   if (bodyParams && bodyParams.length) {
     components.push({
       type: 'body',
@@ -190,6 +195,15 @@ async function sendTemplate({
       })),
     });
   }
+  /* Boutons de réponse rapide : le payload revient tel quel quand la personne touche le bouton. */
+  (quickReplies || []).forEach((payload, index) => {
+    components.push({
+      type: 'button',
+      sub_type: 'quick_reply',
+      index: String(index),
+      parameters: [{ type: 'payload', payload: String(payload).slice(0, 128) }],
+    });
+  });
   return graphSend(phoneNumberId, {
     to,
     type: 'template',
@@ -582,6 +596,19 @@ async function replyProgrammeDocument(from, phoneNumberId) {
   });
 }
 
+/* Bouton « Programme » du modèle si26_palais_acceptee_qr : le détail des journées choisies. */
+async function replyPalaisProgramme(from, rawCode, phoneNumberId) {
+  const code = trackingService.normalizeCode(rawCode);
+  const row = code ? await Participation.findOne({ where: { kind: 'palais', tracking_code: code } }) : null;
+  const days = row ? palais.normalizeDays(row.palais_days) : [];
+  const sections = days
+    .map((n) => PROGRAMME_DAYS.find((d) => d.n === n))
+    .filter(Boolean)
+    .map(formatProgrammeDay);
+  if (!sections.length) return replyProgramme(from, 'menu_programme', phoneNumberId);
+  return sendWithNav({ to: from, phoneNumberId, body: sections.join('\n\n') });
+}
+
 /* Envoie le fichier programme, ou le texte d'un jour. */
 async function replyProgramme(from, action, phoneNumberId) {
   if (action === 'menu_programme' || action === 'prog_all') {
@@ -896,6 +923,8 @@ function extractInbound(raw) {
     text = String(reply?.title || '');
   } else if (msg.type === 'button' && msg.button?.text) {
     text = String(msg.button.text);
+    /* Bouton d'un modèle : son payload sert d'action (ex. « palais_prog:JP-4KTW »). */
+    interactiveId = String(msg.button.payload || '');
   } else {
     return null;
   }
@@ -1371,6 +1400,9 @@ function resolveActionId(id, title) {
 
 /* Traite un identifiant de bouton / liste. */
 async function handleInteractive(from, id, phoneNumberId, title = '') {
+  if (String(id).startsWith('palais_prog:')) {
+    return replyPalaisProgramme(from, String(id).slice('palais_prog:'.length), phoneNumberId);
+  }
   const session = getSession(from);
   const action = resolveActionId(id, title);
 
@@ -1741,9 +1773,25 @@ async function notifyParticipationApproved(participation) {
   if (!code) return { ok: false, reason: 'no_code' };
   const individual = participation.kind !== 'ecole';
   const places = individual ? 1 : participation.headcount || '-';
+  /* Palais des Congrès : modèle avec la carte QR en image et le bouton « Programme » des journées choisies. */
+  const palaisTemplates = [];
+  if (participation.kind === 'palais') {
+    try {
+      const headerImage = await qrImageUrl(code, { payload: passageQrPayload(code), code, name: participation.name });
+      palaisTemplates.push({
+        name: 'si26_palais_acceptee_qr',
+        headerImage,
+        bodyParams: [participation.name, palais.daysSentence(participation.palais_days) || 'voir Mon espace'],
+        quickReplies: [`palais_prog:${code}`],
+      });
+    } catch (err) {
+      logger.warn('[whatsapp] carte QR Palais indisponible', err.message);
+    }
+  }
   return sendTemplateOrText({
     phone: participation?.phone,
     templates: [
+      ...palaisTemplates,
       ...(individual ? [{ name: 'si26_particulier_acceptee', bodyParams: [participation.name, code] }] : []),
       { name: 'si26_inscription_acceptee', bodyParams: [participation.name, places, code] },
     ],
