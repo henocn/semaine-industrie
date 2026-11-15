@@ -147,12 +147,32 @@ function Camera({ onCode, paused }: { onCode: (raw: string) => void; paused: boo
   }, [paused, onCode])
 
   useEffect(() => {
-    const Ctor = nativeDetector()
-    if (!Ctor) return undefined
     let stream: MediaStream | null = null
     let timer = 0
     let alive = true
-    const detector = new Ctor({ formats: ['qr_code'] })
+    let reading = false
+
+    /* Lecteur : détecteur natif (Chrome, Android), sinon jsQR (iPhone, Firefox). */
+    async function makeReader(video: HTMLVideoElement): Promise<() => Promise<string | null>> {
+      const Ctor = nativeDetector()
+      if (Ctor) {
+        const detector = new Ctor({ formats: ['qr_code'] })
+        return async () => (await detector.detect(video))[0]?.rawValue || null
+      }
+      const { default: jsQR } = await import('jsqr')
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      return async () => {
+        if (!ctx || !video.videoWidth) return null
+        /* Image réduite : plus rapide sur téléphone, assez nette pour un QR. */
+        const scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight))
+        canvas.width = Math.round(video.videoWidth * scale)
+        canvas.height = Math.round(video.videoHeight * scale)
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        return jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' })?.data || null
+      }
+    }
 
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: 'environment' }, audio: false })
@@ -166,15 +186,19 @@ function Camera({ onCode, paused }: { onCode: (raw: string) => void; paused: boo
         if (!video) return
         video.srcObject = media
         await video.play()
+        const read = await makeReader(video)
         timer = window.setInterval(async () => {
-          if (pausedRef.current || video.readyState < 2) return
+          if (reading || pausedRef.current || video.readyState < 2) return
+          reading = true
           try {
-            const found = await detector.detect(video)
-            if (found[0]?.rawValue) onCodeRef.current(found[0].rawValue)
+            const value = await read()
+            if (value) onCodeRef.current(value)
           } catch {
             /* image illisible : on réessaie au tour suivant */
+          } finally {
+            reading = false
           }
-        }, 350)
+        }, 250)
       })
       .catch(() => setError('Caméra indisponible : autorisez la caméra, ou saisissez le code ci-dessous.'))
 
@@ -184,14 +208,6 @@ function Camera({ onCode, paused }: { onCode: (raw: string) => void; paused: boo
       stream?.getTracks().forEach((t) => t.stop())
     }
   }, [])
-
-  if (!nativeDetector()) {
-    return (
-      <p className="border border-black bg-white px-4 py-3 text-[14px] text-ink/70">
-        Ce navigateur ne lit pas les QR avec la caméra (iPhone, Firefox). Utilisez Chrome sur Android, ou saisissez le code ci-dessous.
-      </p>
-    )
-  }
 
   return (
     <div>
