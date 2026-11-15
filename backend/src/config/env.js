@@ -57,6 +57,8 @@ const env = cleanEnv(process.env, {
   MAIL_FROM_NOTIFY: str({ default: 'Semaine industrie <no-reply@semaineindustrie.tg>' }),
   MAIL_FROM_CONTACT: str({ default: 'Semaine industrie <infos@semaineindustrie.tg>' }),
   MAIL_TO_CONTACT: str({ default: 'infos@semaineindustrie.tg' }),
+  /* Copie cachée de chaque e-mail envoyé (contrôle). Vide : pas de copie. */
+  MAIL_BCC: str({ default: '' }),
 });
 
 module.exports = env;
