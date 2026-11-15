@@ -257,7 +257,7 @@ export default function OrgaScanPage() {
           }
         } else {
           const r = await scanPalais(code, settings.day, true)
-          const entry = r.days.find((d) => d.n === settings.day)?.checked_in_at
+          const entry = r.already_at || r.days.find((d) => d.n === settings.day)?.checked_in_at
           if (r.already) {
             setOutcome({ tone: 'already', title: `${r.name} : entrée déjà enregistrée`, detail: `${entry ? `À ${hour(entry)} · ` : ''}${r.code}` })
           } else {

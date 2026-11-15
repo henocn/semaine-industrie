@@ -305,20 +305,24 @@ async function palaisCheckin(code, day = null, { check = false } = {}) {
   /* Jour réglé dans le scan ; sans réglage, la journée du Palais d'aujourd'hui. */
   const today = palais.DAY_NUMBERS.includes(Number(day)) ? Number(day) : palais.todayDay();
   if (today === null) throw ApiError.badRequest('Aucune journée du Palais n’a lieu aujourd’hui');
-  /* La personne doit avoir coché ce jour à l'inscription. */
+  /* Vérification des journées cochées désactivée : seule règle, une entrée par jour.
   if (!palais.normalizeDays(row.palais_days).includes(today)) {
     throw ApiError.conflict(`Inscrit pour : ${palais.daysShort(row.palais_days)}. Pas pour le ${today} novembre.`);
-  }
+  } */
   const checkins = { ...(row.palais_checkins || {}) };
-  const already = Boolean(checkins[today]);
+  /* Une seule entrée par jour calendaire à Lomé, quel que soit le jour réglé sur l'appareil qui scanne. */
+  const lomeDate = (value) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lome' }).format(new Date(value));
+  const now = new Date();
+  const alreadyAt = Object.values(checkins).find((at) => at && lomeDate(at) === lomeDate(now)) || null;
+  const already = Boolean(alreadyAt);
   /* Vérification seule : la personne est valide, rien n'est enregistré avant « Entrer ». */
-  if (check) return { ...palaisView(row, today), already, checked: !already, id: row.id };
+  if (check) return { ...palaisView(row, today), already, already_at: alreadyAt, checked: !already, id: row.id };
   if (!already) {
-    checkins[today] = new Date().toISOString();
+    checkins[today] = now.toISOString();
     row.palais_checkins = checkins;
     await row.save();
   }
-  return { ...palaisView(row, today), already, id: row.id };
+  return { ...palaisView(row, today), already, already_at: alreadyAt, id: row.id };
 }
 
 /* Fiche publique d'une accréditation média, ouverte par le QR (accueil du Palais). */
