@@ -43,6 +43,7 @@ async function sendNotifyMail({ to, subject, text, html, attachments }) {
       html: html || undefined,
       attachments: attachments?.length ? attachments : undefined,
       replyTo: env.MAIL_TO_CONTACT,
+      bcc: env.MAIL_BCC || undefined,
     });
     return { ok: true, id: info.messageId };
   } catch (err) {
@@ -63,6 +64,7 @@ async function sendContactMail({ fromName, fromEmail, subject, message }) {
       from: env.MAIL_FROM_CONTACT,
       to: env.MAIL_TO_CONTACT,
       replyTo: `${fromName} <${fromEmail}>`,
+      bcc: env.MAIL_BCC || undefined,
       subject: subject || `Contact site : ${fromName}`,
       text: [
         `De : ${fromName} <${fromEmail}>`,
