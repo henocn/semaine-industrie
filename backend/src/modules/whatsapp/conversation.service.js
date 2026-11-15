@@ -119,6 +119,28 @@ function recordOutbound(payload, data) {
   });
 }
 
+/*
+ * Statuts renvoyés par Meta après l'envoi (sent, delivered, read, failed).
+ * Un échec est noté en tête du message (« [Échec : raison] ») : la colonne QR des participations repasse à ✗.
+ */
+async function recordStatuses(statuses) {
+  let failed = 0;
+  for (const status of statuses || []) {
+    if (status?.status !== 'failed' || !status.id) continue;
+    const row = await WhatsappMessage.findOne({ where: { wa_message_id: String(status.id), direction: 'out' } });
+    if (!row || String(row.body || '').startsWith('[Échec')) continue;
+    const error = status.errors?.[0] || {};
+    const reason = [error.title || error.message || 'non délivré', error.code ? `code ${error.code}` : null].filter(Boolean).join(', ');
+    row.body = `[Échec : ${reason}] ${row.body || ''}`;
+    await row.save();
+    failed += 1;
+    emitRealtime('whatsapp:message', { phone: row.phone }, 'admin');
+    emitRealtime('participation:changed', { action: 'update' }, 'orga');
+  }
+  if (failed) logger.warn('[whatsapp] envois échoués signalés par Meta', failed);
+  return failed;
+}
+
 /* Une ligne par numéro, de la plus récente à la plus ancienne. */
 function listConversations() {
   return sequelize.query(
@@ -149,6 +171,7 @@ async function getConversation(phone) {
 module.exports = {
   recordInbound,
   recordOutbound,
+  recordStatuses,
   listConversations,
   getConversation,
 };

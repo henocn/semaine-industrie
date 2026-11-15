@@ -1,14 +1,16 @@
 /* Acceptation / refus groupés : les lignes passent une à une, avec la même action (et les mêmes notifications) qu'à l'unité. */
 
 export type ReviewStatus = 'approved' | 'rejected'
+/* Action d'un lot : acceptation, refus, ou « notify » (renvoi du message d'acceptation aux lignes déjà acceptées). */
+export type BatchAction = ReviewStatus | 'notify'
 export type BatchFailure = { name: string; message: string }
-export type BatchResult = { status: ReviewStatus; ok: number; total: number; failed: BatchFailure[] }
+export type BatchResult = { status: BatchAction; ok: number; total: number; failed: BatchFailure[] }
 
 /* Traite les lignes l'une après l'autre ; un échec n'arrête pas le lot et est rapporté avec le nom de la ligne. */
-export async function runReviewBatch<T>(
+export async function runReviewBatch<T, S extends BatchAction>(
   rows: readonly T[],
-  status: ReviewStatus,
-  run: (row: T, status: ReviewStatus) => Promise<unknown>,
+  status: S,
+  run: (row: T, status: S) => Promise<unknown>,
   name: (row: T) => string,
   onProgress: (done: number, total: number) => void,
 ): Promise<BatchResult> {

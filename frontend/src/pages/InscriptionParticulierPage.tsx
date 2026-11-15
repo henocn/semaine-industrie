@@ -126,6 +126,7 @@ export default function InscriptionParticulierPage() {
                 Toutes les places prévues pour les particuliers sont déjà attribuées. Nous vous préviendrons par e-mail et sur WhatsApp dès qu’une place se libère.
               </p>
             )}
+            {/* Inscriptions au Palais closes : plus de renvoi vers le Palais.
             {waitlisted && (
               <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
                 En attendant, vous pouvez participer aux{' '}
@@ -134,7 +135,7 @@ export default function InscriptionParticulierPage() {
                 </Link>
                 , du 16 au 18 novembre.
               </p>
-            )}
+            )} */}
             <TrackingCodeNotice code={trackingCode} />
             <SurveyInvite code={trackingCode} />
           </div>

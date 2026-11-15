@@ -42,8 +42,8 @@ function limitSlots(req, res, next) {
 
 /* Refuse les formulaires publics fermés. Le backoffice peut toujours ajouter. */
 function closedForms(req, res, next) {
-  /* Particuliers : inscriptions closes (le réglage PARTICULIER_OPEN ne suffit plus à les rouvrir). */
-  if (req.body?.kind === 'particulier') {
+  /* Particuliers : inscriptions ouvertes, fermables avec PARTICULIER_OPEN=false. */
+  if (req.body?.kind === 'particulier' && !env.PARTICULIER_OPEN) {
     return next(ApiError.badRequest('Les inscriptions des particuliers aux visites d’usines sont closes.'));
   }
   /* Écoles / universités : inscriptions closes (le formulaire public envoie kind « ecole » ou rien). */
@@ -81,6 +81,7 @@ router.get('/:id', controller.getOne);
 router.post('/', validate(createSchema), controller.create);
 router.patch('/:id', validate(updateSchema), controller.update);
 router.post('/:id/approve', controller.approve);
+router.post('/:id/notify', controller.notify);
 router.post('/:id/reject', controller.reject);
 router.delete('/:id', controller.remove);
 

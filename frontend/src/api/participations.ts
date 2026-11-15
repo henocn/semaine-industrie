@@ -30,6 +30,8 @@ export type Participation = {
   createdAt?: string
   /* Particulier en attente de validation, au-delà des places prévues. */
   waitlisted?: boolean
+  /* QR reçu sur WhatsApp (modèle avec QR ou carte envoyée par le bot), liste seulement. */
+  whatsapp_qr?: boolean
   /* Particulier ou média scanné à un point de départ (liste seulement). */
   departure_scan?: { point: string; scanned_at: string } | null
   /* Journées du Palais choisies (16, 17, 18) et entrées scannées, pour une inscription « palais ». */
@@ -147,6 +149,11 @@ export function updateParticipation(id: string, body: ParticipationInput) {
 /* Accepte et crée le QR du jour J. */
 export function approveParticipation(id: string) {
   return apiFetch<Participation>(`/participations/${id}/approve`, { method: 'POST' })
+}
+
+/* Renvoie le message WhatsApp d'acceptation (modèle avec QR pour le Palais). */
+export function notifyParticipation(id: string) {
+  return apiFetch<{ id: string; name: string }>(`/participations/${id}/notify`, { method: 'POST' })
 }
 
 /* Refuse une participation. */
