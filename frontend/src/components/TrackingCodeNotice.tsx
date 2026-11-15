@@ -1,17 +1,19 @@
 import { Link } from 'react-router-dom'
 
-/* Code de suivi remis dès l'inscription, avec le lien vers le dossier. */
+/* Code de suivi remis dès l'inscription, avec le bouton vers le dossier. */
 export function TrackingCodeNotice({ code }: { code?: string | null }) {
   if (!code) return null
   return (
     <div className="mt-5">
-      <p className="text-[15px] text-ink/80">Votre code de suivi, à conserver :</p>
-      <p className="mt-2 inline-block bg-forest px-4 py-2 font-mono text-xl tracking-wide text-white">{code}</p>
-      <p className="mt-3">
-        <Link to={`/mon-espace?code=${encodeURIComponent(code)}`} className="font-semibold text-forest underline underline-offset-4">
-          Suivi de participation
-        </Link>
+      <p className="text-[15px] text-ink/80">
+        Code de suivi, à conserver : <span className="font-mono text-lg font-semibold tracking-wide text-forest">{code}</span>
       </p>
+      <Link
+        to={`/mon-espace?code=${encodeURIComponent(code)}`}
+        className="mt-3 inline-flex items-center border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"
+      >
+        Suivi de participation
+      </Link>
     </div>
   )
 }

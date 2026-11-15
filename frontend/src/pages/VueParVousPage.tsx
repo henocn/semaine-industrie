@@ -377,6 +377,7 @@ export default function VueParVousPage() {
             )}
           </div>
 
+          {/* Image retirée de la page.
           {!current && (
             <picture className="contents">
               <source srcSet="/images/metiers.webp" type="image/webp" />
@@ -390,6 +391,7 @@ export default function VueParVousPage() {
               />
             </picture>
           )}
+          */}
 
           {game === 'sondage' && <SurveyGame />}
           {game === 'quiz' && <QuizGame />}
