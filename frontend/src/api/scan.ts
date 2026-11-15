@@ -33,6 +33,8 @@ export type PalaisScanResult = {
   status: string
   already: boolean
   checked?: boolean
+  /* Heure de l'entrée déjà enregistrée aujourd'hui (une seule par jour). */
+  already_at?: string | null
   today: number | null
   days: { n: number; label: string; title: string; registered: boolean; checked_in_at: string | null }[]
 }
