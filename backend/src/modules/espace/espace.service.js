@@ -18,6 +18,7 @@ const { renderQrCardDataUrl } = require('../../utils/qrCard');
 const { parsePhoneNumberFromString } = require('libphonenumber-js');
 const palais = require('../participations/palais');
 const media = require('../participations/media');
+const visitSlots = require('../participations/visitSlots');
 
 const TIME_ZONE = 'Africa/Lome';
 
@@ -235,6 +236,10 @@ async function passportSpace(passport) {
       ['Inscription', participation ? formatDay(participation.createdAt) : null],
     ]),
     documents: [],
+    /* Particulier validé : départ de visite réservé (null tant qu'il n'a pas choisi). */
+    ...(!isGroup && participation?.kind === 'particulier' && participation.status === 'approved'
+      ? { departure: { slot: participation.visit_slot ? visitSlots.slotLabel(participation.visit_slot) : null } }
+      : {}),
     ...(await visitorSummary({ passports: [passport], bookingsWhere, headcount })),
   };
 }

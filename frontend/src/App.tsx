@@ -43,6 +43,7 @@ import OrgaVisitsPage from './pages/OrgaVisitsPage'
 import PassagePage from './pages/PassagePage'
 import PrivacyPage from './pages/PrivacyPage'
 import ReglesPage from './pages/ReglesPage'
+import ReservationVisitePage from './pages/ReservationVisitePage'
 import ProgrammePage from './pages/ProgrammePage'
 // import VotePage from './pages/VotePage'
 import VueParVousPage from './pages/VueParVousPage'
@@ -97,6 +98,7 @@ export function AppRoutes() {
             <Route path="/inscription-groupe" element={<ClosedFormPage path="/inscription-groupe" subject="Les inscriptions des écoles et universités aux visites d’usines" />} />
             <Route path="/affaires" element={<ClosedFormPage path="/affaires" subject="Les inscriptions aux rencontres d’affaires" />} />
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
+            <Route path="/reservation-visite" element={<ReservationVisitePage />} />
             <Route path="/journees-au-palais" element={<JourneesPalaisPage />} />
             {/* <Route path="/accreditation-medias" element={<AccreditationMediasPage />} /> */}
             <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />

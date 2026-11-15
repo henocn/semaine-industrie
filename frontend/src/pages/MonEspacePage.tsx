@@ -1,12 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Download } from 'lucide-react'
+import { Download, MapPin } from 'lucide-react'
 import { getEspace, type Espace, type EspaceRow, type EspaceType } from '../api/espace'
 import { ResourceCard } from '../components/ResourceCard'
 import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { publicSeo } from '../lib/seo'
+import { VISITS_WHATSAPP_GROUP } from '../data'
+import { WhatsAppIcon } from '../components/ui/WhatsAppIcon'
 
 const TYPE_LABEL: Record<EspaceType, string> = {
   ecole: 'École / université',
@@ -62,7 +64,7 @@ function EspaceView({ space }: { space: Espace }) {
   return (
     <div className="mt-10 space-y-12">
       <section className="grid gap-8 border border-forest/15 bg-white p-5 sm:p-7 md:grid-cols-[1fr_auto]">
-        <div>
+        <div className="flex flex-col">
           <h2 className="display h3">{space.name}</h2>
           <p className="mt-2 text-[15px] text-ink/70">
             {TYPE_LABEL[space.type]} · {STATUS_LABEL[space.status]} · <span className="font-mono">{space.code}</span>
@@ -80,6 +82,37 @@ function EspaceView({ space }: { space: Espace }) {
               ))}
             </dl>
           )}
+          {/* Encadré collé en bas de la colonne : son bas s'aligne sur le bouton « Télécharger le QR ». */}
+          {space.departure && <div className="min-h-6 flex-1" aria-hidden="true" />}
+          {space.departure && (
+            <div className="border-2 border-forest bg-sage px-4 py-3">
+              <p className="text-[15px] text-ink">
+                {space.departure.slot ? (
+                  <>Départ réservé : <span className="font-semibold text-forest">{space.departure.slot}</span></>
+                ) : (
+                  'Visites des 19 et 20 novembre : choisissez votre départ.'
+                )}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a
+                  href={VISITS_WHATSAPP_GROUP}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 border border-forest bg-sun px-4 py-2.5 text-[14px] font-semibold text-forest transition-opacity hover:opacity-90"
+                >
+                  <WhatsAppIcon />
+                  Groupe des visites
+                </a>
+                <Link
+                  to={`/reservation-visite/?code=${encodeURIComponent(space.code)}`}
+                  className="inline-flex items-center gap-2 border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"
+                >
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
+                  {space.departure.slot ? 'Voir ma réservation' : 'Choisir son créneau de visite'}
+                </Link>
+              </div>
+            </div>
+          )}
           {space.page_url && (
             <Link to={space.page_url} className="mt-6 inline-block font-semibold text-forest underline underline-offset-4">
               Voir ma fiche publique
@@ -87,7 +120,12 @@ function EspaceView({ space }: { space: Espace }) {
           )}
         </div>
         {space.qr_data_url && (
-          <div className="justify-self-start md:justify-self-end">
+          <div className="flex flex-col items-start gap-3 justify-self-start md:items-end md:justify-end md:justify-self-end">
+            <img
+              src={space.qr_data_url}
+              alt={`QR de ${space.name}`}
+              className="w-56 max-w-full border border-forest/15 bg-white"
+            />
             <a
               href={space.qr_data_url}
               download={`qr-${space.code}.png`}
@@ -100,7 +138,8 @@ function EspaceView({ space }: { space: Espace }) {
         )}
       </section>
 
-      {space.status === 'approved' && space.stats.length > 0 && (
+      {/* Bilan masqué pour les particuliers : l'essentiel est le QR et le départ réservé. */}
+      {space.status === 'approved' && space.stats.length > 0 && space.type !== 'particulier' && (
         <section aria-labelledby="bilan">
           <h2 id="bilan" className="display h3">Mon bilan</h2>
           <dl className="mt-4 flex flex-wrap gap-px border border-forest/15 bg-forest/15">

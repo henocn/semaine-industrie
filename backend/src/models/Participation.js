@@ -86,6 +86,15 @@ module.exports = (sequelize) => {
         allowNull: true,
         unique: true,
       },
+      /* Départ réservé par un particulier validé : « 19-matin-agoe » (voir participations/visitSlots.js). */
+      visit_slot: {
+        type: DataTypes.STRING(40),
+        allowNull: true,
+      },
+      visit_slot_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       tableName: 'participations',
