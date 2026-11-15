@@ -20,6 +20,8 @@ export type DepartureScanResult = {
   name: string
   status: string
   already: boolean
+  /* Vérification seule (check) : QR valide, rien n'est encore enregistré. */
+  checked?: boolean
   point: string
   scanned_at: string
 }
@@ -30,6 +32,7 @@ export type PalaisScanResult = {
   name: string
   status: string
   already: boolean
+  checked?: boolean
   today: number | null
   days: { n: number; label: string; title: string; registered: boolean; checked_in_at: string | null }[]
 }
@@ -40,18 +43,18 @@ export function listDeparturePoints() {
 }
 
 /* Enregistre le départ d'un particulier. */
-export function scanDeparture(code: string, pointId: string) {
+export function scanDeparture(code: string, pointId: string, check = false) {
   return apiFetch<DepartureScanResult>('/scan/departure', {
     method: 'POST',
-    body: JSON.stringify({ code, point_id: pointId }),
+    body: JSON.stringify({ code, point_id: pointId, check }),
   })
 }
 
 /* Enregistre l'entrée au Palais pour le jour réglé. */
-export function scanPalais(code: string, day: number) {
+export function scanPalais(code: string, day: number, check = false) {
   return apiFetch<PalaisScanResult>('/scan/palais', {
     method: 'POST',
-    body: JSON.stringify({ code, day }),
+    body: JSON.stringify({ code, day, check }),
   })
 }
 

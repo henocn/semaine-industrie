@@ -299,7 +299,7 @@ async function palaisPass(code) {
 }
 
 /* Enregistre l'entrée du jour au Palais (accueil connecté). */
-async function palaisCheckin(code, day = null) {
+async function palaisCheckin(code, day = null, { check = false } = {}) {
   const row = await findPalaisByCode(code);
   if (row.status !== 'approved') throw ApiError.conflict('Inscription pas encore validée : entrée non enregistrée');
   /* Jour réglé dans le scan ; sans réglage, la journée du Palais d'aujourd'hui. */
@@ -311,6 +311,8 @@ async function palaisCheckin(code, day = null) {
   }
   const checkins = { ...(row.palais_checkins || {}) };
   const already = Boolean(checkins[today]);
+  /* Vérification seule : la personne est valide, rien n'est enregistré avant « Entrer ». */
+  if (check) return { ...palaisView(row, today), already, checked: !already, id: row.id };
   if (!already) {
     checkins[today] = new Date().toISOString();
     row.palais_checkins = checkins;

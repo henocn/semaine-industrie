@@ -223,6 +223,8 @@ export default function OrgaScanPage() {
   const [editing, setEditing] = useState(() => !readStore<ScanSettings>(STORE_KEY))
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [busy, setBusy] = useState(false)
+  /* QR valide en attente du bouton « Entrer » : la caméra est masquée pendant ce temps. */
+  const [candidate, setCandidate] = useState<{ code: string; name: string } | null>(null)
   const lastRef = useRef<{ code: string; at: number } | null>(null)
 
   /* Garde les réglages sur l'appareil et passe au scan. */
@@ -233,10 +235,10 @@ export default function OrgaScanPage() {
     setOutcome(null)
   }
 
-  /* Envoie un code selon les réglages et affiche le résultat. */
+  /* Vérifie un code lu (sans rien enregistrer) : valide, on affiche le nom et le bouton « Entrer ». */
   const submitCode = useCallback(
     async (raw: string) => {
-      if (!settings || busy) return
+      if (!settings || busy || candidate) return
       const code = codeFrom(raw)
       if (!code) return
       /* La caméra relit le même QR plusieurs fois : on ignore les répétitions rapprochées. */
@@ -244,22 +246,23 @@ export default function OrgaScanPage() {
       if (last && last.code === code && Date.now() - last.at < 4000) return
       lastRef.current = { code, at: Date.now() }
       setBusy(true)
+      setOutcome(null)
       try {
         if (settings.mode === 'visite') {
-          const r = await scanDeparture(code, settings.pointId)
-          setOutcome(
-            r.already
-              ? { tone: 'already', title: `${r.name} : départ déjà enregistré`, detail: `${r.point}, à ${hour(r.scanned_at)} · ${r.code}` }
-              : { tone: 'ok', title: `${r.name} : départ enregistré`, detail: `${r.point} · ${r.code}` },
-          )
+          const r = await scanDeparture(code, settings.pointId, true)
+          if (r.already) {
+            setOutcome({ tone: 'already', title: `${r.name} : départ déjà enregistré`, detail: `${r.point}, à ${hour(r.scanned_at)} · ${r.code}` })
+          } else {
+            setCandidate({ code, name: r.name })
+          }
         } else {
-          const r = await scanPalais(code, settings.day)
+          const r = await scanPalais(code, settings.day, true)
           const entry = r.days.find((d) => d.n === settings.day)?.checked_in_at
-          setOutcome(
-            r.already
-              ? { tone: 'already', title: `${r.name} : entrée déjà enregistrée`, detail: `${entry ? `À ${hour(entry)} · ` : ''}${r.code}` }
-              : { tone: 'ok', title: `${r.name} : entrée enregistrée`, detail: r.code },
-          )
+          if (r.already) {
+            setOutcome({ tone: 'already', title: `${r.name} : entrée déjà enregistrée`, detail: `${entry ? `À ${hour(entry)} · ` : ''}${r.code}` })
+          } else {
+            setCandidate({ code, name: r.name })
+          }
         }
       } catch (err) {
         setOutcome({ tone: 'error', title: err instanceof Error ? err.message : 'Scan impossible', detail: code })
@@ -267,8 +270,29 @@ export default function OrgaScanPage() {
         setBusy(false)
       }
     },
-    [settings, busy],
+    [settings, busy, candidate],
   )
+
+  /* Bouton « Entrer » : enregistre l'entrée (ou le départ), puis on revient au scan. */
+  async function confirmEntry() {
+    if (!settings || !candidate || busy) return
+    setBusy(true)
+    try {
+      if (settings.mode === 'visite') {
+        const r = await scanDeparture(candidate.code, settings.pointId)
+        setOutcome({ tone: r.already ? 'already' : 'ok', title: `${r.name} : ${r.already ? 'départ déjà enregistré' : 'départ enregistré'}`, detail: r.code })
+      } else {
+        const r = await scanPalais(candidate.code, settings.day)
+        setOutcome({ tone: r.already ? 'already' : 'ok', title: `${r.name} : ${r.already ? 'entrée déjà enregistrée' : 'entrée enregistrée'}`, detail: r.code })
+      }
+    } catch (err) {
+      setOutcome({ tone: 'error', title: err instanceof Error ? err.message : 'Enregistrement impossible', detail: candidate.code })
+    } finally {
+      lastRef.current = { code: candidate.code, at: Date.now() }
+      setCandidate(null)
+      setBusy(false)
+    }
+  }
 
   /* Saisie manuelle du code. */
   function onManual(e: FormEvent<HTMLFormElement>) {
@@ -299,7 +323,21 @@ export default function OrgaScanPage() {
             </button>
           </div>
 
-          <Camera onCode={(raw) => void submitCode(raw)} paused={busy} />
+          {candidate ? (
+            <div className="border border-black bg-white px-5 py-6 text-center">
+              <p className="text-[22px] font-bold leading-tight text-forest">{candidate.name}</p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void confirmEntry()}
+                className="mt-5 w-full bg-energy px-6 py-4 text-[18px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {busy ? 'Enregistrement…' : 'Entrer'}
+              </button>
+            </div>
+          ) : (
+            <Camera onCode={(raw) => void submitCode(raw)} paused={busy} />
+          )}
 
           {outcome && (
             <div role="status" className={`border-l-4 px-4 py-3 ${toneClass[outcome.tone]}`}>
