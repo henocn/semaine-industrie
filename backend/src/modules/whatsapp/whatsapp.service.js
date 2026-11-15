@@ -986,9 +986,70 @@ function suiviIntro(kind, name) {
   return `${label} : ${name}\nQue souhaitez-vous ?`;
 }
 
-/* Ouvre le suivi : mémorise le code et envoie le récap + actions (sans QR auto). */
+/* Inscription validée : seules celles-ci reçoivent leur QR. */
+async function isValidated(linked) {
+  if (linked.organization) return linked.organization.label_status === 'approved';
+  if (linked.participant) return linked.participant.status === 'approved';
+  if (linked.passport) {
+    const participation = await Participation.findOne({ where: { passport_id: linked.passport.id }, attributes: ['status'] });
+    return !participation || participation.status === 'approved';
+  }
+  return false;
+}
+
+/* Envoie la carte QR si l'inscription est validée ; renvoie vrai si elle est partie. */
+async function sendQrIfValidated(from, phoneNumberId, linked) {
+  if (!(await isValidated(linked))) return false;
+  try {
+    const sent = await sendTrackingQr(from, phoneNumberId, linked);
+    return Boolean(sent?.ok);
+  } catch (err) {
+    logger.warn('[whatsapp] QR image failed', err.message);
+    return false;
+  }
+}
+
+/* Inscriptions validées liées à ce numéro WhatsApp (même numéro que celui du formulaire). */
+async function approvedByPhone(from) {
+  const wa = digitsOnly(from);
+  if (wa.length < 8) return [];
+  const rows = await Participation.findAll({
+    where: { status: 'approved', phone: { [Op.like]: `%${wa.slice(-8)}` } },
+    order: [['createdAt', 'ASC']],
+  });
+  return rows.filter((row) => toWaRecipient(row.phone) === wa && row.passport_id);
+}
+
+/* « QR » envoyé par une personne reconnue à son numéro : ses QR validés, sans demander le code. */
+async function replyQrByPhone(from, phoneNumberId) {
+  const rows = await approvedByPhone(from);
+  const linkedList = [];
+  for (const row of rows) {
+    const passport = await Passport.findByPk(row.passport_id);
+    if (passport) linkedList.push({ kind: passportKind(passport), code: passport.code, passport, name: row.name });
+  }
+  if (!linkedList.length) return null;
+  for (const linked of linkedList) {
+    try {
+      await sendTrackingQr(from, phoneNumberId, linked);
+    } catch (err) {
+      logger.warn('[whatsapp] QR image failed', err.message);
+    }
+  }
+  const first = linkedList[0];
+  setSession(from, { mode: 'linked', kind: first.kind, code: first.code, labelCode: first.code, orgId: null, passportId: first.passport.id, b2bId: null });
+  return sendSuiviButtons(
+    from,
+    phoneNumberId,
+    linkedList.length > 1 ? 'Voici vos QR. Présentez le bon QR à l’accueil.' : 'Voici votre QR. Présentez-le à l’accueil.',
+    first.kind,
+  );
+}
+
+/* Ouvre le suivi : mémorise le code, envoie le QR si l'inscription est validée, puis le récap + actions. */
 async function openLinkedSuivi(from, phoneNumberId, patch, linked) {
   setSession(from, { mode: 'linked', ...patch });
+  await sendQrIfValidated(from, phoneNumberId, linked);
   return replyLinkedContent(
     from,
     phoneNumberId,
@@ -1443,12 +1504,13 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
         return replyAskCode(from, phoneNumberId, 'Session expirée. Entrez à nouveau votre code de suivi.');
       }
       if (action === 'suivi_qr') {
-        try {
-          await sendTrackingQr(from, phoneNumberId, linked);
-        } catch (err) {
-          logger.warn('[whatsapp] QR image failed', err.message);
-        }
-        return sendSuiviButtons(from, phoneNumberId, 'Que souhaitez-vous ?', linked.kind);
+        const sent = await sendQrIfValidated(from, phoneNumberId, linked);
+        return sendSuiviButtons(
+          from,
+          phoneNumberId,
+          sent ? 'Que souhaitez-vous ?' : 'Votre QR sera disponible dès la validation de votre inscription.',
+          linked.kind,
+        );
       }
       if (action === 'suivi_ressources') {
         return replyEntryResources(from, phoneNumberId, linked);
@@ -1546,6 +1608,23 @@ async function handleText(from, text, phoneNumberId) {
     || (awaitingCode && trackingService.isKnownCodeShape(text)
       ? trackingService.normalizeCode(text)
       : null);
+  /* Demande de QR (« mon QR », « QR code », « badge ») : le QR s'obtient avec le code de suivi. */
+  if (!codeInText && /\bqr\b|qrcode|qr-code|badge/.test(t)) {
+    const linked = session.mode === 'linked' ? await loadLinked(session) : null;
+    if (linked) {
+      const sent = await sendQrIfValidated(from, phoneNumberId, linked);
+      return sendSuiviButtons(
+        from,
+        phoneNumberId,
+        sent ? 'Que souhaitez-vous ?' : 'Votre QR sera disponible dès la validation de votre inscription.',
+        linked.kind,
+      );
+    }
+    const byPhone = await replyQrByPhone(from, phoneNumberId);
+    if (byPhone) return byPhone;
+    return replyAskCode(from, phoneNumberId, 'Pour recevoir votre QR, envoyez votre code de suivi (reçu à l’inscription).');
+  }
+
   if (codeInText || awaitingCode) {
     const code = trackingService.normalizeCode(codeInText || text);
     const opened = await openByTrackingCode(from, code, phoneNumberId);
