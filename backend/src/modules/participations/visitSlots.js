@@ -6,6 +6,9 @@ const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const trackingService = require('../tracking/tracking.service');
 
+/* Groupe WhatsApp des visites des particuliers (heures, entreprises visitées, consignes). */
+const WHATSAPP_GROUP = 'https://chat.whatsapp.com/D23e7tkuv5E77DmwnSnQxx';
+
 /* Places par départ (une demi-journée et un lieu de rencontre). */
 const CAPACITY = 50;
 
@@ -217,6 +220,7 @@ async function setSlot(id, slotId) {
 }
 
 module.exports = {
+  WHATSAPP_GROUP,
   CAPACITY,
   SLOTS,
   slotInfo,
