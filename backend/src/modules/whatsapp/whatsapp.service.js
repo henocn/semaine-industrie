@@ -18,6 +18,7 @@ const {
 } = require('../../models');
 const palais = require('../participations/palais');
 const media = require('../participations/media');
+const visitSlots = require('../participations/visitSlots');
 const trackingService = require('../tracking/tracking.service');
 const resourceService = require('../resources/resource.service');
 const conversationService = require('./conversation.service');
@@ -442,9 +443,9 @@ async function replyLinkedContent(from, phoneNumberId, kind, body, options) {
 }
 
 /* Texte du récap selon le type de fiche liée. */
-function formatLinkedRecap(linked) {
+async function formatLinkedRecap(linked) {
   if (linked.organization) return formatRecap(linked.organization);
-  if (linked.passport) return formatPassportRecap(linked.passport);
+  if (linked.passport) return formatPassportRecap(linked.passport, await visitLines(linked.passport));
   if (linked.participant) return formatB2bRecap(linked.participant);
   return 'Récapitulatif indisponible.';
 }
@@ -969,7 +970,7 @@ async function openLinkedSuivi(from, phoneNumberId, patch, linked) {
     from,
     phoneNumberId,
     patch.kind,
-    formatLinkedRecap(linked),
+    await formatLinkedRecap(linked),
     { includeRecap: false },
   );
 }
@@ -993,8 +994,22 @@ async function replyPassportRecap(from, passport, phoneNumberId) {
   );
 }
 
+/* Particulier validé : son créneau de visite (ou le lien pour le choisir) et le groupe WhatsApp des visites. */
+async function visitLines(passport) {
+  if (passport.kind === 'group' || passportKind(passport) !== 'pa') return [];
+  const participation = await Participation.findOne({ where: { passport_id: passport.id } });
+  if (participation?.kind !== 'particulier' || participation.status !== 'approved') return [];
+  return [
+    '',
+    participation.visit_slot
+      ? `Créneau de visite : ${visitSlots.slotLabel(participation.visit_slot)}`
+      : `Choisissez votre créneau de visite : ${SITE()}/visites?code=${passport.code}`,
+    `Groupe WhatsApp des visites : ${visitSlots.WHATSAPP_GROUP}`,
+  ];
+}
+
 /* Formate le récap passeport école ou particulier. */
-function formatPassportRecap(passport) {
+function formatPassportRecap(passport, extra = []) {
   let kind = passport.kind === 'group' ? 'École' : 'Particulier';
   if (String(passport.code || '').startsWith('JP-')) kind = 'Palais des Congrès';
   if (String(passport.code || '').startsWith('MD-')) kind = 'Accréditation médias';
@@ -1005,6 +1020,7 @@ function formatPassportRecap(passport) {
     `${kind} : ${passport.holder_name || passport.school_name || 'Participant'}`,
     `Code de suivi : ${passport.code}`,
     `Mon espace : ${url}`,
+    ...extra,
     '',
     'Conservez ce code de suivi.',
   ].join('\n');
@@ -1416,7 +1432,7 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
           from,
           phoneNumberId,
           linked.kind,
-          formatLinkedRecap(linked),
+          await formatLinkedRecap(linked),
           { includeRecap: false },
         );
       }
@@ -1737,6 +1753,12 @@ async function notifyParticipationApproved(participation) {
       ...palaisFallback(participation),
       `Code de suivi : ${code}.`,
       ...(individual ? [] : ["Vous serez prévenu dès qu'une visite sera arrangée."]),
+      ...(participation.kind === 'particulier'
+        ? [
+          `Choisissez votre créneau de visite : ${SITE()}/visites?code=${code}`,
+          `Groupe WhatsApp des visites : ${visitSlots.WHATSAPP_GROUP}`,
+        ]
+        : []),
     ],
   });
 }
