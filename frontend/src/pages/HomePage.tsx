@@ -29,9 +29,11 @@ const TOOL_STEPS: Record<(typeof YOUTH_PILLAR.steps)[number], { text: string; to
   Commencer: {
     // Demandes de label closes : l'étape renvoie vers les inscriptions encore ouvertes.
     // text: 'Industries : demandez le label et rejoignez la semaine.', to: '/label/', cta: 'Demander le label',
-    text: 'Inscrivez-vous aux rendez-vous du Palais des Congrès ou aux visites d’usines.',
-    to: '/regles-de-participation/',
-    cta: 'Participer',
+    // Inscriptions closes : l'étape renvoie vers Mon espace.
+    // text: 'Inscrivez-vous aux rendez-vous du Palais des Congrès ou aux visites d’usines.', to: '/regles-de-participation/', cta: 'Participer',
+    text: 'Déjà inscrit ? Retrouvez votre dossier et votre QR dans Mon espace.',
+    to: '/mon-espace/',
+    cta: 'Mon espace',
   },
 }
 

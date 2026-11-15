@@ -170,7 +170,7 @@ export const FAQ = [
   },
   {
     q: 'Les visites d’usines sont-elles ouvertes au public ?',
-    a: 'Oui ! Les industries labellisées « Usine ouverte » accueillent les écoles et les particuliers du lundi 16 au vendredi 20 novembre 2026, par petits groupes et sur plusieurs créneaux.\nPour vous inscrire et connaître les modalités de participation, rendez-vous dans la rubrique « Participer » du site.',
+    a: 'Oui ! Les industries labellisées « Usine ouverte » accueillent les écoles et les particuliers du lundi 16 au vendredi 20 novembre 2026, par petits groupes et sur plusieurs créneaux.\nLes inscriptions sont closes. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans « Mon espace ».',
   },
   {
     q: 'Qu’est-ce que le Forum d’orientation des métiers de l’industrie ?',
@@ -186,11 +186,11 @@ export const FAQ = [
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie ?',
-    a: 'Rendez-vous dans la rubrique « Participer » du site et choisissez le type d’inscription qui vous correspond :\n• « Participation au Palais des Congrès » pour participer aux rendez-vous des 16, 17 et 18 novembre au Palais des Congrès de Lomé.\n• « Visites d’industries : particuliers » pour une inscription individuelle aux visites d’usines.\nAprès validation de votre inscription, un QR code vous est remis pour le jour de votre participation.',
+    a: 'Les inscriptions sont closes.\nSi vous êtes déjà inscrit, retrouvez votre dossier et votre QR dans « Mon espace » avec votre code de suivi, ou envoyez « QR » au bot WhatsApp de la Semaine de l’industrie.',
   },
   {
     q: 'Comment participer aux rendez-vous au Palais des Congrès ?',
-    a: 'Dans la rubrique « Participer », choisissez « Participation au Palais des Congrès », puis cochez une ou plusieurs journées : l’ouverture le lundi 16 novembre, le forum des métiers le mardi 17, ou le panel sur les femmes dans l’industrie le mercredi 18.\nVous recevez un seul code de suivi et, après validation, un seul QR valable pour les journées choisies, à présenter à l’accueil du Palais des Congrès de Lomé.',
+    a: 'Les inscriptions aux rendez-vous du Palais des Congrès sont closes.\nLes personnes inscrites ont un seul QR, valable pour les journées choisies, à présenter à l’accueil du Palais des Congrès de Lomé. Il se retrouve dans « Mon espace » avec le code de suivi, ou en envoyant « QR » au bot WhatsApp.',
   },
   {
     q: 'Comment obtenir une accréditation média ?',

@@ -560,7 +560,8 @@ function formatProgrammeDay(day) {
   lines.push(
     '',
     `Lieu : ${day.where}`,
-    `Assister au Palais : ${SITE()}/journees-au-palais`,
+    // Inscriptions closes.
+    // `Assister au Palais : ${SITE()}/journees-au-palais`,
     '',
     ...PROGRAMME_ALL_WEEK,
     `Concours : ${SITE()}/concours-video`,
@@ -676,9 +677,14 @@ function participateBody() {
   return [
     "*Participer à la Semaine de l'industrie*",
     '',
-    `1. *Palais des Congrès* (16-18 nov.) : ${site}/journees-au-palais`,
+    // Toutes les inscriptions sont closes.
+    // `1. *Palais des Congrès* (16-18 nov.) : ${site}/journees-au-palais`,
+    // '',
+    // `2. *Visites d'usines, particuliers* : ${site}/inscription-particulier`,
+    // '',
+    'Les inscriptions sont closes.',
     '',
-    `2. *Visites d'usines, particuliers* : ${site}/inscription-particulier`,
+    `Déjà inscrit ? Envoyez « QR » ou votre code de suivi pour recevoir votre QR, ou retrouvez votre dossier dans Mon espace : ${site}/mon-espace`,
     '',
     // Visites des écoles / universités retirées du public (inscriptions closes).
     // `*Visites d'usines, écoles / universités* : ${site}/inscription-groupe`,
@@ -690,7 +696,7 @@ function participateBody() {
     // Rencontres d'affaires retirées du public (programme validé) ; les inscrits existants gardent leur code AF.
     // `*Rencontres d'affaires* : ${site}/affaires`,
     // '',
-    'Chaque formulaire donne un code, à suivre dans « Suivi de participation ».',
+    // 'Chaque formulaire donne un code, à suivre dans « Suivi de participation ».',
   ].join('\n');
 }
 
