@@ -219,9 +219,10 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                   {r.phone && (
                     <a href={`tel:${r.phone}`} className="block font-semibold text-forest underline underline-offset-2">{r.phone}</a>
                   )}
-                  {r.email && (
+                  {/* E-mail non affiché dans le tableau (reste dans l'export Excel). */}
+                  {/* {r.email && (
                     <a href={`mailto:${r.email}`} className="mt-0.5 block text-ink/55 underline underline-offset-2">{r.email}</a>
-                  )}
+                  )} */}
                 </td>
                 <td>
                   <select
