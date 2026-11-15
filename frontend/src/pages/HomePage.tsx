@@ -269,7 +269,7 @@ function Women() {
         <div className="reveal">
           <SectionHeader
             title="Les métiers de l’industrie au féminin"
-            lead="Panel du mercredi 18 novembre, à 9h10, au Palais des Congrès : des industrielles et une jeune femme qui démarre son activité, après la projection de portraits filmés de femmes de l’industrie."
+            lead="Panel du mercredi 18 novembre, de 9h à 10h45, au Palais des Congrès, suivi d’un échange avec les Nana Benz."
           />
         </div>
         <Photo name="atelier" alt="Ouvrières dans un atelier textile" className="reveal aspect-[4/3]" />

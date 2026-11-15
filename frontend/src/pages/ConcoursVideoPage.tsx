@@ -28,7 +28,7 @@ const STEPS: { title: string; text: ReactNode }[] = [
       <>
         Partage ta vidéo sur les réseaux sociaux avec le hashtag{' '}
         <span className="whitespace-nowrap font-semibold text-forest">{HASHTAG}</span> et tague les comptes officiels du
-        Ministère délégué chargé de la Promotion des Investissements, de l’Industrie et de la Souveraineté économique :
+        Ministère délégué, chargé de la Promotion des Investissements, de l’Industrie et de la Souveraineté Économique :
         <span className="mt-2 block space-y-1">
           {MINISTRY_TAGS.map((tag) => (
             <span key={tag.handle} className="block">
