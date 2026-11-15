@@ -1009,6 +1009,43 @@ async function sendQrIfValidated(from, phoneNumberId, linked) {
   }
 }
 
+/* Inscriptions validées liées à ce numéro WhatsApp (même numéro que celui du formulaire). */
+async function approvedByPhone(from) {
+  const wa = digitsOnly(from);
+  if (wa.length < 8) return [];
+  const rows = await Participation.findAll({
+    where: { status: 'approved', phone: { [Op.like]: `%${wa.slice(-8)}` } },
+    order: [['createdAt', 'ASC']],
+  });
+  return rows.filter((row) => toWaRecipient(row.phone) === wa && row.passport_id);
+}
+
+/* « QR » envoyé par une personne reconnue à son numéro : ses QR validés, sans demander le code. */
+async function replyQrByPhone(from, phoneNumberId) {
+  const rows = await approvedByPhone(from);
+  const linkedList = [];
+  for (const row of rows) {
+    const passport = await Passport.findByPk(row.passport_id);
+    if (passport) linkedList.push({ kind: passportKind(passport), code: passport.code, passport, name: row.name });
+  }
+  if (!linkedList.length) return null;
+  for (const linked of linkedList) {
+    try {
+      await sendTrackingQr(from, phoneNumberId, linked);
+    } catch (err) {
+      logger.warn('[whatsapp] QR image failed', err.message);
+    }
+  }
+  const first = linkedList[0];
+  setSession(from, { mode: 'linked', kind: first.kind, code: first.code, labelCode: first.code, orgId: null, passportId: first.passport.id, b2bId: null });
+  return sendSuiviButtons(
+    from,
+    phoneNumberId,
+    linkedList.length > 1 ? 'Voici vos QR. Présentez le bon QR à l’accueil.' : 'Voici votre QR. Présentez-le à l’accueil.',
+    first.kind,
+  );
+}
+
 /* Ouvre le suivi : mémorise le code, envoie le QR si l'inscription est validée, puis le récap + actions. */
 async function openLinkedSuivi(from, phoneNumberId, patch, linked) {
   setSession(from, { mode: 'linked', ...patch });
@@ -1583,6 +1620,8 @@ async function handleText(from, text, phoneNumberId) {
         linked.kind,
       );
     }
+    const byPhone = await replyQrByPhone(from, phoneNumberId);
+    if (byPhone) return byPhone;
     return replyAskCode(from, phoneNumberId, 'Pour recevoir votre QR, envoyez votre code de suivi (reçu à l’inscription).');
   }
 
