@@ -1670,6 +1670,12 @@ async function handleText(from, text, phoneNumberId) {
 
 /* Point d'entrée bot : inbound Meta/n8n → réponses interactives. */
 async function processInbound(raw) {
+  /* Statuts d'envoi (délivré, lu, échoué) : les échecs sont notés sur le message envoyé. */
+  const body = raw?.body && typeof raw.body === 'object' ? raw.body : raw;
+  const statuses = body?.statuses || body?.entry?.[0]?.changes?.[0]?.value?.statuses;
+  if (Array.isArray(statuses) && statuses.length) {
+    await conversationService.recordStatuses(statuses).catch((err) => logger.warn('[whatsapp] statuts non traités', err.message));
+  }
   const envelope = inboundEnvelope(raw);
   if (envelope?.messages[0]?.from) conversationService.recordInbound(envelope);
 
