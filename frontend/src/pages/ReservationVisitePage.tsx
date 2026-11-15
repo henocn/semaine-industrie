@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { Lock } from 'lucide-react'
 import {
   bookVisitSlot,
   getVisitSlots,
@@ -233,9 +234,9 @@ export default function ReservationVisitePage() {
                         return (
                           <label
                             key={s.id}
-                            className={`flex gap-3 rounded-sm border bg-white p-3 transition-colors ${
-                              checked ? 'border-forest' : 'border-forest/25'
-                            } ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:border-forest/60'}`}
+                            className={`flex gap-3 rounded-sm border p-3 transition-colors ${
+                              full ? 'border-ink/15 bg-ink/5' : checked ? 'border-forest bg-white' : 'border-forest/25 bg-white'
+                            } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:border-forest/60'} ${disabled && !full ? 'opacity-60' : ''}`}
                           >
                             <input
                               type="radio"
@@ -247,12 +248,19 @@ export default function ReservationVisitePage() {
                               onChange={() => setChoice(s.id)}
                               className="mt-1 h-4 w-4 shrink-0 accent-forest"
                             />
-                            <span className="min-w-0">
-                              <span className="block font-semibold text-forest">{s.period}</span>
-                              <span className="block text-[14px] text-ink/75">{s.place}</span>
-                              <span className={`mt-1 block text-[13px] ${full ? 'font-semibold text-red-700' : 'text-ink/55'}`}>
-                                {full ? 'Complet' : `${s.remaining} place${s.remaining > 1 ? 's' : ''} disponible${s.remaining > 1 ? 's' : ''}`}
-                              </span>
+                            <span className="min-w-0 flex-1">
+                              <span className={`block font-semibold ${full ? 'text-ink/45' : 'text-forest'}`}>{s.period}</span>
+                              <span className={`block text-[14px] ${full ? 'text-ink/45' : 'text-ink/75'}`}>{s.place}</span>
+                              {full ? (
+                                <span className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-red-700">
+                                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                                  Plein · {s.capacity}/{s.capacity}
+                                </span>
+                              ) : (
+                                <span className="mt-1 block text-[13px] text-ink/55">
+                                  {s.remaining} place{s.remaining > 1 ? 's' : ''} disponible{s.remaining > 1 ? 's' : ''}
+                                </span>
+                              )}
                             </span>
                           </label>
                         )

@@ -99,7 +99,8 @@ export default function OrgaVisitsPage() {
   const [busy, setBusy] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [view, setView] = useState<'table' | 'calendar' | 'map'>('table')
+  /* Seule la vue Tableau est affichée (onglets Calendrier et Carte commentés plus bas). */
+  const [view /* , setView */] = useState<'table' | 'calendar' | 'map'>('table')
   const [selectedDay, setSelectedDay] = useState<string>(EVENT_WEEK[0].iso)
   const [mapPoints, setMapPoints] = useState<MapPoint[]>([])
   const [mapSelected, setMapSelected] = useState<string | null>(null)
@@ -523,6 +524,7 @@ export default function OrgaVisitsPage() {
         </section>
       )}
 
+      {/* Vues Calendrier et Carte retirées : le tableau suffit. Code conservé.
       <div className="mb-4 flex gap-0 border border-black">
         {(
           [
@@ -545,6 +547,7 @@ export default function OrgaVisitsPage() {
           </button>
         ))}
       </div>
+      */}
 
       {view === 'table' && (
         <>

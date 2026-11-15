@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getVisitSlotPlanning, setVisitSlot, type VisitSlotPerson, type VisitSlotPlanning } from '../../api/visitSlots'
-import { IconTrash } from '../ui/IconButton'
+import { Lock } from 'lucide-react'
+import { IconCheck, IconTrash, IconX } from '../ui/IconButton'
 import { useOrgaRealtime } from '../../lib/useOrgaRealtime'
 import { useConfirm } from '../../lib/useConfirm'
 import { exportToExcel, excelDate, type ExcelColumn } from '../../lib/excel'
@@ -16,6 +17,9 @@ const EXPORT_COLUMNS: ExcelColumn<Row>[] = [
   { header: 'E-mail', width: 28, value: (r) => r.email },
   { header: 'Réservé le', width: 18, value: (r) => excelDate(r.booked_at) },
 ]
+
+const iconBtn =
+  'grid h-9 w-9 place-items-center border border-black bg-white text-forest hover:bg-forest hover:text-white disabled:opacity-40'
 
 const iconBtnDanger =
   'grid h-9 w-9 place-items-center border border-black bg-white text-red-700 hover:bg-red-700 hover:text-white disabled:opacity-40'
@@ -38,6 +42,8 @@ export function VisitSlotsPanel({ query }: { query: string }) {
   const [active, setActive] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  /* Départ choisi dans la liste mais pas encore enregistré, par particulier. */
+  const [drafts, setDrafts] = useState<Record<string, string>>({})
   const { confirm, modal } = useConfirm()
 
   const load = useCallback(async () => {
@@ -89,6 +95,7 @@ export function VisitSlotsPanel({ query }: { query: string }) {
     setBusy(true)
     try {
       await setVisitSlot(row.id, slot)
+      setDrafts(({ [row.id]: _done, ...rest }) => rest)
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Modification impossible')
@@ -102,6 +109,11 @@ export function VisitSlotsPanel({ query }: { query: string }) {
   }
 
   const days = [...new Set(data.slots.map((s) => s.day))]
+
+  /* Garde le choix en attente de validation (rien n'est enregistré avant le bouton ✓). */
+  function pick(row: Row, slot: string) {
+    setDrafts(({ [row.id]: _old, ...rest }) => (slot === row.slotId ? rest : { ...rest, [row.id]: slot }))
+  }
 
   return (
     <>
@@ -145,6 +157,12 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                       {n}
                       <span className={`text-[13px] font-medium ${selected ? 'text-white/70' : 'text-ink/50'}`}> / {data.capacity}</span>
                     </p>
+                    {full && (
+                      <p className={`mt-1.5 inline-flex items-center gap-1 text-[12px] font-semibold uppercase tracking-wide ${selected ? 'text-sun' : 'text-red-700'}`}>
+                        <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                        Plein
+                      </p>
+                    )}
                   </button>
                 )
               })}
@@ -185,7 +203,7 @@ export function VisitSlotsPanel({ query }: { query: string }) {
               <th>Contact</th>
               <th>Départ</th>
               <th>Réservé le</th>
-              <th className="w-16">Actions</th>
+              <th className="w-24">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -207,31 +225,56 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                 </td>
                 <td>
                   <select
-                    value={r.slotId}
+                    value={drafts[r.id] ?? r.slotId}
                     disabled={busy}
-                    onChange={(e) => void change(r, e.target.value)}
-                    className="orga-input !py-1.5 text-[13px]"
+                    onChange={(e) => pick(r, e.target.value)}
+                    className={`orga-input !py-1.5 text-[13px] ${drafts[r.id] ? '!border-sun !bg-sun/15' : ''}`}
                     aria-label={`Départ de ${r.name}`}
                   >
                     {data.slots.map((s) => (
                       <option key={s.id} value={s.id} disabled={s.id !== r.slotId && s.people.length >= data.capacity}>
-                        {label(s.id)}
+                        {label(s.id)}{s.id !== r.slotId && s.people.length >= data.capacity ? ' (plein)' : ''}
                       </option>
                     ))}
                   </select>
                 </td>
                 <td className="text-ink/60">{when(r.booked_at)}</td>
                 <td>
-                  <button
-                    type="button"
-                    title="Libérer la place"
-                    aria-label="Libérer la place"
-                    className={iconBtnDanger}
-                    disabled={busy}
-                    onClick={() => void change(r, null)}
-                  >
-                    <IconTrash />
-                  </button>
+                  {drafts[r.id] ? (
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        title="Enregistrer le nouveau départ"
+                        aria-label="Enregistrer le nouveau départ"
+                        className={iconBtn}
+                        disabled={busy}
+                        onClick={() => void change(r, drafts[r.id])}
+                      >
+                        <IconCheck />
+                      </button>
+                      <button
+                        type="button"
+                        title="Annuler le changement"
+                        aria-label="Annuler le changement"
+                        className={iconBtnDanger}
+                        disabled={busy}
+                        onClick={() => pick(r, r.slotId)}
+                      >
+                        <IconX />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      title="Libérer la place"
+                      aria-label="Libérer la place"
+                      className={iconBtnDanger}
+                      disabled={busy}
+                      onClick={() => void change(r, null)}
+                    >
+                      <IconTrash />
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
