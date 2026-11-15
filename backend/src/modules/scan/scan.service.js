@@ -99,14 +99,14 @@ async function scanDeparture({ code: rawCode, point_id: pointId }, user) {
   return { ...personView(row, code), already: false, point: scan.point_name, scanned_at: scan.scanned_at, id: row.id };
 }
 
-/* Entrée au Palais pour le jour réglé : accepté seulement le jour même. */
+/* Entrée au Palais pour le jour réglé dans le scan. Vérification de la date du jour désactivée. */
 async function scanPalais({ code, day }) {
-  const today = palais.todayDay();
+  /* const today = palais.todayDay();
   if (today === null) throw ApiError.badRequest('Aucune journée du Palais n’a lieu aujourd’hui');
   if (Number(day) !== today) {
     throw ApiError.badRequest(`Le scan est réglé sur le ${day} novembre, mais nous sommes le ${today} : revoyez les réglages`);
-  }
-  return participationService.palaisCheckin(code);
+  } */
+  return participationService.palaisCheckin(code, Number(day));
 }
 
 module.exports = { listPoints, settings, setSchool, addCustom, removeCustom, scanDeparture, scanPalais };

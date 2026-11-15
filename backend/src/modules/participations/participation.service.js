@@ -269,10 +269,11 @@ async function findPalaisByCode(rawCode) {
 }
 
 /* Ce que l'accueil voit au scan : la personne, ses journées, et si elle est attendue aujourd'hui. */
-function palaisView(row) {
+function palaisView(row, day = null) {
   const days = palais.normalizeDays(row.palais_days);
   const checkins = row.palais_checkins || {};
-  const today = palais.todayDay();
+  /* Jour réglé dans le scan, sinon la journée du Palais d'aujourd'hui. */
+  const today = day ?? palais.todayDay();
   return {
     code: row.tracking_code,
     name: row.name,
@@ -298,14 +299,16 @@ async function palaisPass(code) {
 }
 
 /* Enregistre l'entrée du jour au Palais (accueil connecté). */
-async function palaisCheckin(code) {
+async function palaisCheckin(code, day = null) {
   const row = await findPalaisByCode(code);
   if (row.status !== 'approved') throw ApiError.conflict('Inscription pas encore validée : entrée non enregistrée');
-  const today = palais.todayDay();
+  /* Jour réglé dans le scan ; sans réglage, la journée du Palais d'aujourd'hui. */
+  const today = palais.DAY_NUMBERS.includes(Number(day)) ? Number(day) : palais.todayDay();
   if (today === null) throw ApiError.badRequest('Aucune journée du Palais n’a lieu aujourd’hui');
+  /* Vérification des journées cochées désactivée : l'entrée est enregistrée quel que soit le jour choisi à l'inscription.
   if (!palais.normalizeDays(row.palais_days).includes(today)) {
     throw ApiError.conflict(`Inscrit pour : ${palais.daysShort(row.palais_days)}. Pas pour aujourd’hui.`);
-  }
+  } */
   const checkins = { ...(row.palais_checkins || {}) };
   const already = Boolean(checkins[today]);
   if (!already) {
@@ -313,7 +316,7 @@ async function palaisCheckin(code) {
     row.palais_checkins = checkins;
     await row.save();
   }
-  return { ...palaisView(row), already, id: row.id };
+  return { ...palaisView(row, today), already, id: row.id };
 }
 
 /* Fiche publique d'une accréditation média, ouverte par le QR (accueil du Palais). */
