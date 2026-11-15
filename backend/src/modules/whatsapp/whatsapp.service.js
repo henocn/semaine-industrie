@@ -419,7 +419,8 @@ function suiviActions(kind, { includeRecap = true } = {}) {
   actions.push(
     { id: 'suivi_qr', title: 'Mon QR' },
     third,
-    { id: 'suivi_ressources', title: 'Mes ressources' },
+    /* Retiré du suivi : pas besoin.
+    { id: 'suivi_ressources', title: 'Mes ressources' }, */
   );
   return actions;
 }
