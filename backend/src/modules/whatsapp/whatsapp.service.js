@@ -1861,25 +1861,29 @@ async function notifyParticipationApproved(participation) {
   if (!code) return { ok: false, reason: 'no_code' };
   const individual = participation.kind !== 'ecole';
   const places = individual ? 1 : participation.headcount || '-';
-  /* Palais des Congrès : modèle avec la carte QR en image et le bouton « Programme » des journées choisies. */
-  const palaisTemplates = [];
+  /* Palais des Congrès : uniquement le modèle si26_palais_acceptee_qr (carte QR, journées, bouton « Programme »).
+     Aucun modèle ni texte de secours : en cas d'échec, l'envoi est signalé comme échoué. */
   if (participation.kind === 'palais') {
+    const to = toWaRecipient(participation?.phone);
+    if (!to) return { ok: false, reason: 'no_phone' };
+    let headerImage;
     try {
-      const headerImage = await qrImageUrl(code, { payload: passageQrPayload(code), code, name: participation.name });
-      palaisTemplates.push({
-        name: 'si26_palais_acceptee_qr',
-        headerImage,
-        bodyParams: [participation.name, palais.daysSentence(participation.palais_days) || 'voir Mon espace'],
-        quickReplies: [`palais_prog:${code}`],
-      });
+      headerImage = await qrImageUrl(code, { payload: passageQrPayload(code), code, name: participation.name });
     } catch (err) {
       logger.warn('[whatsapp] carte QR Palais indisponible', err.message);
+      return { ok: false, reason: 'qr_unavailable' };
     }
+    return sendTemplate({
+      to,
+      name: 'si26_palais_acceptee_qr',
+      headerImage,
+      bodyParams: [participation.name, palais.daysSentence(participation.palais_days) || 'voir Mon espace'],
+      quickReplies: [`palais_prog:${code}`],
+    });
   }
   return sendTemplateOrText({
     phone: participation?.phone,
     templates: [
-      ...palaisTemplates,
       ...(individual ? [{ name: 'si26_particulier_acceptee', bodyParams: [participation.name, code] }] : []),
       { name: 'si26_inscription_acceptee', bodyParams: [participation.name, places, code] },
     ],
