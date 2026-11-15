@@ -16,7 +16,6 @@ import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { readQrImage, trackingCodeFrom } from '../lib/readQrImage'
 
-import { VISITS_WHATSAPP_GROUP as WHATSAPP_GROUP } from '../data'
 
 const DAYS = ['Jeudi 19 novembre', 'Vendredi 20 novembre']
 
@@ -160,9 +159,11 @@ export default function ReservationVisitePage() {
               Gardez votre QR de participation : il est demandé au départ. Rejoignez le groupe WhatsApp si ce n’est pas encore fait : toutes les autres informations y seront communiquées.
             </p>
             <div className="mt-5 flex flex-wrap gap-2.5">
-              <a href={WHATSAPP_GROUP} target="_blank" rel="noopener noreferrer" className="ui-btn-primary">
-                Rejoindre le groupe WhatsApp
-              </a>
+              {person.group && (
+                <a href={person.group} target="_blank" rel="noopener noreferrer" className="ui-btn-primary">
+                  Rejoindre le groupe WhatsApp
+                </a>
+              )}
             </div>
             {/* <p className="mt-4 text-[13px] text-ink/60">
               Un changement ou un empêchement ? Écrivez à l’organisation dans le groupe pour modifier ou libérer votre place.

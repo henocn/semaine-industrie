@@ -147,12 +147,32 @@ function Camera({ onCode, paused }: { onCode: (raw: string) => void; paused: boo
   }, [paused, onCode])
 
   useEffect(() => {
-    const Ctor = nativeDetector()
-    if (!Ctor) return undefined
     let stream: MediaStream | null = null
     let timer = 0
     let alive = true
-    const detector = new Ctor({ formats: ['qr_code'] })
+    let reading = false
+
+    /* Lecteur : détecteur natif (Chrome, Android), sinon jsQR (iPhone, Firefox). */
+    async function makeReader(video: HTMLVideoElement): Promise<() => Promise<string | null>> {
+      const Ctor = nativeDetector()
+      if (Ctor) {
+        const detector = new Ctor({ formats: ['qr_code'] })
+        return async () => (await detector.detect(video))[0]?.rawValue || null
+      }
+      const { default: jsQR } = await import('jsqr')
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      return async () => {
+        if (!ctx || !video.videoWidth) return null
+        /* Image réduite : plus rapide sur téléphone, assez nette pour un QR. */
+        const scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight))
+        canvas.width = Math.round(video.videoWidth * scale)
+        canvas.height = Math.round(video.videoHeight * scale)
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        return jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' })?.data || null
+      }
+    }
 
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: 'environment' }, audio: false })
@@ -166,15 +186,19 @@ function Camera({ onCode, paused }: { onCode: (raw: string) => void; paused: boo
         if (!video) return
         video.srcObject = media
         await video.play()
+        const read = await makeReader(video)
         timer = window.setInterval(async () => {
-          if (pausedRef.current || video.readyState < 2) return
+          if (reading || pausedRef.current || video.readyState < 2) return
+          reading = true
           try {
-            const found = await detector.detect(video)
-            if (found[0]?.rawValue) onCodeRef.current(found[0].rawValue)
+            const value = await read()
+            if (value) onCodeRef.current(value)
           } catch {
             /* image illisible : on réessaie au tour suivant */
+          } finally {
+            reading = false
           }
-        }, 350)
+        }, 250)
       })
       .catch(() => setError('Caméra indisponible : autorisez la caméra, ou saisissez le code ci-dessous.'))
 
@@ -184,14 +208,6 @@ function Camera({ onCode, paused }: { onCode: (raw: string) => void; paused: boo
       stream?.getTracks().forEach((t) => t.stop())
     }
   }, [])
-
-  if (!nativeDetector()) {
-    return (
-      <p className="border border-black bg-white px-4 py-3 text-[14px] text-ink/70">
-        Ce navigateur ne lit pas les QR avec la caméra (iPhone, Firefox). Utilisez Chrome sur Android, ou saisissez le code ci-dessous.
-      </p>
-    )
-  }
 
   return (
     <div>
@@ -207,6 +223,8 @@ export default function OrgaScanPage() {
   const [editing, setEditing] = useState(() => !readStore<ScanSettings>(STORE_KEY))
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [busy, setBusy] = useState(false)
+  /* QR valide en attente du bouton « Entrer » : la caméra est masquée pendant ce temps. */
+  const [candidate, setCandidate] = useState<{ code: string; name: string } | null>(null)
   const lastRef = useRef<{ code: string; at: number } | null>(null)
 
   /* Garde les réglages sur l'appareil et passe au scan. */
@@ -217,10 +235,10 @@ export default function OrgaScanPage() {
     setOutcome(null)
   }
 
-  /* Envoie un code selon les réglages et affiche le résultat. */
+  /* Vérifie un code lu (sans rien enregistrer) : valide, on affiche le nom et le bouton « Entrer ». */
   const submitCode = useCallback(
     async (raw: string) => {
-      if (!settings || busy) return
+      if (!settings || busy || candidate) return
       const code = codeFrom(raw)
       if (!code) return
       /* La caméra relit le même QR plusieurs fois : on ignore les répétitions rapprochées. */
@@ -228,22 +246,23 @@ export default function OrgaScanPage() {
       if (last && last.code === code && Date.now() - last.at < 4000) return
       lastRef.current = { code, at: Date.now() }
       setBusy(true)
+      setOutcome(null)
       try {
         if (settings.mode === 'visite') {
-          const r = await scanDeparture(code, settings.pointId)
-          setOutcome(
-            r.already
-              ? { tone: 'already', title: `${r.name} : départ déjà enregistré`, detail: `${r.point}, à ${hour(r.scanned_at)} · ${r.code}` }
-              : { tone: 'ok', title: `${r.name} : départ enregistré`, detail: `${r.point} · ${r.code}` },
-          )
+          const r = await scanDeparture(code, settings.pointId, true)
+          if (r.already) {
+            setOutcome({ tone: 'already', title: `${r.name} : départ déjà enregistré`, detail: `${r.point}, à ${hour(r.scanned_at)} · ${r.code}` })
+          } else {
+            setCandidate({ code, name: r.name })
+          }
         } else {
-          const r = await scanPalais(code, settings.day)
+          const r = await scanPalais(code, settings.day, true)
           const entry = r.days.find((d) => d.n === settings.day)?.checked_in_at
-          setOutcome(
-            r.already
-              ? { tone: 'already', title: `${r.name} : entrée déjà enregistrée`, detail: `${entry ? `À ${hour(entry)} · ` : ''}${r.code}` }
-              : { tone: 'ok', title: `${r.name} : entrée enregistrée`, detail: r.code },
-          )
+          if (r.already) {
+            setOutcome({ tone: 'already', title: `${r.name} : entrée déjà enregistrée`, detail: `${entry ? `À ${hour(entry)} · ` : ''}${r.code}` })
+          } else {
+            setCandidate({ code, name: r.name })
+          }
         }
       } catch (err) {
         setOutcome({ tone: 'error', title: err instanceof Error ? err.message : 'Scan impossible', detail: code })
@@ -251,8 +270,29 @@ export default function OrgaScanPage() {
         setBusy(false)
       }
     },
-    [settings, busy],
+    [settings, busy, candidate],
   )
+
+  /* Bouton « Entrer » : enregistre l'entrée (ou le départ), puis on revient au scan. */
+  async function confirmEntry() {
+    if (!settings || !candidate || busy) return
+    setBusy(true)
+    try {
+      if (settings.mode === 'visite') {
+        const r = await scanDeparture(candidate.code, settings.pointId)
+        setOutcome({ tone: r.already ? 'already' : 'ok', title: `${r.name} : ${r.already ? 'départ déjà enregistré' : 'départ enregistré'}`, detail: r.code })
+      } else {
+        const r = await scanPalais(candidate.code, settings.day)
+        setOutcome({ tone: r.already ? 'already' : 'ok', title: `${r.name} : ${r.already ? 'entrée déjà enregistrée' : 'entrée enregistrée'}`, detail: r.code })
+      }
+    } catch (err) {
+      setOutcome({ tone: 'error', title: err instanceof Error ? err.message : 'Enregistrement impossible', detail: candidate.code })
+    } finally {
+      lastRef.current = { code: candidate.code, at: Date.now() }
+      setCandidate(null)
+      setBusy(false)
+    }
+  }
 
   /* Saisie manuelle du code. */
   function onManual(e: FormEvent<HTMLFormElement>) {
@@ -283,7 +323,21 @@ export default function OrgaScanPage() {
             </button>
           </div>
 
-          <Camera onCode={(raw) => void submitCode(raw)} paused={busy} />
+          {candidate ? (
+            <div className="border border-black bg-white px-5 py-6 text-center">
+              <p className="text-[22px] font-bold leading-tight text-forest">{candidate.name}</p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void confirmEntry()}
+                className="mt-5 w-full bg-energy px-6 py-4 text-[18px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {busy ? 'Enregistrement…' : 'Entrer'}
+              </button>
+            </div>
+          ) : (
+            <Camera onCode={(raw) => void submitCode(raw)} paused={busy} />
+          )}
 
           {outcome && (
             <div role="status" className={`border-l-4 px-4 py-3 ${toneClass[outcome.tone]}`}>

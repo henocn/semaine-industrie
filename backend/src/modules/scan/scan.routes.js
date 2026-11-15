@@ -15,10 +15,13 @@ const router = Router();
 const departureSchema = Joi.object({
   code: Joi.string().trim().max(40).required(),
   point_id: Joi.string().guid().required(),
+  /* true : vérifie le QR sans rien enregistrer (étape avant le bouton « Entrer »). */
+  check: Joi.boolean().default(false),
 });
 const palaisSchema = Joi.object({
   code: Joi.string().trim().max(40).required(),
   day: Joi.number().valid(...palais.DAY_NUMBERS).required(),
+  check: Joi.boolean().default(false),
 });
 const schoolSchema = Joi.object({ enabled: Joi.boolean().required() });
 const customSchema = Joi.object({ name: Joi.string().trim().min(2).max(200).required() });
@@ -39,6 +42,7 @@ router.get('/points', authorize('orga', 'scan'), handle(async (req, res) => ApiR
 
 router.post('/departure', authorize('orga', 'scan'), validate(departureSchema), handle(async (req, res) => {
   const { id, ...data } = await service.scanDeparture(req.body, req.user);
+  if (data.checked) return ApiResponse.success(res, data, 'QR valide');
   if (!data.already) {
     await audit(req, {
       action: 'update',
@@ -53,6 +57,7 @@ router.post('/departure', authorize('orga', 'scan'), validate(departureSchema), 
 
 router.post('/palais', authorize('orga', 'scan'), validate(palaisSchema), handle(async (req, res) => {
   const { id, ...data } = await service.scanPalais(req.body);
+  if (data.checked) return ApiResponse.success(res, data, 'QR valide');
   if (!data.already) {
     await audit(req, {
       action: 'update',

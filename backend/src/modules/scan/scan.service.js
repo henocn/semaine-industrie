@@ -69,7 +69,7 @@ function personView(row, code) {
 }
 
 /* Scan d'un particulier ou d'un média à un point de départ : un seul scan par inscription. */
-async function scanDeparture({ code: rawCode, point_id: pointId }, user) {
+async function scanDeparture({ code: rawCode, point_id: pointId, check = false }, user) {
   const code = trackingService.normalizeCode(rawCode);
   if (/^(?:EC|JP|AF|IN|MD)-[A-Z0-9]{4}$/.test(code)) {
     throw ApiError.badRequest('Ce QR n’est pas celui d’un particulier (PA-…) inscrit aux visites');
@@ -90,6 +90,8 @@ async function scanDeparture({ code: rawCode, point_id: pointId }, user) {
   if (existing) {
     return { ...personView(row, code), already: true, point: existing.point_name, scanned_at: existing.scanned_at, id: row.id };
   }
+  /* Vérification seule : la personne est valide, rien n'est enregistré avant « Entrer ». */
+  if (check) return { ...personView(row, code), already: false, checked: true, point: point.name, scanned_at: null, id: row.id };
   const scan = await DepartureScan.create({
     participation_id: row.id,
     departure_point_id: point.id,
@@ -99,14 +101,14 @@ async function scanDeparture({ code: rawCode, point_id: pointId }, user) {
   return { ...personView(row, code), already: false, point: scan.point_name, scanned_at: scan.scanned_at, id: row.id };
 }
 
-/* Entrée au Palais pour le jour réglé : accepté seulement le jour même. */
-async function scanPalais({ code, day }) {
-  const today = palais.todayDay();
+/* Entrée au Palais pour le jour réglé dans le scan. Vérification de la date du jour désactivée. */
+async function scanPalais({ code, day, check = false }) {
+  /* const today = palais.todayDay();
   if (today === null) throw ApiError.badRequest('Aucune journée du Palais n’a lieu aujourd’hui');
   if (Number(day) !== today) {
     throw ApiError.badRequest(`Le scan est réglé sur le ${day} novembre, mais nous sommes le ${today} : revoyez les réglages`);
-  }
-  return participationService.palaisCheckin(code);
+  } */
+  return participationService.palaisCheckin(code, Number(day), { check });
 }
 
 module.exports = { listPoints, settings, setSchool, addCustom, removeCustom, scanDeparture, scanPalais };
