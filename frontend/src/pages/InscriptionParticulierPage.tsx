@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { registerParticipation } from '../api/participations'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+import { SurveyInvite } from '../components/SurveyInvite'
 import { VisitDaysNote } from '../components/VisitDaysNote'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
@@ -13,13 +14,16 @@ import { scrollToTopNow } from '../lib/scroll'
 import { PhoneField } from '../components/ui/PhoneField'
 import { PARTICULIER_VISITS_OPEN } from '../data'
 
+/* TEMPORAIRE : affiche le message de fin d'inscription en local (jamais en prod). À retirer. */
+const APERCU_MERCI = import.meta.env.DEV
+
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
 
 /* Inscription individuelle : une personne, un QR personnel pour le jour J. */
 export default function InscriptionParticulierPage() {
-  const [sent, setSent] = useState(false)
-  const [trackingCode, setTrackingCode] = useState<string | null>(null)
+  const [sent, setSent] = useState(APERCU_MERCI)
+  const [trackingCode, setTrackingCode] = useState<string | null>(APERCU_MERCI ? 'PA-3MXR' : null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [waitlisted, setWaitlisted] = useState(false)
@@ -94,7 +98,7 @@ export default function InscriptionParticulierPage() {
           </picture>
         </div>
 
-        {!PARTICULIER_VISITS_OPEN ? (
+        {!PARTICULIER_VISITS_OPEN && !APERCU_MERCI ? (
           <div className="self-start rounded-sm border-2 border-sun bg-sage p-6">
             <p className="text-xl text-forest">Complet : les inscriptions sont closes.</p>
             <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
@@ -135,6 +139,7 @@ export default function InscriptionParticulierPage() {
               </p>
             )}
             <TrackingCodeNotice code={trackingCode} />
+            <SurveyInvite code={trackingCode} />
           </div>
         ) : (
           <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { registerParticipation } from '../api/participations'
 import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+import { SurveyInvite } from '../components/SurveyInvite'
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
@@ -11,6 +12,9 @@ import { SectionHeader } from '../components/ui/SectionHeader'
 import { PhoneField } from '../components/ui/PhoneField'
 import { scrollToTopNow } from '../lib/scroll'
 import { PALAIS_DAYS } from '../data'
+
+/* TEMPORAIRE : affiche le message de fin d'inscription en local (jamais en prod). À retirer. */
+const APERCU_MERCI = import.meta.env.DEV
 
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
@@ -25,8 +29,8 @@ function daysFromQuery(raw: string | null) {
 export default function JourneesPalaisPage() {
   const [searchParams] = useSearchParams()
   const [days, setDays] = useState<number[]>([])
-  const [sent, setSent] = useState(false)
-  const [trackingCode, setTrackingCode] = useState<string | null>(null)
+  const [sent, setSent] = useState(APERCU_MERCI)
+  const [trackingCode, setTrackingCode] = useState<string | null>(APERCU_MERCI ? 'JP-4KTW' : null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -106,6 +110,7 @@ export default function JourneesPalaisPage() {
               Elle est en cours de validation. Vous recevrez votre QR par e-mail et sur WhatsApp.
             </p>
             <TrackingCodeNotice code={trackingCode} />
+            <SurveyInvite code={trackingCode} />
           </div>
         ) : (
           <form onSubmit={onSubmit} className="grid content-start gap-6 sm:grid-cols-2">
