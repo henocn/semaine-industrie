@@ -37,6 +37,14 @@ function daysShort(days) {
     .join(', ');
 }
 
+/* Journées en une phrase : « lundi 16 et mardi 17 novembre » (modèle WhatsApp si26_palais_acceptee_qr). */
+function daysSentence(days) {
+  const parts = normalizeDays(days).map((n) => dayInfo(n).label.replace(/ novembre$/, '').toLowerCase());
+  if (!parts.length) return '';
+  const joined = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}`;
+  return `${joined} novembre`;
+}
+
 /* Journée du Palais qui a lieu aujourd'hui à Lomé, ou null. */
 function todayDay(now = new Date()) {
   const iso = new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' })
@@ -51,5 +59,6 @@ module.exports = {
   dayInfo,
   daysLines,
   daysShort,
+  daysSentence,
   todayDay,
 };
