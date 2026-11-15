@@ -2,6 +2,7 @@
 
 const { Router } = require('express');
 const controller = require('./participation.controller');
+const slots = require('./visitSlots.controller');
 const validate = require('../../middlewares/validate.middleware');
 const { authenticate, authorize } = require('../../middlewares/auth.middleware');
 const { createSchema, publicSchema, updateSchema } = require('./participation.validation');
@@ -21,6 +22,21 @@ function limitPublic(req, res, next) {
   }
   recent.push(now);
   publicHits.set(ip, recent);
+  return next();
+}
+
+const slotHits = new Map();
+
+/* Limite les vérifications de code et réservations de départ par adresse (pas de recherche de codes au hasard). */
+function limitSlots(req, res, next) {
+  const ip = req.ip || 'inconnu';
+  const now = Date.now();
+  const recent = (slotHits.get(ip) || []).filter((at) => now - at < 10 * 60 * 1000);
+  if (recent.length >= 30) {
+    return next(ApiError.badRequest('Trop d’essais depuis cette adresse. Réessayez dans quelques minutes.'));
+  }
+  recent.push(now);
+  slotHits.set(ip, recent);
   return next();
 }
 
@@ -45,8 +61,15 @@ router.get('/public/palais/:code', controller.palaisPass);
 router.get('/public/media/:code', controller.mediaPass);
 router.post('/public', closedForms, limitPublic, validate(publicSchema), controller.create);
 
+/* Départs des visites : choix d'un particulier validé, avec son code de suivi. */
+router.get('/public/visit-slots', slots.availability);
+router.get('/public/visit-slots/:code', limitSlots, slots.lookup);
+router.post('/public/visit-slots', limitSlots, slots.book);
+
 router.use(authenticate, authorize('orga'));
 
+router.get('/visit-slots', slots.planning);
+router.put('/:id/visit-slot', slots.setSlot);
 router.post('/palais/:code/checkin', controller.palaisCheckin);
 router.get('/', controller.list);
 router.get('/:id', controller.getOne);

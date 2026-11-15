@@ -9,7 +9,9 @@ import {
   type VisitBooking,
 } from '../api/bookings'
 import { listMapPoints, type MapPoint } from '../api/labels'
+import { useSearchParams } from 'react-router-dom'
 import { OrgaShell } from '../components/layout/OrgaShell'
+import { VisitSlotsPanel } from '../components/orga/VisitSlotsPanel'
 import { SitesMap } from '../components/map/SitesMap'
 import { IconEdit, IconTrash } from '../components/ui/IconButton'
 import { useOrgaRealtime } from '../lib/useOrgaRealtime'
@@ -72,8 +74,17 @@ function isOnMap(b: VisitBooking) {
   )
 }
 
+/* Deux onglets : les écoles se planifient à la main, les particuliers choisissent leur départ sur le site. */
+type PlanningTab = 'ecoles' | 'particuliers'
+const PLANNING_TABS: { key: PlanningTab; label: string }[] = [
+  { key: 'ecoles', label: 'Écoles' },
+  { key: 'particuliers', label: 'Particuliers' },
+]
+
 /* Arrangements de visites : site + établissement + créneau (orga). */
 export default function OrgaVisitsPage() {
+  const [params, setParams] = useSearchParams()
+  const tab: PlanningTab = params.get('onglet') === 'particuliers' ? 'particuliers' : 'ecoles'
   const [items, setItems] = useState<VisitBooking[]>([])
   const [sites, setSites] = useState<BookableSite[]>([])
   const [schools, setSchools] = useState<BookableSite[]>([])
@@ -312,6 +323,33 @@ export default function OrgaVisitsPage() {
     }
   }
 
+  const tabs = (
+    <div className="mb-4 flex gap-0 border border-black">
+      {PLANNING_TABS.map(({ key, label }, index) => (
+        <button
+          key={key}
+          type="button"
+          onClick={() => setParams({ onglet: key }, { replace: true })}
+          className={`flex-1 px-4 py-2.5 text-[14px] font-semibold ${
+            tab === key ? 'bg-forest text-white' : 'bg-white text-forest hover:bg-forest/10'
+          } ${index > 0 ? 'border-l border-black' : ''}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+
+  /* Particuliers : départs remplis par les réservations du site, sans saisie. */
+  if (tab === 'particuliers') {
+    return (
+      <OrgaShell title="Planning visites" searchPlaceholder="Rechercher un particulier…" onSearch={setQuery}>
+        {tabs}
+        <VisitSlotsPanel query={query} />
+      </OrgaShell>
+    )
+  }
+
   return (
     <OrgaShell
       title="Planning visites"
@@ -334,6 +372,7 @@ export default function OrgaVisitsPage() {
         </button>
       }
     >
+      {tabs}
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       {showForm && (

@@ -15,6 +15,12 @@
     "description": "Inscrivez-vous à titre personnel aux visites d’usines de la Semaine de l’industrie 2026 au Togo, du 16 au 20 novembre, et recevez votre QR de visite."
   },
   {
+    "path": "/reservation-visite",
+    "title": "Réserver son départ pour les visites d’usines",
+    "description": "Particuliers inscrits et validés : choisissez votre demi-journée et votre lieu de rencontre pour les visites d’usines des 19 et 20 novembre 2026.",
+    "noIndex": true
+  },
+  {
     "path": "/journees-au-palais",
     "title": "Assister aux conférences et panels du Palais des Congrès de Lomé",
     "description": "Semaine de l’industrie 2026 : inscrivez-vous aux rendez-vous au Palais des Congrès de Lomé, l’ouverture le 16 novembre, le forum des métiers le 17, les femmes dans l’industrie le 18."

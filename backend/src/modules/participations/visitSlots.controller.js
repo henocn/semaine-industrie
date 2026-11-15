@@ -1,0 +1,84 @@
+'use strict';
+
+const service = require('./visitSlots');
+const ApiResponse = require('../../utils/ApiResponse');
+const { audit } = require('../../utils/audit');
+const { emitRealtime } = require('../../realtime/io');
+
+/* Prévient le planning du backoffice qu'un départ a changé. */
+function emitChange(data) {
+  emitRealtime('visit-slot:changed', { id: data.id, name: data.name, slot: data.slot?.id ?? data.slot ?? null }, 'orga');
+}
+
+/* Départs et places restantes (public). */
+async function availability(req, res, next) {
+  try {
+    return ApiResponse.success(res, await service.availability());
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Vérifie un code de suivi avant le choix du départ (public). */
+async function lookup(req, res, next) {
+  try {
+    return ApiResponse.success(res, await service.lookup(req.params.code));
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Réserve un départ (public). */
+async function book(req, res, next) {
+  try {
+    const { id, ...data } = await service.book(req.body?.code, req.body?.slot);
+    if (!data.already) {
+      await audit(req, {
+        action: 'update',
+        entityType: 'participation',
+        entityId: id,
+        summary: `Départ réservé par « ${data.name} » (${data.code}) : ${service.slotLabel(data.slot.id)}`,
+      });
+      emitChange({ id, ...data });
+    }
+    return ApiResponse.success(res, data, data.already ? 'Départ déjà réservé' : 'Départ réservé');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Planning des départs avec les inscrits (backoffice). */
+async function planning(req, res, next) {
+  try {
+    return ApiResponse.success(res, await service.planning());
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/* Change ou libère le départ d'un particulier (backoffice). */
+async function setSlot(req, res, next) {
+  try {
+    const data = await service.setSlot(req.params.id, req.body?.slot || null);
+    await audit(req, {
+      action: 'update',
+      entityType: 'participation',
+      entityId: data.id,
+      summary: data.slot
+        ? `Départ de « ${data.name} » : ${service.slotLabel(data.slot)}`
+        : `Départ de « ${data.name} » libéré`,
+    });
+    emitChange(data);
+    return ApiResponse.success(res, data, data.slot ? 'Départ modifié' : 'Place libérée');
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = {
+  availability,
+  lookup,
+  book,
+  planning,
+  setSlot,
+};

@@ -1,0 +1,243 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { getVisitSlotPlanning, setVisitSlot, type VisitSlotPerson, type VisitSlotPlanning } from '../../api/visitSlots'
+import { IconTrash } from '../ui/IconButton'
+import { useOrgaRealtime } from '../../lib/useOrgaRealtime'
+import { useConfirm } from '../../lib/useConfirm'
+import { exportToExcel, excelDate, type ExcelColumn } from '../../lib/excel'
+
+type Row = VisitSlotPerson & { slotId: string; slotLabel: string }
+
+/* Colonnes de l'export Excel des départs. */
+const EXPORT_COLUMNS: ExcelColumn<Row>[] = [
+  { header: 'Départ', width: 44, value: (r) => r.slotLabel },
+  { header: 'Nom', width: 28, value: (r) => r.name },
+  { header: 'Code', width: 10, value: (r) => r.code },
+  { header: 'Téléphone', width: 18, value: (r) => r.phone },
+  { header: 'E-mail', width: 28, value: (r) => r.email },
+  { header: 'Réservé le', width: 18, value: (r) => excelDate(r.booked_at) },
+]
+
+const iconBtnDanger =
+  'grid h-9 w-9 place-items-center border border-black bg-white text-red-700 hover:bg-red-700 hover:text-white disabled:opacity-40'
+
+/* Date et heure courtes à Lomé. */
+function when(iso: string | null) {
+  if (!iso) return ''
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Africa/Lome',
+  }).format(new Date(iso))
+}
+
+/* Onglet Particuliers du planning : les 8 départs se remplissent avec les réservations du site. */
+export function VisitSlotsPanel({ query }: { query: string }) {
+  const [data, setData] = useState<VisitSlotPlanning | null>(null)
+  const [active, setActive] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const { confirm, modal } = useConfirm()
+
+  const load = useCallback(async () => {
+    try {
+      setData(await getVisitSlotPlanning())
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Planning indisponible')
+    }
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  useOrgaRealtime(['visit-slot:changed', 'participation:changed'], () => void load())
+
+  const label = useCallback(
+    (id: string) => {
+      const s = data?.slots.find((slot) => slot.id === id)
+      return s ? `${s.day}, ${s.period.toLowerCase()}, ${s.place}` : id
+    },
+    [data],
+  )
+
+  /* Inscrits du départ choisi (ou de tous), filtrés par la recherche. */
+  const rows = useMemo<Row[]>(() => {
+    if (!data) return []
+    const q = query.trim().toLowerCase()
+    return data.slots
+      .filter((s) => !active || s.id === active)
+      .flatMap((s) => s.people.map((p) => ({ ...p, slotId: s.id, slotLabel: label(s.id) })))
+      .filter((r) => !q || [r.name, r.code, r.phone, r.email].some((v) => v?.toLowerCase().includes(q)))
+  }, [data, active, query, label])
+
+  const total = data?.slots.reduce((n, s) => n + s.people.length, 0) ?? 0
+
+  /* Déplace ou libère la place d'un particulier. */
+  async function change(row: Row, slot: string | null) {
+    if (slot === null) {
+      const ok = await confirm({
+        title: 'Libérer cette place ?',
+        message: `${row.name} pourra choisir un autre départ sur le site.`,
+        confirmLabel: 'Libérer',
+        danger: true,
+      })
+      if (!ok) return
+    }
+    setBusy(true)
+    try {
+      await setVisitSlot(row.id, slot)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Modification impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!data) {
+    return error ? <p className="text-[14px] text-red-700">{error}</p> : <p className="text-[14px] text-ink/50">Chargement…</p>
+  }
+
+  const days = [...new Set(data.slots.map((s) => s.day))]
+
+  return (
+    <>
+      {modal}
+      {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
+
+      <p className="mb-4 text-[14px] text-ink/70">
+        {total} place{total > 1 ? 's' : ''} réservée{total > 1 ? 's' : ''} sur {data.slots.length * data.capacity}
+        {' · '}
+        {data.waiting} particulier{data.waiting > 1 ? 's' : ''} validé{data.waiting > 1 ? 's' : ''} sans départ
+        {' · '}
+        Réservations {data.open ? 'ouvertes' : 'fermées'} sur{' '}
+        <a href="/reservation-visite/" target="_blank" rel="noopener noreferrer" className="font-semibold text-forest underline underline-offset-2">
+          /reservation-visite
+        </a>
+      </p>
+
+      <div className="mb-4 grid gap-4 lg:grid-cols-2">
+        {days.map((day) => (
+          <section key={day} className="orga-panel">
+            <h2 className="text-[15px] font-semibold text-forest">{day}</h2>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {data.slots.filter((s) => s.day === day).map((s) => {
+                const n = s.people.length
+                const selected = active === s.id
+                const full = n >= data.capacity
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setActive(selected ? '' : s.id)}
+                    className={`border px-3 py-3 text-left transition-colors ${
+                      selected ? 'border-forest bg-forest text-white' : 'border-black bg-white hover:bg-forest/5'
+                    }`}
+                  >
+                    <p className={`text-[12px] font-semibold uppercase tracking-wide ${selected ? 'text-white/70' : 'text-ink/45'}`}>
+                      {s.period}
+                    </p>
+                    <p className={`mt-0.5 text-[14px] font-semibold ${selected ? 'text-white' : 'text-forest'}`}>{s.place}</p>
+                    <p className={`mt-2 text-[20px] font-bold leading-none ${selected ? 'text-sun' : full ? 'text-red-700' : 'text-forest'}`}>
+                      {n}
+                      <span className={`text-[13px] font-medium ${selected ? 'text-white/70' : 'text-ink/50'}`}> / {data.capacity}</span>
+                    </p>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <section className="orga-panel !p-0 overflow-x-auto">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black px-4 py-3">
+          <h2 className="text-[15px] font-semibold text-forest">
+            {active ? label(active) : 'Tous les départs'} · {rows.length} inscrit{rows.length > 1 ? 's' : ''}
+          </h2>
+          <div className="flex gap-2">
+            {active && (
+              <button type="button" className="orga-btn-ghost" onClick={() => setActive('')}>
+                Tous les départs
+              </button>
+            )}
+            <button
+              type="button"
+              className="orga-btn"
+              disabled={rows.length === 0}
+              onClick={() =>
+                void exportToExcel({ filename: 'departs-particuliers', sheet: 'Départs', columns: EXPORT_COLUMNS, rows })
+              }
+            >
+              Exporter
+            </button>
+          </div>
+        </div>
+        <table className="orga-table min-w-[820px]">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nom</th>
+              <th>Code</th>
+              <th>Contact</th>
+              <th>Départ</th>
+              <th>Réservé le</th>
+              <th className="w-16">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr><td colSpan={7}>Aucune réservation</td></tr>
+            )}
+            {rows.map((r, i) => (
+              <tr key={r.id}>
+                <td className="font-semibold text-forest">{i + 1}</td>
+                <td className="font-medium text-forest">{r.name}</td>
+                <td className="font-mono">{r.code}</td>
+                <td>
+                  {r.phone && (
+                    <a href={`tel:${r.phone}`} className="block font-semibold text-forest underline underline-offset-2">{r.phone}</a>
+                  )}
+                  {r.email && (
+                    <a href={`mailto:${r.email}`} className="mt-0.5 block text-ink/55 underline underline-offset-2">{r.email}</a>
+                  )}
+                </td>
+                <td>
+                  <select
+                    value={r.slotId}
+                    disabled={busy}
+                    onChange={(e) => void change(r, e.target.value)}
+                    className="orga-input !py-1.5 text-[13px]"
+                    aria-label={`Départ de ${r.name}`}
+                  >
+                    {data.slots.map((s) => (
+                      <option key={s.id} value={s.id} disabled={s.id !== r.slotId && s.people.length >= data.capacity}>
+                        {label(s.id)}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="text-ink/60">{when(r.booked_at)}</td>
+                <td>
+                  <button
+                    type="button"
+                    title="Libérer la place"
+                    aria-label="Libérer la place"
+                    className={iconBtnDanger}
+                    disabled={busy}
+                    onClick={() => void change(r, null)}
+                  >
+                    <IconTrash />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </>
+  )
+}

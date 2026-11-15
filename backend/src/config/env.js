@@ -45,6 +45,8 @@ const env = cleanEnv(process.env, {
   PARTICULIER_LIMIT: num({ default: 400 }),
   /* Inscriptions publiques des particuliers aux visites : ouvertes. false pour les fermer. */
   PARTICULIER_OPEN: bool({ default: true }),
+  /* Réservation des départs de visite par les particuliers validés : ouverte. false pour la fermer. */
+  VISIT_SLOTS_OPEN: bool({ default: true }),
 
   /* SMTP SiteGround — mot de passe à renseigner en prod (laisser vide ici si besoin). */
   SMTP_HOST: str({ default: 'mail.semaineindustrie.tg' }),
