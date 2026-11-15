@@ -7,7 +7,6 @@ import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { publicSeo } from '../lib/seo'
-import { VISITS_WHATSAPP_GROUP } from '../data'
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon'
 
 const TYPE_LABEL: Record<EspaceType, string> = {
@@ -94,8 +93,9 @@ function EspaceView({ space }: { space: Espace }) {
                 )}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
+                {space.departure.group && (
                 <a
-                  href={VISITS_WHATSAPP_GROUP}
+                  href={space.departure.group}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 border border-forest bg-sun px-4 py-2.5 text-[14px] font-semibold text-forest transition-opacity hover:opacity-90"
@@ -103,6 +103,7 @@ function EspaceView({ space }: { space: Espace }) {
                   <WhatsAppIcon />
                   Groupe des visites
                 </a>
+                )}
                 <Link
                   to={`/visites/?code=${encodeURIComponent(space.code)}`}
                   className="inline-flex items-center gap-2 border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"

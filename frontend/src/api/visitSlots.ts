@@ -17,6 +17,8 @@ export type VisitSlotBooking = {
   name: string
   slot: VisitSlot | null
   already?: boolean
+  /* Lien du groupe WhatsApp des visites, envoyé par le serveur pour un code validé. */
+  group?: string
 }
 
 /* Particulier inscrit sur un départ (backoffice). */

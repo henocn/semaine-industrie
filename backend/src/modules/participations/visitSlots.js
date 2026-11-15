@@ -125,6 +125,8 @@ function view(row) {
     code: row.displayCode || row.tracking_code,
     name: row.name,
     slot: row.visit_slot ? slotInfo(row.visit_slot) : null,
+    /* Lien du groupe : donné seulement après vérification d'un code validé, jamais dans le code public du site. */
+    group: WHATSAPP_GROUP,
   };
 }
 

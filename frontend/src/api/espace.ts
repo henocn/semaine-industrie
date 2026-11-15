@@ -22,7 +22,7 @@ export type Espace = {
   planned: EspaceRow[]
   documents: { id: string; title: string; url: string }[]
   /* Particulier validé : départ de visite réservé, ou null s'il reste à choisir. */
-  departure?: { slot: string | null }
+  departure?: { slot: string | null; group?: string }
 }
 
 /* Charge la fiche et le bilan liés à un code de suivi. */
