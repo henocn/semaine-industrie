@@ -596,17 +596,9 @@ async function replyProgrammeDocument(from, phoneNumberId) {
   });
 }
 
-/* Bouton « Programme » du modèle si26_palais_acceptee_qr : le détail des journées choisies. */
+/* Bouton « Programme » du modèle si26_palais_acceptee_qr : le PDF du programme, rien d'autre. */
 async function replyPalaisProgramme(from, rawCode, phoneNumberId) {
-  const code = trackingService.normalizeCode(rawCode);
-  const row = code ? await Participation.findOne({ where: { kind: 'palais', tracking_code: code } }) : null;
-  const days = row ? palais.normalizeDays(row.palais_days) : [];
-  const sections = days
-    .map((n) => PROGRAMME_DAYS.find((d) => d.n === n))
-    .filter(Boolean)
-    .map(formatProgrammeDay);
-  if (!sections.length) return replyProgramme(from, 'menu_programme', phoneNumberId);
-  return sendWithNav({ to: from, phoneNumberId, body: sections.join('\n\n') });
+  return replyProgrammeDocument(from, phoneNumberId);
 }
 
 /* Envoie le fichier programme, ou le texte d'un jour. */
