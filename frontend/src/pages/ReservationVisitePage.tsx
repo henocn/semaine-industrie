@@ -136,36 +136,36 @@ export default function ReservationVisitePage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            title="Réservez votre départ pour les visites d’usines"
+            title="Confirmez votre départ pour les visites d’usines"
             lead="Votre inscription aux visites est validée ? Choisissez votre demi-journée et votre lieu de rencontre pour le jeudi 19 ou le vendredi 20 novembre."
           />
-          <ul className="mt-6 space-y-2 border-t border-forest/15 pt-5 text-[15px] leading-relaxed text-ink/75">
+          {/* <ul className="mt-6 space-y-2 border-t border-forest/15 pt-5 text-[15px] leading-relaxed text-ink/75">
             <li>50 places par demi-journée et par lieu de rencontre.</li>
             <li>Une seule réservation par inscription.</li>
             <li>Les heures précises, les entreprises visitées et les consignes sont annoncées dans le groupe WhatsApp.</li>
-          </ul>
+          </ul> */}
         </div>
 
         {booked && person ? (
           <div className="self-start rounded-sm border-2 border-sun bg-sage p-6">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-forest/70">
+            {/* <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-forest/70">
               {person.already === false ? 'Votre place est réservée' : 'Votre réservation'}
-            </p>
-            <p className="mt-2 text-[15px] text-ink/80">{person.name} · {person.code}</p>
+            </p> */}
+            <p className="text-[15px] text-ink/80">{person.name} · {person.code}</p>
             <div className="mt-4">
               <SlotSummary slot={booked} />
             </div>
             <p className="mt-4 text-[15px] leading-relaxed text-ink/80">
-              Gardez votre QR de participation : il est demandé au départ. Les heures précises et les entreprises visitées sont annoncées dans le groupe WhatsApp.
+              Gardez votre QR de participation : il est demandé au départ. Rejoignez le groupe WhatsApp si ce n’est pas encore fait : toutes les autres informations y seront communiquées.
             </p>
             <div className="mt-5 flex flex-wrap gap-2.5">
               <a href={WHATSAPP_GROUP} target="_blank" rel="noopener noreferrer" className="ui-btn-primary">
                 Rejoindre le groupe WhatsApp
               </a>
             </div>
-            <p className="mt-4 text-[13px] text-ink/60">
+            {/* <p className="mt-4 text-[13px] text-ink/60">
               Un changement ou un empêchement ? Écrivez à l’organisation dans le groupe pour modifier ou libérer votre place.
-            </p>
+            </p> */}
           </div>
         ) : (
           <div className="grid content-start gap-8">
