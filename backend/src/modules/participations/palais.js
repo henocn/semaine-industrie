@@ -6,7 +6,7 @@ const TIME_ZONE = 'Africa/Lome';
 const PALAIS_DAYS = [
   { n: 16, date: '2026-11-16', label: 'Lundi 16 novembre', title: 'L’ouverture', place: 'Grande salle', hours: 'à partir de 8h30' },
   { n: 17, date: '2026-11-17', label: 'Mardi 17 novembre', title: 'Le forum des métiers', place: 'Grande salle', hours: 'de 14h à 16h45' },
-  { n: 18, date: '2026-11-18', label: 'Mercredi 18 novembre', title: 'Les femmes dans l’industrie', place: 'Salle polyvalente', hours: 'de 9h à 10h45' },
+  { n: 18, date: '2026-11-18', label: 'Mercredi 18 novembre', title: 'Les femmes dans l’industrie', place: 'Salle polyvalente', hours: 'de 9h à 11h45' },
 ];
 
 const DAY_NUMBERS = PALAIS_DAYS.map((day) => day.n);

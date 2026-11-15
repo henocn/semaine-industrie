@@ -476,40 +476,42 @@ function programmePdfPath() {
   return env.PROGRAMME_PDF_URL || '/uploads/docs/programme-si2026.pdf';
 }
 
-/* Programme validé : trois rendez-vous au Palais des Congrès ; usines ouvertes du 16 au 20 novembre. */
+/* Dernier programme reçu (PDF) : trois rendez-vous au Palais des Congrès ; usines ouvertes du 16 au 20 novembre. */
 const PROGRAMME_DAYS = [
   {
     n: 16, name: 'Lundi', theme: 'Ouverture',
     where: 'Palais des Congrès (grande salle) ; industries l’après-midi',
     slots: [
-      ['8h30', 'Accueil des invités et des autorités'],
-      ['9h00', 'Mot de bienvenue'],
-      ['9h10', 'Allocutions : ONUDI, ONU, CCI-Togo'],
-      ['9h45', 'Film 2020-2025 et vision 2026-2031'],
-      ['9h50', 'Discours du Ministre délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique'],
+      ['8h30', 'Accueil et installation des invités et des autorités'],
+      ['9h00', 'Mot de bienvenue du Président du comité d’organisation'],
+      ['9h10', 'Allocutions : ONUDI (en vidéo), Nations Unies au Togo, CCI-Togo'],
+      ['9h45', 'Discours de Dr Arthur TRIMUA, Ministre délégué, chargé de la Promotion des Investissements, de l’Industrie et de la Souveraineté Économique'],
       ['10h00', 'Remise des labels ; photo de famille'],
-      ['10h45', 'Keynote sur le thème'],
-      ['11h00', 'Panel sur le thème'],
-      ['12h00', 'Lancement de l’exposition « Fabriqué au Togo »'],
-      ['15h00', 'Visite d’industries par le Ministre'],
+      ['10h15', 'Panel sur le thème'],
+      ['11h30', 'Lancement de l’exposition « Fabriqué au Togo »'],
+      ['12h00', 'Cocktail'],
+      ['15h00', 'Visite d’industries par le Ministre et les autorités'],
     ],
   },
   {
     n: 17, name: 'Mardi', theme: 'Jeunes et métiers',
     where: 'Usines le matin ; Palais des Congrès (grande salle)',
     slots: [
-      ['Matin', 'Usines ouvertes : premiers créneaux'],
+      ['Matin', 'Visites d’usines par les écoles'],
+      ['12h00', 'Collation'],
       ['14h00', 'Forum d’orientation des métiers'],
-      ['16h00', 'Ils ont commencé petit'],
+      ['16h00', '« Ils ont commencé petit » : témoignages d’industriels'],
+      ['17h00', 'Cocktail'],
     ],
   },
   {
     n: 18, name: 'Mercredi', theme: 'Femmes dans l’industrie',
     where: 'Palais des Congrès (salle polyvalente) ; usines l’après-midi',
     slots: [
-      ['9h00', 'Portraits filmés de femmes de l’industrie'],
-      ['9h10', 'Panel des métiers au féminin'],
-      ['Après-midi', 'Visites d’usines dirigées par des femmes'],
+      ['9h00', 'Panel « Les métiers de l’industrie au féminin »'],
+      ['10h45', 'Échange avec les Nana Benz'],
+      ['12h30', 'Collation'],
+      ['Après-midi', 'Visites d’usines par des délégations de jeunes femmes'],
     ],
   },
 ];
@@ -695,7 +697,7 @@ function participateBody() {
 function infosBody() {
   return [
     '*Informations*',
-    "La Semaine de l’Industrie 2026 est portée par le Ministère délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique.",
+    "La Semaine de l’Industrie 2026 est portée par le Ministère délégué, chargé de la Promotion des Investissements, de l’Industrie et de la Souveraineté Économique.",
     'Thème : « Accélérer l’industrialisation togolaise : transformation productive, innovation et compétitivité »',
     'La participation est gratuite. Les formulaires sont dans le menu « Participer à la semaine ».',
     '✉️ infos@semaineindustrie.tg',

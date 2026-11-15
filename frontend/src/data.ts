@@ -3,7 +3,7 @@ export type Day = {
   slots: [string, string][]; phare?: boolean
 }
 
-/* Programme validé par le Ministre (MDPISE, novembre 2026) : trois rendez-vous au Palais des Congrès. */
+/* Dernier programme reçu (PDF de novembre 2026) : trois rendez-vous au Palais des Congrès. */
 export const DAYS: Day[] = [
   {
     n: 16, name: 'Lundi', theme: 'Ouverture', phare: true,
@@ -12,14 +12,12 @@ export const DAYS: Day[] = [
     slots: [
       ['8h30', 'Accueil et installation des invités et des autorités'],
       ['9h00', 'Mot de bienvenue du Président du comité d’organisation'],
-      ['9h10', 'Allocutions : Directeur général de l’ONUDI (diffusion), Secrétaire général de l’ONU, Président de la CCI-Togo'],
-      ['9h45', 'Film de 3 minutes : « 2020-2025, ce que l’industrie togolaise a construit », et la vision 2026-2031'],
-      ['9h50-10h00', 'Discours de Monsieur le Ministre délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique'],
+      ['9h10', 'Allocutions : la Représentante résidente de l’ONUDI (discours diffusé en vidéo), la Coordonnatrice résidente du système des Nations Unies au Togo, le Président de la Chambre de Commerce et d’Industrie du Togo (CCI-Togo)'],
+      ['9h45-9h55', 'Discours de Dr Arthur TRIMUA, Ministre délégué, chargé de la Promotion des Investissements, de l’Industrie et de la Souveraineté Économique'],
       ['10h00', 'Remise symbolique des labels aux entreprises et aux écoles partenaires ; photo de famille'],
-      ['10h15-10h45', 'Pause-café'],
-      ['10h45-11h00', 'Keynote sur le thème « Accélérer l’industrialisation togolaise : transformation productive, innovation et compétitivité »'],
-      ['11h00-12h00', 'Panel sur le thème, avec des acteurs de l’industrie'],
-      ['12h00', 'Le Ministre lance l’exposition « Fabriqué au Togo » au 1er étage et visite les stands'],
+      ['10h15-11h30', 'Panel sur le thème « Accélérer l’industrialisation togolaise : transformation productive, innovation et compétitivité »'],
+      ['11h30', 'Le Ministre lance l’exposition « Fabriqué au Togo » et visite les stands'],
+      ['12h00', 'Cocktail'],
       ['15h00-16h30', 'Visite d’industries par le Ministre et les autorités, avec la presse'],
     ],
   },
@@ -28,9 +26,11 @@ export const DAYS: Day[] = [
     goal: 'Les usines ouvrent leurs portes, puis les jeunes découvrent les métiers de l’industrie.',
     where: 'Usines le matin ; Palais des Congrès de Lomé (grande salle) l’après-midi',
     slots: [
-      ['Matin', 'Usines ouvertes : premiers créneaux de visite'],
-      ['14h00-16h00', 'Forum d’orientation des métiers : écoles et entreprises présentent les métiers de l’industrie et les formations qui y mènent ; questions de la salle'],
-      ['16h00-16h45', '« Ils ont commencé petit » : des industriels, dont au moins une femme, racontent leurs débuts'],
+      ['Matin', 'Visites d’usines par les écoles'],
+      ['12h00', 'Collation'],
+      ['14h00-16h00', 'Forum d’orientation des métiers : écoles et entreprises présentent les métiers de l’industrie et les formations qui y mènent'],
+      ['16h00-16h45', '« Ils ont commencé petit » : témoignages d’industriels'],
+      ['17h00', 'Cocktail'],
     ],
   },
   {
@@ -38,9 +38,10 @@ export const DAYS: Day[] = [
     goal: 'Montrer que l’industrie togolaise est aussi faite par des femmes, puis aller les voir au travail.',
     where: 'Palais des Congrès de Lomé (salle polyvalente) le matin ; usines l’après-midi',
     slots: [
-      ['9h00-9h10', 'Projection de portraits filmés de femmes de l’industrie'],
-      ['9h10-10h45', 'Panel « Les métiers de l’industrie au féminin » : des industrielles et une jeune femme qui démarre son activité'],
-      ['Après-midi', 'Visites d’usines, avec un accent sur les industries dirigées par des femmes'],
+      ['9h00-10h45', 'Panel « Les métiers de l’industrie au féminin »'],
+      ['10h45-11h45', 'Échange avec les Nana Benz'],
+      ['12h30', 'Collation'],
+      ['Après-midi', 'Visites d’usines par des délégations de jeunes femmes'],
     ],
   },
 ]
@@ -75,15 +76,15 @@ export type PalaisDay = { n: number; label: string; title: string; place: string
 export const PALAIS_DAYS: PalaisDay[] = [
   {
     n: 16, label: 'Lundi 16 novembre', title: 'L’ouverture', place: 'Grande salle', hours: 'à partir de 8h30',
-    text: 'Cérémonie d’ouverture avec le discours du Ministre, remise des labels aux entreprises et aux écoles, keynote et panel sur le thème de l’édition. À 12h, lancement de l’exposition « Fabriqué au Togo » au 1er étage.',
+    text: 'Cérémonie d’ouverture avec les allocutions et le discours du Ministre, remise des labels aux entreprises et aux écoles partenaires, puis panel sur le thème de l’édition. À 11h30, lancement de l’exposition « Fabriqué au Togo ».',
   },
   {
     n: 17, label: 'Mardi 17 novembre', title: 'Le forum des métiers', place: 'Grande salle', hours: 'de 14h à 16h45',
     text: 'Écoles et entreprises présentent les métiers de l’industrie et les formations qui y mènent, avec des questions de la salle. Puis « Ils ont commencé petit » : des industriels racontent leurs débuts.',
   },
   {
-    n: 18, label: 'Mercredi 18 novembre', title: 'Les femmes dans l’industrie', place: 'Salle polyvalente', hours: 'de 9h à 10h45',
-    text: 'Portraits filmés de femmes de l’industrie, puis le panel « Les métiers de l’industrie au féminin », avec des industrielles et une jeune femme qui démarre son activité.',
+    n: 18, label: 'Mercredi 18 novembre', title: 'Les femmes dans l’industrie', place: 'Salle polyvalente', hours: 'de 9h à 11h45',
+    text: 'Le panel « Les métiers de l’industrie au féminin », puis un échange avec les Nana Benz.',
   },
 ]
 
@@ -167,7 +168,7 @@ export const FAQ = [
   },
   {
     q: 'Quelles activités sont prévues pendant la Semaine de l’industrie ?',
-    a: 'Au programme : une cérémonie d’ouverture avec keynote et panel, un forum d’orientation des métiers, un panel sur les femmes dans l’industrie, l’exposition « Fabriqué au Togo », le parcours des métiers, des visites d’usines toute la semaine et un concours vidéo pour les élèves et les étudiants.',
+    a: 'Au programme : une cérémonie d’ouverture avec un panel sur le thème, un forum d’orientation des métiers, un panel sur les femmes dans l’industrie, l’exposition « Fabriqué au Togo », le parcours des métiers, des visites d’usines toute la semaine et un concours vidéo pour les élèves et les étudiants.',
   },
   {
     q: 'Les visites d’usines sont-elles ouvertes au public ?',

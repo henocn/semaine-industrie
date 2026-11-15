@@ -21,7 +21,7 @@ export function routeUrl(path: string) {
 const ORGANIZER: JsonLd = {
   '@type': 'GovernmentOrganization',
   '@id': ORGANIZER_ID,
-  name: 'Ministère délégué, chargé de la Promotion des investissements, de l’Industrie et de la Souveraineté économique',
+  name: 'Ministère délégué, chargé de la Promotion des Investissements, de l’Industrie et de la Souveraineté Économique',
   alternateName: 'MDPISE',
   url: 'https://investissement.gouv.tg/',
   logo: `${SITE_URL}/brand/bloc-ministere-mdpise.png`,
