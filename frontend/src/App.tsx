@@ -98,7 +98,7 @@ export function AppRoutes() {
             <Route path="/inscription-groupe" element={<ClosedFormPage path="/inscription-groupe" subject="Les inscriptions des écoles et universités aux visites d’usines" />} />
             <Route path="/affaires" element={<ClosedFormPage path="/affaires" subject="Les inscriptions aux rencontres d’affaires" />} />
             <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
-            <Route path="/reservation-visite" element={<ReservationVisitePage />} />
+            <Route path="/visites" element={<ReservationVisitePage />} />
             <Route path="/journees-au-palais" element={<JourneesPalaisPage />} />
             {/* <Route path="/accreditation-medias" element={<AccreditationMediasPage />} /> */}
             <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />

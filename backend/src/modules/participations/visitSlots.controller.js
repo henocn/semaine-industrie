@@ -5,9 +5,14 @@ const ApiResponse = require('../../utils/ApiResponse');
 const { audit } = require('../../utils/audit');
 const { emitRealtime } = require('../../realtime/io');
 
-/* Prévient le planning du backoffice qu'un départ a changé. */
-function emitChange(data) {
-  emitRealtime('visit-slot:changed', { id: data.id, name: data.name, slot: data.slot?.id ?? data.slot ?? null }, 'orga');
+/* Prévient le backoffice qu'un départ a changé : « book » quand un particulier choisit lui-même, « set » depuis le backoffice. */
+function emitChange(action, data) {
+  const slot = data.slot?.id ?? data.slot ?? null;
+  emitRealtime(
+    'visit-slot:changed',
+    { action, id: data.id, name: data.name, slot, label: slot ? service.slotLabel(slot) : null },
+    'orga',
+  );
 }
 
 /* Départs et places restantes (public). */
@@ -39,7 +44,7 @@ async function book(req, res, next) {
         entityId: id,
         summary: `Départ réservé par « ${data.name} » (${data.code}) : ${service.slotLabel(data.slot.id)}`,
       });
-      emitChange({ id, ...data });
+      emitChange('book', { id, ...data });
     }
     return ApiResponse.success(res, data, data.already ? 'Départ déjà réservé' : 'Départ réservé');
   } catch (err) {
@@ -68,7 +73,7 @@ async function setSlot(req, res, next) {
         ? `Départ de « ${data.name} » : ${service.slotLabel(data.slot)}`
         : `Départ de « ${data.name} » libéré`,
     });
-    emitChange(data);
+    emitChange('set', data);
     return ApiResponse.success(res, data, data.slot ? 'Départ modifié' : 'Place libérée');
   } catch (err) {
     return next(err);
