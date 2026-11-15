@@ -23,9 +23,10 @@ export default function ProgrammePage() {
             lead={`Thème : « ${NATIONAL_THEME} ». Trois rendez-vous au Palais des Congrès de Lomé, du lundi 16 au mercredi 18 novembre ; usines ouvertes jusqu’au vendredi 20.`}
           />
           <div className="mt-6 flex flex-wrap gap-2.5">
+            {/* Inscriptions closes.
             <Button to="/journees-au-palais/" variant="primary">
               S’inscrire aux journées
-            </Button>
+            </Button> */}
             <Button to="/carte/" variant="outline">
               Carte des sites
             </Button>
@@ -87,11 +88,12 @@ export default function ProgrammePage() {
                           </li>
                         ))}
                       </ol>
+                      {/* Inscriptions closes.
                       <div className="mt-5">
                         <Button to={`/journees-au-palais/?jour=${d.n}`} variant="outline">
                           S’inscrire à cette journée
                         </Button>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>

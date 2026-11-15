@@ -11,8 +11,9 @@
   },
   {
     "path": "/inscription-particulier",
-    "title": "Visiter les industries en tant que particulier",
-    "description": "Inscrivez-vous à titre personnel aux visites d’usines de la Semaine de l’industrie 2026 au Togo, du 16 au 20 novembre, et recevez votre QR de visite."
+    "title": "Inscriptions clôturées",
+    "description": "Les inscriptions des particuliers aux visites d’usines sont closes. Déjà inscrit ? Retrouvez votre dossier dans Mon espace.",
+    "noIndex": true
   },
   {
     "path": "/visites",
@@ -22,8 +23,9 @@
   },
   {
     "path": "/journees-au-palais",
-    "title": "Assister aux conférences et panels du Palais des Congrès de Lomé",
-    "description": "Semaine de l’industrie 2026 : inscrivez-vous aux rendez-vous au Palais des Congrès de Lomé, l’ouverture le 16 novembre, le forum des métiers le 17, les femmes dans l’industrie le 18."
+    "title": "Inscriptions clôturées",
+    "description": "Les inscriptions aux rendez-vous du Palais des Congrès sont closes. Déjà inscrit ? Retrouvez votre dossier dans Mon espace.",
+    "noIndex": true
   },
   {
     "path": "/mon-espace",
@@ -64,7 +66,7 @@
   {
     "path": "/regles-de-participation",
     "title": "Règles de participation",
-    "description": "Semaine de l’industrie 2026 au Togo : quel formulaire choisir pour les conférences au Palais des Congrès, les visites d’industries ou le label, et comment fonctionnent les codes de suivi."
+    "description": "Semaine de l’industrie 2026 au Togo : les inscriptions sont closes. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace avec leur code de suivi."
   },
   {
     "path": "/confidentialite",

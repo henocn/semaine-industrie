@@ -14,7 +14,8 @@ function PageLink({ to, children }: { to: string; children: ReactNode }) {
   )
 }
 
-/* Les formulaires de la rubrique « Participer » : lequel choisir. */
+/* Les formulaires de la rubrique « Participer » : lequel choisir. Liste masquée : inscriptions closes. */
+/*
 const FORMS: { title: string; to: string; who: string }[] = [
   {
     title: 'Participation au Palais des Congrès',
@@ -44,6 +45,7 @@ const FORMS: { title: string; to: string; who: string }[] = [
   //   who: 'Pour une industrie qui souhaite ouvrir son usine aux visiteurs.',
   // },
 ]
+*/
 
 /* Règles de participation : comment s'inscrire, sans confondre les formulaires. */
 export default function ReglesPage() {
@@ -55,10 +57,11 @@ export default function ReglesPage() {
           <SectionHeader
             level={1}
             title="Règles de participation"
-            lead="Chaque activité a son propre formulaire, dans la rubrique « Participer ». Choisissez celui qui correspond à ce que vous voulez faire."
+            lead="Toutes les inscriptions sont closes. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace, avec leur code de suivi."
           />
         </div>
 
+        {/* Inscriptions closes : liste des formulaires retirée.
         <ul className="border-t border-forest/15">
           {FORMS.map((form) => (
             <li key={form.to} className="border-b border-forest/15 py-4">
@@ -67,6 +70,7 @@ export default function ReglesPage() {
             </li>
           ))}
         </ul>
+        */}
 
         <div className="space-y-3">
           <p>

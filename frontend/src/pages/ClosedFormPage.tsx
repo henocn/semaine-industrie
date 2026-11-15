@@ -16,9 +16,10 @@ export default function ClosedFormPage({ path, subject }: { path: string; subjec
         </p>
         <div className="mt-6 flex flex-wrap gap-2.5">
           <Button to="/mon-espace/">Mon espace</Button>
+          {/* Toutes les inscriptions sont closes : plus de lien vers des inscriptions ouvertes.
           <Button to="/regles-de-participation/" variant="outline">
             Inscriptions ouvertes
-          </Button>
+          </Button> */}
         </div>
       </div>
     </main>
