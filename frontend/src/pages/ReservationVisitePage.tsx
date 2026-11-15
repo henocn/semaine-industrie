@@ -15,7 +15,7 @@ import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { readQrImage, trackingCodeFrom } from '../lib/readQrImage'
 
-const WHATSAPP_GROUP = 'https://chat.whatsapp.com/D23e7tkuv5E77DmwnSnQxx'
+import { VISITS_WHATSAPP_GROUP as WHATSAPP_GROUP } from '../data'
 
 const DAYS = ['Jeudi 19 novembre', 'Vendredi 20 novembre']
 
@@ -75,6 +75,13 @@ export default function ReservationVisitePage() {
       setBusy(false)
     }
   }
+
+  /* Arrivée depuis Mon espace (?code=…) : le code est vérifié tout de suite. */
+  const initialCode = params.get('code')
+  useEffect(() => {
+    if (initialCode) void check(initialCode)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCode])
 
   function onCheck(e: FormEvent) {
     e.preventDefault()

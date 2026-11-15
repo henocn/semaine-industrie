@@ -1,7 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { sequelize, Participation } = require('../../models');
+const { sequelize, Participation, Passport } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const trackingService = require('../tracking/tracking.service');
@@ -81,21 +81,31 @@ async function availability() {
 /* Code de suivi saisi ou lu dans un QR : « pa7rqa », « PA-7RQA », un lien qui le contient. */
 function readCode(raw) {
   const text = trackingService.normalizeCode(raw);
-  const match = text.match(/([A-Z]{2})-?([A-Z0-9]{4})/);
+  if (trackingService.isKnownCodeShape(text)) return text;
+  /* Lien du QR : « …/passage/PA-7RQA ». */
+  const fromLink = text.match(/\/PASSAGE\/([A-Z0-9-]+)/);
+  if (fromLink) return fromLink[1];
+  const match = text.match(/\b(PA|JP|EC|MD|IN|AF)-?([A-Z0-9]{4})\b/);
   return match ? `${match[1]}-${match[2]}` : text;
+}
+
+/* Inscription par son code de suivi, ou par le code de son passeport (celui du QR et du backoffice). */
+async function findByCode(code, transaction) {
+  if (!code) return null;
+  const lock = transaction ? transaction.LOCK.UPDATE : undefined;
+  const row = await Participation.findOne({ where: { tracking_code: code }, transaction, lock });
+  if (row) return row;
+  const passport = await Passport.findOne({ where: { code }, attributes: ['id'], transaction });
+  return passport ? Participation.findOne({ where: { passport_id: passport.id }, transaction, lock }) : null;
 }
 
 /* Inscription d'un particulier validé, ou une erreur claire. */
 async function findBookable(rawCode, transaction) {
   const code = readCode(rawCode);
-  const row = code
-    ? await Participation.findOne({
-      where: { tracking_code: code },
-      transaction,
-      lock: transaction ? transaction.LOCK.UPDATE : undefined,
-    })
-    : null;
+  const row = await findByCode(code, transaction);
   if (!row) throw ApiError.notFound('Code introuvable. Vérifiez-le et réessayez.');
+  /* Code affiché à la personne : celui qu'elle a saisi ou scanné. */
+  row.displayCode = row.tracking_code || code;
   if (row.kind !== 'particulier') {
     throw ApiError.badRequest('Ce code n’est pas celui d’une inscription aux visites des particuliers.');
   }
@@ -109,7 +119,7 @@ async function findBookable(rawCode, transaction) {
 /* Ce que la personne voit : prénom et nom, et son départ s'il est déjà choisi. */
 function view(row) {
   return {
-    code: row.tracking_code,
+    code: row.displayCode || row.tracking_code,
     name: row.name,
     slot: row.visit_slot ? slotInfo(row.visit_slot) : null,
   };
@@ -149,9 +159,16 @@ async function book(rawCode, slotId) {
 async function planning() {
   const rows = await Participation.findAll({
     where: BOOKED,
-    attributes: ['id', 'name', 'phone', 'email', 'tracking_code', 'visit_slot', 'visit_slot_at'],
+    attributes: ['id', 'name', 'phone', 'email', 'tracking_code', 'passport_id', 'visit_slot', 'visit_slot_at'],
     order: [['visit_slot_at', 'ASC']],
   });
+  /* Inscriptions sans code de suivi : on montre le code de leur passeport, comme dans la liste des participations. */
+  const passportIds = rows.filter((row) => !row.tracking_code && row.passport_id).map((row) => row.passport_id);
+  const passportCodes = new Map(
+    passportIds.length
+      ? (await Passport.findAll({ where: { id: passportIds }, attributes: ['id', 'code'] })).map((p) => [p.id, p.code])
+      : [],
+  );
   const waiting = await Participation.count({
     where: { kind: 'particulier', status: 'approved', visit_slot: null },
   });
@@ -166,7 +183,7 @@ async function planning() {
         .map((row) => ({
           id: row.id,
           name: row.name,
-          code: row.tracking_code,
+          code: row.tracking_code || passportCodes.get(row.passport_id) || null,
           phone: row.phone,
           email: row.email,
           booked_at: row.visit_slot_at,

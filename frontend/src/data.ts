@@ -66,6 +66,9 @@ export const DEPARTURE_POINTS: DeparturePoint[] = []
 /* Formulaire des particuliers aux visites : ouvert. Pour le fermer : false ici et PARTICULIER_OPEN=false côté serveur. */
 export const PARTICULIER_VISITS_OPEN = true
 
+/* Groupe WhatsApp des visites d'usines des particuliers (heures, entreprises visitées, consignes). */
+export const VISITS_WHATSAPP_GROUP = 'https://chat.whatsapp.com/D23e7tkuv5E77DmwnSnQxx'
+
 /* Journées du Palais des Congrès ouvertes à l'inscription des particuliers (mêmes numéros côté serveur). */
 export type PalaisDay = { n: number; label: string; title: string; place: string; hours: string; text: string }
 
