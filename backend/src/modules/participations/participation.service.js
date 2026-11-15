@@ -1,7 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { Participation, Passport, DepartureScan } = require('../../models');
+const { Participation, Passport, DepartureScan, WhatsappMessage } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const passportService = require('../passports/passport.service');
@@ -110,11 +110,47 @@ async function list({ kind, status } = {}) {
     ? await DepartureScan.findAll({ where: { participation_id: particulierIds }, attributes: ['participation_id', 'point_name', 'scanned_at'] })
     : [];
   const scanOf = new Map(scans.map((scan) => [scan.participation_id, { point: scan.point_name, scanned_at: scan.scanned_at }]));
-  return Promise.all(rows.map(async (row) => ({
-    ...(await present(row)),
-    waitlisted: row.status === 'pending' && waitlist.has(row.id),
-    departure_scan: scanOf.get(row.id) || null,
-  })));
+  const qrSent = await whatsappQrSent();
+  return Promise.all(rows.map(async (row) => {
+    const presented = await present(row);
+    return {
+      ...presented,
+      waitlisted: row.status === 'pending' && waitlist.has(row.id),
+      departure_scan: scanOf.get(row.id) || null,
+      /* Vrai si la personne a reçu son QR sur WhatsApp (modèle avec QR ou carte envoyée par le bot). */
+      whatsapp_qr: row.status === 'approved' && qrSent(row.phone, presented.passport?.code || row.tracking_code),
+    };
+  }));
+}
+
+/* Numéro au format WhatsApp (228 + 8 chiffres pour le Togo). */
+function waNumber(phone) {
+  const digits = String(phone || '').replace(/\D/g, '');
+  return digits.length === 8 ? `228${digits}` : digits;
+}
+
+/* QR reçus sur WhatsApp : modèle d'acceptation avec QR (si26_…_qr) ou carte QR envoyée par le bot. */
+async function whatsappQrSent() {
+  const rows = await WhatsappMessage.findAll({
+    where: {
+      direction: 'out',
+      [Op.or]: [{ body: { [Op.like]: 'Modèle si26%qr :%' } }, { body: { [Op.like]: '[Image]%' } }],
+    },
+    attributes: ['phone', 'body'],
+    raw: true,
+  });
+  const templatePhones = new Set();
+  const images = new Set();
+  for (const row of rows) {
+    if (row.body.startsWith('Modèle ')) templatePhones.add(row.phone);
+    else images.add(`${row.phone}|${row.body}`);
+  }
+  return (phone, code) => {
+    const wa = waNumber(phone);
+    if (!wa) return false;
+    if (templatePhones.has(wa)) return true;
+    return Boolean(code) && [...images].some((key) => key.startsWith(`${wa}|`) && key.includes(code));
+  };
 }
 
 /* Fiche d'une participation, avec le QR s'il existe. */

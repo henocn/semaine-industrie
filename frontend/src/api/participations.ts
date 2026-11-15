@@ -30,6 +30,8 @@ export type Participation = {
   createdAt?: string
   /* Particulier en attente de validation, au-delà des places prévues. */
   waitlisted?: boolean
+  /* QR reçu sur WhatsApp (modèle avec QR ou carte envoyée par le bot), liste seulement. */
+  whatsapp_qr?: boolean
   /* Particulier ou média scanné à un point de départ (liste seulement). */
   departure_scan?: { point: string; scanned_at: string } | null
   /* Journées du Palais choisies (16, 17, 18) et entrées scannées, pour une inscription « palais ». */

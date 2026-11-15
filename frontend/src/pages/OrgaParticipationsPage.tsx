@@ -594,6 +594,7 @@ export default function OrgaParticipationsPage() {
               <th>Nom</th>
               <th className="w-40">Contact</th>
               <th className="w-28">Statut</th>
+              <th className="w-14 text-center" title="QR reçu sur WhatsApp">QR</th>
               <th className={isPalais ? 'w-36' : isMedia ? 'w-56' : 'w-24'}>{isPalais ? 'Journées' : isMedia ? 'Média' : 'Passage'}</th>
               <th className="w-40">Actions</th>
             </tr>
@@ -601,7 +602,7 @@ export default function OrgaParticipationsPage() {
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7}>Aucune participation</td>
+                <td colSpan={8}>Aucune participation</td>
               </tr>
             )}
             {sort.sorted.map((item) => {
@@ -620,6 +621,15 @@ export default function OrgaParticipationsPage() {
                     <td className="font-medium text-forest">{item.name}</td>
                     <td>{item.phone || item.email || '…'}</td>
                     <td>{statusLabel(item.status, item.waitlisted)}</td>
+                    <td className="text-center">
+                      {item.status !== 'approved' ? (
+                        <span className="text-ink/30">—</span>
+                      ) : item.whatsapp_qr ? (
+                        <span className="font-bold text-energy" title="QR reçu sur WhatsApp" aria-label="QR reçu">✓</span>
+                      ) : (
+                        <span className="font-bold text-red-700" title="QR pas encore reçu sur WhatsApp" aria-label="QR non reçu">✗</span>
+                      )}
+                    </td>
                     {isPalais ? (
                       <td className="whitespace-nowrap">
                         {palaisDays(item).map((n, i) => (
@@ -669,7 +679,7 @@ export default function OrgaParticipationsPage() {
                   </tr>
                   {open && (
                     <tr>
-                      <td colSpan={7} className="bg-white">
+                      <td colSpan={8} className="bg-white">
                         {editingId === item.id ? (
                           <form onSubmit={(e) => void onUpdate(e, item.id)} className="grid gap-3 p-4 sm:grid-cols-2">
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
