@@ -305,10 +305,10 @@ async function palaisCheckin(code, day = null) {
   /* Jour réglé dans le scan ; sans réglage, la journée du Palais d'aujourd'hui. */
   const today = palais.DAY_NUMBERS.includes(Number(day)) ? Number(day) : palais.todayDay();
   if (today === null) throw ApiError.badRequest('Aucune journée du Palais n’a lieu aujourd’hui');
-  /* Vérification des journées cochées désactivée : l'entrée est enregistrée quel que soit le jour choisi à l'inscription.
+  /* La personne doit avoir coché ce jour à l'inscription. */
   if (!palais.normalizeDays(row.palais_days).includes(today)) {
-    throw ApiError.conflict(`Inscrit pour : ${palais.daysShort(row.palais_days)}. Pas pour aujourd’hui.`);
-  } */
+    throw ApiError.conflict(`Inscrit pour : ${palais.daysShort(row.palais_days)}. Pas pour le ${today} novembre.`);
+  }
   const checkins = { ...(row.palais_checkins || {}) };
   const already = Boolean(checkins[today]);
   if (!already) {
