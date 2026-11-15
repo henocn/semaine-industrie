@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RowSelection as Selection } from '../../lib/useRowSelection'
 import { exportToExcel, type ExcelColumn } from '../../lib/excel'
-import { runReviewBatch, type BatchResult, type ReviewStatus } from '../../lib/reviewBatch'
+import { runReviewBatch, type BatchAction, type BatchResult, type ReviewStatus } from '../../lib/reviewBatch'
 
 /* En-tête de la colonne à cocher : tout cocher (état intermédiaire si partiel). */
 export function SelectAllHeader({ selection }: { selection: Selection }) {
@@ -38,6 +38,13 @@ export function SelectCell({ selection, id }: { selection: Selection; id: string
   )
 }
 
+/* Renvoi groupé du message WhatsApp d'acceptation, pour les lignes déjà acceptées. */
+export type BulkNotify<T> = {
+  eligible: (row: T) => boolean
+  run: (row: T) => Promise<unknown>
+  name: (row: T) => string
+}
+
 /* Acceptation / refus groupés : lignes concernées, action unitaire (avec ses notifications), rechargement. */
 export type BulkReview<T> = {
   /* Ligne encore à traiter (en attente). */
@@ -50,11 +57,12 @@ export type BulkReview<T> = {
   onDone: () => void | Promise<void>
 }
 
-type Progress = { status: ReviewStatus; done: number; total: number }
+type Progress = { status: BatchAction; done: number; total: number }
 
-const VERB: Record<ReviewStatus, { button: string; noun: string; finished: string }> = {
+const VERB: Record<BatchAction, { button: string; noun: string; finished: string }> = {
   approved: { button: 'Accepter', noun: 'Acceptation', finished: 'Acceptation terminée' },
   rejected: { button: 'Refuser', noun: 'Refus', finished: 'Refus terminé' },
+  notify: { button: 'Notifier', noun: 'Notification', finished: 'Notification terminée' },
 }
 
 /* Barre affichée dès qu'une ligne est cochée : compte, export Excel, acceptation / refus groupés, désélection. */
@@ -64,21 +72,24 @@ export function ExportBar<T extends { id: string | number }>({
   sheet,
   columns,
   review,
+  notify,
 }: {
   selection: { selected: T[]; clear: () => void }
   filename: string
   sheet: string
   columns: ExcelColumn<T>[]
   review?: BulkReview<T>
+  notify?: BulkNotify<T>
 }) {
   const [busy, setBusy] = useState(false)
-  const [asking, setAsking] = useState<ReviewStatus | null>(null)
+  const [asking, setAsking] = useState<BatchAction | null>(null)
   const [progress, setProgress] = useState<Progress | null>(null)
   const [outcome, setOutcome] = useState<BatchResult | null>(null)
   const runningRef = useRef(false)
   const count = selection.selected.length
   const pending = review ? selection.selected.filter(review.eligible) : []
   const skipped = count - pending.length
+  const toNotify = notify ? selection.selected.filter(notify.eligible) : []
 
   /* Pendant un lot, prévient avant de quitter la page (les envois restants seraient interrompus). */
   useEffect(() => {
@@ -101,19 +112,22 @@ export function ExportBar<T extends { id: string | number }>({
   }
 
   /* Traite les lignes une à une (les notifications partent comme pour une action unitaire). */
-  async function runBatch(status: ReviewStatus) {
+  async function runBatch(status: BatchAction) {
     /* Un seul lot à la fois, même en cas de double clic. */
-    if (!review || !pending.length || runningRef.current) return
+    const rows = status === 'notify' ? toNotify : pending
+    if ((status === 'notify' ? !notify : !review) || !rows.length || runningRef.current) return
     runningRef.current = true
     setAsking(null)
     setOutcome(null)
     try {
-      const result = await runReviewBatch(pending, status, review.run, review.name, (done, total) =>
+      const run = (row: T) => (status === 'notify' ? notify!.run(row) : review!.run(row, status))
+      const name = status === 'notify' ? notify!.name : review!.name
+      const result = await runReviewBatch(rows, status, run, name, (done, total) =>
         setProgress({ status, done, total }),
       )
       selection.clear()
       try {
-        await review.onDone()
+        if (review) await review.onDone()
       } catch {
         /* Rechargement raté : le bilan reste juste, le tableau se met à jour au prochain chargement. */
       }
@@ -141,6 +155,15 @@ export function ExportBar<T extends { id: string | number }>({
         </div>
       ) : asking ? (
         <div className="flex flex-wrap items-center gap-3">
+          {asking === 'notify' ? (
+            <span className="text-forest">
+              <span className="font-semibold">
+                Notifier {toNotify.length} personne{toNotify.length > 1 ? 's' : ''} acceptée{toNotify.length > 1 ? 's' : ''} ?
+              </span>{' '}
+              Le message WhatsApp d’acceptation leur est renvoyé, avec leur QR.
+              {count - toNotify.length > 0 && ` ${count - toNotify.length} ligne${count - toNotify.length > 1 ? 's' : ''} non acceptée${count - toNotify.length > 1 ? 's' : ''} ignorée${count - toNotify.length > 1 ? 's' : ''}.`}
+            </span>
+          ) : (
           <span className="text-forest">
             <span className="font-semibold">
               {VERB[asking].button} {pending.length} ligne{pending.length > 1 ? 's' : ''} en attente ?
@@ -148,6 +171,7 @@ export function ExportBar<T extends { id: string | number }>({
             Chaque personne est prévenue par e-mail et sur WhatsApp.
             {skipped > 0 && ` ${skipped} ligne${skipped > 1 ? 's' : ''} déjà traitée${skipped > 1 ? 's' : ''} ignorée${skipped > 1 ? 's' : ''}.`}
           </span>
+          )}
           <button
             type="button"
             className={asking === 'rejected' ? 'orga-btn !border-red-700 !bg-red-700 hover:!bg-red-800' : 'orga-btn'}
@@ -182,6 +206,11 @@ export function ExportBar<T extends { id: string | number }>({
                     Refuser ({pending.length})
                   </button>
                 </>
+              )}
+              {toNotify.length > 0 && (
+                <button type="button" className="orga-btn-ghost" onClick={() => setAsking('notify')}>
+                  Notifier ({toNotify.length})
+                </button>
               )}
               <button type="button" className="text-forest underline underline-offset-2" onClick={selection.clear}>
                 Désélectionner

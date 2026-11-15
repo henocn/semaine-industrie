@@ -81,6 +81,7 @@ router.get('/:id', controller.getOne);
 router.post('/', validate(createSchema), controller.create);
 router.patch('/:id', validate(updateSchema), controller.update);
 router.post('/:id/approve', controller.approve);
+router.post('/:id/notify', controller.notify);
 router.post('/:id/reject', controller.reject);
 router.delete('/:id', controller.remove);
 

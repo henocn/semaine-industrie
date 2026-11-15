@@ -233,6 +233,23 @@ async function approve(id) {
   return present(row, { withImage: true });
 }
 
+/* Renvoie le message WhatsApp d'acceptation (modèle avec QR pour le Palais) à une participation déjà acceptée. */
+async function notifyApproved(id) {
+  const row = await Participation.findByPk(id);
+  if (!row) throw ApiError.notFound('Participation introuvable');
+  if (row.status !== 'approved') throw ApiError.conflict('Participation pas encore acceptée');
+  const presented = await present(row, { withImage: false });
+  if (!presented.passport?.code) throw ApiError.conflict('QR introuvable pour cette participation');
+  const whatsappService = require('../whatsapp/whatsapp.service');
+  const sent = await whatsappService.notifyParticipationApproved(presented);
+  if (!sent?.ok) {
+    const meta = sent?.data?.error;
+    const detail = meta ? `${meta.message || 'refus'}${meta.code ? ` (code ${meta.code})` : ''}` : (sent?.reason || 'envoi refusé');
+    throw ApiError.badRequest(`WhatsApp : ${detail}`);
+  }
+  return { id: row.id, name: row.name, status: row.status, kind: row.kind };
+}
+
 /* Refuse une participation. */
 async function reject(id) {
   const row = await Participation.findByPk(id);
@@ -353,6 +370,7 @@ module.exports = {
   create,
   update,
   approve,
+  notifyApproved,
   reject,
   remove,
 };

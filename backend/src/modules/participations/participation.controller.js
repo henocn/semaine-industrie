@@ -139,6 +139,22 @@ async function approve(req, res, next) {
   }
 }
 
+/* Renvoie le message WhatsApp d'acceptation (sélection du backoffice). */
+async function notify(req, res, next) {
+  try {
+    const data = await service.notifyApproved(req.params.id);
+    await audit(req, {
+      action: 'update',
+      entityType: 'participation',
+      entityId: data.id,
+      summary: `Message d'acceptation WhatsApp renvoyé à « ${data.name} »`,
+    });
+    return ApiResponse.success(res, data, 'Message envoyé');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Refuse une participation. */
 async function reject(req, res, next) {
   try {
@@ -183,6 +199,7 @@ module.exports = {
   create,
   update,
   approve,
+  notify,
   reject,
   remove,
 };

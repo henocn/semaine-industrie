@@ -149,6 +149,11 @@ export function approveParticipation(id: string) {
   return apiFetch<Participation>(`/participations/${id}/approve`, { method: 'POST' })
 }
 
+/* Renvoie le message WhatsApp d'acceptation (modèle avec QR pour le Palais). */
+export function notifyParticipation(id: string) {
+  return apiFetch<{ id: string; name: string }>(`/participations/${id}/notify`, { method: 'POST' })
+}
+
 /* Refuse une participation. */
 export function rejectParticipation(id: string) {
   return apiFetch<Participation>(`/participations/${id}/reject`, { method: 'POST' })

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   approveParticipation,
+  notifyParticipation,
   createParticipation,
   deleteParticipation,
   getParticipation,
@@ -571,6 +572,11 @@ export default function OrgaParticipationsPage() {
             setDetail(null)
             await load()
           },
+        }}
+        notify={{
+          eligible: (row) => row.status === 'approved',
+          run: (row) => notifyParticipation(row.id),
+          name: (row) => row.name,
         }}
       />
       <section className="orga-panel !p-0 overflow-x-auto">
