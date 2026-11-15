@@ -104,7 +104,7 @@ function EspaceView({ space }: { space: Espace }) {
                   Groupe des visites
                 </a>
                 <Link
-                  to={`/reservation-visite/?code=${encodeURIComponent(space.code)}`}
+                  to={`/visites/?code=${encodeURIComponent(space.code)}`}
                   className="inline-flex items-center gap-2 border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"
                 >
                   <MapPin className="h-4 w-4" aria-hidden="true" />

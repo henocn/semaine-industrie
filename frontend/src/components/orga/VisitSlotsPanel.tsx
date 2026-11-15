@@ -124,11 +124,11 @@ export function VisitSlotsPanel({ query }: { query: string }) {
         {total} place{total > 1 ? 's' : ''} réservée{total > 1 ? 's' : ''} sur {data.slots.length * data.capacity}
         {' · '}
         {data.waiting} particulier{data.waiting > 1 ? 's' : ''} validé{data.waiting > 1 ? 's' : ''} sans départ
-        {' · '}
+        {/* {' · '}
         Réservations {data.open ? 'ouvertes' : 'fermées'} sur{' '}
-        <a href="/reservation-visite/" target="_blank" rel="noopener noreferrer" className="font-semibold text-forest underline underline-offset-2">
-          /reservation-visite
-        </a>
+        <a href="/visites/" target="_blank" rel="noopener noreferrer" className="font-semibold text-forest underline underline-offset-2">
+          /visites
+        </a> */}
       </p>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-2">

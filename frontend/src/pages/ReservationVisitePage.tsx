@@ -132,7 +132,7 @@ export default function ReservationVisitePage() {
 
   return (
     <main className="py-14 sm:py-20">
-      <Seo {...publicSeo('/reservation-visite')} />
+      <Seo {...publicSeo('/visites')} />
       <div className={`${WRAP} grid gap-12 md:grid-cols-[1fr_1.15fr]`}>
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader

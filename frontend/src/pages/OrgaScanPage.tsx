@@ -271,7 +271,7 @@ export default function OrgaScanPage() {
   }
 
   return (
-    <OrgaShell title="Scan">
+    <OrgaShell title="Scan des QR">
       {editing || !settings ? (
         <SettingsForm initial={settings} onSave={save} />
       ) : (

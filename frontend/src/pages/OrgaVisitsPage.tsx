@@ -77,14 +77,15 @@ function isOnMap(b: VisitBooking) {
 /* Deux onglets : les écoles se planifient à la main, les particuliers choisissent leur départ sur le site. */
 type PlanningTab = 'ecoles' | 'particuliers'
 const PLANNING_TABS: { key: PlanningTab; label: string }[] = [
-  { key: 'ecoles', label: 'Écoles' },
   { key: 'particuliers', label: 'Particuliers' },
+  { key: 'ecoles', label: 'Écoles' },
 ]
 
 /* Arrangements de visites : site + établissement + créneau (orga). */
 export default function OrgaVisitsPage() {
   const [params, setParams] = useSearchParams()
-  const tab: PlanningTab = params.get('onglet') === 'particuliers' ? 'particuliers' : 'ecoles'
+  /* Particuliers en premier et par défaut. */
+  const tab: PlanningTab = params.get('onglet') === 'ecoles' ? 'ecoles' : 'particuliers'
   const [items, setItems] = useState<VisitBooking[]>([])
   const [sites, setSites] = useState<BookableSite[]>([])
   const [schools, setSchools] = useState<BookableSite[]>([])

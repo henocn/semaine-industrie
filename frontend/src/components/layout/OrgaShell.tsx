@@ -155,6 +155,22 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
         })
       }
     })
+    /* Un particulier a choisi son créneau de visite sur le site. */
+    const offVisitSlot = onRealtime<{
+      id?: string
+      action?: string
+      name?: string
+      label?: string | null
+    }>('visit-slot:changed', (row) => {
+      if (row.action !== 'book') return
+      const to = '/orga/visites?onglet=particuliers'
+      const msg = `${row.name || 'Un particulier'} a choisi son créneau${row.label ? ` : ${row.label}` : ''}`
+      setBanner({ text: `Visites : ${msg}`, to })
+      pushNotify('Visites : créneau choisi', msg, {
+        tag: `visit-slot-${row.id || 'new'}`,
+        href: to,
+      })
+    })
     const offBusiness = onRealtime<{
       id?: string
       action?: string
@@ -181,6 +197,7 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
       offLabelDeleted()
       offParticipation()
       offBusiness()
+      offVisitSlot()
     }
   }, [user?.id, user?.role, location.pathname])
 
@@ -245,11 +262,11 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
 
       <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
         {isScanRole(user?.role) ? (
-          <NavLink to="/orga/scan" className={linkClass}>Scan</NavLink>
+          <NavLink to="/orga/scan" className={linkClass}>Scan des QR</NavLink>
         ) : (
         <>
         <NavLink to="/orga" end className={linkClass}>Tableau de bord</NavLink>
-        <NavLink to="/orga/scan" className={linkClass}>Scan</NavLink>
+        <NavLink to="/orga/scan" className={linkClass}>Scan des QR</NavLink>
         <NavLink to="/orga/visites" className={linkClass}>Planning visites</NavLink>
         <NavLink to="/orga/labels" className={linkClass}>
           <span className="flex w-full items-center justify-between gap-2">
