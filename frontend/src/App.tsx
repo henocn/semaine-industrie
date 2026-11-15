@@ -20,7 +20,7 @@ import IndustriesPage from './pages/IndustriesPage'
 // Visites des écoles / universités retirées du public (inscriptions closes) ; page conservée pour une reprise éventuelle.
 // import InscriptionGroupPage from './pages/InscriptionGroupPage'
 // Toutes les inscriptions sont closes ; pages conservées pour une reprise éventuelle.
-// import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
+import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
 // import JourneesPalaisPage from './pages/JourneesPalaisPage'
 // import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
@@ -98,8 +98,9 @@ export function AppRoutes() {
             <Route path="/accreditation-medias" element={<ClosedFormPage path="/accreditation-medias" subject="Les demandes d’accréditation médias" />} />
             <Route path="/inscription-groupe" element={<ClosedFormPage path="/inscription-groupe" subject="Les inscriptions des écoles et universités aux visites d’usines" />} />
             <Route path="/affaires" element={<ClosedFormPage path="/affaires" subject="Les inscriptions aux rencontres d’affaires" />} />
-            {/* <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} /> */}
-            <Route path="/inscription-particulier" element={<ClosedFormPage path="/inscription-particulier" subject="Les inscriptions des particuliers aux visites d’usines" />} />
+            {/* Visites des particuliers : inscriptions rouvertes. */}
+            <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} />
+            {/* <Route path="/inscription-particulier" element={<ClosedFormPage path="/inscription-particulier" subject="Les inscriptions des particuliers aux visites d’usines" />} /> */}
             <Route path="/visites" element={<ReservationVisitePage />} />
             {/* <Route path="/journees-au-palais" element={<JourneesPalaisPage />} /> */}
             <Route path="/journees-au-palais" element={<ClosedFormPage path="/journees-au-palais" subject="Les inscriptions aux rendez-vous du Palais des Congrès" />} />

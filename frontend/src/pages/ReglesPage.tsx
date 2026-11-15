@@ -14,18 +14,18 @@ function PageLink({ to, children }: { to: string; children: ReactNode }) {
   )
 }
 
-/* Les formulaires de la rubrique « Participer » : lequel choisir. Liste masquée : inscriptions closes. */
-/*
+/* Les formulaires de la rubrique « Participer » encore ouverts. */
 const FORMS: { title: string; to: string; who: string }[] = [
-  {
-    title: 'Participation au Palais des Congrès',
-    to: '/journees-au-palais/',
-    who: 'Pour assister aux conférences et panels du lundi 16 au mercredi 18 novembre, au Palais des Congrès de Lomé.',
-  },
+  // Inscriptions au Palais closes.
+  // {
+  //   title: 'Participation au Palais des Congrès',
+  //   to: '/journees-au-palais/',
+  //   who: 'Pour assister aux conférences et panels du lundi 16 au mercredi 18 novembre, au Palais des Congrès de Lomé.',
+  // },
   {
     title: 'Visites d’industries : particuliers',
     to: '/inscription-particulier/',
-    who: 'Pour visiter des usines à titre personnel, du lundi 16 au vendredi 20 novembre.',
+    who: 'Pour visiter des usines à titre personnel, le jeudi 19 ou le vendredi 20 novembre.',
   },
   // Retiré du public (inscriptions des écoles closes).
   // {
@@ -45,7 +45,6 @@ const FORMS: { title: string; to: string; who: string }[] = [
   //   who: 'Pour une industrie qui souhaite ouvrir son usine aux visiteurs.',
   // },
 ]
-*/
 
 /* Règles de participation : comment s'inscrire, sans confondre les formulaires. */
 export default function ReglesPage() {
@@ -57,11 +56,10 @@ export default function ReglesPage() {
           <SectionHeader
             level={1}
             title="Règles de participation"
-            lead="Toutes les inscriptions sont closes. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace, avec leur code de suivi."
+            lead="Seule l’inscription des particuliers aux visites d’usines reste ouverte. Les autres inscriptions sont closes : les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace, avec leur code de suivi."
           />
         </div>
 
-        {/* Inscriptions closes : liste des formulaires retirée.
         <ul className="border-t border-forest/15">
           {FORMS.map((form) => (
             <li key={form.to} className="border-b border-forest/15 py-4">
@@ -70,7 +68,6 @@ export default function ReglesPage() {
             </li>
           ))}
         </ul>
-        */}
 
         <div className="space-y-3">
           <p>
