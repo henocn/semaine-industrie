@@ -170,7 +170,7 @@ export const FAQ = [
   },
   {
     q: 'Les visites d’usines sont-elles ouvertes au public ?',
-    a: 'Oui ! Les industries labellisées « Usine ouverte » accueillent les écoles et les particuliers du lundi 16 au vendredi 20 novembre 2026, par petits groupes et sur plusieurs créneaux.\nLes inscriptions sont closes. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans « Mon espace ».',
+    a: 'Oui ! Les industries labellisées « Usine ouverte » accueillent les écoles et les particuliers du lundi 16 au vendredi 20 novembre 2026, par petits groupes et sur plusieurs créneaux.\nLes particuliers peuvent encore s’inscrire dans la rubrique « Participer ». Les personnes déjà inscrites retrouvent leur dossier et leur QR dans « Mon espace ».',
   },
   {
     q: 'Qu’est-ce que le Forum d’orientation des métiers de l’industrie ?',
@@ -186,7 +186,7 @@ export const FAQ = [
   },
   {
     q: 'Comment s’inscrire à la Semaine de l’industrie ?',
-    a: 'Les inscriptions sont closes.\nSi vous êtes déjà inscrit, retrouvez votre dossier et votre QR dans « Mon espace » avec votre code de suivi, ou envoyez « QR » au bot WhatsApp de la Semaine de l’industrie.',
+    a: 'Seule l’inscription des particuliers aux visites d’usines reste ouverte : rubrique « Participer », « Visites d’industries : particuliers ». Les autres inscriptions sont closes.\nSi vous êtes déjà inscrit, retrouvez votre dossier et votre QR dans « Mon espace » avec votre code de suivi, ou envoyez « QR » au bot WhatsApp de la Semaine de l’industrie.',
   },
   {
     q: 'Comment participer aux rendez-vous au Palais des Congrès ?',
