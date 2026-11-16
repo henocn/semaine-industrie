@@ -682,9 +682,10 @@ function participateBody() {
     // '',
     // `2. *Visites d'usines, particuliers* : ${site}/inscription-particulier`,
     // '',
-    `*Visites d'usines, particuliers* (19 et 20 nov.) : ${site}/inscription-particulier`,
-    '',
-    'Les autres inscriptions sont closes.',
+    // Inscriptions des particuliers closes.
+    // `*Visites d'usines, particuliers* (19 et 20 nov.) : ${site}/inscription-particulier`,
+    // '',
+    'Les inscriptions sont closes.',
     '',
     `Déjà inscrit ? Envoyez « QR » ou votre code de suivi pour recevoir votre QR, ou retrouvez votre dossier dans Mon espace : ${site}/mon-espace`,
     '',
