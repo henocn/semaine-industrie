@@ -1,5 +1,6 @@
 'use strict';
 
+const { Op } = require('sequelize');
 const { Organization, Participation, Passport, DeparturePoint, DepartureScan } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const trackingService = require('../tracking/tracking.service');
@@ -111,4 +112,34 @@ async function scanPalais({ code, day, check = false }) {
   return participationService.palaisCheckin(code, Number(day), { check });
 }
 
-module.exports = { listPoints, settings, setSchool, addCustom, removeCustom, scanDeparture, scanPalais };
+/* Personne sans son QR : on retrouve son code par son numéro ou son e-mail (inscription au Palais, ou particulier aux visites). */
+async function findByContact({ mode, query }) {
+  const value = String(query || '').trim();
+  const kinds = mode === 'palais' ? ['palais'] : DEPARTURE_KINDS;
+  let rows = [];
+  if (value.includes('@')) {
+    rows = await Participation.findAll({ where: { kind: kinds, email: { [Op.iLike]: value } }, order: [['created_at', 'DESC']] });
+  } else {
+    const digits = value.replace(/[^0-9]/g, '');
+    if (digits.length < 8) throw ApiError.badRequest('Entrez un numéro de téléphone (8 chiffres au moins) ou une adresse e-mail.');
+    const last8 = digits.slice(-8);
+    rows = (await Participation.findAll({ where: { kind: kinds, phone: { [Op.like]: `%${last8}` } }, order: [['created_at', 'DESC']] }))
+      .filter((row) => String(row.phone || '').replace(/[^0-9]/g, '').endsWith(last8));
+  }
+  if (!rows.length) {
+    throw ApiError.notFound(mode === 'palais'
+      ? 'Aucune inscription au Palais avec ce numéro ou cet e-mail'
+      : 'Aucun particulier inscrit aux visites avec ce numéro ou cet e-mail');
+  }
+  /* Une inscription acceptée passe avant une autre (en attente, refusée). */
+  const row = rows.find((r) => r.status === 'approved') || rows[0];
+  let code = row.tracking_code;
+  if (row.passport_id) {
+    const passport = await Passport.findByPk(row.passport_id, { attributes: ['code'] });
+    code = passport?.code || code;
+  }
+  if (!code) throw ApiError.notFound('Cette inscription n’a pas de code');
+  return { code, name: row.name, status: row.status };
+}
+
+module.exports = { listPoints, settings, setSchool, addCustom, removeCustom, scanDeparture, scanPalais, findByContact };
