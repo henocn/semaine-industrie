@@ -56,7 +56,7 @@ function buttonBlock({ label, url }) {
 
 /* Assemble le message : HTML, texte et pièces jointes. */
 function buildEmail({
-  subject, intro, code = null, details = [], outro = [], button = null, card = null,
+  subject, intro, code = null, details = [], outro = [], button = null, card = null, note = null,
 }) {
   /* Un bouton ou plusieurs, l'un sous l'autre. */
   const buttons = [].concat(button || []);
@@ -67,6 +67,8 @@ function buildEmail({
     details.length ? detailsBlock(details) : '',
     ...outro.map(paragraph),
     ...buttons.map(buttonBlock),
+    /* Mention discrète en bas du message (ex. renvoi). */
+    note ? `<p style="margin:0;font:12px/1.5 ${FONT};color:${MUTED}">${esc(note)}</p>` : '',
   ].join('\n');
 
   const html = `<!doctype html>
@@ -91,6 +93,7 @@ function buildEmail({
     ...(details.length ? ['', ...details.map(([label, value]) => `${label} : ${value}`)] : []),
     ...(outro.length ? ['', ...outro.map(plain)] : []),
     ...(buttons.length ? ['', ...buttons.map((b) => `${b.label} : ${b.url}`)] : []),
+    ...(note ? ['', note] : []),
     '',
     `Semaine de l’industrie 2026, du 16 au 22 novembre, au Togo. Une question ? ${CONTACT}`,
   ].join('\n');
@@ -193,9 +196,10 @@ function emails(site = env.PUBLIC_APP_URL) {
     }),
 
     /* Particulier : inscription acceptée, avec la carte QR. */
-    individualApproved: ({ name, code, cardPng }) => buildEmail({
+    individualApproved: ({ name, code, cardPng, resend = false }) => buildEmail({
       subject: 'Visites d’usines : votre inscription est acceptée',
       intro: [`L’inscription de **${name}** aux visites d’usines de la Semaine de l’industrie 2026 a été **acceptée**.`],
+      note: resend ? 'Si vous avez déjà reçu ce message, merci de ne pas en tenir compte.' : null,
       code,
       card: { png: cardPng, fileCode: code },
       outro: [

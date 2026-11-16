@@ -62,15 +62,15 @@ function participationWaitlisted(row) {
   return deliver(row.email, (mail) => mail.individualWaitlisted({ name: row.name, code: row.tracking_code }));
 }
 
-/* Inscription acceptée, avec la carte QR en pièce jointe. */
-function participationApproved(row, code) {
+/* Inscription acceptée, avec la carte QR en pièce jointe. `resend` : renvoi, « si déjà reçu, ignorez ». */
+function participationApproved(row, code, { resend = false } = {}) {
   return deliver(row.email, async (mail) => {
     const cardPng = await renderQrCard({ payload: passportService.passageQrPayload(code), name: row.name, code });
     if (row.kind === 'palais') return mail.palaisApproved({ name: row.name, code, cardPng, days: row.palais_days });
     if (row.kind === 'media') return mail.mediaApproved({ name: row.name, code, cardPng, details: row.media_details });
     return row.kind === 'ecole'
       ? mail.schoolApproved({ name: row.name, code, places: row.headcount || '-', cardPng })
-      : mail.individualApproved({ name: row.name, code, cardPng });
+      : mail.individualApproved({ name: row.name, code, cardPng, resend });
   });
 }
 
