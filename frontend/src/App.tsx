@@ -13,7 +13,7 @@ import { peekOrgaUser } from './api/auth'
 import ClosedFormPage from './pages/ClosedFormPage'
 import ConcoursVideoPage from './pages/ConcoursVideoPage'
 // Points de départ désactivés en attendant les infos de l'organisation ; page conservée.
-// import DeparturePointsPage from './pages/DeparturePointsPage'
+import DeparturePointsPage from './pages/DeparturePointsPage'
 import FaqPage from './pages/FaqPage'
 import HomePage from './pages/HomePage'
 import IndustriesPage from './pages/IndustriesPage'
@@ -109,7 +109,8 @@ export function AppRoutes() {
             <Route path="/mon-espace" element={<MonEspacePage />} />
             {/* <Route path="/affaires" element={<BusinessRegisterPage />} /> */}
             <Route path="/carte" element={<MapPage />} />
-            {/* <Route path="/points-de-depart" element={<DeparturePointsPage />} /> */}
+            {/* Points de départ : page réactivée (lien du modèle WhatsApp des particuliers). */}
+            <Route path="/points-de-depart" element={<DeparturePointsPage />} />
             <Route path="/industrie" element={<IndustriesPage />} />
             <Route path="/passeport/:code" element={<PassportRedirect />} />
             <Route path="/passage/:code" element={<PassagePage />} />

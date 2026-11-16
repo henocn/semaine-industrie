@@ -1,64 +1,53 @@
 import { Seo } from '../components/Seo'
 import { publicSeo } from '../lib/seo'
 import { WRAP } from '../components/layout/Mark'
+import { Button } from '../components/ui/Button'
 import { SectionHeader } from '../components/ui/SectionHeader'
-import { DEPARTURE_POINTS, VISIT_DAYS } from '../data'
+// Tableau des points et horaires par jour : remplacé par les informations ci-dessous. Données conservées dans data.ts.
+// import { DEPARTURE_POINTS, VISIT_DAYS } from '../data'
 
-/* Points de départ des visites : un point par ligne, l'heure de départ par jour. */
+/* Lieux de départ des particuliers (mêmes lieux que la page /visites). */
+const PARTICULIER_PLACES = ['Lycée d’Agoé', 'Palais des Congrès de Lomé']
+
+/* Points de départ des visites : écoles pour les élèves, deux lieux pour les particuliers le jeudi et le vendredi. */
 export default function DeparturePointsPage() {
   return (
     <main className="py-16 sm:py-24">
       <Seo {...publicSeo('/points-de-depart')} />
-      <div className={`${WRAP} max-w-4xl`}>
+      <div className={`${WRAP} max-w-2xl`}>
         <SectionHeader
           level={1}
           title="Points de départ des visites"
-          lead="Présentez-vous au point de départ un peu avant l’heure indiquée, avec votre QR de participation."
+          lead="Présentez-vous au point de départ un peu avant l’heure prévue, avec votre QR de participation : il est scanné au départ."
         />
 
-        {DEPARTURE_POINTS.length === 0 ? (
-          <p className="mt-8 border-t border-forest/15 pt-6 text-[15px] text-ink/70">
-            Les points de départ et leurs horaires seront publiés ici avant le début des visites.
+        <section className="mt-8 border-t border-forest/15 pt-6">
+          <h2 className="text-[17px] font-semibold text-forest">Élèves et étudiants</h2>
+          <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
+            Les départs se font principalement depuis les écoles et les établissements inscrits. Chaque établissement est prévenu de l’heure de départ de ses groupes.
           </p>
-        ) : (
-          <div className="mt-8 overflow-x-auto border border-forest/15">
-            <table className="w-full min-w-[640px] border-collapse text-left text-[15px]">
-              <thead>
-                <tr className="border-b border-forest/15 bg-sage/60 text-[13px] text-forest">
-                  <th scope="col" className="sticky left-0 bg-sage px-4 py-3 font-semibold">Point de départ</th>
-                  {VISIT_DAYS.map((d) => (
-                    <th key={d.n} scope="col" className="whitespace-nowrap px-3 py-3 text-center font-semibold">
-                      {d.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {DEPARTURE_POINTS.map((row) => (
-                  <tr key={row.point} className="border-b border-forest/10 last:border-b-0">
-                    <th scope="row" className="sticky left-0 bg-white px-4 py-3 font-normal">
-                      <span className="block font-semibold text-forest">{row.point}</span>
-                      {row.place && <span className="block text-[13px] text-ink/60">{row.place}</span>}
-                    </th>
-                    {VISIT_DAYS.map((d) => (
-                      <td key={d.n} className="whitespace-nowrap px-3 py-3 text-center tabular-nums">
-                        {row.times[d.n] ? (
-                          <span className="font-semibold text-forest">{row.times[d.n]}</span>
-                        ) : (
-                          <span className="text-ink/30" aria-label="Pas de départ">—</span>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        </section>
 
-        <p className="mt-6 text-[14px] text-ink/60">
-          Visites du lundi 16 au vendredi 20 novembre 2026. « — » : pas de départ ce jour-là.
-        </p>
+        <section className="mt-8 border-t border-forest/15 pt-6">
+          <h2 className="text-[17px] font-semibold text-forest">Particuliers</h2>
+          <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
+            Les visites des particuliers ont lieu le <strong>jeudi 19</strong> et le <strong>vendredi 20 novembre</strong>, le matin ou l’après-midi, au départ de deux lieux :
+          </p>
+          <ul className="mt-3 space-y-1.5 text-[15px] text-ink/80">
+            {PARTICULIER_PLACES.map((place) => (
+              <li key={place} className="flex gap-2">
+                <span aria-hidden="true" className="text-forest">•</span>
+                <span className="font-semibold text-forest">{place}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-[15px] leading-relaxed text-ink/80">
+            Inscription validée ? Choisissez votre jour et votre lieu de départ avec votre code de suivi. Les heures précises sont communiquées dans le groupe WhatsApp des visites.
+          </p>
+          <div className="mt-5">
+            <Button to="/visites/">Choisir mon créneau</Button>
+          </div>
+        </section>
       </div>
     </main>
   )
