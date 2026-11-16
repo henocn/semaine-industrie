@@ -40,6 +40,12 @@ router.use(authenticate);
 /* Scan : tous les comptes du back-office, y compris le rôle scan. */
 router.get('/points', authorize('orga', 'scan'), handle(async (req, res) => ApiResponse.success(res, await service.listPoints())));
 
+/* Retrouve le code d'une personne venue sans QR, par son numéro ou son e-mail. */
+router.get('/contact', authorize('orga', 'scan'), handle(async (req, res) => {
+  const mode = req.query.mode === 'palais' ? 'palais' : 'visite';
+  return ApiResponse.success(res, await service.findByContact({ mode, query: String(req.query.q || '').slice(0, 120) }));
+}));
+
 router.post('/departure', authorize('orga', 'scan'), validate(departureSchema), handle(async (req, res) => {
   const { id, ...data } = await service.scanDeparture(req.body, req.user);
   if (data.checked) return ApiResponse.success(res, data, 'QR valide');

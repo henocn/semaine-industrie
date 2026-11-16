@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { OrgaShell } from '../components/layout/OrgaShell'
-import { listDeparturePoints, scanDeparture, scanPalais, type DeparturePoint } from '../api/scan'
+import { findByContact, listDeparturePoints, scanDeparture, scanPalais, type DeparturePoint } from '../api/scan'
 import { readStore, writeStore } from '../lib/localStore'
 import { PALAIS_DAYS } from '../data'
 
@@ -304,6 +304,30 @@ export default function OrgaScanPage() {
     void submitCode(value)
   }
 
+  /* Personne sans QR : numéro ou e-mail, puis même vérification et même bouton « Entrer » que pour un QR. */
+  async function onContact(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!settings || busy || candidate) return
+    const input = e.currentTarget.elements.namedItem('contact') as HTMLInputElement
+    const value = input.value.trim()
+    if (!value) return
+    setBusy(true)
+    setOutcome(null)
+    let code: string | null = null
+    try {
+      code = (await findByContact(settings.mode, value)).code
+      input.value = ''
+    } catch (err) {
+      setOutcome({ tone: 'error', title: err instanceof Error ? err.message : 'Recherche impossible', detail: value })
+    } finally {
+      setBusy(false)
+    }
+    if (code) {
+      lastRef.current = null
+      await submitCode(code)
+    }
+  }
+
   const toneClass = {
     ok: 'border-energy bg-energy/10 text-forest',
     already: 'border-sun bg-sun/15 text-ink',
@@ -356,6 +380,19 @@ export default function OrgaScanPage() {
             />
             <button type="submit" disabled={busy} className="orga-btn disabled:opacity-50">
               Valider
+            </button>
+          </form>
+
+          <form onSubmit={(e) => void onContact(e)} className="flex gap-2">
+            <input
+              name="contact"
+              placeholder="Numéro ou e-mail"
+              autoComplete="off"
+              inputMode="email"
+              className="orga-input flex-1"
+            />
+            <button type="submit" disabled={busy} className="orga-btn disabled:opacity-50">
+              Chercher
             </button>
           </form>
         </div>

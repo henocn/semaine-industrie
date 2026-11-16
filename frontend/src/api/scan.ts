@@ -52,6 +52,11 @@ export function scanDeparture(code: string, pointId: string, check = false) {
   })
 }
 
+/* Retrouve le code d'une personne sans QR, par son numéro ou son e-mail. */
+export function findByContact(mode: 'palais' | 'visite', q: string) {
+  return apiFetch<{ code: string; name: string; status: string }>(`/scan/contact?mode=${mode}&q=${encodeURIComponent(q)}`)
+}
+
 /* Enregistre l'entrée au Palais pour le jour réglé. */
 export function scanPalais(code: string, day: number, check = false) {
   return apiFetch<PalaisScanResult>('/scan/palais', {
