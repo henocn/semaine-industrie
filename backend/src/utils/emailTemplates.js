@@ -58,13 +58,15 @@ function buttonBlock({ label, url }) {
 function buildEmail({
   subject, intro, code = null, details = [], outro = [], button = null, card = null,
 }) {
+  /* Un bouton ou plusieurs, l'un sous l'autre. */
+  const buttons = [].concat(button || []);
   const body = [
     paragraph('Bonjour,'),
     ...intro.map(paragraph),
     code ? `<p style="margin:0 0 6px;font:14px/1.4 ${FONT};color:${MUTED}">Votre code de suivi</p>${codeBlock(code)}` : '',
     details.length ? detailsBlock(details) : '',
     ...outro.map(paragraph),
-    button ? buttonBlock(button) : '',
+    ...buttons.map(buttonBlock),
   ].join('\n');
 
   const html = `<!doctype html>
@@ -88,7 +90,7 @@ function buildEmail({
     ...(code ? ['', `Votre code de suivi : ${code}`] : []),
     ...(details.length ? ['', ...details.map(([label, value]) => `${label} : ${value}`)] : []),
     ...(outro.length ? ['', ...outro.map(plain)] : []),
-    ...(button ? ['', `${button.label} : ${button.url}`] : []),
+    ...(buttons.length ? ['', ...buttons.map((b) => `${b.label} : ${b.url}`)] : []),
     '',
     `Semaine de l’industrie 2026, du 16 au 22 novembre, au Togo. Une question ? ${CONTACT}`,
   ].join('\n');
@@ -129,6 +131,8 @@ function emails(site = env.PUBLIC_APP_URL) {
   const base = String(site).replace(/\/$/, '');
   /* Bouton vers le dossier. */
   const space = (code) => ({ label: 'Ouvrir Mon espace', url: `${base}/mon-espace?code=${encodeURIComponent(code)}` });
+  /* Chargé à la demande : lien du groupe des visites, gardé côté serveur. */
+  const visitSlots = () => require('../modules/participations/visitSlots');
   const FOLLOW = 'Suivez l’état de votre dossier à tout moment dans Mon espace, avec ce code.';
   const refusedOutro = [`Pour en savoir plus, écrivez à l’équipe d’organisation : ${CONTACT}.`];
 
@@ -190,12 +194,18 @@ function emails(site = env.PUBLIC_APP_URL) {
 
     /* Particulier : inscription acceptée, avec la carte QR. */
     individualApproved: ({ name, code, cardPng }) => buildEmail({
-      subject: 'Votre inscription est acceptée',
-      intro: [`L’inscription de **${name}** à la Semaine de l’industrie 2026 a été **acceptée**.`],
+      subject: 'Visites d’usines : votre inscription est acceptée',
+      intro: [`L’inscription de **${name}** aux visites d’usines de la Semaine de l’industrie 2026 a été **acceptée**.`],
       code,
       card: { png: cardPng, fileCode: code },
-      outro: ['Votre carte QR est jointe à ce message : présentez-la à l’entrée des sites.'],
-      button: space(code),
+      outro: [
+        'Les visites des particuliers ont lieu les **jeudi 19 et vendredi 20 novembre 2026**. Votre carte QR est jointe à ce message : présentez-la au départ.',
+        'Choisissez votre créneau et votre point de départ, puis rejoignez le groupe WhatsApp des visites pour recevoir les informations pratiques.',
+      ],
+      button: [
+        { label: 'Choisir mon créneau', url: `${base}/visites?code=${encodeURIComponent(code)}` },
+        { label: 'Rejoindre le groupe WhatsApp', url: visitSlots().WHATSAPP_GROUP },
+      ],
     }),
 
     /* Journées du Palais : inscription reçue, avec les journées choisies. */
