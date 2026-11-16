@@ -29,8 +29,8 @@ const GROUPS: NavGroup[] = [
     items: [
       { label: 'Industries à visiter', to: '/industrie/' },
       { label: 'Carte des visites', to: '/carte/' },
-      // Désactivé en attendant les infos de l'organisation.
-      // { label: 'Points de départ des visites', to: '/points-de-depart/' },
+      // Réactivé : lien du modèle WhatsApp d'acceptation des particuliers.
+      { label: 'Points de départ des visites', to: '/points-de-depart/' },
       { label: 'Galerie photo', href: 'https://galerie.semaineindustrie.tg/', external: true },
     ],
   },
