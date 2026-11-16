@@ -14,8 +14,7 @@ function PageLink({ to, children }: { to: string; children: ReactNode }) {
   )
 }
 
-/* Les formulaires de la rubrique « Participer ». Liste masquée : inscriptions closes. */
-/*
+/* Les formulaires de la rubrique « Participer » encore ouverts. */
 const FORMS: { title: string; to: string; who: string }[] = [
   // Inscriptions au Palais closes.
   // {
@@ -46,7 +45,6 @@ const FORMS: { title: string; to: string; who: string }[] = [
   //   who: 'Pour une industrie qui souhaite ouvrir son usine aux visiteurs.',
   // },
 ]
-*/
 
 /* Règles de participation : comment s'inscrire, sans confondre les formulaires. */
 export default function ReglesPage() {
@@ -58,11 +56,10 @@ export default function ReglesPage() {
           <SectionHeader
             level={1}
             title="Règles de participation"
-            lead="Toutes les inscriptions sont closes. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace, avec leur code de suivi."
+            lead="Seule l’inscription des particuliers aux visites d’usines reste ouverte. Les autres inscriptions sont closes : les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace, avec leur code de suivi."
           />
         </div>
 
-        {/* Inscriptions closes : liste des formulaires retirée.
         <ul className="border-t border-forest/15">
           {FORMS.map((form) => (
             <li key={form.to} className="border-b border-forest/15 py-4">
@@ -71,7 +68,6 @@ export default function ReglesPage() {
             </li>
           ))}
         </ul>
-        */}
 
         <div className="space-y-3">
           <p>

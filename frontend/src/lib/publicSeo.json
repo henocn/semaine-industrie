@@ -11,9 +11,8 @@
   },
   {
     "path": "/inscription-particulier",
-    "title": "Inscriptions clôturées",
-    "description": "Les inscriptions des particuliers aux visites d’usines sont closes. Déjà inscrit ? Retrouvez votre dossier dans Mon espace.",
-    "noIndex": true
+    "title": "Visiter les industries en tant que particulier",
+    "description": "Inscrivez-vous à titre personnel aux visites d’usines de la Semaine de l’industrie 2026 au Togo, les 19 et 20 novembre, et recevez votre QR de visite."
   },
   {
     "path": "/visites",
@@ -66,7 +65,7 @@
   {
     "path": "/regles-de-participation",
     "title": "Règles de participation",
-    "description": "Semaine de l’industrie 2026 au Togo : les inscriptions sont closes. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace avec leur code de suivi."
+    "description": "Semaine de l’industrie 2026 au Togo : seule l’inscription des particuliers aux visites d’usines reste ouverte. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace."
   },
   {
     "path": "/confidentialite",
