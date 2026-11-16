@@ -134,7 +134,11 @@ async function whatsappQrSent() {
   const rows = await WhatsappMessage.findAll({
     where: {
       direction: 'out',
-      [Op.or]: [{ body: { [Op.like]: 'Modèle si26%qr :%' } }, { body: { [Op.like]: '[Image]%' } }],
+      [Op.or]: [
+        { body: { [Op.like]: 'Modèle si26%qr :%' } },
+        { body: 'Modèle si26_particulier_valide_groupe' },
+        { body: { [Op.like]: '[Image]%' } },
+      ],
     },
     attributes: ['phone', 'body'],
     raw: true,

@@ -1863,16 +1863,22 @@ async function notifyParticipationApproved(participation) {
   const individual = participation.kind !== 'ecole';
   const places = individual ? 1 : participation.headcount || '-';
   /* Palais des Congrès : uniquement le modèle si26_palais_acceptee_qr (carte QR, journées, bouton « Programme »).
+     Particulier : uniquement si26_particulier_valide_groupe (carte QR, lien du groupe).
      Aucun modèle ni texte de secours : en cas d'échec, l'envoi est signalé comme échoué. */
-  if (participation.kind === 'palais') {
+  if (participation.kind === 'palais' || participation.kind === 'particulier') {
     const to = toWaRecipient(participation?.phone);
     if (!to) return { ok: false, reason: 'no_phone' };
     let headerImage;
     try {
       headerImage = await qrImageUrl(code, { payload: passageQrPayload(code), code, name: participation.name });
     } catch (err) {
-      logger.warn('[whatsapp] carte QR Palais indisponible', err.message);
+      logger.warn('[whatsapp] carte QR indisponible', err.message);
       return { ok: false, reason: 'qr_unavailable' };
+    }
+    /* Particulier (visites d'usines) : uniquement le modèle si26_particulier_valide_groupe
+       (carte QR + lien du groupe des visites, texte fixe sans variable). Pas de secours. */
+    if (participation.kind === 'particulier') {
+      return sendTemplate({ to, name: 'si26_particulier_valide_groupe', headerImage });
     }
     return sendTemplate({
       to,
