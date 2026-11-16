@@ -1,75 +1,57 @@
 'use strict';
 
-/* Renvoi unique de l'e-mail d'acceptation aux particuliers acceptés (envois bloqués par la limite SiteGround).
-   Le message précise que ceux qui l'ont déjà reçu peuvent l'ignorer.
-   Sans option, liste seulement ce qui partirait ; --send envoie.
-   Une trace par e-mail empêche tout second envoi, même si le script est relancé.
-   Rythme lent (une toutes les 10 s, soit 360 par heure) et arrêt au premier refus du serveur d'envoi,
-   pour ne pas prolonger un blocage. --limit=N borne le nombre d'envois de cette exécution. */
-const { sequelize, AuditEvent, Participation, Passport } = require('../src/models');
+/* Renvoie l'e-mail d'acceptation à tous les particuliers acceptés (mention « si déjà reçu, n'en tenez pas compte »).
+   Sans option, compte seulement ; --send envoie. S'arrête au premier refus du serveur d'envoi.
+   Rapport par personne : logs/renvoi-particuliers-AAAA-MM-JJ.csv (envoyé, échec ou non tenté). */
+const fs = require('fs');
+const path = require('path');
+const { sequelize, Participation, Passport } = require('../src/models');
 const mailService = require('../src/modules/notifications/mail.service');
 
-const SENT = 'resend_approved_email';
-const PAUSE_MS = 10000;
-
 const send = process.argv.includes('--send');
-const limitArg = process.argv.find((arg) => arg.startsWith('--limit='));
-const limit = limitArg ? Number(limitArg.split('=')[1]) : Infinity;
+const REPORT = path.join(__dirname, '..', 'logs', `renvoi-particuliers-${new Date().toISOString().slice(0, 10)}.csv`);
+
+const cell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 
 async function main() {
-  const done = new Set((await AuditEvent.findAll({
-    where: { entity_type: 'participation', action: SENT },
-    attributes: ['entity_id'],
-  })).map((event) => event.entity_id));
-  const rows = await Participation.findAll({
-    where: { kind: 'particulier', status: 'approved' },
-    order: [['updated_at', 'ASC']],
-  });
-  const passports = new Map((await Passport.findAll({
+  const rows = await Participation.findAll({ where: { kind: 'particulier', status: 'approved' }, order: [['name', 'ASC']] });
+  const codes = new Map((await Passport.findAll({
     where: { id: rows.map((row) => row.passport_id).filter(Boolean) },
     attributes: ['id', 'code'],
   })).map((passport) => [passport.id, passport.code]));
+  const todo = rows.filter((row) => row.email && codes.get(row.passport_id));
+  console.log(`${todo.length} e-mail(s) à envoyer${send ? '' : ' (ajouter --send pour envoyer)'}`);
+  if (!send) return 0;
 
-  const todo = rows.filter((row) => row.email && !done.has(row.id) && passports.get(row.passport_id));
-  console.log(`${rows.length} particulier(s) accepté(s) : ${todo.length} à envoyer, ${done.size} déjà renvoyé(s), `
-    + `${rows.filter((row) => !row.email).length} sans e-mail — ${send ? 'ENVOI' : 'liste seule'}`);
-  if (!send) {
-    todo.forEach((row) => console.log(`- ${row.name} | ${passports.get(row.passport_id)}`));
-    return 0;
-  }
-
-  let sentCount = 0;
+  const results = new Map();
+  let count = 0;
+  let stopped = null;
   for (const row of todo) {
-    if (sentCount >= limit) break;
-    const code = passports.get(row.passport_id);
-    const sent = await mailService.participationApproved(row, code, { resend: true });
+    const sent = await mailService.participationApproved(row, codes.get(row.passport_id), { resend: true });
     if (!sent.ok) {
-      console.log(`- ${row.name} | ${code} : échec (${String(sent.reason).split('\n')[0]})`);
-      console.log(`Arrêt : ${sentCount} envoyé(s) dans cette exécution. Relancer plus tard, les envoyés seront sautés.`);
-      return 2;
+      stopped = String(sent.reason).split('\n')[0];
+      results.set(row.id, ['échec', new Date().toISOString(), stopped]);
+      break;
     }
-    await AuditEvent.create({
-      action: SENT,
-      entity_type: 'participation',
-      entity_id: row.id,
-      summary: `E-mail d'acceptation renvoyé : ${row.name}`,
-      meta: { code },
-    });
-    sentCount += 1;
-    console.log(`- ${row.name} | ${code} : envoyé (${sentCount}/${todo.length})`);
-    await new Promise((resolve) => { setTimeout(resolve, PAUSE_MS); });
+    results.set(row.id, ['envoyé', new Date().toISOString(), '']);
+    count += 1;
+    await new Promise((resolve) => { setTimeout(resolve, 1000); });
   }
-  console.log(`Terminé : ${sentCount} envoyé(s).`);
-  return 0;
+
+  const lines = [['nom', 'code', 'telephone', 'email', 'statut', 'heure', 'detail'].join(';')];
+  for (const row of rows) {
+    const [status, at, detail] = results.get(row.id)
+      || [!row.email ? 'pas d’e-mail' : !codes.get(row.passport_id) ? 'pas de QR' : 'non tenté (arrêt)', '', ''];
+    lines.push([row.name, codes.get(row.passport_id) || row.tracking_code, row.phone, row.email, status, at, detail].map(cell).join(';'));
+  }
+  fs.mkdirSync(path.dirname(REPORT), { recursive: true });
+  fs.writeFileSync(REPORT, `﻿${lines.join('\n')}\n`);
+
+  console.log(stopped ? `Arrêt après ${count} envoi(s) : ${stopped}` : `Terminé : ${count} envoyé(s).`);
+  console.log(`Rapport : ${REPORT}`);
+  return stopped ? 2 : 0;
 }
 
 main()
-  .then(async (code) => {
-    await sequelize.close();
-    process.exit(code);
-  })
-  .catch(async (err) => {
-    console.error(err.message);
-    await sequelize.close();
-    process.exit(1);
-  });
+  .then(async (code) => { await sequelize.close(); process.exit(code); })
+  .catch(async (err) => { console.error(err.message); await sequelize.close(); process.exit(1); });
