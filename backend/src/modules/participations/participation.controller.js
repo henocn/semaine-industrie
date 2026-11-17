@@ -155,6 +155,16 @@ async function notify(req, res, next) {
   }
 }
 
+/* Renvoie l'e-mail d'acceptation (bouton « Relancer » du backoffice) ; le résultat est noté par le service. */
+async function mail(req, res, next) {
+  try {
+    const data = await service.mailApproved(req.params.id);
+    return ApiResponse.success(res, data, 'E-mail envoyé');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 /* Refuse une participation. */
 async function reject(req, res, next) {
   try {
@@ -200,6 +210,7 @@ module.exports = {
   update,
   approve,
   notify,
+  mail,
   reject,
   remove,
 };

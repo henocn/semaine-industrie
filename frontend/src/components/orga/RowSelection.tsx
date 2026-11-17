@@ -188,10 +188,12 @@ export function ExportBar<T extends { id: string | number }>({
           {count > 0 && (
             <>
               <span className="font-semibold text-forest">
-                {count} ligne{count > 1 ? 's' : ''} sélectionnée{count > 1 ? 's' : ''}
+                {count} ligne{count > 1 ? 's' : ''}
               </span>
+              {/* Boutons alignés à droite. */}
+              <div className="ml-auto flex flex-wrap items-center gap-3">
               <button type="button" className="orga-btn" disabled={busy} onClick={() => void onExport()}>
-                {busy ? 'Export…' : 'Exporter en Excel'}
+                {busy ? 'Export…' : 'Exporter'}
               </button>
               {pending.length > 0 && (
                 <>
@@ -212,9 +214,12 @@ export function ExportBar<T extends { id: string | number }>({
                   Notifier ({toNotify.length})
                 </button>
               )}
+              {/* Lien « Désélectionner » retiré (la case de l'en-tête décoche tout).
               <button type="button" className="text-forest underline underline-offset-2" onClick={selection.clear}>
                 Désélectionner
               </button>
+              */}
+              </div>
             </>
           )}
           {outcome && (

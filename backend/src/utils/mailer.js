@@ -29,6 +29,11 @@ function getTransporter() {
 
 /* Envoie un e-mail transactionnel (no-reply). */
 async function sendNotifyMail({ to, subject, text, html, attachments }) {
+  /* Envois coupés (SEND_ENABLED=false) : rien ne part, rien n'est noté. */
+  if (!env.SEND_ENABLED) {
+    logger.info('[mail] envoi désactivé (SEND_ENABLED=false)', subject);
+    return { ok: false, reason: 'disabled' };
+  }
   const tx = getTransporter();
   if (!tx) {
     logger.warn('[mail] SMTP non configuré, e-mail ignoré', subject, to);
@@ -54,6 +59,10 @@ async function sendNotifyMail({ to, subject, text, html, attachments }) {
 
 /* Envoie un message de contact vers infos@ (formulaire public). */
 async function sendContactMail({ fromName, fromEmail, subject, message }) {
+  if (!env.SEND_ENABLED) {
+    logger.info('[mail] envoi désactivé (SEND_ENABLED=false)', 'contact');
+    return { ok: false, reason: 'disabled' };
+  }
   const tx = getTransporter();
   if (!tx) {
     logger.warn('[mail] SMTP non configuré, contact ignoré');

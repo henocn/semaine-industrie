@@ -1,7 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { Participation, Passport, DepartureScan, WhatsappMessage } = require('../../models');
+const { Participation, Passport, DepartureScan, WhatsappMessage, AuditEvent } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const passportService = require('../passports/passport.service');
@@ -111,6 +111,7 @@ async function list({ kind, status } = {}) {
     : [];
   const scanOf = new Map(scans.map((scan) => [scan.participation_id, { point: scan.point_name, scanned_at: scan.scanned_at }]));
   const qrSent = await whatsappQrSent();
+  const mailState = await approvedMailState(rows.filter((row) => row.status === 'approved').map((row) => row.id));
   return Promise.all(rows.map(async (row) => {
     const presented = await present(row);
     return {
@@ -119,8 +120,43 @@ async function list({ kind, status } = {}) {
       departure_scan: scanOf.get(row.id) || null,
       /* Vrai si la personne a reçu son QR sur WhatsApp (modèle avec QR ou carte envoyée par le bot). */
       whatsapp_qr: row.status === 'approved' && qrSent(row.phone, presented.passport?.code || row.tracking_code),
+      /* E-mail d'acceptation : true envoyé, false échec, null inconnu (avant ce suivi ou sans e-mail). */
+      approved_mail: mailState.has(row.id) ? mailState.get(row.id) : null,
     };
   }));
+}
+
+/* E-mail d'acceptation : envoyé ou refusé, noté dans le journal d'audit (colonne « Mail » du backoffice). */
+const MAIL_ACTIONS = { sent: 'approved_mail_sent', failed: 'approved_mail_failed' };
+
+async function recordApprovedMail(row, sent) {
+  /* Sans adresse, ou envois coupés (SEND_ENABLED=false) : rien à noter. */
+  if (!row?.email || sent?.reason === 'no_email' || sent?.reason === 'disabled') return;
+  await AuditEvent.create({
+    action: sent?.ok ? MAIL_ACTIONS.sent : MAIL_ACTIONS.failed,
+    entity_type: 'participation',
+    entity_id: row.id,
+    summary: `E-mail d'acceptation ${sent?.ok ? 'envoyé' : 'non envoyé'} : ${row.name}`,
+    meta: sent?.ok ? null : { reason: String(sent?.reason || '').split('\n')[0].slice(0, 300) },
+  });
+}
+
+/* Dernier état de l'e-mail d'acceptation par participation : true (envoyé), false (échec). */
+async function approvedMailState(ids) {
+  if (!ids.length) return new Map();
+  const events = await AuditEvent.findAll({
+    where: { entity_type: 'participation', entity_id: ids, action: Object.values(MAIL_ACTIONS) },
+    attributes: ['entity_id', 'action'],
+    order: [['created_at', 'ASC']],
+    raw: true,
+  });
+  const state = new Map();
+  /* Un envoi réussi l'emporte : un échec plus ancien ou plus récent ne l'efface pas. */
+  for (const event of events) {
+    if (state.get(event.entity_id) === true) continue;
+    state.set(event.entity_id, event.action === MAIL_ACTIONS.sent);
+  }
+  return state;
 }
 
 /* Numéro au format WhatsApp (228 + 8 chiffres pour le Togo). */
@@ -262,7 +298,9 @@ async function approve(id) {
 
   if (!wasApproved) {
     const presented = await present(row, { withImage: false });
-    mailService.participationApproved(row, presented.passport.code);
+    mailService.participationApproved(row, presented.passport.code)
+      .then((sent) => recordApprovedMail(row, sent))
+      .catch((err) => logger.warn('[participation] suivi e-mail non noté', err.message));
     try {
       const whatsappService = require('../whatsapp/whatsapp.service');
       await whatsappService.notifyParticipationApproved(presented);
@@ -288,6 +326,20 @@ async function notifyApproved(id) {
     throw ApiError.badRequest(`WhatsApp : ${detail}`);
   }
   return { id: row.id, name: row.name, status: row.status, kind: row.kind };
+}
+
+/* Renvoie l'e-mail d'acceptation (avec la mention « si déjà reçu, n'en tenez pas compte ») ; le résultat est noté. */
+async function mailApproved(id) {
+  const row = await Participation.findByPk(id);
+  if (!row) throw ApiError.notFound('Participation introuvable');
+  if (row.status !== 'approved') throw ApiError.conflict('Participation pas encore acceptée');
+  if (!row.email) throw ApiError.badRequest('Pas d’adresse e-mail');
+  const presented = await present(row, { withImage: false });
+  if (!presented.passport?.code) throw ApiError.conflict('QR introuvable pour cette participation');
+  const sent = await mailService.participationApproved(row, presented.passport.code, { resend: true });
+  await recordApprovedMail(row, sent);
+  if (!sent?.ok) throw ApiError.badRequest(`E-mail : ${String(sent?.reason || 'envoi refusé').split('\n')[0]}`);
+  return { id: row.id, name: row.name };
 }
 
 /* Refuse une participation. */
@@ -411,6 +463,8 @@ module.exports = {
   update,
   approve,
   notifyApproved,
+  recordApprovedMail,
+  mailApproved,
   reject,
   remove,
 };

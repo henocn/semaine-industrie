@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { registerParticipation } from '../api/participations'
-import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+// import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+import { WhatsAppIcon } from '../components/ui/WhatsAppIcon'
 import { SurveyInvite } from '../components/SurveyInvite'
 import { VisitDaysNote } from '../components/VisitDaysNote'
 import { Seo } from '../components/Seo'
@@ -19,8 +20,12 @@ const field =
 
 /* Inscription individuelle : une personne, un QR personnel pour le jour J. */
 export default function InscriptionParticulierPage() {
-  const [sent, setSent] = useState(false)
-  const [trackingCode, setTrackingCode] = useState<string | null>(null)
+  /* TEMPORAIRE, à retirer avant commit : aperçu du message de succès en local (?apercu=CODE), jamais en production. */
+  const preview = import.meta.env.DEV && typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('apercu')
+    : null
+  const [sent, setSent] = useState(Boolean(preview))
+  const [trackingCode, setTrackingCode] = useState<string | null>(preview)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [waitlisted, setWaitlisted] = useState(false)
@@ -77,11 +82,14 @@ export default function InscriptionParticulierPage() {
             }
           />
           <VisitDaysNote audience="public" />
+          {/* Message rouge retiré.
           {PARTICULIER_VISITS_OPEN && (
             <p className="mt-3 text-[15px] leading-relaxed text-red-700">
               Le code de cette inscription est différent de celui que vous avez reçu si vous êtes aussi inscrit aux conférences du Palais des Congrès.
             </p>
           )}
+          */}
+          {/* Image retirée.
           <picture className="contents">
             <source srcSet="/images/inscription-particulier.webp" type="image/webp" />
             <img
@@ -93,6 +101,7 @@ export default function InscriptionParticulierPage() {
               className="mt-8 aspect-[4/3] w-full rounded-sm object-cover object-top md:aspect-[3/4] md:max-w-sm"
             />
           </picture>
+          */}
         </div>
 
         {!PARTICULIER_VISITS_OPEN ? (
@@ -119,7 +128,7 @@ export default function InscriptionParticulierPage() {
         ) : sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
             <p className="text-xl text-forest">
-              {waitlisted ? 'Merci. Votre inscription aux visites est enregistrée en liste d’attente.' : 'Merci. Votre inscription aux visites d’industries est enregistrée.'}
+              {waitlisted ? 'Merci. Votre inscription aux visites est enregistrée en liste d’attente.' : 'Merci, votre inscription est en cours de validation.'}
             </p>
             {waitlisted && (
               <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
@@ -136,7 +145,29 @@ export default function InscriptionParticulierPage() {
                 , du 16 au 18 novembre.
               </p>
             )} */}
+            {/* Bouton de suivi retiré : le numéro WhatsApp ci-dessous ouvre le bot avec le code déjà écrit.
             <TrackingCodeNotice code={trackingCode} />
+            */}
+            {trackingCode && (
+              <p className="mt-5 text-[15px] text-ink/80">
+                Code de suivi, à conserver :{' '}
+                <span className="font-mono text-lg font-semibold tracking-wide text-forest">{trackingCode}</span>
+              </p>
+            )}
+            <p className="mt-4 text-[15px] font-bold leading-relaxed text-red-700">
+              IMPORTANT : après validation, vous recevez un message par e-mail ou sur WhatsApp. Pour consulter votre dossier et
+              recevoir votre QR, envoyez simplement votre code de suivi sur WhatsApp au numéro ci-dessous.
+            </p>
+            {/* Numéro du bot, bien visible : ouvre WhatsApp avec le code de suivi déjà écrit. */}
+            <a
+              href={`https://wa.me/22871535358${trackingCode ? `?text=${encodeURIComponent(trackingCode)}` : ''}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2.5 rounded-sm bg-forest px-5 py-3 text-lg font-bold text-white shadow-sm transition-colors hover:bg-ink"
+            >
+              <WhatsAppIcon className="h-6 w-6" />
+              <span className="whitespace-nowrap tabular-nums">+228 71 53 53 58</span>
+            </a>
             <SurveyInvite code={trackingCode} />
           </div>
         ) : (

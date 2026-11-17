@@ -59,6 +59,8 @@ const env = cleanEnv(process.env, {
   MAIL_TO_CONTACT: str({ default: 'infos@semaineindustrie.tg' }),
   /* Copie cachée de chaque e-mail envoyé (contrôle). Vide : pas de copie. */
   MAIL_BCC: str({ default: '' }),
+  /* false : aucun e-mail ni WhatsApp ne part (développement local) ; à remettre à true pour un test ciblé. */
+  SEND_ENABLED: bool({ default: true }),
 });
 
 module.exports = env;

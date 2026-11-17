@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const { sequelize, Participation, Passport } = require('../src/models');
 const mailService = require('../src/modules/notifications/mail.service');
+const participationService = require('../src/modules/participations/participation.service');
 
 const send = process.argv.includes('--send');
 const REPORT = path.join(__dirname, '..', 'logs', `renvoi-particuliers-${new Date().toISOString().slice(0, 10)}.csv`);
@@ -28,6 +29,7 @@ async function main() {
   let stopped = null;
   for (const row of todo) {
     const sent = await mailService.participationApproved(row, codes.get(row.passport_id), { resend: true });
+    await participationService.recordApprovedMail(row, sent);
     if (!sent.ok) {
       stopped = String(sent.reason).split('\n')[0];
       results.set(row.id, ['échec', new Date().toISOString(), stopped]);

@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   approveParticipation,
-  notifyParticipation,
+  // notifyParticipation : utilisé par le bouton « Relancer ».
   createParticipation,
   deleteParticipation,
   getParticipation,
@@ -22,6 +22,7 @@ import { ExportBar, SelectAllHeader, SelectCell } from '../components/orga/RowSe
 import { PendingBadge } from '../components/orga/PendingBadge'
 import { useConfirm } from '../lib/useConfirm'
 import { SortControl } from '../components/orga/SortControl'
+import { RelaunchButton } from '../components/orga/RelaunchButton'
 import { useTableSort, type SortAccessors } from '../lib/useTableSort'
 import { useRowSelection } from '../lib/useRowSelection'
 import { excelDate, type ExcelColumn } from '../lib/excel'
@@ -573,18 +574,29 @@ export default function OrgaParticipationsPage() {
             await load()
           },
         }}
+        /* « Notifier » sur sélection remplacé par le bouton « Relancer » du tableau.
         notify={{
           eligible: (row) => row.status === 'approved',
           run: (row) => notifyParticipation(row.id),
           name: (row) => row.name,
         }}
+        */
       />
       <section className="orga-panel !p-0 overflow-x-auto">
         <div className="flex items-center justify-between border-b border-black px-4 py-3">
           <h2 className="text-[15px] font-semibold text-forest">
             {filtered.length} {noun}
           </h2>
-          <SortControl order={sort.order} onChange={sort.setOrder} />
+          <div className="flex items-center gap-3">
+            <RelaunchButton
+              rows={filtered}
+              onDone={async () => {
+                setDetail(null)
+                await load()
+              }}
+            />
+            <SortControl order={sort.order} onChange={sort.setOrder} />
+          </div>
         </div>
         <table className="orga-table min-w-[720px]">
           <thead>
@@ -593,16 +605,19 @@ export default function OrgaParticipationsPage() {
               <th className="w-32">Code de suivi</th>
               <th>Nom</th>
               <th className="w-40">Contact</th>
-              <th className="w-28">Statut</th>
-              <th className="w-14 text-center" title="QR reçu sur WhatsApp">QR</th>
-              <th className={isPalais ? 'w-36' : isMedia ? 'w-56' : 'w-24'}>{isPalais ? 'Journées' : isMedia ? 'Média' : 'Passage'}</th>
+              {/* Statut : la couleur de la ligne suffit. */}
+              {/* <th className="w-28">Statut</th> */}
+              <th className="w-14 text-center" title="E-mail d’acceptation envoyé">Mail</th>
+              <th className="w-20 text-center" title="QR reçu sur WhatsApp">WhatsApp</th>
+              {/* Colonne « Passage » retirée ; Journées (Palais) et Média restent. */}
+              {(isPalais || isMedia) && <th className={isPalais ? 'w-36' : 'w-56'}>{isPalais ? 'Journées' : 'Média'}</th>}
               <th className="w-40">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8}>Aucune participation</td>
+                <td colSpan={isPalais || isMedia ? 8 : 7}>Aucune participation</td>
               </tr>
             )}
             {sort.sorted.map((item) => {
@@ -620,7 +635,16 @@ export default function OrgaParticipationsPage() {
                     </td>
                     <td className="font-medium text-forest">{item.name}</td>
                     <td>{item.phone || item.email || '…'}</td>
-                    <td>{statusLabel(item.status, item.waitlisted)}</td>
+                    {/* <td>{statusLabel(item.status, item.waitlisted)}</td> */}
+                    <td className="text-center">
+                      {item.status !== 'approved' || item.approved_mail == null ? (
+                        <span className="text-ink/30" title={item.status === 'approved' ? 'Envoi non suivi' : undefined}>—</span>
+                      ) : item.approved_mail ? (
+                        <span className="font-bold text-energy" title="E-mail d’acceptation envoyé" aria-label="E-mail envoyé">✓</span>
+                      ) : (
+                        <span className="font-bold text-red-700" title="E-mail d’acceptation non envoyé" aria-label="E-mail non envoyé">✗</span>
+                      )}
+                    </td>
                     <td className="text-center">
                       {item.status !== 'approved' ? (
                         <span className="text-ink/30">—</span>
@@ -640,11 +664,12 @@ export default function OrgaParticipationsPage() {
                       </td>
                     ) : isMedia ? (
                       <td>{mediaSummary(item) || '—'}</td>
-                    ) : (
+                    ) : null}
+                    {/* Colonne « Passage » retirée.
                       <td className={passageCount(item) > 0 ? 'font-semibold text-forest' : 'text-ink/45'}>
                         {passageCount(item)}
                       </td>
-                    )}
+                    */}
                     <td onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-1">
                         {item.status === 'pending' && (
@@ -679,7 +704,7 @@ export default function OrgaParticipationsPage() {
                   </tr>
                   {open && (
                     <tr>
-                      <td colSpan={8} className="bg-white">
+                      <td colSpan={isPalais || isMedia ? 8 : 7} className="bg-white">
                         {editingId === item.id ? (
                           <form onSubmit={(e) => void onUpdate(e, item.id)} className="grid gap-3 p-4 sm:grid-cols-2">
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
