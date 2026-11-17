@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { registerParticipation } from '../api/participations'
-import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+// import { TrackingCodeNotice } from '../components/TrackingCodeNotice'
+import { WhatsAppIcon } from '../components/ui/WhatsAppIcon'
 import { SurveyInvite } from '../components/SurveyInvite'
 import { VisitDaysNote } from '../components/VisitDaysNote'
 import { Seo } from '../components/Seo'
@@ -144,7 +145,29 @@ export default function InscriptionParticulierPage() {
                 , du 16 au 18 novembre.
               </p>
             )} */}
-            <TrackingCodeNotice code={trackingCode} via="whatsapp" />
+            {/* Bouton de suivi retiré : le numéro WhatsApp ci-dessous ouvre le bot avec le code déjà écrit.
+            <TrackingCodeNotice code={trackingCode} />
+            */}
+            {trackingCode && (
+              <p className="mt-5 text-[15px] text-ink/80">
+                Code de suivi, à conserver :{' '}
+                <span className="font-mono text-lg font-semibold tracking-wide text-forest">{trackingCode}</span>
+              </p>
+            )}
+            <p className="mt-4 text-[15px] font-bold leading-relaxed text-red-700">
+              IMPORTANT : après validation, vous recevez un message par e-mail ou sur WhatsApp. Pour consulter votre dossier et
+              recevoir votre QR, envoyez simplement votre code de suivi sur WhatsApp au numéro ci-dessous.
+            </p>
+            {/* Numéro du bot, bien visible : ouvre WhatsApp avec le code de suivi déjà écrit. */}
+            <a
+              href={`https://wa.me/22871535358${trackingCode ? `?text=${encodeURIComponent(trackingCode)}` : ''}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2.5 rounded-sm bg-forest px-5 py-3 text-lg font-bold text-white shadow-sm transition-colors hover:bg-ink"
+            >
+              <WhatsAppIcon className="h-6 w-6" />
+              <span className="whitespace-nowrap tabular-nums">+228 71 53 53 58</span>
+            </a>
             <SurveyInvite code={trackingCode} />
           </div>
         ) : (
