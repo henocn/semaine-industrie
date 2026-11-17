@@ -968,7 +968,8 @@ async function replyRequestStatus(from, found, phoneNumberId) {
   let status = 'Non retenu';
   if (waitlisted) status = "En liste d'attente";
   else if (item.status === 'pending') status = 'En cours de validation';
-  return sendWithNav({
+  /* Résultat du suivi : seulement le bouton Menu (plus de « Suivi de participation » juste après). */
+  return sendWithMenu({
     to: from,
     phoneNumberId,
     body: [

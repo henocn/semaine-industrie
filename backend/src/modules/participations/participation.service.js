@@ -223,6 +223,8 @@ async function create(payload) {
   } else {
     mailService.participationReceived(row);
   }
+  /* WhatsApp « en cours » / « liste d'attente » désactivés : le statut s'affiche sur la page, dans l'e-mail
+     et dans Mon espace ; seul le message d'acceptation part sur WhatsApp (moins d'envois, moins de blocages Meta).
   try {
     const whatsappService = require('../whatsapp/whatsapp.service');
     await (waitlisted
@@ -231,6 +233,7 @@ async function create(payload) {
   } catch (err) {
     logger.warn('[participation] notify WhatsApp failed', err.message);
   }
+  */
   return { ...(await present(row)), waitlisted };
 }
 
