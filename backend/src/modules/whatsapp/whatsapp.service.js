@@ -63,6 +63,11 @@ function setSession(from, patch) {
 
 /* Appel Graph WhatsApp générique. */
 async function graphSend(phoneNumberId, payload) {
+  /* Envois coupés (SEND_ENABLED=false) : rien ne part, rien n'est noté. */
+  if (!env.SEND_ENABLED) {
+    logger.info('[whatsapp] envoi désactivé (SEND_ENABLED=false)', payload?.type || '');
+    return { ok: false, reason: 'disabled' };
+  }
   const token = env.WHATSAPP_TOKEN;
   const id = phoneNumberId || env.WHATSAPP_PHONE_NUMBER_ID;
   if (!token || !id) {
