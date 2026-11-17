@@ -99,7 +99,7 @@ export function AppRoutes() {
             <Route path="/accreditation-medias" element={<ClosedFormPage path="/accreditation-medias" subject="Les demandes d’accréditation médias" />} />
             <Route path="/inscription-groupe" element={<ClosedFormPage path="/inscription-groupe" subject="Les inscriptions des écoles et universités aux visites d’usines" />} />
             <Route path="/affaires" element={<ClosedFormPage path="/affaires" subject="Les inscriptions aux rencontres d’affaires" />} />
-            {/* Visites des particuliers : inscriptions rouvertes. */}
+            {/* Visites des particuliers : inscriptions closes. */}
             {/* <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} /> */}
             <Route path="/inscription-particulier" element={<ClosedFormPage path="/inscription-particulier" subject="Les inscriptions des particuliers aux visites d’usines" />} />
             <Route path="/visites" element={<ReservationVisitePage />} />
