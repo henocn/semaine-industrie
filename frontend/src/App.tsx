@@ -22,7 +22,8 @@ import IndustriesPage from './pages/IndustriesPage'
 // Toutes les inscriptions sont closes ; pages conservées pour une reprise éventuelle.
 // Inscriptions des particuliers closes ; page conservée.
 // import InscriptionParticulierPage from './pages/InscriptionParticulierPage'
-// import JourneesPalaisPage from './pages/JourneesPalaisPage'
+// Palais rouvert pour le mercredi 18.
+import JourneesPalaisPage from './pages/JourneesPalaisPage'
 // import LabelRequestPage from './pages/LabelRequestPage'
 import LoginPage from './pages/LoginPage'
 import MapPage from './pages/MapPage'
@@ -103,8 +104,9 @@ export function AppRoutes() {
             {/* <Route path="/inscription-particulier" element={<InscriptionParticulierPage />} /> */}
             <Route path="/inscription-particulier" element={<ClosedFormPage path="/inscription-particulier" subject="Les inscriptions des particuliers aux visites d’usines" />} />
             <Route path="/visites" element={<ReservationVisitePage />} />
-            {/* <Route path="/journees-au-palais" element={<JourneesPalaisPage />} /> */}
-            <Route path="/journees-au-palais" element={<ClosedFormPage path="/journees-au-palais" subject="Les inscriptions aux rendez-vous du Palais des Congrès" />} />
+            {/* Palais rouvert pour le mercredi 18. */}
+            <Route path="/journees-au-palais" element={<JourneesPalaisPage />} />
+            {/* <Route path="/journees-au-palais" element={<ClosedFormPage path="/journees-au-palais" subject="Les inscriptions aux rendez-vous du Palais des Congrès" />} /> */}
             {/* <Route path="/accreditation-medias" element={<AccreditationMediasPage />} /> */}
             <Route path="/ressources" element={<Navigate to="/#ressources" replace />} />
             <Route path="/mon-espace" element={<MonEspacePage />} />
