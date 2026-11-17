@@ -19,8 +19,12 @@ const field =
 
 /* Inscription individuelle : une personne, un QR personnel pour le jour J. */
 export default function InscriptionParticulierPage() {
-  const [sent, setSent] = useState(false)
-  const [trackingCode, setTrackingCode] = useState<string | null>(null)
+  /* TEMPORAIRE, à retirer avant commit : aperçu du message de succès en local (?apercu=CODE), jamais en production. */
+  const preview = import.meta.env.DEV && typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('apercu')
+    : null
+  const [sent, setSent] = useState(Boolean(preview))
+  const [trackingCode, setTrackingCode] = useState<string | null>(preview)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [waitlisted, setWaitlisted] = useState(false)
@@ -77,11 +81,14 @@ export default function InscriptionParticulierPage() {
             }
           />
           <VisitDaysNote audience="public" />
+          {/* Message rouge retiré.
           {PARTICULIER_VISITS_OPEN && (
             <p className="mt-3 text-[15px] leading-relaxed text-red-700">
               Le code de cette inscription est différent de celui que vous avez reçu si vous êtes aussi inscrit aux conférences du Palais des Congrès.
             </p>
           )}
+          */}
+          {/* Image retirée.
           <picture className="contents">
             <source srcSet="/images/inscription-particulier.webp" type="image/webp" />
             <img
@@ -93,6 +100,7 @@ export default function InscriptionParticulierPage() {
               className="mt-8 aspect-[4/3] w-full rounded-sm object-cover object-top md:aspect-[3/4] md:max-w-sm"
             />
           </picture>
+          */}
         </div>
 
         {!PARTICULIER_VISITS_OPEN ? (
@@ -119,7 +127,7 @@ export default function InscriptionParticulierPage() {
         ) : sent ? (
           <div className="self-center rounded-sm border-2 border-sun bg-sage p-6">
             <p className="text-xl text-forest">
-              {waitlisted ? 'Merci. Votre inscription aux visites est enregistrée en liste d’attente.' : 'Merci. Votre inscription aux visites d’industries est enregistrée.'}
+              {waitlisted ? 'Merci. Votre inscription aux visites est enregistrée en liste d’attente.' : 'Merci, votre inscription est en cours de validation.'}
             </p>
             {waitlisted && (
               <p className="mt-2 text-[15px] leading-relaxed text-ink/80">
@@ -136,7 +144,7 @@ export default function InscriptionParticulierPage() {
                 , du 16 au 18 novembre.
               </p>
             )} */}
-            <TrackingCodeNotice code={trackingCode} />
+            <TrackingCodeNotice code={trackingCode} via="whatsapp" />
             <SurveyInvite code={trackingCode} />
           </div>
         ) : (
