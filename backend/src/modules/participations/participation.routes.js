@@ -40,6 +40,9 @@ function limitSlots(req, res, next) {
   return next();
 }
 
+/* Journées du Palais encore ouvertes à l'inscription publique (mêmes numéros que PALAIS_OPEN_DAYS côté site). */
+const PALAIS_OPEN_DAYS = [18];
+
 /* Refuse les formulaires publics fermés. Le backoffice peut toujours ajouter. */
 function closedForms(req, res, next) {
   /* Particuliers : inscriptions closes (PARTICULIER_OPEN ne suffit plus à les rouvrir). */
@@ -50,9 +53,15 @@ function closedForms(req, res, next) {
   if (!req.body?.kind || req.body.kind === 'ecole') {
     return next(ApiError.badRequest('Les inscriptions des écoles et universités aux visites d’industries sont closes.'));
   }
-  /* Palais des Congrès : inscriptions closes. */
+  /* Palais des Congrès : rouvert pour la seule journée encore à venir (mercredi 18). */
+  // if (req.body.kind === 'palais') {
+  //   return next(ApiError.badRequest('Les inscriptions aux rendez-vous du Palais des Congrès sont closes.'));
+  // }
   if (req.body.kind === 'palais') {
-    return next(ApiError.badRequest('Les inscriptions aux rendez-vous du Palais des Congrès sont closes.'));
+    const days = [].concat(req.body.palais_days || []).map(Number);
+    if (days.some((n) => !PALAIS_OPEN_DAYS.includes(n))) {
+      return next(ApiError.badRequest('Seule la journée du mercredi 18 novembre est encore ouverte à l’inscription.'));
+    }
   }
   /* Accréditations médias : demandes closes. */
   if (req.body.kind === 'media') {

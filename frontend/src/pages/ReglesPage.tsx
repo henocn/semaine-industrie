@@ -58,7 +58,7 @@ export default function ReglesPage() {
           <SectionHeader
             level={1}
             title="Règles de participation"
-            lead="Toutes les inscriptions sont closes. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace, avec leur code de suivi."
+            lead="Seule l’inscription au Palais des Congrès pour le mercredi 18 novembre est ouverte, dans la rubrique « Participer ». Les autres inscriptions sont closes. Les personnes déjà inscrites retrouvent leur dossier et leur QR dans Mon espace, avec leur code de suivi."
           />
         </div>
 
