@@ -17,6 +17,8 @@ const departureSchema = Joi.object({
   point_id: Joi.string().guid().required(),
   /* true : vérifie le QR sans rien enregistrer (étape avant le bouton « Entrer »). */
   check: Joi.boolean().default(false),
+  /* true : la personne déjà scannée repart (le scanneur a répondu Oui). */
+  again: Joi.boolean().default(false),
 });
 const palaisSchema = Joi.object({
   code: Joi.string().trim().max(40).required(),
@@ -49,12 +51,26 @@ router.get('/contact', authorize('orga', 'scan'), handle(async (req, res) => {
 router.post('/departure', authorize('orga', 'scan'), validate(departureSchema), handle(async (req, res) => {
   const { id, ...data } = await service.scanDeparture(req.body, req.user);
   if (data.checked) return ApiResponse.success(res, data, 'QR valide');
+  /* Ce que le scanneur a accepté malgré l'alerte, pour le journal. */
+  const notes = { no_slot: 'sans créneau', wrong_place: 'autre lieu de départ', wrong_day: 'autre jour' };
+  const forced = (data.issues || []).map((key) => notes[key]).filter(Boolean);
+  const suffix = forced.length ? ` (accepté : ${forced.join(', ')})` : '';
+  if (data.already && data.again) {
+    await audit(req, {
+      action: 'update',
+      entityType: 'participation',
+      entityId: id,
+      summary: `Départ repris à « ${data.here} » : « ${data.name} » (${data.code}), déjà parti de « ${data.point} »${suffix}`,
+    });
+    emitRealtime('participation:changed', { action: 'update', id, name: data.name, status: data.status, kind: data.kind }, 'orga');
+    return ApiResponse.success(res, data, 'Départ repris');
+  }
   if (!data.already) {
     await audit(req, {
       action: 'update',
       entityType: 'participation',
       entityId: id,
-      summary: `Départ scanné à « ${data.point} » : « ${data.name} » (${data.code})`,
+      summary: `Départ scanné à « ${data.point} » : « ${data.name} » (${data.code})${suffix}`,
     });
     emitRealtime('participation:changed', { action: 'update', id, name: data.name, status: data.status, kind: data.kind }, 'orga');
   }

@@ -14,6 +14,9 @@ export type DepartureSettings = {
   custom: DeparturePoint[]
 }
 
+/* Ce qui demande une confirmation au scanneur : pas de créneau, autre lieu, autre jour. */
+export type DepartureIssue = 'no_slot' | 'wrong_place' | 'wrong_day'
+
 /* Résultat d'un scan à un point de départ. */
 export type DepartureScanResult = {
   code: string
@@ -22,8 +25,16 @@ export type DepartureScanResult = {
   already: boolean
   /* Vérification seule (check) : QR valide, rien n'est encore enregistré. */
   checked?: boolean
+  /* Départ repris : la personne déjà scannée repart, le scanneur a dit Oui. */
+  again?: boolean
+  /* Lieu du premier scan si already, sinon le point où l'on scanne. */
   point: string
-  scanned_at: string
+  scanned_at: string | null
+  /* Point de départ réglé sur l'appareil qui scanne. */
+  here?: string
+  /* Créneau choisi par la personne (jour, demi-journée, lieu), ou null. */
+  slot?: { id: string; day: string; period: string; place: string } | null
+  issues?: DepartureIssue[]
 }
 
 /* Résultat d'un scan à l'accueil du Palais. */
@@ -45,10 +56,10 @@ export function listDeparturePoints() {
 }
 
 /* Enregistre le départ d'un particulier. */
-export function scanDeparture(code: string, pointId: string, check = false) {
+export function scanDeparture(code: string, pointId: string, check = false, again = false) {
   return apiFetch<DepartureScanResult>('/scan/departure', {
     method: 'POST',
-    body: JSON.stringify({ code, point_id: pointId, check }),
+    body: JSON.stringify({ code, point_id: pointId, check, again }),
   })
 }
 
