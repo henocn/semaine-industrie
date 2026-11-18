@@ -287,10 +287,11 @@ export function OrgaShell({ title, children, actions, searchPlaceholder, onSearc
           </span>
         </NavLink>
         <NavLink to="/orga/enquete" className={linkClass}>Sondage</NavLink>
-        {/* Ressources : déplacées dans Paramètres. */}
-        <NavLink to="/orga/parametres" className={linkClass}>Paramètres</NavLink>
+        {/* Ressources : déplacées dans Paramètres. Paramètres : admins seulement. */}
+        {/* <NavLink to="/orga/parametres" className={linkClass}>Paramètres</NavLink> */}
         {isAdminRole(user?.role) && (
           <>
+            <NavLink to="/orga/parametres" className={linkClass}>Paramètres</NavLink>
             <NavLink to="/orga/chatbot" className={linkClass}>Chatbot</NavLink>
             <NavLink to="/orga/audit" className={linkClass}>Audit et logs</NavLink>
             <NavLink to="/orga/utilisateurs" className={linkClass}>Utilisateurs</NavLink>

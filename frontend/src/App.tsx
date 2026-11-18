@@ -138,10 +138,13 @@ export function AppRoutes() {
             <Route path="/orga/affaires" element={<OrgaBusinessPage />} />
             <Route path="/orga/enquete" element={<OrgaSurveyPage />} />
             <Route path="/orga/scan" element={<OrgaScanPage />} />
-            <Route path="/orga/parametres" element={<OrgaSettingsPage />} />
-            {/* Ressources : déplacées dans Paramètres. */}
-            <Route path="/orga/ressources" element={<Navigate to="/orga/parametres?onglet=ressources" replace />} />
+            {/* Paramètres : réservés aux admins (déplacés dans RequireAdmin). */}
+            {/* <Route path="/orga/parametres" element={<OrgaSettingsPage />} /> */}
+            {/* <Route path="/orga/ressources" element={<Navigate to="/orga/parametres?onglet=ressources" replace />} /> */}
             <Route element={<RequireAdmin />}>
+              <Route path="/orga/parametres" element={<OrgaSettingsPage />} />
+              {/* Ressources : déplacées dans Paramètres. */}
+              <Route path="/orga/ressources" element={<Navigate to="/orga/parametres?onglet=ressources" replace />} />
               <Route path="/orga/chatbot" element={<OrgaChatbotPage />} />
               <Route path="/orga/chatbot/:phone" element={<OrgaChatbotDetailPage />} />
               <Route path="/orga/audit" element={<OrgaAuditPage />} />

@@ -22,10 +22,11 @@ router.get('/', controller.listPublic);
 router.post(
   '/',
   authenticate,
-  authorize('orga'),
+  /* Ressources gérées dans Paramètres : admins seulement. */
+  authorize('admin'),
   withUpload(uploadResource, controller.create),
 );
-router.patch('/:id/primary', authenticate, authorize('orga'), controller.setPrimary);
-router.delete('/:id', authenticate, authorize('orga'), controller.remove);
+router.patch('/:id/primary', authenticate, authorize('admin'), controller.setPrimary);
+router.delete('/:id', authenticate, authorize('admin'), controller.remove);
 
 module.exports = router;
