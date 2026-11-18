@@ -76,18 +76,18 @@ router.post('/palais', authorize('orga', 'scan'), validate(palaisSchema), handle
   return ApiResponse.success(res, data, data.already ? 'Entrée déjà enregistrée' : 'Entrée enregistrée');
 }));
 
-/* Paramètres des points de départ : comptes admin et simple seulement. */
-router.get('/settings', authorize('orga'), handle(async (req, res) => ApiResponse.success(res, await service.settings())));
+/* Paramètres des points de départ : admins seulement (onglet Paramètres). */
+router.get('/settings', authorize('admin'), handle(async (req, res) => ApiResponse.success(res, await service.settings())));
 
-router.put('/settings/schools/:id', authorize('orga'), validate(schoolSchema), handle(async (req, res) => {
+router.put('/settings/schools/:id', authorize('admin'), validate(schoolSchema), handle(async (req, res) => {
   return ApiResponse.success(res, await service.setSchool(req.params.id, req.body.enabled));
 }));
 
-router.post('/settings/points', authorize('orga'), validate(customSchema), handle(async (req, res) => {
+router.post('/settings/points', authorize('admin'), validate(customSchema), handle(async (req, res) => {
   return ApiResponse.created(res, await service.addCustom(req.body.name));
 }));
 
-router.delete('/settings/points/:id', authorize('orga'), handle(async (req, res) => {
+router.delete('/settings/points/:id', authorize('admin'), handle(async (req, res) => {
   return ApiResponse.success(res, await service.removeCustom(req.params.id));
 }));
 

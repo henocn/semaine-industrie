@@ -74,7 +74,8 @@ router.post('/public/visit-slots', limitSlots, slots.book);
 router.use(authenticate, authorize('orga'));
 
 router.get('/visit-slots', slots.planning);
-router.put('/visit-slots/open', slots.setOpen);
+/* Choix des créneaux par jour : Paramètres, admins seulement. */
+router.put('/visit-slots/open', authorize('admin'), slots.setOpen);
 router.put('/:id/visit-slot', slots.setSlot);
 router.post('/palais/:code/checkin', controller.palaisCheckin);
 router.get('/', controller.list);
