@@ -11,10 +11,7 @@ import { Field } from '../components/ui/Field'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { PhoneField } from '../components/ui/PhoneField'
 import { scrollToTopNow } from '../lib/scroll'
-import { PALAIS_DAYS, PALAIS_OPEN_DAYS } from '../data'
-
-/* Journées proposées : seulement celles encore ouvertes. */
-const OPEN_DAYS = PALAIS_DAYS.filter((d) => PALAIS_OPEN_DAYS.includes(d.n))
+import { PALAIS_DAYS } from '../data'
 
 const field =
   'w-full rounded-sm border border-forest/25 bg-white px-3 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-energy/30'
@@ -22,7 +19,7 @@ const field =
 /* Journées demandées dans l'adresse (?jour=16 ou ?jour=16,18), limitées aux journées connues. */
 function daysFromQuery(raw: string | null) {
   const asked = String(raw || '').split(',').map((v) => Number(v.trim()))
-  return OPEN_DAYS.map((d) => d.n).filter((n) => asked.includes(n))
+  return PALAIS_DAYS.map((d) => d.n).filter((n) => asked.includes(n))
 }
 
 /* Inscription des particuliers aux journées du Palais des Congrès : un code, un QR, les journées cochées. */
@@ -76,7 +73,7 @@ export default function JourneesPalaisPage() {
     }
   }
 
-  const chosen = OPEN_DAYS.filter((d) => days.includes(d.n))
+  const chosen = PALAIS_DAYS.filter((d) => days.includes(d.n))
 
   return (
     <main className="py-14 sm:py-20">
@@ -85,8 +82,8 @@ export default function JourneesPalaisPage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            title="Assister au panel des femmes dans l’industrie"
-            lead="Mercredi 18 novembre, au Palais des Congrès de Lomé : le panel « Les métiers de l’industrie au féminin », puis un échange avec les Nana Benz. Inscrivez-vous : vous recevez un code de suivi, puis un QR après validation."
+            title="Assister aux conférences et panels du Palais des Congrès"
+            lead="Du lundi 16 au mercredi 18 novembre, la Semaine de l’industrie tient ses rendez-vous au Palais des Congrès de Lomé. Cochez une ou plusieurs journées : vous recevez un seul code et un seul QR, valable pour les journées choisies."
           />
           <ul className="mt-6 space-y-2 border-t border-forest/15 pt-5 text-[15px] leading-relaxed text-ink/75">
             <li className="text-red-700">Le code de cette inscription est différent de celui que vous avez reçu si vous êtes aussi inscrit aux visites d’industries.</li>
@@ -130,7 +127,7 @@ export default function JourneesPalaisPage() {
             <fieldset className="sm:col-span-2">
               <legend className="text-sm font-semibold text-forest">Choisissez vos journées</legend>
               <div className="mt-3 grid gap-3">
-                {OPEN_DAYS.map((d) => {
+                {PALAIS_DAYS.map((d) => {
                   const checked = days.includes(d.n)
                   return (
                     <label

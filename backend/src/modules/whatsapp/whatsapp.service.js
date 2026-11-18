@@ -690,10 +690,7 @@ function participateBody() {
     // Inscriptions des particuliers closes.
     // `*Visites d'usines, particuliers* (19 et 20 nov.) : ${site}/inscription-particulier`,
     // '',
-    // Palais rouvert pour le mercredi 18 seulement.
-    `*Palais des Congrès* (mercredi 18 nov., les femmes dans l'industrie) : ${site}/journees-au-palais`,
-    '',
-    'Les autres inscriptions sont closes.',
+    'Les inscriptions sont closes.',
     '',
     `Déjà inscrit ? Envoyez « QR » ou votre code de suivi pour recevoir votre QR, ou retrouvez votre dossier dans Mon espace : ${site}/mon-espace`,
     '',
