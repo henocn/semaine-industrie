@@ -68,7 +68,7 @@ function buildEmail({
     ...outro.map(paragraph),
     ...buttons.map(buttonBlock),
     /* Mention discrète en bas du message (ex. renvoi). */
-    note ? `<p style="margin:0;font:12px/1.5 ${FONT};color:${MUTED}">${esc(note)}</p>` : '',
+    note ? `<p style="margin:0;font:12px/1.5 ${FONT};color:${MUTED}">${[].concat(note).map(esc).join('<br>')}</p>` : '',
   ].join('\n');
 
   const html = `<!doctype html>
@@ -93,7 +93,7 @@ function buildEmail({
     ...(details.length ? ['', ...details.map(([label, value]) => `${label} : ${value}`)] : []),
     ...(outro.length ? ['', ...outro.map(plain)] : []),
     ...(buttons.length ? ['', ...buttons.map((b) => `${b.label} : ${b.url}`)] : []),
-    ...(note ? ['', note] : []),
+    ...(note ? ['', ...[].concat(note)] : []),
     '',
     `Semaine de l’industrie 2026, du 16 au 22 novembre, au Togo. Une question ? ${CONTACT}`,
   ].join('\n');
@@ -209,6 +209,20 @@ function emails(site = env.PUBLIC_APP_URL) {
       button: [
         { label: 'Choisir mon créneau', url: `${base}/visites?code=${encodeURIComponent(code)}` },
         { label: 'Rejoindre le groupe WhatsApp', url: visitSlots().WHATSAPP_GROUP },
+      ],
+    }),
+
+    /* Particulier accepté sans créneau : rappel pour choisir son départ (envoi unique par script). */
+    slotReminder: ({ name, code }) => buildEmail({
+      subject: 'Visites d’usines : choisissez votre créneau, places limitées',
+      intro: [
+        `L’inscription de **${name}** aux visites d’usines est acceptée, mais **aucun créneau de départ n’a encore été choisi**.`,
+        'Les places sont limitées et certains départs du jeudi 19 et du vendredi 20 novembre sont presque complets : choisissez le vôtre dès maintenant.',
+      ],
+      button: { label: 'Choisir mon créneau', url: `${base}/visites?code=${encodeURIComponent(code)}` },
+      note: [
+        `Votre code de suivi : ${code}`,
+        'Si vous avez déjà choisi votre créneau, merci de ne pas tenir compte de ce message.',
       ],
     }),
 
