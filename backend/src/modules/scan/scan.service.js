@@ -6,6 +6,7 @@ const ApiError = require('../../utils/ApiError');
 const trackingService = require('../tracking/tracking.service');
 const participationService = require('../participations/participation.service');
 const palais = require('../participations/palais');
+const visitSlots = require('../participations/visitSlots');
 
 /* Point de départ tel que l'écran de scan et les paramètres le voient. */
 function pointView(row) {
@@ -69,8 +70,39 @@ function personView(row, code) {
   return { code: row.tracking_code || code, name: row.name, status: row.status, kind: row.kind };
 }
 
-/* Scan d'un particulier ou d'un média à un point de départ : un seul scan par inscription. */
-async function scanDeparture({ code: rawCode, point_id: pointId, check = false }, user) {
+/* Lieu d'un point de départ, comparable au lieu du créneau (« agoe », « palais ») ; null si autre lieu. */
+function placeOfPoint(name) {
+  const text = String(name || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  if (text.includes('palais')) return 'palais';
+  if (text.includes('agoe')) return 'agoe';
+  return null;
+}
+
+/* Jour de novembre aujourd'hui à Lomé (19, 20…), null hors novembre 2026. */
+function todayInLome() {
+  const iso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lome', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  return iso.startsWith('2026-11-') ? Number(iso.slice(-2)) : null;
+}
+
+/*
+ * Ce qui demande une confirmation au scanneur (boutons Oui / Non) :
+ * pas de créneau, mauvais lieu, mauvais jour. Sans souci, le scanneur n'a que « Oui ».
+ */
+function departureIssues(row, point) {
+  if (!row.visit_slot) return ['no_slot'];
+  const parts = String(row.visit_slot).split('-');
+  const issues = [];
+  const here = placeOfPoint(point.name);
+  if (here && here !== parts[parts.length - 1]) issues.push('wrong_place');
+  if (todayInLome() !== Number(parts[0])) issues.push('wrong_day');
+  return issues;
+}
+
+/*
+ * Scan d'un particulier à un point de départ : un seul scan enregistré par inscription.
+ * again : la personne déjà scannée repart, le scanneur a dit Oui ; noté dans le journal, pas de second scan.
+ */
+async function scanDeparture({ code: rawCode, point_id: pointId, check = false, again = false }, user) {
   const code = trackingService.normalizeCode(rawCode);
   if (/^(?:EC|JP|AF|IN|MD)-[A-Z0-9]{4}$/.test(code)) {
     throw ApiError.badRequest('Ce QR n’est pas celui d’un particulier (PA-…) inscrit aux visites');
@@ -87,19 +119,24 @@ async function scanDeparture({ code: rawCode, point_id: pointId, check = false }
   if (row.status !== 'approved') {
     throw ApiError.conflict(`Inscription ${row.status === 'rejected' ? 'refusée' : 'pas encore validée'} : départ non enregistré`);
   }
+  const slot = row.visit_slot ? visitSlots.slotInfo(row.visit_slot) : null;
+  const issues = departureIssues(row, point);
+  const base = { ...personView(row, code), slot, issues, here: point.name, id: row.id };
   const existing = await DepartureScan.findOne({ where: { participation_id: row.id } });
   if (existing) {
-    return { ...personView(row, code), already: true, point: existing.point_name, scanned_at: existing.scanned_at, id: row.id };
+    const first = { point: existing.point_name, scanned_at: existing.scanned_at };
+    if (check) return { ...base, ...first, already: true, checked: true };
+    return { ...base, ...first, already: true, again: Boolean(again) };
   }
-  /* Vérification seule : la personne est valide, rien n'est enregistré avant « Entrer ». */
-  if (check) return { ...personView(row, code), already: false, checked: true, point: point.name, scanned_at: null, id: row.id };
+  /* Vérification seule : rien n'est enregistré avant la réponse du scanneur. */
+  if (check) return { ...base, already: false, checked: true, point: point.name, scanned_at: null };
   const scan = await DepartureScan.create({
     participation_id: row.id,
     departure_point_id: point.id,
     point_name: point.name,
     scanned_by: user?.id || null,
   });
-  return { ...personView(row, code), already: false, point: scan.point_name, scanned_at: scan.scanned_at, id: row.id };
+  return { ...base, already: false, point: scan.point_name, scanned_at: scan.scanned_at };
 }
 
 /* Entrée au Palais pour le jour réglé dans le scan. Vérification de la date du jour désactivée. */

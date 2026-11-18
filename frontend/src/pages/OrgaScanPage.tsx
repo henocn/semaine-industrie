@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { OrgaShell } from '../components/layout/OrgaShell'
-import { findByContact, listDeparturePoints, scanDeparture, scanPalais, type DeparturePoint } from '../api/scan'
+import { findByContact, listDeparturePoints, scanDeparture, scanPalais, type DeparturePoint, type DepartureScanResult } from '../api/scan'
 import { readStore, writeStore } from '../lib/localStore'
 import { PALAIS_DAYS } from '../data'
 
@@ -40,6 +40,21 @@ function defaultDay() {
   const iso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lome', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
   const today = iso.startsWith('2026-11-') ? Number(iso.slice(-2)) : null
   return PALAIS_DAYS.some((d) => d.n === today) ? (today as number) : PALAIS_DAYS[0].n
+}
+
+/* Personne scannée en attente de la réponse du scanneur ; visit : résultat d'un scan de départ. */
+type Candidate = { code: string; name: string; visit?: DepartureScanResult }
+
+/* Ce que le scanneur doit savoir avant de répondre (vide : tout est en ordre, seul « Oui » s'affiche). */
+function departureAlerts(v: DepartureScanResult) {
+  const alerts: string[] = []
+  if (v.already) alerts.push(`Déjà parti de « ${v.point} »${v.scanned_at ? ` à ${hour(v.scanned_at)}` : ''}.`)
+  for (const issue of v.issues ?? []) {
+    if (issue === 'no_slot') alerts.push('N’a pas choisi de créneau.')
+    if (issue === 'wrong_place' && v.slot) alerts.push(`Son départ est prévu à ${v.slot.place}, pas ici.`)
+    if (issue === 'wrong_day' && v.slot) alerts.push(`Son départ est prévu le ${v.slot.day.toLowerCase()}.`)
+  }
+  return alerts
 }
 
 /* Libellé des réglages en cours. */
@@ -217,6 +232,68 @@ function Camera({ onCode, paused }: { onCode: (raw: string) => void; paused: boo
   )
 }
 
+/*
+ * Fiche après le scan d'un particulier : nom, départ et demi-journée.
+ * Tout en ordre (accepté, créneau choisi, bon lieu, bon jour, pas encore parti) : seul « Oui ».
+ * Sinon, le message explique ce qui cloche et le scanneur répond Oui ou Non.
+ */
+function DepartureCard({ visit, busy, onYes, onNo }: { visit: DepartureScanResult; busy: boolean; onYes: () => void; onNo: () => void }) {
+  const alerts = departureAlerts(visit)
+  const confirm = alerts.length > 0
+  return (
+    <div className="border border-black bg-white px-5 py-5">
+      <p className="text-center text-[22px] font-bold leading-tight text-forest">{visit.name}</p>
+      <p className="mt-1 text-center text-[13px] text-ink/55">{visit.code}</p>
+
+      <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-black/10 pt-4 text-[15px]">
+        <dt className="text-ink/55">Départ</dt>
+        <dd className="font-semibold text-forest">{visit.slot ? visit.slot.place : 'Aucun créneau choisi'}</dd>
+        <dt className="text-ink/55">Demi-journée</dt>
+        <dd className="font-semibold text-forest">{visit.slot ? `${visit.slot.day} · ${visit.slot.period}` : '—'}</dd>
+      </dl>
+
+      {confirm && (
+        <div role="alert" className="mt-4 border-l-4 border-sun bg-sun/15 px-3 py-2.5 text-[15px] text-ink">
+          {alerts.map((a) => (
+            <p key={a}>{a}</p>
+          ))}
+          <p className="mt-1.5 font-semibold">{visit.already ? 'Le laisser repartir ?' : 'Le laisser partir quand même ?'}</p>
+        </div>
+      )}
+
+      {confirm ? (
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onNo}
+            className="border border-black bg-white px-4 py-4 text-[18px] font-bold text-ink transition-colors hover:bg-black/5 disabled:opacity-50"
+          >
+            Non
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onYes}
+            className="bg-energy px-4 py-4 text-[18px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {busy ? '…' : 'Oui'}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onYes}
+          className="mt-5 w-full bg-energy px-6 py-4 text-[18px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {busy ? 'Enregistrement…' : 'Oui'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 /* Page Scan : réglages (visite + point de départ, ou palais + jour), puis lecture des QR. */
 export default function OrgaScanPage() {
   const [settings, setSettings] = useState<ScanSettings | null>(() => readStore<ScanSettings>(STORE_KEY))
@@ -224,7 +301,7 @@ export default function OrgaScanPage() {
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [busy, setBusy] = useState(false)
   /* QR valide en attente du bouton « Entrer » : la caméra est masquée pendant ce temps. */
-  const [candidate, setCandidate] = useState<{ code: string; name: string } | null>(null)
+  const [candidate, setCandidate] = useState<Candidate | null>(null)
   const lastRef = useRef<{ code: string; at: number } | null>(null)
 
   /* Garde les réglages sur l'appareil et passe au scan. */
@@ -249,12 +326,9 @@ export default function OrgaScanPage() {
       setOutcome(null)
       try {
         if (settings.mode === 'visite') {
+          /* Toujours la fiche : départ, demi-journée, et Oui / Non si quelque chose cloche (déjà parti compris). */
           const r = await scanDeparture(code, settings.pointId, true)
-          if (r.already) {
-            setOutcome({ tone: 'already', title: `${r.name} : départ déjà enregistré`, detail: `${r.point}, à ${hour(r.scanned_at)} · ${r.code}` })
-          } else {
-            setCandidate({ code, name: r.name })
-          }
+          setCandidate({ code, name: r.name, visit: r })
         } else {
           const r = await scanPalais(code, settings.day, true)
           const entry = r.already_at || r.days.find((d) => d.n === settings.day)?.checked_in_at
@@ -273,14 +347,27 @@ export default function OrgaScanPage() {
     [settings, busy, candidate],
   )
 
-  /* Bouton « Entrer » : enregistre l'entrée (ou le départ), puis on revient au scan. */
+  /* Réponse « Non » : rien n'est enregistré, retour au scan. */
+  function refuseEntry() {
+    if (!candidate) return
+    setOutcome({ tone: 'already', title: `${candidate.name} : départ non enregistré`, detail: candidate.code })
+    lastRef.current = { code: candidate.code, at: Date.now() }
+    setCandidate(null)
+  }
+
+  /* Réponse « Oui » : enregistre le départ (ou la reprise d'un départ), ou l'entrée au Palais. */
   async function confirmEntry() {
     if (!settings || !candidate || busy) return
     setBusy(true)
     try {
       if (settings.mode === 'visite') {
-        const r = await scanDeparture(candidate.code, settings.pointId)
-        setOutcome({ tone: r.already ? 'already' : 'ok', title: `${r.name} : ${r.already ? 'départ déjà enregistré' : 'départ enregistré'}`, detail: r.code })
+        const again = Boolean(candidate.visit?.already)
+        const r = await scanDeparture(candidate.code, settings.pointId, false, again)
+        setOutcome({
+          tone: 'ok',
+          title: `${r.name} : ${r.again ? 'départ repris' : r.already ? 'départ déjà enregistré' : 'départ enregistré'}`,
+          detail: r.code,
+        })
       } else {
         const r = await scanPalais(candidate.code, settings.day)
         setOutcome({ tone: r.already ? 'already' : 'ok', title: `${r.name} : ${r.already ? 'entrée déjà enregistrée' : 'entrée enregistrée'}`, detail: r.code })
@@ -347,7 +434,9 @@ export default function OrgaScanPage() {
             </button>
           </div>
 
-          {candidate ? (
+          {candidate?.visit ? (
+            <DepartureCard visit={candidate.visit} busy={busy} onYes={() => void confirmEntry()} onNo={refuseEntry} />
+          ) : candidate ? (
             <div className="border border-black bg-white px-5 py-6 text-center">
               <p className="text-[22px] font-bold leading-tight text-forest">{candidate.name}</p>
               <button
