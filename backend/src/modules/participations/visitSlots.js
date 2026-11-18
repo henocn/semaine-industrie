@@ -1,13 +1,48 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { sequelize, Participation, Passport } = require('../../models');
+const { sequelize, Participation, Passport, AuditEvent } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const trackingService = require('../tracking/tracking.service');
 
 /* Groupe WhatsApp des visites des particuliers (heures, entreprises visitées, consignes). */
 const WHATSAPP_GROUP = 'https://chat.whatsapp.com/D23e7tkuv5E77DmwnSnQxx';
+
+/*
+ * Choix des créneaux ouvert ou fermé : case des Paramètres du backoffice.
+ * Chaque changement ajoute une ligne dans audit_events (qui, quand) ; la dernière fait foi.
+ * Sans aucune ligne, VISIT_SLOTS_OPEN du .env décide. Gardé en mémoire après la première lecture.
+ */
+const SETTING = { entity_type: 'setting', entity_id: 'visit_slots_open' };
+const OPEN_ACTIONS = { true: 'visit_slots_opened', false: 'visit_slots_closed' };
+let openCache = null;
+
+async function isOpen() {
+  if (openCache === null) {
+    const last = await AuditEvent.findOne({
+      where: { ...SETTING, action: Object.values(OPEN_ACTIONS) },
+      order: [['created_at', 'DESC']],
+      attributes: ['action'],
+    });
+    openCache = last ? last.action === OPEN_ACTIONS.true : env.VISIT_SLOTS_OPEN;
+  }
+  return openCache;
+}
+
+/* Ouvre ou ferme le choix des créneaux depuis le backoffice, et le note. */
+async function setOpen(open, user = {}) {
+  const value = Boolean(open);
+  await AuditEvent.create({
+    ...SETTING,
+    user_id: user.id || null,
+    actor_email: user.email || null,
+    action: OPEN_ACTIONS[value],
+    summary: value ? 'Choix des créneaux ouvert' : 'Choix des créneaux fermé',
+  });
+  openCache = value;
+  return { open: value };
+}
 
 /* Places par départ (une demi-journée et un lieu de rencontre). */
 const CAPACITY = 50;
@@ -73,7 +108,7 @@ async function countBySlot(transaction) {
 async function availability() {
   const counts = await countBySlot();
   return {
-    open: env.VISIT_SLOTS_OPEN,
+    open: await isOpen(),
     slots: SLOTS.map((slot) => {
       const booked = counts.get(slot.id) || 0;
       return { ...slot, capacity: CAPACITY, remaining: Math.max(CAPACITY - booked, 0) };
@@ -137,7 +172,7 @@ async function lookup(rawCode) {
 
 /* Réserve un départ : une seule réservation par inscription, 50 places par départ. */
 async function book(rawCode, slotId) {
-  if (!env.VISIT_SLOTS_OPEN) throw ApiError.conflict('Les réservations ne sont pas ouvertes.');
+  if (!(await isOpen())) throw ApiError.conflict('Le choix des créneaux est clos.');
   const slot = slotInfo(slotId);
   if (!slot) throw ApiError.badRequest('Choisissez un départ.');
 
@@ -178,7 +213,7 @@ async function planning() {
     where: { kind: 'particulier', status: 'approved', visit_slot: null },
   });
   return {
-    open: env.VISIT_SLOTS_OPEN,
+    open: await isOpen(),
     capacity: CAPACITY,
     waiting,
     slots: SLOTS.map((slot) => ({
@@ -232,4 +267,6 @@ module.exports = {
   book,
   planning,
   setSlot,
+  isOpen,
+  setOpen,
 };

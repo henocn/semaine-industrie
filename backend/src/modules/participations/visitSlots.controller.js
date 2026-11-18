@@ -80,7 +80,19 @@ async function setSlot(req, res, next) {
   }
 }
 
+/* Ouvre ou ferme le choix des créneaux (case des Paramètres du backoffice). */
+async function setOpen(req, res, next) {
+  try {
+    const data = await service.setOpen(req.body?.open === true, req.user);
+    emitRealtime('visit-slot:changed', { action: 'open', open: data.open }, 'orga');
+    return ApiResponse.success(res, data, data.open ? 'Choix des créneaux ouvert' : 'Choix des créneaux fermé');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
+  setOpen,
   availability,
   lookup,
   book,

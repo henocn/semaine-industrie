@@ -70,3 +70,11 @@ export function setVisitSlot(id: string, slot: string | null) {
     body: JSON.stringify({ slot }),
   })
 }
+
+/* Ouvre ou ferme le choix des créneaux par les particuliers (backoffice, Paramètres). */
+export function setVisitSlotsOpen(open: boolean) {
+  return apiFetch<{ open: boolean }>('/participations/visit-slots/open', {
+    method: 'PUT',
+    body: JSON.stringify({ open }),
+  })
+}
