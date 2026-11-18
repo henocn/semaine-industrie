@@ -10,7 +10,7 @@ import {
   type DepartureSettings,
 } from '../api/scan'
 import { ResourcesPanel } from './OrgaResourcesPage'
-import { getVisitSlots, setVisitSlotsOpen } from '../api/visitSlots'
+import { getVisitSlots, setVisitSlotsOpen, type VisitSlotDay } from '../api/visitSlots'
 
 const TABS = [
   { key: 'depart', label: 'Points de départ' },
@@ -119,56 +119,65 @@ function DeparturePanel() {
   )
 }
 
-/* Choix des créneaux par les particuliers : une case ouvre ou ferme la page publique /visites. */
+/* Choix des créneaux par les particuliers, jour par jour (page publique /visites). */
 function SlotsOpenPanel() {
-  const [open, setOpen] = useState<boolean | null>(null)
+  const [days, setDays] = useState<VisitSlotDay[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState<string | null>(null)
 
   useEffect(() => {
     getVisitSlots()
-      .then((data) => setOpen(data.open))
+      .then((data) => setDays(data.days ?? []))
       .catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
   }, [])
 
-  /* Change l'état après confirmation. */
-  async function onToggle(next: boolean) {
+  /* Ouvre ou ferme un jour après confirmation. */
+  async function onToggle(d: VisitSlotDay, next: boolean) {
     const question = next
-      ? 'Rouvrir le choix des créneaux ? Les particuliers acceptés pourront de nouveau choisir leur départ.'
-      : 'Fermer le choix des créneaux ? La page publique affichera « Le choix des créneaux est clos ».'
+      ? `Rouvrir le choix des créneaux du ${d.label.toLowerCase()} ?`
+      : `Fermer le choix des créneaux du ${d.label.toLowerCase()} ? Ses départs seront grisés sur la page publique.`
     if (!window.confirm(question)) return
-    setBusy(true)
+    setBusy(d.day)
     setError(null)
     try {
-      setOpen((await setVisitSlotsOpen(next)).open)
+      setDays((await setVisitSlotsOpen(d.day, next)).days)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Modification impossible')
     } finally {
-      setBusy(false)
+      setBusy(null)
     }
   }
 
   return (
     <section className="orga-panel max-w-xl">
       <h2 className="text-[15px] font-semibold text-forest">Choix des créneaux de visite</h2>
-      <p className="mt-1 text-[13px] text-ink/55">Page publique /visites, où les particuliers acceptés choisissent leur départ.</p>
+      <p className="mt-1 text-[13px] text-ink/55">
+        Cochez les jours où les particuliers acceptés peuvent encore choisir leur départ (page publique /visites). Un jour décoché
+        reste visible mais grisé ; si tous sont décochés, la page affiche « Le choix des créneaux est clos ».
+      </p>
       {error && <p className="mt-3 text-[14px] text-red-700">{error}</p>}
-      {open === null ? (
+      {!days ? (
         !error && <p className="mt-4 text-[13px] text-ink/50">Chargement…</p>
       ) : (
-        <label className="mt-4 flex cursor-pointer items-center gap-3">
-          <input
-            type="checkbox"
-            checked={open}
-            disabled={busy}
-            onChange={(e) => void onToggle(e.target.checked)}
-            className="h-4 w-4 shrink-0 accent-forest"
-          />
-          <span className="text-[14px] text-forest">Les particuliers peuvent choisir leur créneau</span>
-          <span className={`ml-auto text-[13px] font-semibold ${open ? 'text-energy' : 'text-red-700'}`}>
-            {open ? 'Ouvert' : 'Fermé'}
-          </span>
-        </label>
+        <ul className="mt-4 divide-y divide-black/10 border border-black">
+          {days.map((d) => (
+            <li key={d.day}>
+              <label className="flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-forest/5">
+                <input
+                  type="checkbox"
+                  checked={d.open}
+                  disabled={busy === d.day}
+                  onChange={(e) => void onToggle(d, e.target.checked)}
+                  className="h-4 w-4 shrink-0 accent-forest"
+                />
+                <span className="min-w-0 flex-1 text-[14px] text-forest">{d.label}</span>
+                <span className={`text-[13px] font-semibold ${d.open ? 'text-energy' : 'text-red-700'}`}>
+                  {d.open ? 'Ouvert' : 'Fermé'}
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   )
