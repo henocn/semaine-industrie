@@ -10,38 +10,62 @@ const trackingService = require('../tracking/tracking.service');
 const WHATSAPP_GROUP = 'https://chat.whatsapp.com/D23e7tkuv5E77DmwnSnQxx';
 
 /*
- * Choix des créneaux ouvert ou fermé : case des Paramètres du backoffice.
- * Chaque changement ajoute une ligne dans audit_events (qui, quand) ; la dernière fait foi.
- * Sans aucune ligne, VISIT_SLOTS_OPEN du .env décide. Gardé en mémoire après la première lecture.
+ * Choix des créneaux ouvert ou fermé, jour par jour : cases des Paramètres du backoffice.
+ * Chaque changement ajoute une ligne dans audit_events (qui, quand) ; la dernière ligne du jour fait foi.
+ * Sans aucune ligne pour un jour, VISIT_SLOTS_OPEN du .env décide. Gardé en mémoire après la première lecture.
  */
-const SETTING = { entity_type: 'setting', entity_id: 'visit_slots_open' };
 const OPEN_ACTIONS = { true: 'visit_slots_opened', false: 'visit_slots_closed' };
+const settingFor = (day) => ({ entity_type: 'setting', entity_id: `visit_slots_open_${day}` });
 let openCache = null;
 
-async function isOpen() {
+/* État de chaque jour : { 19: true, 20: false }. */
+async function openDays() {
   if (openCache === null) {
-    const last = await AuditEvent.findOne({
-      where: { ...SETTING, action: Object.values(OPEN_ACTIONS) },
-      order: [['created_at', 'DESC']],
-      attributes: ['action'],
-    });
-    openCache = last ? last.action === OPEN_ACTIONS.true : env.VISIT_SLOTS_OPEN;
+    const state = {};
+    for (const day of Object.keys(DAYS)) {
+      const last = await AuditEvent.findOne({
+        where: { ...settingFor(day), action: Object.values(OPEN_ACTIONS) },
+        order: [['created_at', 'DESC']],
+        attributes: ['action'],
+      });
+      state[day] = last ? last.action === OPEN_ACTIONS.true : env.VISIT_SLOTS_OPEN;
+    }
+    openCache = state;
   }
   return openCache;
 }
 
-/* Ouvre ou ferme le choix des créneaux depuis le backoffice, et le note. */
-async function setOpen(open, user = {}) {
+/* Au moins un jour encore ouvert. */
+async function isOpen() {
+  return Object.values(await openDays()).some(Boolean);
+}
+
+/* Jour d'un départ : « 19-matin-agoe » donne « 19 ». */
+function dayOf(slotId) {
+  return String(slotId).split('-')[0];
+}
+
+/* Jours avec leur état, pour la page publique et les Paramètres. */
+async function daysView() {
+  const state = await openDays();
+  return Object.keys(DAYS).map((day) => ({ day, label: DAYS[day], open: state[day] }));
+}
+
+/* Ouvre ou ferme le choix des créneaux d'un jour depuis le backoffice, et le note. */
+async function setOpen(day, open, user = {}) {
+  const key = String(day);
+  if (!DAYS[key]) throw ApiError.badRequest('Jour inconnu.');
   const value = Boolean(open);
   await AuditEvent.create({
-    ...SETTING,
+    ...settingFor(key),
     user_id: user.id || null,
     actor_email: user.email || null,
     action: OPEN_ACTIONS[value],
-    summary: value ? 'Choix des créneaux ouvert' : 'Choix des créneaux fermé',
+    summary: `Choix des créneaux du ${DAYS[key].toLowerCase()} ${value ? 'ouvert' : 'fermé'}`,
   });
-  openCache = value;
-  return { open: value };
+  await openDays();
+  openCache = { ...openCache, [key]: value };
+  return { open: await isOpen(), days: await daysView() };
 }
 
 /* Places par départ (une demi-journée et un lieu de rencontre). */
@@ -107,11 +131,13 @@ async function countBySlot(transaction) {
 /* Départs avec les places restantes (page publique). */
 async function availability() {
   const counts = await countBySlot();
+  const state = await openDays();
   return {
     open: await isOpen(),
+    days: await daysView(),
     slots: SLOTS.map((slot) => {
       const booked = counts.get(slot.id) || 0;
-      return { ...slot, capacity: CAPACITY, remaining: Math.max(CAPACITY - booked, 0) };
+      return { ...slot, open: state[dayOf(slot.id)], capacity: CAPACITY, remaining: Math.max(CAPACITY - booked, 0) };
     }),
   };
 }
@@ -175,6 +201,7 @@ async function book(rawCode, slotId) {
   if (!(await isOpen())) throw ApiError.conflict('Le choix des créneaux est clos.');
   const slot = slotInfo(slotId);
   if (!slot) throw ApiError.badRequest('Choisissez un départ.');
+  if (!(await openDays())[dayOf(slot.id)]) throw ApiError.conflict(`Le choix des créneaux du ${slot.day.toLowerCase()} est clos.`);
 
   return sequelize.transaction(async (transaction) => {
     const row = await findBookable(rawCode, transaction);
@@ -214,6 +241,7 @@ async function planning() {
   });
   return {
     open: await isOpen(),
+    days: await daysView(),
     capacity: CAPACITY,
     waiting,
     slots: SLOTS.map((slot) => ({

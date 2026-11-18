@@ -236,18 +236,26 @@ export default function ReservationVisitePage() {
               ) : (
                 DAYS.map((day) => (
                   <fieldset key={day} className="mt-4">
-                    <legend className="text-[15px] font-semibold text-ink">{day}</legend>
+                    <legend className="text-[15px] font-semibold text-ink">
+                      {day}
+                      {slots.some((s) => s.day === day && s.open === false) && (
+                        <span className="ml-2 text-[13px] font-semibold text-red-700">· choix clos</span>
+                      )}
+                    </legend>
                     <div className="mt-2 grid gap-2 sm:grid-cols-2">
                       {slots.filter((s) => s.day === day).map((s) => {
+                        /* Jour fermé dans les Paramètres : départ visible mais grisé, comme un départ plein. */
+                        const closed = s.open === false
                         const full = s.remaining <= 0
-                        const disabled = !open || !person || full || busy
+                        const locked = closed || full
+                        const disabled = !open || !person || locked || busy
                         const checked = choice === s.id
                         return (
                           <label
                             key={s.id}
                             className={`flex gap-3 rounded-sm border p-3 transition-colors ${
-                              full ? 'border-ink/15 bg-ink/5' : checked ? 'border-forest bg-white' : 'border-forest/25 bg-white'
-                            } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:border-forest/60'} ${disabled && !full ? 'opacity-60' : ''}`}
+                              locked ? 'border-ink/15 bg-ink/5' : checked ? 'border-forest bg-white' : 'border-forest/25 bg-white'
+                            } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:border-forest/60'} ${disabled && !locked ? 'opacity-60' : ''}`}
                           >
                             <input
                               type="radio"
@@ -260,9 +268,14 @@ export default function ReservationVisitePage() {
                               className="mt-1 h-4 w-4 shrink-0 accent-forest"
                             />
                             <span className="min-w-0 flex-1">
-                              <span className={`block font-semibold ${full ? 'text-ink/45' : 'text-forest'}`}>{s.period}</span>
-                              <span className={`block text-[14px] ${full ? 'text-ink/45' : 'text-ink/75'}`}>{s.place}</span>
-                              {full ? (
+                              <span className={`block font-semibold ${locked ? 'text-ink/45' : 'text-forest'}`}>{s.period}</span>
+                              <span className={`block text-[14px] ${locked ? 'text-ink/45' : 'text-ink/75'}`}>{s.place}</span>
+                              {closed ? (
+                                <span className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-red-700">
+                                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                                  Clos
+                                </span>
+                              ) : full ? (
                                 <span className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-red-700">
                                   <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                                   Plein · {s.capacity}/{s.capacity}

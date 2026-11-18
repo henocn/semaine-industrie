@@ -8,8 +8,11 @@ export type VisitSlot = {
   place: string
 }
 
-/* Départ avec ses places restantes (page publique). */
-export type VisitSlotAvailability = VisitSlot & { capacity: number; remaining: number }
+/* Départ avec ses places restantes (page publique) ; open = choix encore ouvert ce jour-là. */
+export type VisitSlotAvailability = VisitSlot & { capacity: number; remaining: number; open?: boolean }
+
+/* Jour de visite et état du choix des créneaux (cases des Paramètres). */
+export type VisitSlotDay = { day: string; label: string; open: boolean }
 
 /* Inscription d'un particulier validé, et son départ s'il l'a déjà choisi. */
 export type VisitSlotBooking = {
@@ -34,6 +37,7 @@ export type VisitSlotPerson = {
 /* Planning des départs pour le backoffice. */
 export type VisitSlotPlanning = {
   open: boolean
+  days?: VisitSlotDay[]
   capacity: number
   /* Particuliers validés qui n'ont pas encore choisi de départ. */
   waiting: number
@@ -42,7 +46,7 @@ export type VisitSlotPlanning = {
 
 /* Départs et places restantes. */
 export function getVisitSlots() {
-  return apiFetch<{ open: boolean; slots: VisitSlotAvailability[] }>('/participations/public/visit-slots')
+  return apiFetch<{ open: boolean; days?: VisitSlotDay[]; slots: VisitSlotAvailability[] }>('/participations/public/visit-slots')
 }
 
 /* Vérifie un code de suivi avant le choix du départ. */
@@ -71,10 +75,10 @@ export function setVisitSlot(id: string, slot: string | null) {
   })
 }
 
-/* Ouvre ou ferme le choix des créneaux par les particuliers (backoffice, Paramètres). */
-export function setVisitSlotsOpen(open: boolean) {
-  return apiFetch<{ open: boolean }>('/participations/visit-slots/open', {
+/* Ouvre ou ferme le choix des créneaux d'un jour (backoffice, Paramètres). */
+export function setVisitSlotsOpen(day: string, open: boolean) {
+  return apiFetch<{ open: boolean; days: VisitSlotDay[] }>('/participations/visit-slots/open', {
     method: 'PUT',
-    body: JSON.stringify({ open }),
+    body: JSON.stringify({ day, open }),
   })
 }
