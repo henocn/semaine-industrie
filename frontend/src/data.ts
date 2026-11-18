@@ -71,9 +71,6 @@ export const PARTICULIER_VISITS_OPEN = true
 /* Journées du Palais des Congrès ouvertes à l'inscription des particuliers (mêmes numéros côté serveur). */
 export type PalaisDay = { n: number; label: string; title: string; place: string; hours: string; text: string }
 
-/* Journées encore ouvertes à l'inscription (mêmes numéros côté serveur) : les 16 et 17 sont passés. */
-export const PALAIS_OPEN_DAYS = [18]
-
 export const PALAIS_DAYS: PalaisDay[] = [
   {
     n: 16, label: 'Lundi 16 novembre', title: 'L’ouverture', place: 'Grande salle', hours: 'à partir de 8h30',
@@ -193,7 +190,7 @@ export const FAQ = [
   },
   {
     q: 'Comment participer aux rendez-vous au Palais des Congrès ?',
-    a: 'L’inscription est ouverte pour le mercredi 18 novembre, les femmes dans l’industrie : rubrique « Participer », « Participation au Palais des Congrès ».\nLes personnes inscrites ont un seul QR, valable pour les journées choisies, à présenter à l’accueil du Palais des Congrès de Lomé. Il se retrouve dans « Mon espace » avec le code de suivi, ou en envoyant « QR » au bot WhatsApp.',
+    a: 'Les inscriptions aux rendez-vous du Palais des Congrès sont closes.\nLes personnes inscrites ont un seul QR, valable pour les journées choisies, à présenter à l’accueil du Palais des Congrès de Lomé. Il se retrouve dans « Mon espace » avec le code de suivi, ou en envoyant « QR » au bot WhatsApp.',
   },
   {
     q: 'Comment obtenir une accréditation média ?',
