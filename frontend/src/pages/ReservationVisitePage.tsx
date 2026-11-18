@@ -136,8 +136,10 @@ export default function ReservationVisitePage() {
         <div className="animate-rise md:sticky md:top-24 md:self-start">
           <SectionHeader
             level={1}
-            title="Confirmez votre départ pour les visites d’usines"
-            lead="Votre inscription aux visites est validée ? Choisissez votre demi-journée et votre lieu de rencontre pour le jeudi 19 ou le vendredi 20 novembre."
+            title={open ? 'Confirmez votre départ pour les visites d’usines' : 'Départs des visites d’usines'}
+            lead={open
+              ? 'Votre inscription aux visites est validée ? Choisissez votre demi-journée et votre lieu de rencontre pour le jeudi 19 ou le vendredi 20 novembre.'
+              : 'Visites d’usines des particuliers, jeudi 19 et vendredi 20 novembre.'}
           />
           {/* <ul className="mt-6 space-y-2 border-t border-forest/15 pt-5 text-[15px] leading-relaxed text-ink/75">
             <li>50 places par demi-journée et par lieu de rencontre.</li>
@@ -169,6 +171,14 @@ export default function ReservationVisitePage() {
               Un changement ou un empêchement ? Écrivez à l’organisation dans le groupe pour modifier ou libérer votre place.
             </p> */}
           </div>
+        ) : !open ? (
+          /* Choix clos : un seul message, sans code à saisir ni champs grisés. */
+          <section className="self-start rounded-sm border-2 border-sun bg-sage p-6">
+            <p className="flex items-center gap-2 font-semibold text-forest">
+              <Lock className="h-4 w-4 shrink-0" aria-hidden="true" />
+              Le choix des créneaux est clos.
+            </p>
+          </section>
         ) : (
           <div className="grid content-start gap-8">
             <section>
@@ -216,11 +226,11 @@ export default function ReservationVisitePage() {
 
             <form onSubmit={onBook}>
               <h2 className="text-sm font-semibold text-forest">2. Votre départ</h2>
-              {!open && (
+              {/* {!open && (
                 <p className="mt-3 border-l-2 border-sun bg-sage px-3 py-2 text-[14px] text-ink/80">
                   Les réservations ne sont pas encore ouvertes. L’ouverture sera annoncée dans le groupe WhatsApp.
                 </p>
-              )}
+              )} */}
               {!slots ? (
                 <p className="mt-3 text-[14px] text-ink/60">Chargement des départs…</p>
               ) : (

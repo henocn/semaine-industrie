@@ -10,9 +10,11 @@ import {
   type DepartureSettings,
 } from '../api/scan'
 import { ResourcesPanel } from './OrgaResourcesPage'
+import { getVisitSlots, setVisitSlotsOpen } from '../api/visitSlots'
 
 const TABS = [
   { key: 'depart', label: 'Points de départ' },
+  { key: 'creneaux', label: 'Choix des créneaux' },
   { key: 'ressources', label: 'Ressources' },
 ] as const
 type TabKey = (typeof TABS)[number]['key']
@@ -117,10 +119,66 @@ function DeparturePanel() {
   )
 }
 
-/* Paramètres du back-office : points de départ des visites et ressources. */
+/* Choix des créneaux par les particuliers : une case ouvre ou ferme la page publique /visites. */
+function SlotsOpenPanel() {
+  const [open, setOpen] = useState<boolean | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    getVisitSlots()
+      .then((data) => setOpen(data.open))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
+  }, [])
+
+  /* Change l'état après confirmation. */
+  async function onToggle(next: boolean) {
+    const question = next
+      ? 'Rouvrir le choix des créneaux ? Les particuliers acceptés pourront de nouveau choisir leur départ.'
+      : 'Fermer le choix des créneaux ? La page publique affichera « Le choix des créneaux est clos ».'
+    if (!window.confirm(question)) return
+    setBusy(true)
+    setError(null)
+    try {
+      setOpen((await setVisitSlotsOpen(next)).open)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Modification impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="orga-panel max-w-xl">
+      <h2 className="text-[15px] font-semibold text-forest">Choix des créneaux de visite</h2>
+      <p className="mt-1 text-[13px] text-ink/55">Page publique /visites, où les particuliers acceptés choisissent leur départ.</p>
+      {error && <p className="mt-3 text-[14px] text-red-700">{error}</p>}
+      {open === null ? (
+        !error && <p className="mt-4 text-[13px] text-ink/50">Chargement…</p>
+      ) : (
+        <label className="mt-4 flex cursor-pointer items-center gap-3">
+          <input
+            type="checkbox"
+            checked={open}
+            disabled={busy}
+            onChange={(e) => void onToggle(e.target.checked)}
+            className="h-4 w-4 shrink-0 accent-forest"
+          />
+          <span className="text-[14px] text-forest">Les particuliers peuvent choisir leur créneau</span>
+          <span className={`ml-auto text-[13px] font-semibold ${open ? 'text-energy' : 'text-red-700'}`}>
+            {open ? 'Ouvert' : 'Fermé'}
+          </span>
+        </label>
+      )}
+    </section>
+  )
+}
+
+/* Paramètres du back-office : points de départ des visites, choix des créneaux et ressources. */
 export default function OrgaSettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab: TabKey = searchParams.get('onglet') === 'ressources' ? 'ressources' : 'depart'
+  const asked = searchParams.get('onglet')
+  const tab: TabKey = asked === 'ressources' || asked === 'creneaux' ? asked : 'depart'
 
   return (
     <OrgaShell title="Paramètres">
@@ -136,7 +194,7 @@ export default function OrgaSettingsPage() {
           </button>
         ))}
       </div>
-      {tab === 'depart' ? <DeparturePanel /> : <ResourcesPanel />}
+      {tab === 'depart' ? <DeparturePanel /> : tab === 'creneaux' ? <SlotsOpenPanel /> : <ResourcesPanel />}
     </OrgaShell>
   )
 }
