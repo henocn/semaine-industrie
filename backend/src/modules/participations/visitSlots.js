@@ -1,7 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { sequelize, Participation, Passport, AuditEvent } = require('../../models');
+const { sequelize, Participation, Passport, AuditEvent, DepartureScan } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const trackingService = require('../tracking/tracking.service');
@@ -261,6 +261,7 @@ async function planning() {
   const waiting = await Participation.count({
     where: { kind: 'particulier', status: 'approved', visit_slot: null },
   });
+  const scansOf = await departureScans(rows.map((row) => row.id));
   return {
     open: await isOpen(),
     days: await daysView(),
@@ -277,9 +278,35 @@ async function planning() {
           phone: row.phone,
           email: row.email,
           booked_at: row.visit_slot_at,
+          scans: scansOf.get(row.id) || [],
         })),
     })),
   };
+}
+
+/*
+ * Scans de départ par inscription, du plus ancien au plus récent :
+ * le premier départ (departure_scans) puis les reprises notées dans le journal (« Départ repris à « … » »).
+ */
+async function departureScans(ids) {
+  const byId = new Map();
+  if (!ids.length) return byId;
+  const push = (id, scan) => byId.set(id, [...(byId.get(id) || []), scan]);
+  const first = await DepartureScan.findAll({
+    where: { participation_id: ids },
+    attributes: ['participation_id', 'point_name', 'scanned_at'],
+  });
+  for (const scan of first) push(scan.participation_id, { point: scan.point_name, at: scan.scanned_at, again: false });
+  const again = await AuditEvent.findAll({
+    where: { entity_type: 'participation', entity_id: ids, summary: { [Op.like]: 'Départ repris à « %' } },
+    attributes: ['entity_id', 'summary', 'created_at'],
+  });
+  for (const event of again) {
+    const point = /^Départ repris à « (.+?) »/.exec(event.summary)?.[1] || 'point inconnu';
+    push(event.entity_id, { point, at: event.created_at, again: true });
+  }
+  for (const list of byId.values()) list.sort((a, b) => new Date(a.at) - new Date(b.at));
+  return byId;
 }
 
 /* Change ou libère le départ d'un particulier (backoffice). La limite de 50 reste valable. */

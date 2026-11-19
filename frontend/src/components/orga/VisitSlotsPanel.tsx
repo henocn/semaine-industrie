@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { getVisitSlotPlanning, setVisitSlot, type VisitSlotPerson, type VisitSlotPlanning } from '../../api/visitSlots'
 import { Lock } from 'lucide-react'
 import { IconCheck, IconTrash, IconX } from '../ui/IconButton'
@@ -16,6 +16,7 @@ const EXPORT_COLUMNS: ExcelColumn<Row>[] = [
   { header: 'Téléphone', width: 18, value: (r) => r.phone },
   { header: 'E-mail', width: 28, value: (r) => r.email },
   { header: 'Réservé le', width: 18, value: (r) => excelDate(r.booked_at) },
+  { header: 'Scans', width: 50, value: (r) => r.scans.map((s) => `${s.again ? 'Repris' : 'Scanné'} le ${scanTime(s.at)} à ${s.point}`).join(' ; ') },
 ]
 
 const iconBtn =
@@ -36,6 +37,16 @@ function when(iso: string | null) {
   }).format(new Date(iso))
 }
 
+/* « 19/11 à 12h41 » à Lomé. */
+function scanTime(iso: string) {
+  const d = new Date(iso)
+  const day = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Africa/Lome' }).format(d)
+  const [h, m] = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Lome' })
+    .format(d)
+    .split(':')
+  return `${day} à ${h}h${m}`
+}
+
 /* Onglet Particuliers du planning : les 8 départs se remplissent avec les réservations du site. */
 export function VisitSlotsPanel({ query }: { query: string }) {
   const [data, setData] = useState<VisitSlotPlanning | null>(null)
@@ -44,6 +55,8 @@ export function VisitSlotsPanel({ query }: { query: string }) {
   const [busy, setBusy] = useState(false)
   /* Départ choisi dans la liste mais pas encore enregistré, par particulier. */
   const [drafts, setDrafts] = useState<Record<string, string>>({})
+  /* Particulier dont on affiche les scans sous la ligne. */
+  const [opened, setOpened] = useState<string | null>(null)
   const { confirm, modal } = useConfirm()
 
   const load = useCallback(async () => {
@@ -211,9 +224,25 @@ export function VisitSlotsPanel({ query }: { query: string }) {
               <tr><td colSpan={7}>Aucune réservation</td></tr>
             )}
             {rows.map((r, i) => (
-              <tr key={r.id}>
+              <Fragment key={r.id}>
+              <tr className={opened === r.id ? 'bg-forest/5' : undefined}>
                 <td className="font-semibold text-forest">{i + 1}</td>
-                <td className="font-medium text-forest">{r.name}</td>
+                <td>
+                  <button
+                    type="button"
+                    onClick={() => setOpened(opened === r.id ? null : r.id)}
+                    aria-expanded={opened === r.id}
+                    className="text-left font-medium text-forest underline-offset-2 hover:underline"
+                    title="Voir les scans"
+                  >
+                    {r.name}
+                  </button>
+                  {r.scans.length > 0 && (
+                    <span className="ml-2 text-[12px] font-semibold text-energy">
+                      scanné{r.scans.length > 1 ? ` ×${r.scans.length}` : ''}
+                    </span>
+                  )}
+                </td>
                 <td className="font-mono">{r.code}</td>
                 <td>
                   {r.phone && (
@@ -278,6 +307,25 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                   )}
                 </td>
               </tr>
+              {opened === r.id && (
+                <tr className="bg-forest/5">
+                  <td />
+                  <td colSpan={6} className="!pt-0">
+                    {r.scans.length === 0 ? (
+                      <p className="text-[13px] text-ink/55">Pas encore scanné au départ.</p>
+                    ) : (
+                      <ul className="space-y-1 text-[13px] text-ink/80">
+                        {r.scans.map((s, k) => (
+                          <li key={k}>
+                            {s.again ? 'Repris' : 'Scanné'} le {scanTime(s.at)} à <span className="font-semibold text-forest">{s.point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
           </tbody>
         </table>

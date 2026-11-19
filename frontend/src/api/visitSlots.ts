@@ -32,6 +32,8 @@ export type VisitSlotPerson = {
   phone: string | null
   email: string | null
   booked_at: string | null
+  /* Scans de départ, du premier aux reprises. */
+  scans: { point: string; at: string; again: boolean }[]
 }
 
 /* Planning des départs pour le backoffice. */
