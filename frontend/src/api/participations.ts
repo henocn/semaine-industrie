@@ -172,3 +172,16 @@ export function rejectParticipation(id: string) {
 export function deleteParticipation(id: string) {
   return apiFetch<{ id: string }>(`/participations/${id}`, { method: 'DELETE' })
 }
+
+/* Formulaires ouverts au public : inscriptions des particuliers aux visites. */
+export function getPublicForms() {
+  return apiFetch<{ particulier_open: boolean }>('/participations/public/forms')
+}
+
+/* Ouvre ou ferme les inscriptions des particuliers (backoffice, Paramètres). */
+export function setParticulierOpen(open: boolean) {
+  return apiFetch<{ particulier_open: boolean }>('/participations/forms/particulier', {
+    method: 'PUT',
+    body: JSON.stringify({ open }),
+  })
+}

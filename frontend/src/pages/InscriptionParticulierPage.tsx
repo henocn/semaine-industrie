@@ -20,12 +20,8 @@ const field =
 
 /* Inscription individuelle : une personne, un QR personnel pour le jour J. */
 export default function InscriptionParticulierPage() {
-  /* TEMPORAIRE, à retirer avant commit : aperçu du message de succès en local (?apercu=CODE), jamais en production. */
-  const preview = import.meta.env.DEV && typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search).get('apercu')
-    : null
-  const [sent, setSent] = useState(Boolean(preview))
-  const [trackingCode, setTrackingCode] = useState<string | null>(preview)
+  const [sent, setSent] = useState(false)
+  const [trackingCode, setTrackingCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [waitlisted, setWaitlisted] = useState(false)

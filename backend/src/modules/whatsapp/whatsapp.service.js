@@ -676,8 +676,8 @@ async function sendList({ to, body, buttonLabel, sections, phoneNumberId, header
   return graphSend(phoneNumberId, { to, type: 'interactive', interactive });
 }
 
-/* Message Participer : parcours publics + code de suivi. */
-function participateBody() {
+/* Message Participer : parcours publics + code de suivi ; open : inscriptions des particuliers ouvertes. */
+function participateBody(open = false) {
   const site = SITE();
   return [
     "*Participer à la Semaine de l'industrie*",
@@ -687,10 +687,10 @@ function participateBody() {
     // '',
     // `2. *Visites d'usines, particuliers* : ${site}/inscription-particulier`,
     // '',
-    // Inscriptions des particuliers closes.
-    // `*Visites d'usines, particuliers* (19 et 20 nov.) : ${site}/inscription-particulier`,
-    // '',
-    'Les inscriptions sont closes.',
+    /* Inscriptions des particuliers : selon la case des Paramètres du backoffice. */
+    ...(open
+      ? [`*Visites d'usines, particuliers* (19 et 20 nov.) : ${site}/inscription-particulier`, '', 'Les autres inscriptions sont closes.']
+      : ['Les inscriptions sont closes.']),
     '',
     `Déjà inscrit ? Envoyez « QR » ou votre code de suivi pour recevoir votre QR, ou retrouvez votre dossier dans Mon espace : ${site}/mon-espace`,
     '',
@@ -1487,7 +1487,7 @@ async function handleInteractive(from, id, phoneNumberId, title = '') {
       return sendButtons({
         to: from,
         phoneNumberId,
-        body: participateBody(),
+        body: participateBody(await require('../participations/formSettings').isParticulierOpen().catch(() => false)),
         buttons: [{ id: 'menu_home', title: 'Menu' }],
       });
     case 'menu_infos':
