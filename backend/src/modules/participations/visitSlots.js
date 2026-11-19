@@ -1,7 +1,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { sequelize, Participation, Passport, AuditEvent } = require('../../models');
+const { sequelize, Participation, Passport, AuditEvent, DepartureScan } = require('../../models');
 const env = require('../../config/env');
 const ApiError = require('../../utils/ApiError');
 const trackingService = require('../tracking/tracking.service');
@@ -88,8 +88,63 @@ async function setOpen(slotId, open, user = {}) {
   return { open: await isOpen(), days: await daysView(), slots: await slotsView() };
 }
 
-/* Places par départ (une demi-journée et un lieu de rencontre). */
+/* Places par départ (une demi-journée et un lieu de rencontre) : valeur par défaut, réglable départ par départ. */
 const CAPACITY = 50;
+
+/*
+ * Nombre de places de chaque départ : champ des Paramètres du backoffice.
+ * Chaque changement ajoute une ligne dans audit_events (meta.capacity) ; la dernière ligne du départ fait foi.
+ * Départ jamais réglé : CAPACITY. Gardé en mémoire après la première lecture.
+ */
+const CAPACITY_ACTION = 'visit_slot_capacity_set';
+const MAX_CAPACITY = 1000;
+let capacityCache = null;
+
+/* Places de chaque départ : { '19-matin-agoe': 50, ... }. */
+async function capacities() {
+  if (capacityCache === null) {
+    const state = {};
+    for (const slot of SLOTS) {
+      const last = await AuditEvent.findOne({
+        where: { entity_type: 'setting', entity_id: `visit_slot_capacity_${slot.id}`, action: CAPACITY_ACTION },
+        order: [['created_at', 'DESC']],
+        attributes: ['meta'],
+      });
+      const n = Number(last?.meta?.capacity);
+      state[slot.id] = Number.isInteger(n) && n > 0 ? n : CAPACITY;
+    }
+    capacityCache = state;
+  }
+  return capacityCache;
+}
+
+/* Places d'un départ. */
+async function capacityOf(slotId) {
+  return (await capacities())[slotId] ?? CAPACITY;
+}
+
+/* Change le nombre de places d'un départ depuis le backoffice, et le note. */
+async function setCapacity(slotId, value, user = {}) {
+  const slot = SLOTS.find((s) => s.id === String(slotId));
+  if (!slot) throw ApiError.badRequest('Départ inconnu.');
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1 || n > MAX_CAPACITY) {
+    throw ApiError.badRequest(`Indiquez un nombre de places entre 1 et ${MAX_CAPACITY}.`);
+  }
+  await capacities();
+  const previous = capacityCache[slot.id];
+  await AuditEvent.create({
+    entity_type: 'setting',
+    entity_id: `visit_slot_capacity_${slot.id}`,
+    user_id: user.id || null,
+    actor_email: user.email || null,
+    action: CAPACITY_ACTION,
+    summary: `Départ ${slot.day.toLowerCase()}, ${slot.period.toLowerCase()}, ${slot.place} : ${previous} → ${n} places`,
+    meta: { capacity: n, previous },
+  });
+  capacityCache = { ...capacityCache, [slot.id]: n };
+  return availability();
+}
 
 const PLACES = {
   agoe: 'Lycée d’Agoé',
@@ -152,12 +207,20 @@ async function countBySlot(transaction) {
 async function availability() {
   const counts = await countBySlot();
   const state = await openSlots();
+  const caps = await capacities();
   return {
     open: await isOpen(),
     days: await daysView(),
     slots: SLOTS.map((slot) => {
       const booked = counts.get(slot.id) || 0;
-      return { ...slot, open: state[slot.id], capacity: CAPACITY, remaining: Math.max(CAPACITY - booked, 0) };
+      /* waiting : réservations au-delà des places du départ (liste d'attente, tant que le départ reste coché). */
+      return {
+        ...slot,
+        open: state[slot.id],
+        capacity: caps[slot.id],
+        remaining: Math.max(caps[slot.id] - booked, 0),
+        waiting: Math.max(booked - caps[slot.id], 0),
+      };
     }),
   };
 }
@@ -207,27 +270,55 @@ function view(row) {
     name: row.name,
     slot: row.visit_slot ? slotInfo(row.visit_slot) : null,
     /* Lien du groupe : donné seulement après vérification d'un code validé, jamais dans le code public du site. */
-    group: WHATSAPP_GROUP,
+    // Groupe WhatsApp retiré de la page publique.
+    // group: WHATSAPP_GROUP,
   };
+}
+
+/*
+ * Liste d'attente : dans un départ, les 50 premières réservations (ordre de réservation) ont une place,
+ * les suivantes sont en attente et peuvent quand même se présenter. Une place libérée fait monter la suivante.
+ */
+async function isWaiting(row, transaction) {
+  if (!row.visit_slot || !row.visit_slot_at) return false;
+  const before = await Participation.count({
+    where: {
+      ...BOOKED,
+      visit_slot: row.visit_slot,
+      [Op.or]: [
+        { visit_slot_at: { [Op.lt]: row.visit_slot_at } },
+        { visit_slot_at: row.visit_slot_at, id: { [Op.lt]: row.id } },
+      ],
+    },
+    transaction,
+  });
+  return before >= (await capacityOf(row.visit_slot));
 }
 
 /* Vérifie le code avant le choix du départ (page publique). */
 async function lookup(rawCode) {
-  return view(await findBookable(rawCode));
+  const row = await findBookable(rawCode);
+  return { ...view(row), waiting: await isWaiting(row) };
 }
 
-/* Réserve un départ : une seule réservation par inscription, 50 places par départ. */
+/*
+ * Réserve un départ : une seule réservation par inscription.
+ * Départ plein mais encore coché dans les Paramètres : réservation en liste d'attente.
+ * Départ décoché (complet confirmé ou fermé) : refusé.
+ */
 async function book(rawCode, slotId) {
   if (!(await isOpen())) throw ApiError.conflict('Le choix des créneaux est clos.');
   const slot = slotInfo(slotId);
   if (!slot) throw ApiError.badRequest('Choisissez un départ.');
   if (!(await openSlots())[slot.id]) {
-    throw ApiError.conflict(`Le départ du ${slot.day.toLowerCase()}, ${slot.period.toLowerCase()}, ${slot.place} est clos. Choisissez-en un autre.`);
+    const full = ((await countBySlot()).get(slot.id) || 0) >= (await capacityOf(slot.id));
+    const what = `Le départ du ${slot.day.toLowerCase()}, ${slot.period.toLowerCase()}, ${slot.place}`;
+    throw ApiError.conflict(`${what} est ${full ? 'complet' : 'clos'}. Choisissez-en un autre.`);
   }
 
   return sequelize.transaction(async (transaction) => {
     const row = await findBookable(rawCode, transaction);
-    if (row.visit_slot) return { ...view(row), id: row.id, already: true };
+    if (row.visit_slot) return { ...view(row), id: row.id, already: true, waiting: await isWaiting(row, transaction) };
 
     /* Un verrou par départ : deux personnes ne prennent pas la dernière place en même temps. */
     await sequelize.query('SELECT pg_advisory_xact_lock(hashtext(:key))', {
@@ -235,12 +326,13 @@ async function book(rawCode, slotId) {
       transaction,
     });
     const booked = (await countBySlot(transaction)).get(slot.id) || 0;
-    if (booked >= CAPACITY) throw ApiError.conflict('Ce départ est complet. Choisissez-en un autre.');
+    /* Plus de refus au-delà de 50 : la personne passe en liste d'attente. */
+    const waiting = booked >= (await capacityOf(slot.id));
 
     row.visit_slot = slot.id;
     row.visit_slot_at = new Date();
     await row.save({ transaction });
-    return { ...view(row), id: row.id, already: false };
+    return { ...view(row), id: row.id, already: false, waiting };
   });
 }
 
@@ -249,7 +341,7 @@ async function planning() {
   const rows = await Participation.findAll({
     where: BOOKED,
     attributes: ['id', 'name', 'phone', 'email', 'tracking_code', 'passport_id', 'visit_slot', 'visit_slot_at'],
-    order: [['visit_slot_at', 'ASC']],
+    order: [['visit_slot_at', 'ASC'], ['id', 'ASC']],
   });
   /* Inscriptions sans code de suivi : on montre le code de leur passeport, comme dans la liste des participations. */
   const passportIds = rows.filter((row) => !row.tracking_code && row.passport_id).map((row) => row.passport_id);
@@ -261,6 +353,8 @@ async function planning() {
   const waiting = await Participation.count({
     where: { kind: 'particulier', status: 'approved', visit_slot: null },
   });
+  const scansOf = await departureScans(rows.map((row) => row.id));
+  const caps = await capacities();
   return {
     open: await isOpen(),
     days: await daysView(),
@@ -268,21 +362,50 @@ async function planning() {
     waiting,
     slots: SLOTS.map((slot) => ({
       ...slot,
+      capacity: caps[slot.id],
+      /* Ordre de réservation : au-delà des 50 premiers, liste d'attente. */
       people: rows
         .filter((row) => row.visit_slot === slot.id)
-        .map((row) => ({
+        .map((row, rank) => ({
+          waiting: rank >= caps[slot.id],
           id: row.id,
           name: row.name,
           code: row.tracking_code || passportCodes.get(row.passport_id) || null,
           phone: row.phone,
           email: row.email,
           booked_at: row.visit_slot_at,
+          scans: scansOf.get(row.id) || [],
         })),
     })),
   };
 }
 
-/* Change ou libère le départ d'un particulier (backoffice). La limite de 50 reste valable. */
+/*
+ * Scans de départ par inscription, du plus ancien au plus récent :
+ * le premier départ (departure_scans) puis les reprises notées dans le journal (« Départ repris à « … » »).
+ */
+async function departureScans(ids) {
+  const byId = new Map();
+  if (!ids.length) return byId;
+  const push = (id, scan) => byId.set(id, [...(byId.get(id) || []), scan]);
+  const first = await DepartureScan.findAll({
+    where: { participation_id: ids },
+    attributes: ['participation_id', 'point_name', 'scanned_at'],
+  });
+  for (const scan of first) push(scan.participation_id, { point: scan.point_name, at: scan.scanned_at, again: false });
+  const again = await AuditEvent.findAll({
+    where: { entity_type: 'participation', entity_id: ids, summary: { [Op.like]: 'Départ repris à « %' } },
+    attributes: ['entity_id', 'summary', 'created_at'],
+  });
+  for (const event of again) {
+    const point = /^Départ repris à « (.+?) »/.exec(event.summary)?.[1] || 'point inconnu';
+    push(event.entity_id, { point, at: event.created_at, again: true });
+  }
+  for (const list of byId.values()) list.sort((a, b) => new Date(a.at) - new Date(b.at));
+  return byId;
+}
+
+/* Change ou libère le départ d'un particulier (backoffice). Au-delà de 50, la personne passe en liste d'attente. */
 async function setSlot(id, slotId) {
   const slot = slotId ? slotInfo(slotId) : null;
   if (slotId && !slot) throw ApiError.badRequest('Départ inconnu.');
@@ -296,8 +419,10 @@ async function setSlot(id, slotId) {
         replacements: { key: `visit-slot:${slot.id}` },
         transaction,
       });
+      /* Limite de 50 retirée : liste d'attente comme sur le site.
       const booked = (await countBySlot(transaction)).get(slot.id) || 0;
       if (booked >= CAPACITY) throw ApiError.conflict('Ce départ est complet.');
+      */
     }
     row.visit_slot = slot ? slot.id : null;
     row.visit_slot_at = slot ? (slot.id === previous ? row.visit_slot_at : new Date()) : null;
@@ -318,5 +443,7 @@ module.exports = {
   planning,
   setSlot,
   isOpen,
+  isWaiting,
+  setCapacity,
   setOpen,
 };

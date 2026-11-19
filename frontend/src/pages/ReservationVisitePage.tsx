@@ -128,6 +128,8 @@ export default function ReservationVisitePage() {
   }
 
   const booked = person?.slot ?? null
+  /* Départ choisi déjà plein : la réservation passera en liste d'attente. */
+  const choiceFull = Boolean(slots?.find((s) => s.id === choice && s.remaining <= 0))
 
   return (
     <main className="py-14 sm:py-20">
@@ -157,9 +159,17 @@ export default function ReservationVisitePage() {
             <div className="mt-4">
               <SlotSummary slot={booked} />
             </div>
+            {person.waiting && (
+              <p className="mt-4 border-l-4 border-sun bg-white px-3 py-2 text-[15px] leading-relaxed text-ink">
+                <span className="font-semibold text-forest">Places limitées sur ce départ.</span> Présentez-vous à l’heure avec votre QR ;
+                nous vous préviendrons si jamais les places venaient à manquer.
+              </p>
+            )}
             <p className="mt-4 text-[15px] leading-relaxed text-ink/80">
-              Gardez votre QR de participation : il est demandé au départ. Rejoignez le groupe WhatsApp si ce n’est pas encore fait : toutes les autres informations y seront communiquées.
+              Gardez votre QR de participation : il est demandé au départ.
+              {/* Rejoignez le groupe WhatsApp si ce n’est pas encore fait : toutes les autres informations y seront communiquées. */}
             </p>
+            {/* Bouton du groupe WhatsApp retiré.
             <div className="mt-5 flex flex-wrap gap-2.5">
               {person.group && (
                 <a href={person.group} target="_blank" rel="noopener noreferrer" className="ui-btn-primary">
@@ -167,6 +177,7 @@ export default function ReservationVisitePage() {
                 </a>
               )}
             </div>
+            */}
             {/* <p className="mt-4 text-[13px] text-ink/60">
               Un changement ou un empêchement ? Écrivez à l’organisation dans le groupe pour modifier ou libérer votre place.
             </p> */}
@@ -244,10 +255,11 @@ export default function ReservationVisitePage() {
                     </legend>
                     <div className="mt-2 grid gap-2 sm:grid-cols-2">
                       {slots.filter((s) => s.day === day).map((s) => {
-                        /* Jour fermé dans les Paramètres : départ visible mais grisé, comme un départ plein. */
+                        /* Décoché dans les Paramètres : grisé (« Complet » s'il est plein, sinon « Clos »).
+                           Plein mais encore coché : choisissable, en liste d'attente. */
                         const closed = s.open === false
                         const full = s.remaining <= 0
-                        const locked = closed || full
+                        const locked = closed
                         const disabled = !open || !person || locked || busy
                         const checked = choice === s.id
                         return (
@@ -273,13 +285,10 @@ export default function ReservationVisitePage() {
                               {closed ? (
                                 <span className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-red-700">
                                   <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-                                  Clos
+                                  {full ? 'Complet' : 'Clos'}
                                 </span>
                               ) : full ? (
-                                <span className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-red-700">
-                                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-                                  Plein · {s.capacity}/{s.capacity}
-                                </span>
+                                <span className="mt-1 block text-[13px] font-semibold text-forest/80">Places limitées</span>
                               ) : (
                                 <span className="mt-1 block text-[13px] text-ink/55">
                                   {s.remaining} place{s.remaining > 1 ? 's' : ''} disponible{s.remaining > 1 ? 's' : ''}
@@ -294,6 +303,11 @@ export default function ReservationVisitePage() {
                 ))
               )}
 
+              {choiceFull && (
+                <p className="mt-4 border-l-4 border-sun bg-sage px-3 py-2 text-[14px] leading-relaxed text-ink">
+                  Places limitées sur ce départ : présentez-vous à l’heure, nous vous préviendrons si jamais les places venaient à manquer.
+                </p>
+              )}
               {error && person && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
               <div className="mt-5">
                 <Button type="submit" disabled={busy || !open || !person || !choice}>

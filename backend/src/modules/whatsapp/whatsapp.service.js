@@ -1102,9 +1102,10 @@ async function visitLines(passport) {
   return [
     '',
     participation.visit_slot
-      ? `Créneau de visite : ${visitSlots.slotLabel(participation.visit_slot)}`
+      ? `Créneau de visite : ${visitSlots.slotLabel(participation.visit_slot)}${(await visitSlots.isWaiting(participation)) ? " (places limitées : présentez-vous à l'heure avec votre QR)" : ''}`
       : `Choisissez votre créneau de visite : ${SITE()}/visites?code=${passport.code}`,
-    `Groupe WhatsApp des visites : ${visitSlots.WHATSAPP_GROUP}`,
+    // Groupe WhatsApp retiré.
+    // `Groupe WhatsApp des visites : ${visitSlots.WHATSAPP_GROUP}`,
   ];
 }
 
@@ -1909,7 +1910,8 @@ async function notifyParticipationApproved(participation) {
       ...(participation.kind === 'particulier'
         ? [
           `Choisissez votre créneau de visite : ${SITE()}/visites?code=${code}`,
-          `Groupe WhatsApp des visites : ${visitSlots.WHATSAPP_GROUP}`,
+          // Groupe WhatsApp retiré.
+          // `Groupe WhatsApp des visites : ${visitSlots.WHATSAPP_GROUP}`,
         ]
         : []),
     ],

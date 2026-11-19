@@ -91,8 +91,20 @@ async function setOpen(req, res, next) {
   }
 }
 
+/* Change le nombre de places d'un départ (champ des Paramètres du backoffice). */
+async function setCapacity(req, res, next) {
+  try {
+    const data = await service.setCapacity(req.body?.slot, req.body?.capacity, req.user);
+    emitRealtime('visit-slot:changed', { action: 'capacity', slot: req.body?.slot }, 'orga');
+    return ApiResponse.success(res, data, 'Nombre de places mis à jour');
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   setOpen,
+  setCapacity,
   availability,
   lookup,
   book,

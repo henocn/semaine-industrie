@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { getVisitSlotPlanning, setVisitSlot, type VisitSlotPerson, type VisitSlotPlanning } from '../../api/visitSlots'
 import { Lock } from 'lucide-react'
 import { IconCheck, IconTrash, IconX } from '../ui/IconButton'
@@ -16,6 +16,8 @@ const EXPORT_COLUMNS: ExcelColumn<Row>[] = [
   { header: 'Téléphone', width: 18, value: (r) => r.phone },
   { header: 'E-mail', width: 28, value: (r) => r.email },
   { header: 'Réservé le', width: 18, value: (r) => excelDate(r.booked_at) },
+  { header: 'Statut', width: 16, value: (r) => (r.waiting ? 'Liste d’attente' : 'Place') },
+  { header: 'Scans', width: 50, value: (r) => r.scans.map((s) => `${s.again ? 'Repris' : 'Scanné'} le ${scanTime(s.at)} à ${s.point}`).join(' ; ') },
 ]
 
 const iconBtn =
@@ -36,6 +38,16 @@ function when(iso: string | null) {
   }).format(new Date(iso))
 }
 
+/* « 19/11 à 12h41 » à Lomé. */
+function scanTime(iso: string) {
+  const d = new Date(iso)
+  const day = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Africa/Lome' }).format(d)
+  const [h, m] = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Lome' })
+    .format(d)
+    .split(':')
+  return `${day} à ${h}h${m}`
+}
+
 /* Onglet Particuliers du planning : les 8 départs se remplissent avec les réservations du site. */
 export function VisitSlotsPanel({ query }: { query: string }) {
   const [data, setData] = useState<VisitSlotPlanning | null>(null)
@@ -44,6 +56,8 @@ export function VisitSlotsPanel({ query }: { query: string }) {
   const [busy, setBusy] = useState(false)
   /* Départ choisi dans la liste mais pas encore enregistré, par particulier. */
   const [drafts, setDrafts] = useState<Record<string, string>>({})
+  /* Particulier dont on affiche les scans sous la ligne. */
+  const [opened, setOpened] = useState<string | null>(null)
   const { confirm, modal } = useConfirm()
 
   const load = useCallback(async () => {
@@ -121,7 +135,7 @@ export function VisitSlotsPanel({ query }: { query: string }) {
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <p className="mb-4 text-[14px] text-ink/70">
-        {total} place{total > 1 ? 's' : ''} réservée{total > 1 ? 's' : ''} sur {data.slots.length * data.capacity}
+        {total} place{total > 1 ? 's' : ''} réservée{total > 1 ? 's' : ''} sur {data.slots.reduce((n, s) => n + (s.capacity ?? data.capacity), 0)}
         {' · '}
         {data.waiting} particulier{data.waiting > 1 ? 's' : ''} validé{data.waiting > 1 ? 's' : ''} sans départ
         {/* {' · '}
@@ -139,7 +153,9 @@ export function VisitSlotsPanel({ query }: { query: string }) {
               {data.slots.filter((s) => s.day === day).map((s) => {
                 const n = s.people.length
                 const selected = active === s.id
-                const full = n >= data.capacity
+                const cap = s.capacity ?? data.capacity
+                const full = n >= cap
+                const extra = Math.max(n - cap, 0)
                 return (
                   <button
                     key={s.id}
@@ -154,9 +170,14 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                     </p>
                     <p className={`mt-0.5 text-[14px] font-semibold ${selected ? 'text-white' : 'text-forest'}`}>{s.place}</p>
                     <p className={`mt-2 text-[20px] font-bold leading-none ${selected ? 'text-sun' : full ? 'text-red-700' : 'text-forest'}`}>
-                      {n}
-                      <span className={`text-[13px] font-medium ${selected ? 'text-white/70' : 'text-ink/50'}`}> / {data.capacity}</span>
+                      {Math.min(n, cap)}
+                      <span className={`text-[13px] font-medium ${selected ? 'text-white/70' : 'text-ink/50'}`}> / {cap}</span>
                     </p>
+                    {extra > 0 && (
+                      <p className={`mt-1 text-[12px] font-semibold ${selected ? 'text-sun' : 'text-amber-700'}`}>
+                        + {extra} en attente
+                      </p>
+                    )}
                     {full && (
                       <p className={`mt-1.5 inline-flex items-center gap-1 text-[12px] font-semibold uppercase tracking-wide ${selected ? 'text-sun' : 'text-red-700'}`}>
                         <Lock className="h-3.5 w-3.5" aria-hidden="true" />
@@ -211,20 +232,49 @@ export function VisitSlotsPanel({ query }: { query: string }) {
               <tr><td colSpan={7}>Aucune réservation</td></tr>
             )}
             {rows.map((r, i) => (
-              <tr key={r.id}>
+              <Fragment key={r.id}>
+              {/* Clic sur la ligne : scans de la personne dans une ligne en dessous (comme les autres tableaux). */}
+              <tr
+                className={`cursor-pointer ${opened === r.id ? 'bg-forest/10' : ''}`}
+                onClick={() => setOpened(opened === r.id ? null : r.id)}
+                aria-expanded={opened === r.id}
+              >
                 <td className="font-semibold text-forest">{i + 1}</td>
-                <td className="font-medium text-forest">{r.name}</td>
+                <td>
+                  <span className="block font-medium text-forest">{r.name}</span>
+                  {/* Statuts sous le nom, pour ne pas les lire comme un prénom. */}
+                  {(r.waiting || r.scans.length > 0) && (
+                    <span className="mt-1 flex flex-wrap gap-1.5">
+                      {r.waiting && (
+                        <span className="border border-amber-600 px-1.5 py-px text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                          En attente
+                        </span>
+                      )}
+                      {r.scans.length > 0 && (
+                        <span className="border border-energy px-1.5 py-px text-[11px] font-semibold uppercase tracking-wide text-energy">
+                          Scanné{r.scans.length > 1 ? ` ×${r.scans.length}` : ''}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </td>
                 <td className="font-mono">{r.code}</td>
                 <td>
                   {r.phone && (
-                    <a href={`tel:${r.phone}`} className="block font-semibold text-forest underline underline-offset-2">{r.phone}</a>
+                    <a
+                      href={`tel:${r.phone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="block font-semibold text-forest underline underline-offset-2"
+                    >
+                      {r.phone}
+                    </a>
                   )}
                   {/* E-mail non affiché dans le tableau (reste dans l'export Excel). */}
                   {/* {r.email && (
                     <a href={`mailto:${r.email}`} className="mt-0.5 block text-ink/55 underline underline-offset-2">{r.email}</a>
                   )} */}
                 </td>
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   <select
                     value={drafts[r.id] ?? r.slotId}
                     disabled={busy}
@@ -233,14 +283,14 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                     aria-label={`Départ de ${r.name}`}
                   >
                     {data.slots.map((s) => (
-                      <option key={s.id} value={s.id} disabled={s.id !== r.slotId && s.people.length >= data.capacity}>
-                        {label(s.id)}{s.id !== r.slotId && s.people.length >= data.capacity ? ' (plein)' : ''}
+                      <option key={s.id} value={s.id}>
+                        {label(s.id)}{s.id !== r.slotId && s.people.length >= (s.capacity ?? data.capacity) ? ' (plein, attente)' : ''}
                       </option>
                     ))}
                   </select>
                 </td>
                 <td className="text-ink/60">{when(r.booked_at)}</td>
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   {drafts[r.id] ? (
                     <div className="flex gap-1.5">
                       <button
@@ -278,6 +328,25 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                   )}
                 </td>
               </tr>
+              {opened === r.id && (
+                <tr className="bg-forest/5">
+                  <td />
+                  <td colSpan={6} className="!pt-0">
+                    {r.scans.length === 0 ? (
+                      <p className="text-[13px] text-ink/55">Pas encore scanné au départ.</p>
+                    ) : (
+                      <ul className="space-y-1 text-[13px] text-ink/80">
+                        {r.scans.map((s, k) => (
+                          <li key={k}>
+                            {s.again ? 'Repris' : 'Scanné'} le {scanTime(s.at)} à <span className="font-semibold text-forest">{s.point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
           </tbody>
         </table>

@@ -7,7 +7,7 @@ import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { publicSeo } from '../lib/seo'
-import { WhatsAppIcon } from '../components/ui/WhatsAppIcon'
+// import { WhatsAppIcon } from '../components/ui/WhatsAppIcon' (bouton du groupe retiré)
 
 const TYPE_LABEL: Record<EspaceType, string> = {
   ecole: 'École / université',
@@ -87,12 +87,20 @@ function EspaceView({ space }: { space: Espace }) {
             <div className="border-2 border-forest bg-sage px-4 py-3">
               <p className="text-[15px] text-ink">
                 {space.departure.slot ? (
-                  <>Départ réservé : <span className="font-semibold text-forest">{space.departure.slot}</span></>
+                  <>
+                    Départ réservé : <span className="font-semibold text-forest">{space.departure.slot}</span>
+                    {space.departure.waiting && (
+                      <span className="mt-1 block text-[14px] text-ink/80">
+                        Places limitées sur ce départ : présentez-vous à l’heure avec votre QR.
+                      </span>
+                    )}
+                  </>
                 ) : (
                   'Visites des 19 et 20 novembre : choisissez votre départ.'
                 )}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
+                {/* Bouton du groupe WhatsApp retiré.
                 {space.departure.group && (
                 <a
                   href={space.departure.group}
@@ -104,6 +112,7 @@ function EspaceView({ space }: { space: Espace }) {
                   Groupe des visites
                 </a>
                 )}
+                */}
                 <Link
                   to={`/visites/?code=${encodeURIComponent(space.code)}`}
                   className="inline-flex items-center gap-2 border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"

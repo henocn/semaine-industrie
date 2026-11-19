@@ -204,11 +204,13 @@ function emails(site = env.PUBLIC_APP_URL) {
       card: { png: cardPng, fileCode: code },
       outro: [
         'Les visites des particuliers ont lieu les **jeudi 19 et vendredi 20 novembre 2026**. Votre carte QR est jointe à ce message : présentez-la au départ.',
-        'Choisissez votre créneau et votre point de départ, puis rejoignez le groupe WhatsApp des visites pour recevoir les informations pratiques.',
+        'Choisissez votre créneau et votre point de départ.',
+        // 'Choisissez votre créneau et votre point de départ, puis rejoignez le groupe WhatsApp des visites pour recevoir les informations pratiques.',
       ],
       button: [
         { label: 'Choisir mon créneau', url: `${base}/visites?code=${encodeURIComponent(code)}` },
-        { label: 'Rejoindre le groupe WhatsApp', url: visitSlots().WHATSAPP_GROUP },
+        // Groupe WhatsApp retiré.
+        // { label: 'Rejoindre le groupe WhatsApp', url: visitSlots().WHATSAPP_GROUP },
       ],
     }),
 

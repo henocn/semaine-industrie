@@ -10,7 +10,7 @@ import {
   type DepartureSettings,
 } from '../api/scan'
 import { ResourcesPanel } from './OrgaResourcesPage'
-import { getVisitSlots, setVisitSlotsOpen, type VisitSlotAvailability } from '../api/visitSlots'
+import { getVisitSlots, setVisitSlotCapacity, setVisitSlotsOpen, type VisitSlotAvailability } from '../api/visitSlots'
 import { getPublicForms, setParticulierOpen } from '../api/participations'
 
 const TABS = [
@@ -202,14 +202,42 @@ function SlotsOpenPanel() {
     }
   }
 
+  /* Nombre de places saisi mais pas encore enregistré, par départ. */
+  const [caps, setCaps] = useState<Record<string, string>>({})
+
+  /* Enregistre le nombre de places d'un départ après confirmation. */
+  async function saveCapacity(s: VisitSlotAvailability) {
+    const raw = caps[s.id]
+    if (raw === undefined) return
+    const n = Number(raw)
+    if (!Number.isInteger(n) || n < 1 || n === s.capacity) {
+      setCaps(({ [s.id]: _done, ...rest }) => rest)
+      return
+    }
+    const label = `${s.day.toLowerCase()}, ${s.period.toLowerCase()}, ${s.place}`
+    if (!window.confirm(`Passer le départ du ${label} de ${s.capacity} à ${n} places ?`)) return
+    setBusy(s.id)
+    setError(null)
+    try {
+      const result = await setVisitSlotCapacity(s.id, n)
+      setSlots(result.slots)
+      setCaps(({ [s.id]: _done, ...rest }) => rest)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Modification impossible')
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const days = slots ? [...new Set(slots.map((s) => s.day))] : []
 
   return (
     <section className="orga-panel max-w-2xl">
       <h2 className="text-[15px] font-semibold text-forest">Choix des créneaux de visite</h2>
       <p className="mt-1 text-[13px] text-ink/55">
-        Cochez les départs que les particuliers acceptés peuvent encore choisir (page publique /visites). Un départ décoché reste
-        visible mais grisé ; si tous sont décochés, la page affiche « Le choix des créneaux est clos ».
+        Cochez les départs que les particuliers acceptés peuvent encore choisir (page publique /visites). Un départ plein reste
+        choisissable en liste d’attente ; décochez-le pour confirmer qu’il est complet. Un départ décoché reste visible mais grisé ;
+        si tous sont décochés, la page affiche « Le choix des créneaux est clos ».
       </p>
       {error && <p className="mt-3 text-[14px] text-red-700">{error}</p>}
       {!slots ? (
@@ -220,8 +248,8 @@ function SlotsOpenPanel() {
             <h3 className="text-[13px] font-semibold text-forest">{day}</h3>
             <ul className="mt-2 divide-y divide-black/10 border border-black">
               {slots.filter((s) => s.day === day).map((s) => (
-                <li key={s.id}>
-                  <label className="flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-forest/5">
+                <li key={s.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 hover:bg-forest/5">
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
                     <input
                       type="checkbox"
                       checked={s.open !== false}
@@ -232,13 +260,34 @@ function SlotsOpenPanel() {
                     <span className="min-w-0 flex-1 text-[14px] text-forest">
                       {s.period} · {s.place}
                     </span>
-                    <span className="hidden text-[12px] text-ink/45 sm:inline">
-                      {s.remaining} place{s.remaining > 1 ? 's' : ''} libre{s.remaining > 1 ? 's' : ''}
+                  </label>
+                  {/* Nombre de places : enregistré en quittant le champ ou avec Entrée. */}
+                  <label className="flex items-center gap-1.5 text-[12px] text-ink/55">
+                    <input
+                      type="number"
+                      min={1}
+                      max={1000}
+                      inputMode="numeric"
+                      value={caps[s.id] ?? String(s.capacity)}
+                      disabled={busy === s.id}
+                      onChange={(e) => setCaps((c) => ({ ...c, [s.id]: e.target.value }))}
+                      onBlur={() => void saveCapacity(s)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') e.currentTarget.blur()
+                      }}
+                      className={`w-16 border px-2 py-1 text-right text-[13px] text-forest ${caps[s.id] !== undefined ? 'border-sun bg-sun/15' : 'border-black'}`}
+                      aria-label={`Places du départ ${s.period} · ${s.place}`}
+                    />
+                    places
+                  </label>
+                  <span className="hidden text-[12px] text-ink/45 sm:inline">
+                      {s.remaining > 0
+                        ? `${s.remaining} place${s.remaining > 1 ? 's' : ''} libre${s.remaining > 1 ? 's' : ''}`
+                        : `Plein${s.waiting ? ` · ${s.waiting} en attente` : ''}`}
                     </span>
                     <span className={`w-14 text-right text-[13px] font-semibold ${s.open !== false ? 'text-energy' : 'text-red-700'}`}>
                       {s.open !== false ? 'Ouvert' : 'Fermé'}
                     </span>
-                  </label>
                 </li>
               ))}
             </ul>
