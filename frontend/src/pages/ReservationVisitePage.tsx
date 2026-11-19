@@ -166,8 +166,10 @@ export default function ReservationVisitePage() {
               </p>
             )}
             <p className="mt-4 text-[15px] leading-relaxed text-ink/80">
-              Gardez votre QR de participation : il est demandé au départ. Rejoignez le groupe WhatsApp si ce n’est pas encore fait : toutes les autres informations y seront communiquées.
+              Gardez votre QR de participation : il est demandé au départ.
+              {/* Rejoignez le groupe WhatsApp si ce n’est pas encore fait : toutes les autres informations y seront communiquées. */}
             </p>
+            {/* Bouton du groupe WhatsApp retiré.
             <div className="mt-5 flex flex-wrap gap-2.5">
               {person.group && (
                 <a href={person.group} target="_blank" rel="noopener noreferrer" className="ui-btn-primary">
@@ -175,6 +177,7 @@ export default function ReservationVisitePage() {
                 </a>
               )}
             </div>
+            */}
             {/* <p className="mt-4 text-[13px] text-ink/60">
               Un changement ou un empêchement ? Écrivez à l’organisation dans le groupe pour modifier ou libérer votre place.
             </p> */}

@@ -243,7 +243,8 @@ async function passportSpace(passport) {
             slot: participation.visit_slot ? visitSlots.slotLabel(participation.visit_slot) : null,
             /* Départ plein : en liste d'attente, peut quand même se présenter. */
             waiting: await visitSlots.isWaiting(participation),
-            group: visitSlots.WHATSAPP_GROUP,
+            // Groupe WhatsApp retiré.
+            // group: visitSlots.WHATSAPP_GROUP,
           },
         }
       : {}),

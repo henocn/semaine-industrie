@@ -233,36 +233,48 @@ export function VisitSlotsPanel({ query }: { query: string }) {
             )}
             {rows.map((r, i) => (
               <Fragment key={r.id}>
-              <tr className={opened === r.id ? 'bg-forest/5' : undefined}>
+              {/* Clic sur la ligne : scans de la personne dans une ligne en dessous (comme les autres tableaux). */}
+              <tr
+                className={`cursor-pointer ${opened === r.id ? 'bg-forest/10' : ''}`}
+                onClick={() => setOpened(opened === r.id ? null : r.id)}
+                aria-expanded={opened === r.id}
+              >
                 <td className="font-semibold text-forest">{i + 1}</td>
                 <td>
-                  <button
-                    type="button"
-                    onClick={() => setOpened(opened === r.id ? null : r.id)}
-                    aria-expanded={opened === r.id}
-                    className="text-left font-medium text-forest underline-offset-2 hover:underline"
-                    title="Voir les scans"
-                  >
-                    {r.name}
-                  </button>
-                  {r.waiting && <span className="ml-2 text-[12px] font-semibold text-amber-700">en attente</span>}
-                  {r.scans.length > 0 && (
-                    <span className="ml-2 text-[12px] font-semibold text-energy">
-                      scanné{r.scans.length > 1 ? ` ×${r.scans.length}` : ''}
+                  <span className="block font-medium text-forest">{r.name}</span>
+                  {/* Statuts sous le nom, pour ne pas les lire comme un prénom. */}
+                  {(r.waiting || r.scans.length > 0) && (
+                    <span className="mt-1 flex flex-wrap gap-1.5">
+                      {r.waiting && (
+                        <span className="border border-amber-600 px-1.5 py-px text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                          En attente
+                        </span>
+                      )}
+                      {r.scans.length > 0 && (
+                        <span className="border border-energy px-1.5 py-px text-[11px] font-semibold uppercase tracking-wide text-energy">
+                          Scanné{r.scans.length > 1 ? ` ×${r.scans.length}` : ''}
+                        </span>
+                      )}
                     </span>
                   )}
                 </td>
                 <td className="font-mono">{r.code}</td>
                 <td>
                   {r.phone && (
-                    <a href={`tel:${r.phone}`} className="block font-semibold text-forest underline underline-offset-2">{r.phone}</a>
+                    <a
+                      href={`tel:${r.phone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="block font-semibold text-forest underline underline-offset-2"
+                    >
+                      {r.phone}
+                    </a>
                   )}
                   {/* E-mail non affiché dans le tableau (reste dans l'export Excel). */}
                   {/* {r.email && (
                     <a href={`mailto:${r.email}`} className="mt-0.5 block text-ink/55 underline underline-offset-2">{r.email}</a>
                   )} */}
                 </td>
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   <select
                     value={drafts[r.id] ?? r.slotId}
                     disabled={busy}
@@ -278,7 +290,7 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                   </select>
                 </td>
                 <td className="text-ink/60">{when(r.booked_at)}</td>
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   {drafts[r.id] ? (
                     <div className="flex gap-1.5">
                       <button

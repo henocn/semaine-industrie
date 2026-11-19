@@ -270,7 +270,8 @@ function view(row) {
     name: row.name,
     slot: row.visit_slot ? slotInfo(row.visit_slot) : null,
     /* Lien du groupe : donné seulement après vérification d'un code validé, jamais dans le code public du site. */
-    group: WHATSAPP_GROUP,
+    // Groupe WhatsApp retiré de la page publique.
+    // group: WHATSAPP_GROUP,
   };
 }
 

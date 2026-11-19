@@ -100,6 +100,7 @@ function EspaceView({ space }: { space: Espace }) {
                 )}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
+                {/* Bouton du groupe WhatsApp retiré.
                 {space.departure.group && (
                 <a
                   href={space.departure.group}
@@ -111,6 +112,7 @@ function EspaceView({ space }: { space: Espace }) {
                   Groupe des visites
                 </a>
                 )}
+                */}
                 <Link
                   to={`/visites/?code=${encodeURIComponent(space.code)}`}
                   className="inline-flex items-center gap-2 border border-forest bg-forest px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-ink"
