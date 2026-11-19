@@ -10,7 +10,7 @@ import {
   type DepartureSettings,
 } from '../api/scan'
 import { ResourcesPanel } from './OrgaResourcesPage'
-import { getVisitSlots, setVisitSlotsOpen, type VisitSlotDay } from '../api/visitSlots'
+import { getVisitSlots, setVisitSlotsOpen, type VisitSlotAvailability } from '../api/visitSlots'
 
 const TABS = [
   { key: 'depart', label: 'Points de départ' },
@@ -119,28 +119,29 @@ function DeparturePanel() {
   )
 }
 
-/* Choix des créneaux par les particuliers, jour par jour (page publique /visites). */
+/* Choix des créneaux par les particuliers, départ par départ (page publique /visites). */
 function SlotsOpenPanel() {
-  const [days, setDays] = useState<VisitSlotDay[] | null>(null)
+  const [slots, setSlots] = useState<VisitSlotAvailability[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
 
   useEffect(() => {
     getVisitSlots()
-      .then((data) => setDays(data.days ?? []))
+      .then((data) => setSlots(data.slots))
       .catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
   }, [])
 
-  /* Ouvre ou ferme un jour après confirmation. */
-  async function onToggle(d: VisitSlotDay, next: boolean) {
-    const question = next
-      ? `Rouvrir le choix des créneaux du ${d.label.toLowerCase()} ?`
-      : `Fermer le choix des créneaux du ${d.label.toLowerCase()} ? Ses départs seront grisés sur la page publique.`
+  /* Ouvre ou ferme un départ après confirmation. */
+  async function onToggle(s: VisitSlotAvailability, next: boolean) {
+    const label = `${s.day.toLowerCase()}, ${s.period.toLowerCase()}, ${s.place}`
+    const question = next ? `Rouvrir le départ du ${label} ?` : `Fermer le départ du ${label} ? Il sera grisé sur la page publique.`
     if (!window.confirm(question)) return
-    setBusy(d.day)
+    setBusy(s.id)
     setError(null)
     try {
-      setDays((await setVisitSlotsOpen(d.day, next)).days)
+      const result = await setVisitSlotsOpen(s.id, next)
+      /* Garde les places restantes affichées ; seul l'état ouvert / fermé change. */
+      setSlots((current) => current?.map((c) => ({ ...c, open: result.slots.find((r) => r.id === c.id)?.open ?? c.open })) ?? null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Modification impossible')
     } finally {
@@ -148,36 +149,48 @@ function SlotsOpenPanel() {
     }
   }
 
+  const days = slots ? [...new Set(slots.map((s) => s.day))] : []
+
   return (
-    <section className="orga-panel max-w-xl">
+    <section className="orga-panel max-w-2xl">
       <h2 className="text-[15px] font-semibold text-forest">Choix des créneaux de visite</h2>
       <p className="mt-1 text-[13px] text-ink/55">
-        Cochez les jours où les particuliers acceptés peuvent encore choisir leur départ (page publique /visites). Un jour décoché
-        reste visible mais grisé ; si tous sont décochés, la page affiche « Le choix des créneaux est clos ».
+        Cochez les départs que les particuliers acceptés peuvent encore choisir (page publique /visites). Un départ décoché reste
+        visible mais grisé ; si tous sont décochés, la page affiche « Le choix des créneaux est clos ».
       </p>
       {error && <p className="mt-3 text-[14px] text-red-700">{error}</p>}
-      {!days ? (
+      {!slots ? (
         !error && <p className="mt-4 text-[13px] text-ink/50">Chargement…</p>
       ) : (
-        <ul className="mt-4 divide-y divide-black/10 border border-black">
-          {days.map((d) => (
-            <li key={d.day}>
-              <label className="flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-forest/5">
-                <input
-                  type="checkbox"
-                  checked={d.open}
-                  disabled={busy === d.day}
-                  onChange={(e) => void onToggle(d, e.target.checked)}
-                  className="h-4 w-4 shrink-0 accent-forest"
-                />
-                <span className="min-w-0 flex-1 text-[14px] text-forest">{d.label}</span>
-                <span className={`text-[13px] font-semibold ${d.open ? 'text-energy' : 'text-red-700'}`}>
-                  {d.open ? 'Ouvert' : 'Fermé'}
-                </span>
-              </label>
-            </li>
-          ))}
-        </ul>
+        days.map((day) => (
+          <div key={day} className="mt-5">
+            <h3 className="text-[13px] font-semibold text-forest">{day}</h3>
+            <ul className="mt-2 divide-y divide-black/10 border border-black">
+              {slots.filter((s) => s.day === day).map((s) => (
+                <li key={s.id}>
+                  <label className="flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-forest/5">
+                    <input
+                      type="checkbox"
+                      checked={s.open !== false}
+                      disabled={busy === s.id}
+                      onChange={(e) => void onToggle(s, e.target.checked)}
+                      className="h-4 w-4 shrink-0 accent-forest"
+                    />
+                    <span className="min-w-0 flex-1 text-[14px] text-forest">
+                      {s.period} · {s.place}
+                    </span>
+                    <span className="hidden text-[12px] text-ink/45 sm:inline">
+                      {s.remaining} place{s.remaining > 1 ? 's' : ''} libre{s.remaining > 1 ? 's' : ''}
+                    </span>
+                    <span className={`w-14 text-right text-[13px] font-semibold ${s.open !== false ? 'text-energy' : 'text-red-700'}`}>
+                      {s.open !== false ? 'Ouvert' : 'Fermé'}
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
       )}
     </section>
   )
