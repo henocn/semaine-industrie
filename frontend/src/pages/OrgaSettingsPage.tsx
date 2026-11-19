@@ -208,8 +208,9 @@ function SlotsOpenPanel() {
     <section className="orga-panel max-w-2xl">
       <h2 className="text-[15px] font-semibold text-forest">Choix des créneaux de visite</h2>
       <p className="mt-1 text-[13px] text-ink/55">
-        Cochez les départs que les particuliers acceptés peuvent encore choisir (page publique /visites). Un départ décoché reste
-        visible mais grisé ; si tous sont décochés, la page affiche « Le choix des créneaux est clos ».
+        Cochez les départs que les particuliers acceptés peuvent encore choisir (page publique /visites). Un départ plein reste
+        choisissable en liste d’attente ; décochez-le pour confirmer qu’il est complet. Un départ décoché reste visible mais grisé ;
+        si tous sont décochés, la page affiche « Le choix des créneaux est clos ».
       </p>
       {error && <p className="mt-3 text-[14px] text-red-700">{error}</p>}
       {!slots ? (
@@ -233,7 +234,9 @@ function SlotsOpenPanel() {
                       {s.period} · {s.place}
                     </span>
                     <span className="hidden text-[12px] text-ink/45 sm:inline">
-                      {s.remaining} place{s.remaining > 1 ? 's' : ''} libre{s.remaining > 1 ? 's' : ''}
+                      {s.remaining > 0
+                        ? `${s.remaining} place${s.remaining > 1 ? 's' : ''} libre${s.remaining > 1 ? 's' : ''}`
+                        : `Plein${s.waiting ? ` · ${s.waiting} en attente` : ''}`}
                     </span>
                     <span className={`w-14 text-right text-[13px] font-semibold ${s.open !== false ? 'text-energy' : 'text-red-700'}`}>
                       {s.open !== false ? 'Ouvert' : 'Fermé'}

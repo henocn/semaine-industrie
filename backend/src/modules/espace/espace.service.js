@@ -238,7 +238,14 @@ async function passportSpace(passport) {
     documents: [],
     /* Particulier validé : départ de visite réservé (null tant qu'il n'a pas choisi). */
     ...(!isGroup && participation?.kind === 'particulier' && participation.status === 'approved'
-      ? { departure: { slot: participation.visit_slot ? visitSlots.slotLabel(participation.visit_slot) : null, group: visitSlots.WHATSAPP_GROUP } }
+      ? {
+          departure: {
+            slot: participation.visit_slot ? visitSlots.slotLabel(participation.visit_slot) : null,
+            /* Départ plein : en liste d'attente, peut quand même se présenter. */
+            waiting: await visitSlots.isWaiting(participation),
+            group: visitSlots.WHATSAPP_GROUP,
+          },
+        }
       : {}),
     ...(await visitorSummary({ passports: [passport], bookingsWhere, headcount })),
   };

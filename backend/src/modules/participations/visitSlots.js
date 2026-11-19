@@ -157,7 +157,14 @@ async function availability() {
     days: await daysView(),
     slots: SLOTS.map((slot) => {
       const booked = counts.get(slot.id) || 0;
-      return { ...slot, open: state[slot.id], capacity: CAPACITY, remaining: Math.max(CAPACITY - booked, 0) };
+      /* waiting : réservations au-delà des 50 places (liste d'attente, tant que le départ reste coché). */
+      return {
+        ...slot,
+        open: state[slot.id],
+        capacity: CAPACITY,
+        remaining: Math.max(CAPACITY - booked, 0),
+        waiting: Math.max(booked - CAPACITY, 0),
+      };
     }),
   };
 }
@@ -211,23 +218,50 @@ function view(row) {
   };
 }
 
-/* Vérifie le code avant le choix du départ (page publique). */
-async function lookup(rawCode) {
-  return view(await findBookable(rawCode));
+/*
+ * Liste d'attente : dans un départ, les 50 premières réservations (ordre de réservation) ont une place,
+ * les suivantes sont en attente et peuvent quand même se présenter. Une place libérée fait monter la suivante.
+ */
+async function isWaiting(row, transaction) {
+  if (!row.visit_slot || !row.visit_slot_at) return false;
+  const before = await Participation.count({
+    where: {
+      ...BOOKED,
+      visit_slot: row.visit_slot,
+      [Op.or]: [
+        { visit_slot_at: { [Op.lt]: row.visit_slot_at } },
+        { visit_slot_at: row.visit_slot_at, id: { [Op.lt]: row.id } },
+      ],
+    },
+    transaction,
+  });
+  return before >= CAPACITY;
 }
 
-/* Réserve un départ : une seule réservation par inscription, 50 places par départ. */
+/* Vérifie le code avant le choix du départ (page publique). */
+async function lookup(rawCode) {
+  const row = await findBookable(rawCode);
+  return { ...view(row), waiting: await isWaiting(row) };
+}
+
+/*
+ * Réserve un départ : une seule réservation par inscription.
+ * Départ plein mais encore coché dans les Paramètres : réservation en liste d'attente.
+ * Départ décoché (complet confirmé ou fermé) : refusé.
+ */
 async function book(rawCode, slotId) {
   if (!(await isOpen())) throw ApiError.conflict('Le choix des créneaux est clos.');
   const slot = slotInfo(slotId);
   if (!slot) throw ApiError.badRequest('Choisissez un départ.');
   if (!(await openSlots())[slot.id]) {
-    throw ApiError.conflict(`Le départ du ${slot.day.toLowerCase()}, ${slot.period.toLowerCase()}, ${slot.place} est clos. Choisissez-en un autre.`);
+    const full = ((await countBySlot()).get(slot.id) || 0) >= CAPACITY;
+    const what = `Le départ du ${slot.day.toLowerCase()}, ${slot.period.toLowerCase()}, ${slot.place}`;
+    throw ApiError.conflict(`${what} est ${full ? 'complet' : 'clos'}. Choisissez-en un autre.`);
   }
 
   return sequelize.transaction(async (transaction) => {
     const row = await findBookable(rawCode, transaction);
-    if (row.visit_slot) return { ...view(row), id: row.id, already: true };
+    if (row.visit_slot) return { ...view(row), id: row.id, already: true, waiting: await isWaiting(row, transaction) };
 
     /* Un verrou par départ : deux personnes ne prennent pas la dernière place en même temps. */
     await sequelize.query('SELECT pg_advisory_xact_lock(hashtext(:key))', {
@@ -235,12 +269,13 @@ async function book(rawCode, slotId) {
       transaction,
     });
     const booked = (await countBySlot(transaction)).get(slot.id) || 0;
-    if (booked >= CAPACITY) throw ApiError.conflict('Ce départ est complet. Choisissez-en un autre.');
+    /* Plus de refus au-delà de 50 : la personne passe en liste d'attente. */
+    const waiting = booked >= CAPACITY;
 
     row.visit_slot = slot.id;
     row.visit_slot_at = new Date();
     await row.save({ transaction });
-    return { ...view(row), id: row.id, already: false };
+    return { ...view(row), id: row.id, already: false, waiting };
   });
 }
 
@@ -249,7 +284,7 @@ async function planning() {
   const rows = await Participation.findAll({
     where: BOOKED,
     attributes: ['id', 'name', 'phone', 'email', 'tracking_code', 'passport_id', 'visit_slot', 'visit_slot_at'],
-    order: [['visit_slot_at', 'ASC']],
+    order: [['visit_slot_at', 'ASC'], ['id', 'ASC']],
   });
   /* Inscriptions sans code de suivi : on montre le code de leur passeport, comme dans la liste des participations. */
   const passportIds = rows.filter((row) => !row.tracking_code && row.passport_id).map((row) => row.passport_id);
@@ -269,9 +304,11 @@ async function planning() {
     waiting,
     slots: SLOTS.map((slot) => ({
       ...slot,
+      /* Ordre de réservation : au-delà des 50 premiers, liste d'attente. */
       people: rows
         .filter((row) => row.visit_slot === slot.id)
-        .map((row) => ({
+        .map((row, rank) => ({
+          waiting: rank >= CAPACITY,
           id: row.id,
           name: row.name,
           code: row.tracking_code || passportCodes.get(row.passport_id) || null,
@@ -309,7 +346,7 @@ async function departureScans(ids) {
   return byId;
 }
 
-/* Change ou libère le départ d'un particulier (backoffice). La limite de 50 reste valable. */
+/* Change ou libère le départ d'un particulier (backoffice). Au-delà de 50, la personne passe en liste d'attente. */
 async function setSlot(id, slotId) {
   const slot = slotId ? slotInfo(slotId) : null;
   if (slotId && !slot) throw ApiError.badRequest('Départ inconnu.');
@@ -323,8 +360,10 @@ async function setSlot(id, slotId) {
         replacements: { key: `visit-slot:${slot.id}` },
         transaction,
       });
+      /* Limite de 50 retirée : liste d'attente comme sur le site.
       const booked = (await countBySlot(transaction)).get(slot.id) || 0;
       if (booked >= CAPACITY) throw ApiError.conflict('Ce départ est complet.');
+      */
     }
     row.visit_slot = slot ? slot.id : null;
     row.visit_slot_at = slot ? (slot.id === previous ? row.visit_slot_at : new Date()) : null;
@@ -345,5 +384,6 @@ module.exports = {
   planning,
   setSlot,
   isOpen,
+  isWaiting,
   setOpen,
 };

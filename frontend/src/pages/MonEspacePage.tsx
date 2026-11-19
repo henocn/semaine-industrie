@@ -87,7 +87,14 @@ function EspaceView({ space }: { space: Espace }) {
             <div className="border-2 border-forest bg-sage px-4 py-3">
               <p className="text-[15px] text-ink">
                 {space.departure.slot ? (
-                  <>Départ réservé : <span className="font-semibold text-forest">{space.departure.slot}</span></>
+                  <>
+                    Départ réservé : <span className="font-semibold text-forest">{space.departure.slot}</span>
+                    {space.departure.waiting && (
+                      <span className="mt-1 block text-[14px] font-semibold text-amber-700">
+                        Liste d’attente : ce départ est plein, mais vous pouvez quand même vous présenter.
+                      </span>
+                    )}
+                  </>
                 ) : (
                   'Visites des 19 et 20 novembre : choisissez votre départ.'
                 )}

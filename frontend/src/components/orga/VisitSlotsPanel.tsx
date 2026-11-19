@@ -16,6 +16,7 @@ const EXPORT_COLUMNS: ExcelColumn<Row>[] = [
   { header: 'Téléphone', width: 18, value: (r) => r.phone },
   { header: 'E-mail', width: 28, value: (r) => r.email },
   { header: 'Réservé le', width: 18, value: (r) => excelDate(r.booked_at) },
+  { header: 'Statut', width: 16, value: (r) => (r.waiting ? 'Liste d’attente' : 'Place') },
   { header: 'Scans', width: 50, value: (r) => r.scans.map((s) => `${s.again ? 'Repris' : 'Scanné'} le ${scanTime(s.at)} à ${s.point}`).join(' ; ') },
 ]
 
@@ -153,6 +154,7 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                 const n = s.people.length
                 const selected = active === s.id
                 const full = n >= data.capacity
+                const extra = Math.max(n - data.capacity, 0)
                 return (
                   <button
                     key={s.id}
@@ -167,9 +169,14 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                     </p>
                     <p className={`mt-0.5 text-[14px] font-semibold ${selected ? 'text-white' : 'text-forest'}`}>{s.place}</p>
                     <p className={`mt-2 text-[20px] font-bold leading-none ${selected ? 'text-sun' : full ? 'text-red-700' : 'text-forest'}`}>
-                      {n}
+                      {Math.min(n, data.capacity)}
                       <span className={`text-[13px] font-medium ${selected ? 'text-white/70' : 'text-ink/50'}`}> / {data.capacity}</span>
                     </p>
+                    {extra > 0 && (
+                      <p className={`mt-1 text-[12px] font-semibold ${selected ? 'text-sun' : 'text-amber-700'}`}>
+                        + {extra} en attente
+                      </p>
+                    )}
                     {full && (
                       <p className={`mt-1.5 inline-flex items-center gap-1 text-[12px] font-semibold uppercase tracking-wide ${selected ? 'text-sun' : 'text-red-700'}`}>
                         <Lock className="h-3.5 w-3.5" aria-hidden="true" />
@@ -237,6 +244,7 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                   >
                     {r.name}
                   </button>
+                  {r.waiting && <span className="ml-2 text-[12px] font-semibold text-amber-700">en attente</span>}
                   {r.scans.length > 0 && (
                     <span className="ml-2 text-[12px] font-semibold text-energy">
                       scanné{r.scans.length > 1 ? ` ×${r.scans.length}` : ''}
@@ -262,8 +270,8 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                     aria-label={`Départ de ${r.name}`}
                   >
                     {data.slots.map((s) => (
-                      <option key={s.id} value={s.id} disabled={s.id !== r.slotId && s.people.length >= data.capacity}>
-                        {label(s.id)}{s.id !== r.slotId && s.people.length >= data.capacity ? ' (plein)' : ''}
+                      <option key={s.id} value={s.id}>
+                        {label(s.id)}{s.id !== r.slotId && s.people.length >= data.capacity ? ' (plein, attente)' : ''}
                       </option>
                     ))}
                   </select>

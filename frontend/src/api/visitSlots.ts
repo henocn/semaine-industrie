@@ -9,7 +9,8 @@ export type VisitSlot = {
 }
 
 /* Départ avec ses places restantes (page publique) ; open = choix encore ouvert ce jour-là. */
-export type VisitSlotAvailability = VisitSlot & { capacity: number; remaining: number; open?: boolean }
+/* waiting : réservations au-delà des places (liste d'attente). */
+export type VisitSlotAvailability = VisitSlot & { capacity: number; remaining: number; waiting?: number; open?: boolean }
 
 /* Jour de visite et état du choix des créneaux (cases des Paramètres). */
 export type VisitSlotDay = { day: string; label: string; open: boolean }
@@ -20,6 +21,8 @@ export type VisitSlotBooking = {
   name: string
   slot: VisitSlot | null
   already?: boolean
+  /* Départ plein : en liste d'attente, peut quand même se présenter. */
+  waiting?: boolean
   /* Lien du groupe WhatsApp des visites, envoyé par le serveur pour un code validé. */
   group?: string
 }
@@ -32,6 +35,8 @@ export type VisitSlotPerson = {
   phone: string | null
   email: string | null
   booked_at: string | null
+  /* Au-delà des 50 premières réservations du départ. */
+  waiting: boolean
   /* Scans de départ, du premier aux reprises. */
   scans: { point: string; at: string; again: boolean }[]
 }
