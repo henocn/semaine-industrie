@@ -8,6 +8,7 @@ const { authenticate, authorize } = require('../../middlewares/auth.middleware')
 const { createSchema, publicSchema, updateSchema } = require('./participation.validation');
 const ApiError = require('../../utils/ApiError');
 const env = require('../../config/env');
+const formSettings = require('./formSettings');
 
 const router = Router();
 const publicHits = new Map();
@@ -41,10 +42,17 @@ function limitSlots(req, res, next) {
 }
 
 /* Refuse les formulaires publics fermés. Le backoffice peut toujours ajouter. */
-function closedForms(req, res, next) {
-  /* Particuliers : inscriptions closes (PARTICULIER_OPEN ne suffit plus à les rouvrir). */
+async function closedForms(req, res, next) {
+  /* Particuliers : ouvertes ou fermées par la case des Paramètres du backoffice. */
   if (req.body?.kind === 'particulier') {
-    return next(ApiError.badRequest('Les inscriptions des particuliers aux visites d’usines sont closes.'));
+    try {
+      if (!(await formSettings.isParticulierOpen())) {
+        return next(ApiError.badRequest('Les inscriptions des particuliers aux visites d’usines sont closes.'));
+      }
+      return next();
+    } catch (err) {
+      return next(err);
+    }
   }
   /* Écoles / universités : inscriptions closes (le formulaire public envoie kind « ecole » ou rien). */
   if (!req.body?.kind || req.body.kind === 'ecole') {
@@ -62,6 +70,14 @@ function closedForms(req, res, next) {
 }
 
 router.get('/public/capacity', controller.capacity);
+/* Formulaires ouverts au public (le site affiche le formulaire ou « Inscriptions clôturées »). */
+router.get('/public/forms', async (req, res, next) => {
+  try {
+    return res.json({ success: true, data: { particulier_open: await formSettings.isParticulierOpen() } });
+  } catch (err) {
+    return next(err);
+  }
+});
 router.get('/public/palais/:code', controller.palaisPass);
 router.get('/public/media/:code', controller.mediaPass);
 router.post('/public', closedForms, limitPublic, validate(publicSchema), controller.create);
@@ -76,6 +92,15 @@ router.use(authenticate, authorize('orga'));
 router.get('/visit-slots', slots.planning);
 /* Choix des créneaux par jour : Paramètres, admins seulement. */
 router.put('/visit-slots/open', authorize('admin'), slots.setOpen);
+/* Inscriptions des particuliers ouvertes / fermées : Paramètres, admins seulement. */
+router.put('/forms/particulier', authorize('admin'), async (req, res, next) => {
+  try {
+    const data = await formSettings.setParticulierOpen(req.body?.open === true, req.user);
+    return res.json({ success: true, data, message: data.particulier_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées' });
+  } catch (err) {
+    return next(err);
+  }
+});
 router.put('/:id/visit-slot', slots.setSlot);
 router.post('/palais/:code/checkin', controller.palaisCheckin);
 router.get('/', controller.list);

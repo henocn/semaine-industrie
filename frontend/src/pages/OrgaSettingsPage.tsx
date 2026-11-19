@@ -11,10 +11,11 @@ import {
 } from '../api/scan'
 import { ResourcesPanel } from './OrgaResourcesPage'
 import { getVisitSlots, setVisitSlotsOpen, type VisitSlotAvailability } from '../api/visitSlots'
+import { getPublicForms, setParticulierOpen } from '../api/participations'
 
 const TABS = [
   { key: 'depart', label: 'Points de départ' },
-  { key: 'creneaux', label: 'Choix des créneaux' },
+  { key: 'creneaux', label: 'Visites' },
   { key: 'ressources', label: 'Ressources' },
 ] as const
 type TabKey = (typeof TABS)[number]['key']
@@ -119,6 +120,58 @@ function DeparturePanel() {
   )
 }
 
+/* Inscriptions des particuliers aux visites : une case, ouvertes ou fermées (page publique /inscription-particulier). */
+function ParticulierOpenPanel() {
+  const [open, setOpen] = useState<boolean | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    getPublicForms()
+      .then((data) => setOpen(data.particulier_open))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
+  }, [])
+
+  async function onToggle(next: boolean) {
+    const question = next
+      ? 'Ouvrir les inscriptions des particuliers aux visites ? Le formulaire redevient accessible sur le site.'
+      : 'Fermer les inscriptions des particuliers aux visites ? Le site affichera « Inscriptions clôturées ».'
+    if (!window.confirm(question)) return
+    setBusy(true)
+    setError(null)
+    try {
+      setOpen((await setParticulierOpen(next)).particulier_open)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Modification impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="orga-panel mb-6 max-w-2xl">
+      <h2 className="text-[15px] font-semibold text-forest">Inscriptions des particuliers</h2>
+      <p className="mt-1 text-[13px] text-ink/55">Formulaire public /inscription-particulier et menu Participer du bot WhatsApp.</p>
+      {error && <p className="mt-3 text-[14px] text-red-700">{error}</p>}
+      {open === null ? (
+        !error && <p className="mt-4 text-[13px] text-ink/50">Chargement…</p>
+      ) : (
+        <label className="mt-4 flex cursor-pointer items-center gap-3 border border-black px-3 py-2.5 hover:bg-forest/5">
+          <input
+            type="checkbox"
+            checked={open}
+            disabled={busy}
+            onChange={(e) => void onToggle(e.target.checked)}
+            className="h-4 w-4 shrink-0 accent-forest"
+          />
+          <span className="min-w-0 flex-1 text-[14px] text-forest">Inscriptions aux visites ouvertes</span>
+          <span className={`text-[13px] font-semibold ${open ? 'text-energy' : 'text-red-700'}`}>{open ? 'Ouvertes' : 'Fermées'}</span>
+        </label>
+      )}
+    </section>
+  )
+}
+
 /* Choix des créneaux par les particuliers, départ par départ (page publique /visites). */
 function SlotsOpenPanel() {
   const [slots, setSlots] = useState<VisitSlotAvailability[] | null>(null)
@@ -216,7 +269,12 @@ export default function OrgaSettingsPage() {
           </button>
         ))}
       </div>
-      {tab === 'depart' ? <DeparturePanel /> : tab === 'creneaux' ? <SlotsOpenPanel /> : <ResourcesPanel />}
+      {tab === 'depart' ? <DeparturePanel /> : tab === 'creneaux' ? (
+        <>
+          <ParticulierOpenPanel />
+          <SlotsOpenPanel />
+        </>
+      ) : <ResourcesPanel />}
     </OrgaShell>
   )
 }
