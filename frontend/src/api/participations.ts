@@ -34,6 +34,8 @@ export type Participation = {
   whatsapp_qr?: boolean
   /* E-mail d'acceptation : true envoyé, false échec, null non suivi. */
   approved_mail?: boolean | null
+  /* Départ de visite choisi par un particulier (« 19-matin-agoe »), null sinon. */
+  visit_slot?: string | null
   /* Particulier ou média scanné à un point de départ (liste seulement). */
   departure_scan?: { point: string; scanned_at: string } | null
   /* Journées du Palais choisies (16, 17, 18) et entrées scannées, pour une inscription « palais ». */

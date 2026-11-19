@@ -91,6 +91,8 @@ export function VisitSlotsPanel({ query }: { query: string }) {
       .filter((s) => !active || s.id === active)
       .flatMap((s) => s.people.map((p) => ({ ...p, slotId: s.id, slotLabel: label(s.id) })))
       .filter((r) => !q || [r.name, r.code, r.phone, r.email].some((v) => v?.toLowerCase().includes(q)))
+      /* Personnes en attente d'abord ; sinon ordre des départs et de réservation (tri stable). */
+      .sort((a, b) => Number(b.waiting) - Number(a.waiting))
   }, [data, active, query, label])
 
   const total = data?.slots.reduce((n, s) => n + s.people.length, 0) ?? 0

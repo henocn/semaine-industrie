@@ -28,6 +28,14 @@ import { useRowSelection } from '../lib/useRowSelection'
 import { excelDate, type ExcelColumn } from '../lib/excel'
 import { MEDIA_PROFILES, PALAIS_DAYS, mediaProfileLabel } from '../data'
 
+/* Départ en clair : « 19-matin-agoe » donne « 19 nov., matin, Agoé ». */
+function slotText(id: string) {
+  const parts = id.split('-')
+  const place = parts[parts.length - 1]
+  const period = parts.slice(1, -1).join('-')
+  return `${parts[0]} nov., ${period === 'apres-midi' ? 'après-midi' : period}, ${place === 'agoe' ? 'Agoé' : place === 'palais' ? 'Palais des Congrès' : place}`
+}
+
 const field = 'mt-1 w-full border border-black bg-white px-3 py-2 text-[14px] text-ink focus:outline-none'
 
 /* Libellé court du statut. */
@@ -464,6 +472,9 @@ export default function OrgaParticipationsPage() {
   const isSchool = kind === 'ecole'
   const isPalais = kind === 'palais'
   const isMedia = kind === 'media'
+  /* Particuliers : colonne « Créneau » (départ de visite choisi ou non). */
+  const isParticulier = kind === 'particulier'
+  const cols = 7 + (isPalais || isMedia ? 1 : 0) + (isParticulier ? 1 : 0)
   let noun = filtered.length > 1 ? 'particuliers' : 'particulier'
   if (isSchool) noun = filtered.length > 1 ? 'écoles' : 'école'
   if (isPalais) noun = filtered.length > 1 ? 'inscrits au Palais' : 'inscrit au Palais'
@@ -609,6 +620,7 @@ export default function OrgaParticipationsPage() {
               {/* <th className="w-28">Statut</th> */}
               <th className="w-14 text-center" title="E-mail d’acceptation envoyé">Mail</th>
               <th className="w-20 text-center" title="QR reçu sur WhatsApp">WhatsApp</th>
+              {isParticulier && <th className="w-20 text-center" title="Créneau de visite choisi">Créneau</th>}
               {/* Colonne « Passage » retirée ; Journées (Palais) et Média restent. */}
               {(isPalais || isMedia) && <th className={isPalais ? 'w-36' : 'w-56'}>{isPalais ? 'Journées' : 'Média'}</th>}
               <th className="w-40">Actions</th>
@@ -617,7 +629,7 @@ export default function OrgaParticipationsPage() {
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={isPalais || isMedia ? 8 : 7}>Aucune participation</td>
+                <td colSpan={cols}>Aucune participation</td>
               </tr>
             )}
             {sort.sorted.map((item) => {
@@ -654,6 +666,17 @@ export default function OrgaParticipationsPage() {
                         <span className="font-bold text-red-700" title="QR pas encore reçu sur WhatsApp" aria-label="QR non reçu">✗</span>
                       )}
                     </td>
+                    {isParticulier && (
+                      <td className="text-center">
+                        {item.status !== 'approved' ? (
+                          <span className="text-ink/30">—</span>
+                        ) : item.visit_slot ? (
+                          <span className="font-bold text-energy" title={`Créneau choisi : ${slotText(item.visit_slot)}`} aria-label="Créneau choisi">✓</span>
+                        ) : (
+                          <span className="font-bold text-red-700" title="Créneau pas encore choisi" aria-label="Créneau non choisi">✗</span>
+                        )}
+                      </td>
+                    )}
                     {isPalais ? (
                       <td className="whitespace-nowrap">
                         {palaisDays(item).map((n, i) => (
@@ -704,7 +727,7 @@ export default function OrgaParticipationsPage() {
                   </tr>
                   {open && (
                     <tr>
-                      <td colSpan={isPalais || isMedia ? 8 : 7} className="bg-white">
+                      <td colSpan={cols} className="bg-white">
                         {editingId === item.id ? (
                           <form onSubmit={(e) => void onUpdate(e, item.id)} className="grid gap-3 p-4 sm:grid-cols-2">
                             <label className="text-[13px] font-medium text-forest sm:col-span-2">
