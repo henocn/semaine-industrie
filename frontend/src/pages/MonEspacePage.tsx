@@ -7,7 +7,7 @@ import { Seo } from '../components/Seo'
 import { WRAP } from '../components/layout/Mark'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { publicSeo } from '../lib/seo'
-import { WhatsAppIcon } from '../components/ui/WhatsAppIcon'
+// import { WhatsAppIcon } from '../components/ui/WhatsAppIcon' (bouton du groupe retiré)
 
 const TYPE_LABEL: Record<EspaceType, string> = {
   ecole: 'École / université',
