@@ -238,7 +238,7 @@ export default function ReservationVisitePage() {
                   <fieldset key={day} className="mt-4">
                     <legend className="text-[15px] font-semibold text-ink">
                       {day}
-                      {slots.some((s) => s.day === day && s.open === false) && (
+                      {slots.filter((s) => s.day === day).every((s) => s.open === false) && (
                         <span className="ml-2 text-[13px] font-semibold text-red-700">· choix clos</span>
                       )}
                     </legend>

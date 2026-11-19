@@ -75,10 +75,10 @@ export function setVisitSlot(id: string, slot: string | null) {
   })
 }
 
-/* Ouvre ou ferme le choix des créneaux d'un jour (backoffice, Paramètres). */
-export function setVisitSlotsOpen(day: string, open: boolean) {
-  return apiFetch<{ open: boolean; days: VisitSlotDay[] }>('/participations/visit-slots/open', {
+/* Ouvre ou ferme un départ (backoffice, Paramètres). */
+export function setVisitSlotsOpen(slot: string, open: boolean) {
+  return apiFetch<{ open: boolean; days: VisitSlotDay[]; slots: VisitSlotAvailability[] }>('/participations/visit-slots/open', {
     method: 'PUT',
-    body: JSON.stringify({ day, open }),
+    body: JSON.stringify({ slot, open }),
   })
 }
