@@ -92,6 +92,8 @@ router.use(authenticate, authorize('orga'));
 router.get('/visit-slots', slots.planning);
 /* Choix des créneaux par jour : Paramètres, admins seulement. */
 router.put('/visit-slots/open', authorize('admin'), slots.setOpen);
+/* Nombre de places par départ : Paramètres, admins seulement. */
+router.put('/visit-slots/capacity', authorize('admin'), slots.setCapacity);
 /* Inscriptions des particuliers ouvertes / fermées : Paramètres, admins seulement. */
 router.put('/forms/particulier', authorize('admin'), async (req, res, next) => {
   try {

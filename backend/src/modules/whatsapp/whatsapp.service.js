@@ -1102,7 +1102,7 @@ async function visitLines(passport) {
   return [
     '',
     participation.visit_slot
-      ? `Créneau de visite : ${visitSlots.slotLabel(participation.visit_slot)}${(await visitSlots.isWaiting(participation)) ? " (liste d'attente : vous pouvez quand même vous présenter au départ)" : ''}`
+      ? `Créneau de visite : ${visitSlots.slotLabel(participation.visit_slot)}${(await visitSlots.isWaiting(participation)) ? " (places limitées : présentez-vous à l'heure avec votre QR)" : ''}`
       : `Choisissez votre créneau de visite : ${SITE()}/visites?code=${passport.code}`,
     `Groupe WhatsApp des visites : ${visitSlots.WHATSAPP_GROUP}`,
   ];

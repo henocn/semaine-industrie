@@ -48,7 +48,7 @@ export type VisitSlotPlanning = {
   capacity: number
   /* Particuliers validés qui n'ont pas encore choisi de départ. */
   waiting: number
-  slots: (VisitSlot & { people: VisitSlotPerson[] })[]
+  slots: (VisitSlot & { capacity?: number; people: VisitSlotPerson[] })[]
 }
 
 /* Départs et places restantes. */
@@ -79,6 +79,14 @@ export function setVisitSlot(id: string, slot: string | null) {
   return apiFetch<{ id: string; slot: string | null }>(`/participations/${id}/visit-slot`, {
     method: 'PUT',
     body: JSON.stringify({ slot }),
+  })
+}
+
+/* Change le nombre de places d'un départ (backoffice, Paramètres). */
+export function setVisitSlotCapacity(slot: string, capacity: number) {
+  return apiFetch<{ open: boolean; slots: VisitSlotAvailability[] }>('/participations/visit-slots/capacity', {
+    method: 'PUT',
+    body: JSON.stringify({ slot, capacity }),
   })
 }
 

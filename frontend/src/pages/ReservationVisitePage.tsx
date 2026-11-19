@@ -160,9 +160,9 @@ export default function ReservationVisitePage() {
               <SlotSummary slot={booked} />
             </div>
             {person.waiting && (
-              <p className="mt-4 border-l-4 border-amber-600 bg-white px-3 py-2 text-[15px] leading-relaxed text-ink">
-                <span className="font-semibold text-amber-700">Vous êtes en liste d’attente.</span> Ce départ est plein, mais vous pouvez
-                quand même vous présenter : vous partirez selon les places libérées.
+              <p className="mt-4 border-l-4 border-sun bg-white px-3 py-2 text-[15px] leading-relaxed text-ink">
+                <span className="font-semibold text-forest">Places limitées sur ce départ.</span> Présentez-vous à l’heure avec votre QR ;
+                nous vous préviendrons si jamais les places venaient à manquer.
               </p>
             )}
             <p className="mt-4 text-[15px] leading-relaxed text-ink/80">
@@ -285,7 +285,7 @@ export default function ReservationVisitePage() {
                                   {full ? 'Complet' : 'Clos'}
                                 </span>
                               ) : full ? (
-                                <span className="mt-1 block text-[13px] font-semibold text-amber-700">Plein · liste d’attente</span>
+                                <span className="mt-1 block text-[13px] font-semibold text-forest/80">Places limitées</span>
                               ) : (
                                 <span className="mt-1 block text-[13px] text-ink/55">
                                   {s.remaining} place{s.remaining > 1 ? 's' : ''} disponible{s.remaining > 1 ? 's' : ''}
@@ -301,15 +301,14 @@ export default function ReservationVisitePage() {
               )}
 
               {choiceFull && (
-                <p className="mt-4 border-l-4 border-amber-600 bg-sage px-3 py-2 text-[14px] leading-relaxed text-ink">
-                  Ce départ est plein : vous serez en <span className="font-semibold">liste d’attente</span>. Vous pourrez quand même vous
-                  présenter au départ, et partir selon les places libérées.
+                <p className="mt-4 border-l-4 border-sun bg-sage px-3 py-2 text-[14px] leading-relaxed text-ink">
+                  Places limitées sur ce départ : présentez-vous à l’heure, nous vous préviendrons si jamais les places venaient à manquer.
                 </p>
               )}
               {error && person && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
               <div className="mt-5">
                 <Button type="submit" disabled={busy || !open || !person || !choice}>
-                  {busy && person ? 'Réservation…' : choiceFull ? 'Me mettre en liste d’attente' : 'Confirmer ma place'}
+                  {busy && person ? 'Réservation…' : 'Confirmer ma place'}
                 </Button>
                 {!person && (
                   <p className="mt-2 text-[13px] text-ink/55">Vérifiez d’abord votre code de suivi.</p>

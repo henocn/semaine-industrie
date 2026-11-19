@@ -90,8 +90,8 @@ function EspaceView({ space }: { space: Espace }) {
                   <>
                     Départ réservé : <span className="font-semibold text-forest">{space.departure.slot}</span>
                     {space.departure.waiting && (
-                      <span className="mt-1 block text-[14px] font-semibold text-amber-700">
-                        Liste d’attente : ce départ est plein, mais vous pouvez quand même vous présenter.
+                      <span className="mt-1 block text-[14px] text-ink/80">
+                        Places limitées sur ce départ : présentez-vous à l’heure avec votre QR.
                       </span>
                     )}
                   </>

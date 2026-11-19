@@ -135,7 +135,7 @@ export function VisitSlotsPanel({ query }: { query: string }) {
       {error && <p className="mb-4 text-[14px] text-red-700">{error}</p>}
 
       <p className="mb-4 text-[14px] text-ink/70">
-        {total} place{total > 1 ? 's' : ''} réservée{total > 1 ? 's' : ''} sur {data.slots.length * data.capacity}
+        {total} place{total > 1 ? 's' : ''} réservée{total > 1 ? 's' : ''} sur {data.slots.reduce((n, s) => n + (s.capacity ?? data.capacity), 0)}
         {' · '}
         {data.waiting} particulier{data.waiting > 1 ? 's' : ''} validé{data.waiting > 1 ? 's' : ''} sans départ
         {/* {' · '}
@@ -153,8 +153,9 @@ export function VisitSlotsPanel({ query }: { query: string }) {
               {data.slots.filter((s) => s.day === day).map((s) => {
                 const n = s.people.length
                 const selected = active === s.id
-                const full = n >= data.capacity
-                const extra = Math.max(n - data.capacity, 0)
+                const cap = s.capacity ?? data.capacity
+                const full = n >= cap
+                const extra = Math.max(n - cap, 0)
                 return (
                   <button
                     key={s.id}
@@ -169,8 +170,8 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                     </p>
                     <p className={`mt-0.5 text-[14px] font-semibold ${selected ? 'text-white' : 'text-forest'}`}>{s.place}</p>
                     <p className={`mt-2 text-[20px] font-bold leading-none ${selected ? 'text-sun' : full ? 'text-red-700' : 'text-forest'}`}>
-                      {Math.min(n, data.capacity)}
-                      <span className={`text-[13px] font-medium ${selected ? 'text-white/70' : 'text-ink/50'}`}> / {data.capacity}</span>
+                      {Math.min(n, cap)}
+                      <span className={`text-[13px] font-medium ${selected ? 'text-white/70' : 'text-ink/50'}`}> / {cap}</span>
                     </p>
                     {extra > 0 && (
                       <p className={`mt-1 text-[12px] font-semibold ${selected ? 'text-sun' : 'text-amber-700'}`}>
@@ -271,7 +272,7 @@ export function VisitSlotsPanel({ query }: { query: string }) {
                   >
                     {data.slots.map((s) => (
                       <option key={s.id} value={s.id}>
-                        {label(s.id)}{s.id !== r.slotId && s.people.length >= data.capacity ? ' (plein, attente)' : ''}
+                        {label(s.id)}{s.id !== r.slotId && s.people.length >= (s.capacity ?? data.capacity) ? ' (plein, attente)' : ''}
                       </option>
                     ))}
                   </select>
